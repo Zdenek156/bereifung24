@@ -100,8 +100,14 @@ export default function InfluencerDashboardPage() {
   }
 
   const handleLogout = async () => {
-    await fetch('/api/influencer/auth/logout', { method: 'POST' })
-    router.push('/influencer/login')
+    try {
+      await fetch('/api/influencer/auth/logout', { method: 'POST' })
+      localStorage.clear()
+      sessionStorage.clear()
+    } catch (error) {
+      console.error('[LOGOUT] Error:', error)
+    }
+    window.location.href = '/'
   }
 
   const formatCurrency = (cents: number) => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -8,12 +8,23 @@ import Link from 'next/link'
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const returnUrl = searchParams.get('returnUrl') || ''
+  const urlReturnUrl = searchParams.get('returnUrl') || ''
+  const [returnUrl, setReturnUrl] = useState(urlReturnUrl)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  // Fallback: returnUrl aus localStorage laden (nach Email-Verifizierung)
+  useEffect(() => {
+    if (!urlReturnUrl) {
+      const storedReturnUrl = localStorage.getItem('registrationReturnUrl')
+      if (storedReturnUrl) {
+        setReturnUrl(storedReturnUrl)
+      }
+    }
+  }, [urlReturnUrl])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,6 +70,7 @@ export default function LoginPage() {
           window.location.href = '/freelancer'
         } else {
           // CUSTOMER: return to landing page if returnUrl set
+          localStorage.removeItem('registrationReturnUrl')
           window.location.href = returnUrl || '/dashboard'
         }
       } else {

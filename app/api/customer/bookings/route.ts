@@ -84,7 +84,10 @@ export async function GET(request: NextRequest) {
       basePrice: Number(booking.basePrice),
       balancingPrice: booking.balancingPrice ? Number(booking.balancingPrice) : null,
       storagePrice: booking.storagePrice ? Number(booking.storagePrice) : null,
-      totalPrice: Number(booking.totalPrice)
+      washingPrice: booking.washingPrice ? Number(booking.washingPrice) : null,
+      totalPrice: Number(booking.totalPrice),
+      discountAmount: booking.discountAmount ? Number(booking.discountAmount) : null,
+      originalPrice: booking.originalPrice ? Number(booking.originalPrice) : null,
     }))
 
     console.log('[BOOKINGS API] Found', bookingsData.length, 'bookings for customer')

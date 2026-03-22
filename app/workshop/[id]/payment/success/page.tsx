@@ -437,6 +437,25 @@ export default function PaymentSuccessPage() {
               </div>
             )}
 
+            {/* Add-ons (Auswuchten, Einlagerung, Räder waschen, Entsorgung, RunFlat) */}
+            {(booking?.hasBalancing || booking?.hasStorage || booking?.hasWashing || (booking?.hasDisposal && booking?.disposalFee) || (booking?.runFlatSurcharge && Number(booking.runFlatSurcharge) > 0)) && (
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-gray-400 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <div>
+                  <p className="font-semibold text-gray-900">Zusatzleistungen</p>
+                  <ul className="text-sm text-gray-600 list-none">
+                    {booking.hasBalancing && <li>✅ Auswuchten (+{Number(booking.balancingPrice || 0).toFixed(2)}€)</li>}
+                    {booking.hasStorage && <li>✅ Einlagerung (+{Number(booking.storagePrice || 0).toFixed(2)}€)</li>}
+                    {booking.hasWashing && <li>✅ Räder waschen (+{Number(booking.washingPrice || 0).toFixed(2)}€)</li>}
+                    {booking.hasDisposal && booking.disposalFee && <li>✅ Reifenentsorgung (+{Number(booking.disposalFee).toFixed(2)}€)</li>}
+                    {booking.runFlatSurcharge && Number(booking.runFlatSurcharge) > 0 && <li>✅ RunFlat-Zuschlag (+{Number(booking.runFlatSurcharge).toFixed(2)}€)</li>}
+                  </ul>
+                </div>
+              </div>
+            )}
+
             {/* Additional Services (Klimaservice, Achsvermessung, etc.) */}
             {booking?.additionalServicesData && booking.additionalServicesData.length > 0 && (
               <div className="flex items-start gap-3">
@@ -444,7 +463,7 @@ export default function PaymentSuccessPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 <div>
-                  <p className="font-semibold text-gray-900">Zusatzleistungen</p>
+                  <p className="font-semibold text-gray-900">Weitere Services</p>
                   <ul className="text-sm text-gray-600 list-none">
                     {booking.additionalServicesData.map((svc: any, idx: number) => {
                       const rawName = (svc.name || '').replace(/[\u{1F300}-\u{1F9FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu, '').trim()

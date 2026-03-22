@@ -39,7 +39,8 @@ export async function POST(request: NextRequest) {
       totalPrice,
       workshopName,
       serviceName,
-      vehicleInfo
+      vehicleInfo,
+      durationMinutes,
     } = body
 
     // Create Stripe Checkout Session
@@ -71,7 +72,8 @@ export async function POST(request: NextRequest) {
         time,
         hasBalancing: hasBalancing ? 'true' : 'false',
         hasStorage: hasStorage ? 'true' : 'false',
-        totalPrice: totalPrice.toString()
+        totalPrice: totalPrice.toString(),
+        ...(durationMinutes ? { durationMinutes: durationMinutes.toString() } : {}),
       }
     })
 

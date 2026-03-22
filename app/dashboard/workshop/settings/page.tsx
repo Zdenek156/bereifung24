@@ -23,6 +23,7 @@ interface WorkshopProfile {
   website: string | null
   description: string | null
   logoUrl: string | null
+  cardImageUrl: string | null
   openingHours: string | null
   isVerified: boolean
   verifiedAt: string | null
@@ -924,6 +925,7 @@ export default function WorkshopSettings() {
   
   // Logo upload state
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingCardImage, setUploadingCardImage] = useState(false)
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -1293,6 +1295,76 @@ export default function WorkshopSettings() {
     }
   }
 
+  const handleCardImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setMessage({ type: 'error', text: 'Nur JPG, PNG und WebP Dateien sind erlaubt' })
+      return
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Datei ist zu groß. Maximal 5MB erlaubt.' })
+      return
+    }
+
+    setUploadingCardImage(true)
+    setMessage(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('cardImage', file)
+
+      const response = await fetch('/api/workshop/card-image', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setMessage({ type: 'success', text: 'Card-Foto erfolgreich hochgeladen!' })
+        if (profile) {
+          setProfile({ ...profile, cardImageUrl: data.cardImageUrl })
+        }
+        await fetchProfile()
+      } else {
+        const data = await response.json()
+        setMessage({ type: 'error', text: data.error || 'Fehler beim Hochladen' })
+      }
+    } catch (error) {
+      console.error('Card image upload error:', error)
+      setMessage({ type: 'error', text: 'Fehler beim Hochladen des Card-Fotos' })
+    } finally {
+      setUploadingCardImage(false)
+      e.target.value = ''
+    }
+  }
+
+  const handleDeleteCardImage = async () => {
+    if (!confirm('Möchten Sie Ihr Card-Foto wirklich löschen?')) return
+    setMessage(null)
+
+    try {
+      const response = await fetch('/api/workshop/card-image', { method: 'DELETE' })
+
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Card-Foto erfolgreich gelöscht' })
+        if (profile) {
+          setProfile({ ...profile, cardImageUrl: null })
+        }
+        await fetchProfile()
+      } else {
+        const data = await response.json()
+        setMessage({ type: 'error', text: data.error || 'Fehler beim Löschen' })
+      }
+    } catch (error) {
+      console.error('Card image delete error:', error)
+      setMessage({ type: 'error', text: 'Fehler beim Löschen des Card-Fotos' })
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
@@ -1651,6 +1723,51 @@ export default function WorkshopSettings() {
                           className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 cursor-not-allowed text-gray-500 dark:text-gray-400" />
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card-Foto für Suchergebnisse */}
+              <div className="p-5">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-3">Card-Foto für Suchergebnisse</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                  Dieses Foto wird in den Suchergebnis-Karten angezeigt. Ideal: Ein Foto Ihrer Werkstatt oder Ihres Teams (Hochformat, mind. 300x400px).
+                </p>
+                <div className="flex items-start gap-4">
+                  {profile?.cardImageUrl ? (
+                    <div className="relative">
+                      <img 
+                        src={`${profile.cardImageUrl}?t=${Date.now()}`} 
+                        alt="Card-Foto" 
+                        className="w-32 h-48 object-cover border border-gray-200 dark:border-gray-700 rounded-lg"
+                        key={profile.cardImageUrl}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleDeleteCardImage}
+                        className="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors"
+                        title="Card-Foto löschen"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-32 h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-700">
+                      <svg className="w-8 h-8 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 mt-1">Kein Foto</span>
+                    </div>
+                  )}
+                  <div>
+                    <input type="file" id="card-image-upload" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleCardImageUpload} className="hidden" />
+                    <label htmlFor="card-image-upload" className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-600 border border-primary-300 rounded-lg cursor-pointer hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors">
+                      {uploadingCardImage ? 'Lädt...' : profile?.cardImageUrl ? 'Foto ändern' : 'Foto hochladen'}
+                    </label>
+                    <p className="text-xs text-gray-400 mt-1.5">JPG, PNG oder WebP · Max. 5MB</p>
                   </div>
                 </div>
               </div>

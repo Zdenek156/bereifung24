@@ -6,9 +6,38 @@ export const metadata = {
   description: 'Professioneller Klimaservice: Inspektion, Desinfektion, Befüllung und Wartung deiner Auto-Klimaanlage. R134a und R1234yf.'
 }
 
+const faqData = [
+  { question: 'Was kostet ein Klimaservice?', answer: 'Ein Klimaservice kostet je nach Umfang zwischen 50-200€. Ein einfacher Basis-Check liegt bei ca. 50€, eine vollständige Befüllung mit Kältemittel bei 100-200€ je nach Kältemitteltyp (R134a oder R1234yf).' },
+  { question: 'Wie oft sollte die Klimaanlage gewartet werden?', answer: 'Die Klimaanlage sollte alle 2 Jahre gewartet werden. Jährlich gehen ca. 10% des Kältemittels verloren, daher ist regelmäßige Befüllung wichtig.' },
+  { question: 'Warum riecht meine Klimaanlage unangenehm?', answer: 'Unangenehme Gerüche entstehen durch Bakterien und Pilze im Verdampfer. Eine professionelle Desinfektion beseitigt das Problem und verbessert die Luftqualität im Fahrzeug.' },
+  { question: 'Was ist der Unterschied zwischen R134a und R1234yf?', answer: 'R1234yf ist das neuere, umweltfreundlichere Kältemittel (ab Baujahr 2017 vorgeschrieben). R134a wird bei älteren Fahrzeugen verwendet. R1234yf ist teurer, dafür klimaschonender.' },
+]
+
 export default function KlimaservicePage() {
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Klimaservice', item: 'https://www.bereifung24.de/services/klimaservice' },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqData.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+      })),
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <nav className="bg-primary-600 sticky top-0 z-50 shadow-md">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -489,83 +518,55 @@ export default function KlimaservicePage() {
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-16 bg-white">
+      {/* FAQ Section */}
+      <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">
-              Häufige Fragen zum Klimaservice
-            </h2>
-
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Häufige Fragen zum Klimaservice</h2>
             <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Wie oft muss ich einen Klimaservice machen lassen?
-                </h3>
-                <p className="text-gray-700">
-                  Hersteller empfehlen alle <strong>2 Jahre</strong>. Bei intensiver Nutzung (Taxi, Außendienst) 
-                  oder Leckagen jährlich.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Warum kühlt meine Klimaanlage nicht mehr richtig?
-                </h3>
-                <p className="text-gray-700">
-                  Meist ist zu wenig Kältemittel vorhanden (natürlicher Verlust oder Leck). 
-                  Seltener: defekter Kompressor, verstopfter Filter oder defektes Expansionsventil.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Kann ich Kältemittel selbst nachfüllen?
-                </h3>
-                <p className="text-gray-700">
-                  <strong>Nein!</strong> Das ist gesetzlich verboten und gefährlich. Kältemittel steht unter hohem Druck 
-                  und erfordert spezielle Werkzeuge. Nur zertifizierte Werkstätten dürfen das System öffnen.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Ist Ozon-Desinfektion gefährlich?
-                </h3>
-                <p className="text-gray-700">
-                  Nein, wenn sie professionell durchgeführt wird. Die Werkstatt lüftet das Fahrzeug nach der Behandlung 
-                  vollständig durch. Ozon zerfällt zu normalem Sauerstoff (O₂) - es bleiben keine Rückstände.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Was kostet Kältemittel extra?
-                </h3>
-                <p className="text-gray-700">
-                  R134a: ca. <strong>15-20€ pro 100ml</strong><br />
-                  R1234yf: ca. <strong>20-25€ pro 100ml</strong><br />
-                  Die meisten Fahrzeuge haben 400-600ml Füllmenge. Die Werkstatt informiert dich vor dem Nachfüllen.
-                </p>
-              </div>
-
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  Wie lange dauert ein kompletter Klimaservice?
-                </h3>
-                <p className="text-gray-700">
-                  Basis-Check: 15-20 Minuten<br />
-                  Standard-Service: 30-45 Minuten<br />
-                  Komfort-Service: 45-60 Minuten<br />
-                  Premium-Service mit Ozon: 60-90 Minuten
-                </p>
-              </div>
+              {faqData.map((faq, i) => (
+                <div key={i} className="bg-white rounded-xl p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{faq.question}</h3>
+                  <p className="text-gray-700">{faq.answer}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Cross-Links */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Weitere Services</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Unsere Services</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/services/reifenwechsel" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Reifenwechsel</Link>
+                  <Link href="/services/raederwechsel" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Räderwechsel</Link>
+                  <Link href="/services/reifenreparatur" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Reifenreparatur</Link>
+                  <Link href="/services/achsvermessung" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Achsvermessung</Link>
+                  <Link href="/services/motorradreifen" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Motorradreifen</Link>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Klimaservice in deiner Stadt</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/werkstatt-werden/berlin" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Berlin</Link>
+                  <Link href="/werkstatt-werden/muenchen" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">München</Link>
+                  <Link href="/werkstatt-werden/hamburg" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Hamburg</Link>
+                  <Link href="/werkstatt-werden/koeln" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Köln</Link>
+                  <Link href="/werkstatt-werden/frankfurt-am-main" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Frankfurt</Link>
+                  <Link href="/werkstatt-werden/stuttgart" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Stuttgart</Link>
+                  <Link href="/werkstatt-werden" className="px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-medium transition-colors">Alle Städte →</Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="py-20 bg-gradient-to-br from-cyan-500 via-blue-600 to-blue-800 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-bold mb-6">

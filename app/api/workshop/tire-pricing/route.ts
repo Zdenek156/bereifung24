@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (rimSize < 13 || rimSize > 23) {
+    if (rimSize < 13 || rimSize > 24) {
       return NextResponse.json(
-        { error: 'rimSize must be between 13 and 23' },
+        { error: 'rimSize must be between 13 and 24' },
         { status: 400 }
       )
     }

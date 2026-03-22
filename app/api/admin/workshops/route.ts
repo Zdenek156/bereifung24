@@ -49,6 +49,23 @@ export async function GET(req: NextRequest) {
             orderTotal: true,
             status: true
           }
+        },
+        workshopServices: {
+          where: { isActive: true },
+          select: { id: true }
+        },
+        employees: {
+          select: { googleCalendarId: true, googleAccessToken: true }
+        },
+        landingPage: {
+          select: { id: true, isActive: true }
+        },
+        pricingSettings: {
+          select: { id: true }
+        },
+        suppliers: {
+          select: { id: true },
+          take: 1
         }
       }
     })
@@ -75,15 +92,29 @@ export async function GET(req: NextRequest) {
         distance = Math.round(R * c)
       }
 
+      // Profile completeness check (6 criteria)
+      const workshopCalendarConnected = !!(workshop.googleCalendarId && workshop.googleAccessToken)
+      const employeeCalendarConnected = (workshop as any).employees?.some((e: any) => e.googleCalendarId && e.googleAccessToken)
+      const hasCalendar = workshopCalendarConnected || employeeCalendarConnected
+      const hasStripe = !!workshop.stripeAccountId
+      const hasServices = (workshop as any).workshopServices?.length > 0
+      const hasPricing = !!(workshop as any).pricingSettings
+      const hasSupplier = (workshop as any).suppliers?.length > 0
+      const hasLandingPage = !!(workshop as any).landingPage?.isActive
+      const profileScore = [hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage].filter(Boolean).length
+
       return {
         id: workshop.id,
         customerNumber: workshop.customerNumber,
         companyName: workshop.companyName,
+        logoUrl: workshop.logoUrl || null,
         isVerified: workshop.isVerified,
         createdAt: workshop.createdAt,
         distance,
         offersCount,
         revenue,
+        profileScore,
+        profileDetails: { hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage },
         freelancer: workshop.freelancer ? {
           id: workshop.freelancer.id,
           name: `${workshop.freelancer.user.firstName} ${workshop.freelancer.user.lastName}`

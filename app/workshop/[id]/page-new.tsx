@@ -581,9 +581,7 @@ export default function WorkshopDetailPage() {
               className="absolute left-1/2 transform -translate-x-1/2"
             >
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">B24</span>
-                </div>
+                <img src="/logos/B24_Logo_blau_gray.png" alt="Bereifung24" className="h-8 w-auto" />
                 <span className="text-lg font-bold text-gray-900 hidden sm:inline">Bereifung24</span>
               </div>
             </button>

@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
-import jwt from 'jsonwebtoken'
-
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'fallback-secret-for-dev'
+import { issueTokenPair } from '@/lib/mobile-auth'
+import { checkLoginRateLimit, getClientIp } from '@/lib/auth-rate-limiter'
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateLimit = checkLoginRateLimit(ip)
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: `Zu viele Anmeldeversuche. Bitte in ${rateLimit.retryAfterSeconds} Sekunden erneut versuchen.` },
+        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+      )
+    }
+
     const { email, password } = await request.json()
 
     if (!email || !password) {
@@ -18,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // Find user
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase().trim() },
       include: {
         customer: true,
         workshop: true,
@@ -39,6 +48,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check email verification for customers
+    if (user.role === 'CUSTOMER' && !user.emailVerified) {
+      return NextResponse.json(
+        { error: 'Bitte bestätige zuerst deine E-Mail-Adresse.' },
+        { status: 403 }
+      )
+    }
+
     // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
@@ -49,111 +66,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Track affiliate conversion on first login
-    if (user.customer?.id) {
-      try {
-        const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
-        const cookieId = request.cookies.get('b24_cookie_id')?.value
+    // Issue access + refresh tokens
+    const tokens = await issueTokenPair(user)
 
-        console.log('[AFFILIATE LOGIN] Starting tracking check:', {
-          hasCustomer: !!user.customer?.id,
-          affiliateRef,
-          cookieId,
-          email: user.email
-        })
-
-        if (affiliateRef && cookieId) {
-          // Check if conversion already exists
-          const existingConversion = await prisma.affiliateConversion.findFirst({
-            where: {
-              cookieId: cookieId,
-              type: 'REGISTRATION',
-              customerId: user.customer.id
-            }
-          })
-
-          if (!existingConversion) {
-            // Find the influencer
-            const influencer = await prisma.influencer.findUnique({
-              where: { code: affiliateRef },
-              select: {
-                id: true,
-                isActive: true,
-                commissionPerRegistration: true
-              }
-            })
-
-            if (influencer && influencer.isActive) {
-              console.log(`[AFFILIATE LOGIN] Influencer found: ${affiliateRef}, active: ${influencer.isActive}`)
-              // Find the click record
-              const click = await prisma.affiliateClick.findFirst({
-                where: {
-                  influencerId: influencer.id,
-                  cookieId: cookieId
-                },
-                orderBy: {
-                  clickedAt: 'desc'
-                }
-              })
-
-              if (click) {
-                await prisma.affiliateConversion.create({
-                  data: {
-                    influencerId: influencer.id,
-                    clickId: click.id,
-                    cookieId: cookieId,
-                    customerId: user.customer.id,
-                    type: 'REGISTRATION',
-                    commissionAmount: influencer.commissionPerRegistration,
-                    convertedAt: new Date(),
-                    isPaid: false
-                  }
-                })
-                
-                console.log(`[AFFILIATE] ✓ First login conversion tracked: ${affiliateRef} - Customer ${user.email} - €${influencer.commissionPerRegistration / 100}`)
-              } else {
-                console.log(`[AFFILIATE] ✗ No click found for cookieId: ${cookieId}`)
-              }
-            } else {
-              console.log(`[AFFILIATE LOGIN] Influencer not found or inactive: ${affiliateRef}`)
-            }
-          } else {
-            console.log(`[AFFILIATE LOGIN] Conversion already exists for this customer`)
-          }
-        } else {
-          console.log(`[AFFILIATE LOGIN] Missing cookies - affiliateRef: ${!!affiliateRef}, cookieId: ${!!cookieId}`)
-        }
-      } catch (conversionError) {
-        console.error('[AFFILIATE] Error tracking conversion on login:', conversionError)
-      }
-    }
-
-    // Create JWT token
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-        customerId: user.customer?.id,
-        workshopId: user.workshop?.id,
-      },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    )
-
-    // Return user data and token
-    return NextResponse.json({
-      token,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        customerId: user.customer?.id,
-        workshopId: user.workshop?.id,
-      }
-    })
+    return NextResponse.json(tokens)
 
   } catch (error) {
     console.error('Mobile login error:', error)

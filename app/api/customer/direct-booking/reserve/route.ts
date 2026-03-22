@@ -40,10 +40,12 @@ export async function POST(request: NextRequest) {
       basePrice,
       balancingPrice,
       storagePrice,
+      washingPrice,
       disposalFee,
       runFlatSurcharge,
       hasBalancing,
       hasStorage,
+      hasWashing,
       hasDisposal,
       totalPrice,
       // Additional services data (Klimaservice, Achsvermessung, etc.)
@@ -222,8 +224,11 @@ export async function POST(request: NextRequest) {
     // Auto-detect stored tires: If customer books WHEEL_CHANGE at a workshop where they have stored tires
     // IMPORTANT: Must match vehicleId to prevent cross-vehicle detection
     // (e.g. Mercedes tires should NOT auto-link when booking for Skoda)
+    // Skip for TIRE_CHANGE "Nur Montage" (no tire purchase) — customer brings own tires
     let fromStorageBookingId = explicitFromStorageBookingId || null
-    if (!fromStorageBookingId && (serviceType === 'WHEEL_CHANGE' || serviceType === 'TIRE_CHANGE')) {
+    const hasTirePurchaseData = !!(tireBrand || (body.hasMixedTires && (body.tireBrandFront || body.tireBrandRear)))
+    const shouldCheckStorage = serviceType === 'WHEEL_CHANGE' || (serviceType === 'TIRE_CHANGE' && hasTirePurchaseData)
+    if (!fromStorageBookingId && shouldCheckStorage) {
       try {
         const storageBooking = await prisma.directBooking.findFirst({
           where: {
@@ -242,6 +247,23 @@ export async function POST(request: NextRequest) {
         }
       } catch (err) {
         console.error('[RESERVE] Error checking stored tires:', err)
+      }
+    }
+
+    // Look up balancingMinutes from the workshop service for duration calculation
+    let balancingMinutesPerWheel = 0
+    if (hasBalancing && serviceType === 'WHEEL_CHANGE') {
+      try {
+        const workshopService = await prisma.workshopService.findFirst({
+          where: { workshopId, serviceType },
+          select: { balancingMinutes: true }
+        })
+        if (workshopService?.balancingMinutes) {
+          balancingMinutesPerWheel = workshopService.balancingMinutes
+          console.log(`⏱️ [RESERVE] Balancing time: ${balancingMinutesPerWheel} min/wheel × ${tireQuantity || 4} wheels = ${balancingMinutesPerWheel * (tireQuantity || 4)} min`)
+        }
+      } catch (err) {
+        console.error('[RESERVE] Error looking up balancingMinutes:', err)
       }
     }
 
@@ -271,6 +293,10 @@ export async function POST(request: NextRequest) {
         time,
         durationMinutes: (() => {
           let dur = baseDuration || 60 // Use actual workshop service duration
+          // Add balancing time (per wheel × number of wheels) for WHEEL_CHANGE
+          if (hasBalancing && balancingMinutesPerWheel > 0) {
+            dur += balancingMinutesPerWheel * (tireQuantity || 4)
+          }
           if (additionalServicesData && Array.isArray(additionalServicesData)) {
             for (const svc of additionalServicesData) {
               dur += (svc.duration || 0)
@@ -281,10 +307,12 @@ export async function POST(request: NextRequest) {
         basePrice: basePrice || 0,
         balancingPrice: balancingPrice || 0,
         storagePrice: storagePrice || 0,
+        washingPrice: washingPrice || 0,
         disposalFee: disposalFee || 0,
         runFlatSurcharge: runFlatSurcharge || 0,
         hasBalancing: hasBalancing || false,
         hasStorage: hasStorage || false,
+        hasWashing: hasWashing || false,
         hasDisposal: (hasDisposal && (serviceType === 'TIRE_CHANGE' || serviceType === 'MOTORCYCLE_TIRE')) || false,
         totalPrice,
         // Save tire data in standard fields (works for standard tires AND front tire of mixed tires)

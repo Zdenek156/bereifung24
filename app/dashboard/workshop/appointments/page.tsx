@@ -23,6 +23,7 @@ interface Appointment {
   storagePrice?: number | null
   disposalFee?: number | null
   serviceType?: string
+  serviceSubtype?: string | null
   // Direct Booking tire fields
   tireBrand?: string | null
   tireModel?: string | null
@@ -67,7 +68,7 @@ interface Appointment {
 }
 
 // Service Type Translation Helper
-const getServiceTypeName = (serviceType: string): string => {
+const getServiceTypeName = (serviceType: string, serviceSubtype?: string | null): string => {
   const serviceNames: Record<string, string> = {
     'TIRE_CHANGE': 'Reifenwechsel',
     'WHEEL_CHANGE': 'Radwechsel',
@@ -81,7 +82,26 @@ const getServiceTypeName = (serviceType: string): string => {
     'BATTERY_SERVICE': 'Batterieservice',
     'OTHER_SERVICES': 'Sonstige Services'
   }
-  return serviceNames[serviceType] || serviceType
+  const subtypeNames: Record<string, string> = {
+    'foreign_object': 'Fremdkörper-Entfernung',
+    'valve_damage': 'Ventilschaden',
+    'basic': 'Basis',
+    'comfort': 'Komfort',
+    'premium': 'Premium',
+    'check': 'Prüfung',
+    'measurement_front': 'Vermessung Vorderachse',
+    'measurement_rear': 'Vermessung Hinterachse',
+    'measurement_both': 'Vermessung beide Achsen',
+    'adjustment_front': 'Einstellung Vorderachse',
+    'adjustment_rear': 'Einstellung Hinterachse',
+    'adjustment_both': 'Einstellung beide Achsen',
+    'full_service': 'Komplett-Service'
+  }
+  const base = serviceNames[serviceType] || serviceType
+  if (serviceSubtype && subtypeNames[serviceSubtype]) {
+    return `${base} - ${subtypeNames[serviceSubtype]}`
+  }
+  return base
 }
 
 export default function WorkshopAppointments() {
@@ -571,7 +591,7 @@ export default function WorkshopAppointments() {
                 try { const nd = JSON.parse(apt.notes); customerName = nd.customerName || '' } catch {}
               }
               if (apt.isDirectBooking) {
-                serviceName = getServiceTypeName(apt.serviceType || '')
+                serviceName = getServiceTypeName(apt.serviceType || '', apt.serviceSubtype)
               } else if (isManualEntry && apt.offer) {
                 serviceName = apt.offer.tireModel || ''
               } else if (apt.offer) {
@@ -753,7 +773,7 @@ export default function WorkshopAppointments() {
                       <>
                         <h4 className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-0.5">Service</h4>
                         <p className="text-sm text-gray-900 font-medium">
-                          {getServiceTypeName(apt.serviceType || '')}
+                          {getServiceTypeName(apt.serviceType || '', apt.serviceSubtype)}
                         </p>
                         {apt.vehicle && (
                           <>

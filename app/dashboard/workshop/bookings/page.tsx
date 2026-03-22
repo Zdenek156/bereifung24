@@ -10,6 +10,7 @@ import { Calendar, Car, User, Package, CheckCircle, AlertCircle } from 'lucide-r
 interface Booking {
   id: string
   serviceType: string
+  serviceSubtype: string | null
   date: string
   time: string
   status: string
@@ -25,8 +26,10 @@ interface Booking {
   totalTirePurchasePrice: number | null
   hasBalancing: boolean
   hasStorage: boolean
+  hasWashing: boolean
   hasDisposal: boolean
   tireRunFlat: boolean
+  washingPrice: number | null
   durationMinutes: number
   paymentMethod: string
   // Invoice
@@ -82,6 +85,30 @@ const serviceTypeLabels: Record<string, string> = {
   MOTORCYCLE_TIRE: 'Motorradreifen',
   ALIGNMENT_BOTH: 'Achsvermessung',
   CLIMATE_SERVICE: 'Klimaservice'
+}
+
+const subtypeLabels: Record<string, string> = {
+  'foreign_object': 'Fremdkörper-Entfernung',
+  'valve_damage': 'Ventilschaden',
+  'basic': 'Basis',
+  'comfort': 'Komfort',
+  'premium': 'Premium',
+  'check': 'Prüfung',
+  'measurement_front': 'Vermessung Vorderachse',
+  'measurement_rear': 'Vermessung Hinterachse',
+  'measurement_both': 'Vermessung beide Achsen',
+  'adjustment_front': 'Einstellung Vorderachse',
+  'adjustment_rear': 'Einstellung Hinterachse',
+  'adjustment_both': 'Einstellung beide Achsen',
+  'full_service': 'Komplett-Service'
+}
+
+function getServiceDisplayName(serviceType: string, serviceSubtype: string | null | undefined): string {
+  const base = serviceTypeLabels[serviceType] || serviceType
+  if (serviceSubtype && subtypeLabels[serviceSubtype]) {
+    return `${base} - ${subtypeLabels[serviceSubtype]}`
+  }
+  return base
 }
 
 const statusLabels: Record<string, string> = {
@@ -419,7 +446,7 @@ export default function WorkshopBookingsPage() {
                 <div className="flex items-center justify-between gap-3 mb-1.5">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                      {serviceTypeLabels[booking.serviceType] || booking.serviceType}
+                      {getServiceDisplayName(booking.serviceType, booking.serviceSubtype)}
                     </span>
                     <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono shrink-0">#{booking.id.slice(-7).toUpperCase()}</span>
                   </div>
@@ -653,7 +680,13 @@ export default function WorkshopBookingsPage() {
                             <span className="font-medium">{booking.disposalFee.toFixed(2)} €</span>
                           </div>
                         )}
-                        {booking.tireRunFlat && booking.runFlatSurcharge && (
+                        {booking.hasWashing && booking.washingPrice && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Räder waschen:</span>
+                            <span className="font-medium">{booking.washingPrice.toFixed(2)} €</span>
+                          </div>
+                        )}
+                        {booking.runFlatSurcharge && Number(booking.runFlatSurcharge) > 0 && (
                           <div className="flex justify-between">
                             <span className="text-gray-600">Runflat-Zuschlag:</span>
                             <span className="font-medium">{booking.runFlatSurcharge.toFixed(2)} €</span>

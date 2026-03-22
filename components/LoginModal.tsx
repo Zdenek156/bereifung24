@@ -52,6 +52,8 @@ export default function LoginModal({ isOpen, onClose, returnUrl }: LoginModalPro
             router.push('/dashboard/workshop')
           } else if (role === 'EMPLOYEE' || role === 'B24_EMPLOYEE') {
             router.push('/mitarbeiter')
+          } else if (role === 'FREELANCER') {
+            router.push('/freelancer')
           } else {
             // CUSTOMER stays on current page - just refresh to update UI
             router.refresh()

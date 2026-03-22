@@ -87,11 +87,14 @@ export async function GET(
       basePrice: Number(directBooking.basePrice),
       balancingPrice: directBooking.balancingPrice ? Number(directBooking.balancingPrice) : null,
       storagePrice: directBooking.storagePrice ? Number(directBooking.storagePrice) : null,
+      washingPrice: directBooking.washingPrice ? Number(directBooking.washingPrice) : null,
       disposalFee: directBooking.disposalFee ? Number(directBooking.disposalFee) : null,
       runFlatSurcharge: directBooking.runFlatSurcharge ? Number(directBooking.runFlatSurcharge) : null,
       tirePurchasePrice: directBooking.tirePurchasePrice ? Number(directBooking.tirePurchasePrice) : null,
       totalTirePurchasePrice: directBooking.totalTirePurchasePrice ? Number(directBooking.totalTirePurchasePrice) : null,
-      totalPrice: Number(directBooking.totalPrice)
+      totalPrice: Number(directBooking.totalPrice),
+      discountAmount: directBooking.discountAmount ? Number(directBooking.discountAmount) : null,
+      originalPrice: directBooking.originalPrice ? Number(directBooking.originalPrice) : null,
     }
 
     return NextResponse.json(bookingData)

@@ -114,7 +114,12 @@ export default function CustomerRegisterPage() {
         }
       }
 
-      // Success - zeige Hinweis
+      // Success - returnUrl in localStorage speichern für nach Email-Verifizierung
+      if (returnUrl) {
+        localStorage.setItem('registrationReturnUrl', returnUrl)
+      }
+
+      // Zeige Hinweis
       alert('Registrierung erfolgreich! Bitte überprüfe deine E-Mails und bestätige deine E-Mail-Adresse, bevor du dich anmeldest.')
       router.push('/login' + (returnUrl ? '?returnUrl=' + encodeURIComponent(returnUrl) : ''))
     } catch (err) {

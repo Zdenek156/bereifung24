@@ -83,6 +83,11 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
             packageType: 'with_storage', 
             label: 'Mit Einlagerung', 
             info: 'Radwechsel inkl. fachgerechte Einlagerung Ihrer Reifen'
+          },
+          { 
+            packageType: 'with_washing', 
+            label: 'Räder waschen', 
+            info: 'Ihre alten Räder werden professionell gereinigt, bevor sie mitgenommen oder eingelagert werden'
           }
         ]
       }

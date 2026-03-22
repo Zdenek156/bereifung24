@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import SessionWrapper from './components/SessionWrapper'
 import CookieBanner from '@/components/CookieBanner'
+import { Suspense } from 'react'
 import Analytics from './components/Analytics'
 import StructuredData from './components/StructuredData'
 
@@ -69,7 +70,9 @@ export default function RootLayout({
       <body className={`${plusJakartaSans.className} notranslate`}>
         <StructuredData />
         <SessionWrapper>
-          <Analytics />
+          <Suspense fallback={null}>
+            <Analytics />
+          </Suspense>
           {children}
           <CookieBanner />
         </SessionWrapper>

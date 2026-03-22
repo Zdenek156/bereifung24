@@ -1,0 +1,99 @@
+name: bereifung24_app
+description: Bereifung24 – Reifenservice buchen
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # Networking
+  dio: ^5.4.0
+
+  # Authentication
+  google_sign_in: ^6.2.1
+  sign_in_with_apple: ^6.1.0
+
+  # Secure Storage
+  flutter_secure_storage: ^9.0.0
+
+  # Payment
+  flutter_stripe: ^10.1.1
+
+  # Push Notifications
+  firebase_core: ^2.27.0
+  firebase_messaging: ^14.7.15
+  flutter_local_notifications: ^17.2.4
+
+  # Location
+  geolocator: ^11.0.0
+  geocoding: ^3.0.0
+
+  # Navigation
+  go_router: ^13.2.0
+
+  # UI
+  cached_network_image: ^3.3.1
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.9
+  lucide_icons: ^0.257.0
+
+  # Utilities
+  intl: ^0.20.2
+  url_launcher: ^6.2.4
+  share_plus: ^7.2.2
+  package_info_plus: ^5.0.1
+  connectivity_plus: ^6.0.1
+
+  # Biometric Auth
+  local_auth: ^2.1.8
+
+  # Analytics & Crash Reporting
+  firebase_analytics: ^10.8.7
+  firebase_crashlytics: ^3.4.15
+  sentry_flutter: ^7.18.0
+
+  # Deep Linking
+  app_links: ^6.0.1
+
+  # Camera & OCR
+  camera: ^0.11.0+2
+  google_mlkit_text_recognition: ^0.14.0
+
+  # Caching
+  hive_flutter: ^1.1.0
+
+  # Preferences
+  shared_preferences: ^2.2.0
+
+  cupertino_icons: ^1.0.6
+  flutter_widget_from_html_core: ^0.17.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  riverpod_generator: ^2.4.0
+  build_runner: ^2.4.8
+  json_serializable: ^6.7.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/images/payment/
+    - assets/images/services/
+    - assets/fonts/
+    - assets/splash/

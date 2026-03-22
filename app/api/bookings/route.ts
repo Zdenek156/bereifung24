@@ -2,24 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/getAuthUser'
 import { sendEmail, bookingConfirmationCustomerEmailTemplate, bookingConfirmationWorkshopEmailTemplate, createICSFile } from '@/lib/email'
 import { getBusySlots, generateAvailableSlots, createCalendarEvent, updateCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 
 // GET /api/bookings - Get all bookings for current customer
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
       )
     }
+    // Compatibility alias
+    const session = { user: authUser }
 
     // Get customer ID
     const customer = await prisma.customer.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: authUser.id }
     })
 
     if (!customer) {
@@ -39,6 +42,7 @@ export async function GET(req: NextRequest) {
           include: {
             user: {
               select: {
+                email: true,
                 firstName: true,
                 lastName: true,
                 phone: true,
@@ -117,6 +121,7 @@ export async function GET(req: NextRequest) {
             companyName: true,
             user: {
               select: {
+                email: true,
                 firstName: true,
                 lastName: true,
                 phone: true,
@@ -157,6 +162,7 @@ export async function GET(req: NextRequest) {
         appointmentTime: berlinTime,
         estimatedDuration: booking.estimatedDuration,
         status: booking.status,
+        serviceType: 'TIRE_CHANGE',
         // Payment information
         paymentStatus: booking.paymentStatus,
         paymentMethod: booking.paymentMethod,
@@ -167,7 +173,9 @@ export async function GET(req: NextRequest) {
           zipCode: booking.workshop.user.zipCode || '',
           city: booking.workshop.user.city || '',
           phone: booking.workshop.user.phone || '',
+          email: booking.workshop.user.email || '',
         },
+        vehicle: booking.tireRequest.vehicle || null,
         tireRequest: {
           season: booking.tireRequest.season,
           width: booking.tireRequest.width,
@@ -218,18 +226,44 @@ export async function GET(req: NextRequest) {
         appointmentDate: appointmentDate.toISOString(),
         appointmentTime: berlinTime,
         estimatedDuration: booking.duration || 60,
+        durationMinutes: booking.durationMinutes,
         status: booking.status,
+        serviceType: booking.serviceType,
+        serviceSubtype: booking.serviceSubtype || null,
         // Payment information
         paymentStatus: booking.paymentStatus,
         paymentMethod: booking.paymentMethod,
         paidAt: booking.paidAt ? booking.paidAt.toISOString() : null,
+        // Additional services
+        hasBalancing: booking.hasBalancing,
+        hasStorage: booking.hasStorage,
+        hasWashing: booking.hasWashing,
+        hasDisposal: booking.hasDisposal,
+        // Tire details
+        tireBrand: booking.tireBrand || null,
+        tireModel: booking.tireModel || null,
+        tireSize: booking.tireSize || tireDimensions || null,
+        tireQuantity: booking.tireQuantity || booking.quantity || 4,
+        // Pricing
+        basePrice: Number(booking.basePrice),
+        totalPrice: Number(booking.totalPrice),
+        balancingPrice: booking.balancingPrice ? Number(booking.balancingPrice) : null,
+        storagePrice: booking.storagePrice ? Number(booking.storagePrice) : null,
+        washingPrice: booking.washingPrice ? Number(booking.washingPrice) : null,
+        disposalFee: booking.disposalFee ? Number(booking.disposalFee) : null,
+        discountAmount: booking.discountAmount ? Number(booking.discountAmount) : null,
+        originalPrice: booking.originalPrice ? Number(booking.originalPrice) : null,
+        couponCode: booking.couponCode || null,
+        notes: booking.notes || null,
         workshop: {
           companyName: booking.workshop.companyName,
           street: booking.workshop.user.street || '',
           zipCode: booking.workshop.user.zipCode || '',
           city: booking.workshop.user.city || '',
           phone: booking.workshop.user.phone || '',
+          email: booking.workshop.user.email || '',
         },
+        vehicle: booking.vehicle || null,
         tireRequest: {
           season: seasonMap[booking.season || 's'] || 'Sommerreifen',
           width: width,
@@ -264,19 +298,20 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     console.log('=== BOOKING POST REQUEST START ===')
-    const session = await getServerSession(authOptions)
-    console.log('Session:', session ? `User ID: ${session.user?.id}` : 'No session')
+    const authUser = await getAuthUser(req)
+    console.log('Auth user:', authUser ? `User ID: ${authUser.id}` : 'No auth')
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       console.log('ERROR: Not authenticated')
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
       )
     }
+    const session = { user: authUser }
 
     const customer = await prisma.customer.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: authUser.id }
     })
     console.log('Customer:', customer ? `ID: ${customer.id}` : 'Not found')
 

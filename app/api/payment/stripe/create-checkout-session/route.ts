@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { getAuthUser } from '@/lib/getAuthUser'
 
 // Only import Stripe if key is available
 let stripe: any = null
@@ -13,10 +14,11 @@ if (process.env.STRIPE_SECRET_KEY) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
+    const authUser = await getAuthUser(request)
+    if (!authUser) {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 })
     }
+    const session = { user: authUser }
 
     if (!stripe) {
       return NextResponse.json(

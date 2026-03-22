@@ -117,7 +117,26 @@ function FreelancerSidebar() {
           </div>
         )}
         <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
+          onClick={async () => {
+            try {
+              const cookieConsent = localStorage.getItem('cookieConsent')
+              const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+              const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
+              await signOut({ redirect: false })
+              await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+              localStorage.clear()
+              sessionStorage.clear()
+              if (cookieConsent) localStorage.setItem('cookieConsent', cookieConsent)
+              if (bereifung24Consent) localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+              if (bereifung24ConsentDate) localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
+              window.location.href = '/'
+            } catch (error) {
+              console.error('[LOGOUT] Error:', error)
+              localStorage.clear()
+              sessionStorage.clear()
+              window.location.href = '/'
+            }
+          }}
           className={`w-full flex items-center ${collapsed ? 'justify-center' : ''} px-3 py-2 text-sm text-red-400 hover:bg-gray-800 rounded-lg transition-colors`}
           title="Abmelden"
         >

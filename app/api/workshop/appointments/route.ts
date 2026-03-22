@@ -103,6 +103,7 @@ export async function GET() {
       balancingPrice: db.balancingPrice ? Number(db.balancingPrice) : null,
       storagePrice: db.storagePrice ? Number(db.storagePrice) : null,
       serviceType: db.serviceType,
+      serviceSubtype: db.serviceSubtype || null,
       customer: {
         user: {
           firstName: db.customer.user.firstName,

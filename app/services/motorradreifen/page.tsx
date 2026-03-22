@@ -6,9 +6,38 @@ export const metadata = {
   description: 'Professioneller Motorradreifen-Service. Vorderrad, Hinterrad oder beide Räder wechseln lassen bei Spezialisten.'
 }
 
+const faqData = [
+  { question: 'Was kostet ein Motorradreifen-Wechsel?', answer: 'Ein Motorradreifen-Wechsel kostet zwischen 20-50€ pro Rad, je nach Werkstatt. Für beide Räder zusammen rechnen Sie mit 40-80€ inklusive Auswuchten.' },
+  { question: 'Wie oft muss ich Motorradreifen wechseln?', answer: 'Motorradreifen halten durchschnittlich 5.000-15.000 km, je nach Fahrweise und Reifentyp. Sportreifen verschleißen schneller als Tourenreifen. Spätestens nach 5-6 Jahren sollten Reifen getauscht werden.' },
+  { question: 'Kann ich Motorradreifen selbst montieren?', answer: 'Die Montage von Motorradreifen erfordert Spezialwerkzeug und Erfahrung. Falsch montierte Reifen können lebensgefährlich sein. Wir empfehlen immer den Wechsel in einer Fachwerkstatt.' },
+  { question: 'Müssen Motorradreifen eingefahren werden?', answer: 'Ja! Neue Motorradreifen haben eine glatte Oberfläche und müssen ca. 100-200 km eingefahren werden. In dieser Zeit vorsichtig fahren und extreme Schräglagen vermeiden.' },
+]
+
 export default function MotorradreifenPage() {
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Motorradreifen', item: 'https://www.bereifung24.de/services/motorradreifen' },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqData.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+      })),
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <nav className="bg-primary-600 sticky top-0 z-50 shadow-md">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -367,6 +396,56 @@ export default function MotorradreifenPage() {
                   Bei jedem Reifenwechsel sollten neue Ventile montiert werden. Alte Gummiventile können undicht werden. 
                   Kosten sind gering, Sicherheit geht vor.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Häufige Fragen zu Motorradreifen</h2>
+            <div className="space-y-4">
+              {faqData.map((faq, i) => (
+                <div key={i} className="bg-white rounded-xl p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{faq.question}</h3>
+                  <p className="text-gray-700">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Cross-Links */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Weitere Services</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Unsere Services</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/services/reifenwechsel" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Reifenwechsel</Link>
+                  <Link href="/services/raederwechsel" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Räderwechsel</Link>
+                  <Link href="/services/reifenreparatur" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Reifenreparatur</Link>
+                  <Link href="/services/achsvermessung" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Achsvermessung</Link>
+                  <Link href="/services/klimaservice" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Klimaservice</Link>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Werkstatt in deiner Stadt</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/werkstatt-werden/berlin" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Berlin</Link>
+                  <Link href="/werkstatt-werden/muenchen" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">München</Link>
+                  <Link href="/werkstatt-werden/hamburg" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Hamburg</Link>
+                  <Link href="/werkstatt-werden/koeln" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Köln</Link>
+                  <Link href="/werkstatt-werden/frankfurt-am-main" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Frankfurt</Link>
+                  <Link href="/werkstatt-werden/stuttgart" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Stuttgart</Link>
+                  <Link href="/werkstatt-werden" className="px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-medium transition-colors">Alle Städte →</Link>
+                </div>
               </div>
             </div>
           </div>

@@ -213,10 +213,12 @@ export default function PaymentPage() {
           basePrice: bookingData.pricing.servicePrice,
           balancingPrice: bookingData.additionalServices?.find((s: any) => s.type === 'BALANCING')?.price || 0,
           storagePrice: bookingData.additionalServices?.find((s: any) => s.type === 'STORAGE')?.price || 0,
+          washingPrice: bookingData.additionalServices?.find((s: any) => s.type === 'WASHING')?.price || 0,
           disposalFee: bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0,
           runFlatSurcharge: bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0,
           hasBalancing: bookingData.additionalServices?.some((s: any) => s.type === 'BALANCING') || false,
           hasStorage: bookingData.additionalServices?.some((s: any) => s.type === 'STORAGE') || false,
+          hasWashing: bookingData.additionalServices?.some((s: any) => s.type === 'WASHING') || false,
           hasDisposal: (bookingData.service.type === 'TIRE_CHANGE' || bookingData.service.type === 'MOTORCYCLE_TIRE') ? (bookingData.tireBooking?.hasDisposal || false) : false,
           totalPrice: bookingData.pricing.totalPrice,
           // Storage: explicit link from TireStorageCard or bookingData
@@ -224,7 +226,7 @@ export default function PaymentPage() {
           // Base service duration from workshop (actual package duration, NOT hardcoded 60)
           baseDuration: bookingData.service?.baseDuration || 60,
           // Additional services data (Klimaservice, Achsvermessung, etc.) - excluding BALANCING/STORAGE which have dedicated fields
-          additionalServicesData: bookingData.additionalServices?.filter((s: any) => s.type !== 'BALANCING' && s.type !== 'STORAGE').map((s: any) => ({
+          additionalServicesData: bookingData.additionalServices?.filter((s: any) => s.type !== 'BALANCING' && s.type !== 'STORAGE' && s.type !== 'WASHING').map((s: any) => ({
             name: s.serviceName || s.name,
             packageName: s.packageName || '',
             price: s.price || 0,
@@ -403,7 +405,17 @@ export default function PaymentPage() {
               tire3PMSFRear: bookingData.tireBooking.selectedRearTire.tire?.winter || false,
             }),
             paymentMethodType: method, // 'card', 'sofort', 'amazon_pay', 'klarna', or 'paypal'
-            reservationId: reserveData.reservationId
+            reservationId: reserveData.reservationId,
+            // Coupon data (if applied)
+            ...(appliedCoupon && {
+              couponId: appliedCoupon.id,
+              couponCode: appliedCoupon.code,
+              discountAmount: discount,
+              originalPrice: subtotal,
+              costBearer: appliedCoupon.costBearer || 'PLATFORM',
+            }),
+            // Override totalPrice if coupon applied
+            ...(appliedCoupon && { totalPrice: totalPrice }),
           })
         })
 
@@ -454,30 +466,26 @@ export default function PaymentPage() {
     setCouponError('')
 
     try {
-      // TODO: Replace with real API call when coupon system is implemented
-      // const response = await fetch('/api/coupons/validate', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ code: couponCode, amount: bookingData.pricing.totalPrice })
-      // })
-      // const data = await response.json()
-      
-      // Mock validation for now (remove this when API is ready)
-      await new Promise(resolve => setTimeout(resolve, 800)) // Simulate API delay
-      
-      // Mock: Accept codes that start with "SAVE"
-      if (couponCode.toUpperCase().startsWith('SAVE')) {
-        const mockDiscount = couponCode.toUpperCase() === 'SAVE10' ? 10 : 
-                           couponCode.toUpperCase() === 'SAVE20' ? 20 : 5
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode, amount: bookingData.pricing.totalPrice })
+      })
+      const data = await response.json()
+
+      if (data.valid && data.coupon) {
         setAppliedCoupon({
-          code: couponCode.toUpperCase(),
-          type: 'percentage',
-          value: mockDiscount,
-          description: `${mockDiscount}% Rabatt`
+          id: data.coupon.id,
+          code: data.coupon.code,
+          type: data.coupon.type,
+          value: data.coupon.value,
+          discountAmount: data.coupon.discountAmount,
+          description: data.coupon.description,
+          costBearer: data.coupon.costBearer || 'PLATFORM'
         })
         setCouponError('')
       } else {
-        setCouponError('Ungültiger Gutscheincode')
+        setCouponError(data.error || 'Ungültiger Gutscheincode')
         setAppliedCoupon(null)
       }
     } catch (error) {
@@ -535,9 +543,11 @@ export default function PaymentPage() {
   // Calculate total price with coupon discount
   const subtotal = bookingData.pricing.totalPrice
   const discount = appliedCoupon 
-    ? appliedCoupon.type === 'percentage' 
-      ? Math.round(subtotal * (appliedCoupon.value / 100))
-      : appliedCoupon.value
+    ? appliedCoupon.discountAmount || (
+        appliedCoupon.type === 'percentage' 
+          ? Math.round(subtotal * (appliedCoupon.value / 100))
+          : appliedCoupon.value
+      )
     : 0
   const totalPrice = subtotal - discount
 
@@ -626,7 +636,7 @@ export default function PaymentPage() {
                       <p className="text-sm font-medium text-primary-800 mb-2">Zusatzleistungen:</p>
                       {bookingData.additionalServices.map((service: any, index: number) => (
                         <div key={index} className="flex items-center justify-between text-sm text-primary-700 mb-1">
-                          <span>+ {service.serviceName || service.name || service.packageName}{service.packageName && service.packageName !== (service.serviceName || service.name) ? ` (${service.packageName})` : ''}</span>
+                          <span>{((service.serviceName || service.name || service.packageName) || '').replace(/^Mit /, '')}{service.packageName && service.packageName !== (service.serviceName || service.name) ? ` (${service.packageName})` : ''}</span>
                           <span className="font-medium">{formatPrice(service.price)}</span>
                         </div>
                       ))}
@@ -844,7 +854,7 @@ export default function PaymentPage() {
                   {bookingData.additionalServices && bookingData.additionalServices.length > 0 && (
                     bookingData.additionalServices.map((service: any, index: number) => (
                       <div key={index} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">+ {(() => { const sn = service.serviceName || service.name; const pn = service.packageName; return pn && pn !== sn ? `${sn} (${pn})` : sn; })()}</span>
+                        <span className="text-gray-600">{(() => { const sn = (service.serviceName || service.name || '').replace(/^Mit /, ''); const pn = service.packageName; return pn && pn !== sn ? `${sn} (${pn})` : sn; })()}</span>
                         <span className="font-medium">{formatPrice(service.price)}</span>
                       </div>
                     ))

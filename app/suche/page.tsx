@@ -828,9 +828,9 @@ export default function SuchePage() {
                       <div className="flex flex-col md:flex-row">
                         {/* Workshop Image */}
                         <div className="md:w-64 h-48 md:h-auto bg-gray-200 flex-shrink-0">
-                          {workshop.logoUrl ? (
+                          {(workshop.cardImageUrl || workshop.logoUrl) ? (
                             <img
-                              src={workshop.logoUrl}
+                              src={workshop.cardImageUrl || workshop.logoUrl}
                               alt={`Werkstatt ${workshop.name} – Reifenservice in der Nähe`}
                               className="w-full h-full object-cover"
                             />

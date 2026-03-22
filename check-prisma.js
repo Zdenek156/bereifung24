@@ -1,0 +1,7 @@
+const { PrismaClient } = require('@prisma/client')
+const p = new PrismaClient()
+const keys = Object.keys(p).filter(k => k.toLowerCase().includes('tire') || k.toLowerCase().includes('pricing'))
+console.log('Tire-related keys:', keys)
+const allKeys = Object.keys(p).filter(k => !k.startsWith('_') && !k.startsWith('$'))
+console.log('All model keys:', allKeys)
+process.exit(0)

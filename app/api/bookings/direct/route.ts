@@ -435,10 +435,11 @@ export async function POST(req: NextRequest) {
       }
       
       // Add additional services (standard: balancing, storage, disposal)
-      if (completeBooking.hasBalancing || completeBooking.hasStorage || completeBooking.hasDisposal || completeBooking.runFlatSurcharge) {
+      if (completeBooking.hasBalancing || completeBooking.hasStorage || completeBooking.hasWashing || completeBooking.hasDisposal || completeBooking.runFlatSurcharge) {
         calendarDescription += `\n\nZusatzleistungen:`
         if (completeBooking.hasBalancing) calendarDescription += `\n✅ Auswuchtung (+${Number(completeBooking.balancingPrice || 0).toFixed(2)}€)`
         if (completeBooking.hasStorage) calendarDescription += `\n✅ Einlagerung (+${Number(completeBooking.storagePrice || 0).toFixed(2)}€)`
+        if (completeBooking.hasWashing) calendarDescription += `\n✅ Räder waschen (+${Number(completeBooking.washingPrice || 0).toFixed(2)}€)`
         if (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) calendarDescription += `\n✅ Reifenentsorgung (+${Number(completeBooking.disposalFee || 0).toFixed(2)}€)`
         if (completeBooking.runFlatSurcharge && Number(completeBooking.runFlatSurcharge) > 0) calendarDescription += `\n✅ RunFlat-Aufschlag (+${Number(completeBooking.runFlatSurcharge).toFixed(2)}€)`
       }
@@ -511,8 +512,9 @@ export async function POST(req: NextRequest) {
     // === AUTO-ORDER: Try to order tires automatically if workshop has autoOrder enabled ===
     let autoOrderResult: { success: boolean; orderNumber?: string; error?: string } | null = null
     const isTireServiceType = ['TIRE_CHANGE', 'TIRE_MOUNT', 'MOTORCYCLE_TIRE'].includes(serviceType)
+    const hasTirePurchase = !!(completeBooking.tireBrand || (completeBooking.tireData as any)?.isMixedTires)
     
-    if (isTireServiceType) {
+    if (isTireServiceType && hasTirePurchase) {
       console.log('[AUTO-ORDER] Checking auto-order for tire service booking...')
       try {
         autoOrderResult = await autoOrderTires(completeBooking.id)
@@ -736,6 +738,8 @@ export async function POST(req: NextRequest) {
         tireData: completeBooking.tireData as any, // Mixed tires data
         hasBalancing: completeBooking.hasBalancing || undefined,
         hasStorage: completeBooking.hasStorage || undefined,
+        hasWashing: completeBooking.hasWashing || undefined,
+        washingPrice: completeBooking.washingPrice ? Number(completeBooking.washingPrice) : undefined,
         hasDisposal: (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) || undefined,
         additionalServicesData: (completeBooking as any).additionalServicesData || undefined
       })
@@ -805,6 +809,8 @@ export async function POST(req: NextRequest) {
         workshopPayout: completeBooking.workshopPayout ? Number(completeBooking.workshopPayout) : totalPrice,
         hasBalancing: completeBooking.hasBalancing || undefined,
         hasStorage: completeBooking.hasStorage || undefined,
+        hasWashing: completeBooking.hasWashing || undefined,
+        washingPrice: completeBooking.washingPrice ? Number(completeBooking.washingPrice) : undefined,
         hasDisposal: (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) || undefined,
         tireBrand: completeBooking.tireBrand || undefined,
         tireModel: completeBooking.tireModel || undefined,
@@ -874,7 +880,13 @@ export async function POST(req: NextRequest) {
         storagePrice: completeBooking.storagePrice,
         disposalFee: completeBooking.disposalFee,
         runFlatSurcharge: completeBooking.runFlatSurcharge,
+        washingPrice: completeBooking.washingPrice ? Number(completeBooking.washingPrice) : null,
         totalPrice: completeBooking.totalPrice,
+        // Boolean flags for add-on services
+        hasBalancing: completeBooking.hasBalancing || false,
+        hasStorage: completeBooking.hasStorage || false,
+        hasWashing: completeBooking.hasWashing || false,
+        hasDisposal: completeBooking.hasDisposal || false,
         // Additional services data
         additionalServicesData: (completeBooking as any).additionalServicesData || null,
         serviceSubtype: (completeBooking as any).serviceSubtype || null,

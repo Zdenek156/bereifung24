@@ -31,8 +31,13 @@ async function getHomePageData() {
       prisma.booking.count()
     ])
 
-    // Shuffle and limit
-    const shuffled = [...allReviews].sort(() => Math.random() - 0.5)
+    // Deterministic daily shuffle using date as seed (avoids Math.random deopt)
+    const daySeed = new Date().toISOString().slice(0, 10).split('-').reduce((a, b) => a + parseInt(b), 0)
+    const shuffled = [...allReviews].sort((a, b) => {
+      const hashA = (a.id.charCodeAt(0) * 31 + daySeed) % 1000
+      const hashB = (b.id.charCodeAt(0) * 31 + daySeed) % 1000
+      return hashA - hashB
+    })
     const reviews = shuffled.slice(0, 15).map(review => {
       const firstName = review.customer.user.firstName?.split(' ')[0] || 'Kunde'
       return {

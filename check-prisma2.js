@@ -1,0 +1,5 @@
+const { PrismaClient } = require('@prisma/client')
+const p = new PrismaClient()
+console.log('Has tireChangePricingBySize:', typeof p.tireChangePricingBySize)
+console.log('Has tirePricingBySize:', typeof p.tirePricingBySize)
+process.exit(0)

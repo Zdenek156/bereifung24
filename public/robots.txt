@@ -1,22 +1,13 @@
-# Bereifung24.de Robots.txt
-# Allow all search engines to crawl the entire site
+# https://www.bereifung24.de/robots.txt
 
 User-agent: *
 Allow: /
-
-# Disallow admin areas
 Disallow: /admin/
 Disallow: /api/admin/
-
-# Disallow employee areas
 Disallow: /employee/
-
-# Disallow private API endpoints
 Disallow: /api/auth/
 
-# Sitemaps
-Sitemap: https://bereifung24.de/sitemap.xml
-Sitemap: https://bereifung24.de/sitemap-blog.xml
-
-# Crawl-delay for polite bots
-Crawl-delay: 1
+Sitemap: https://www.bereifung24.de/sitemap.xml
+Sitemap: https://www.bereifung24.de/sitemap-blog.xml
+Sitemap: https://www.bereifung24.de/sitemap-werkstatt.xml
+Sitemap: https://www.bereifung24.de/sitemap-reifen.xml

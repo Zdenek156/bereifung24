@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/getAuthUser'
 import { z } from 'zod'
 
 // Validation Schema
@@ -21,17 +22,19 @@ const profileUpdateSchema = z.object({
 // GET /api/user/profile - Get current user profile
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
       )
     }
+    // Compatibility alias
+    const session = { user: authUser }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: authUser.id },
       select: {
         id: true,
         email: true,
@@ -72,14 +75,15 @@ export async function GET(req: NextRequest) {
 // PUT /api/user/profile - Update user profile
 export async function PUT(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
       )
     }
+    const session = { user: authUser }
 
     const body = await req.json()
     
@@ -158,14 +162,15 @@ export async function PUT(req: NextRequest) {
 // DELETE /api/user/profile - Delete own account (self-service)
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id || session.user.role !== 'CUSTOMER') {
+    if (!authUser?.id || authUser.role !== 'CUSTOMER') {
       return NextResponse.json(
         { error: 'Nicht authentifiziert oder keine Berechtigung' },
         { status: 401 }
       )
     }
+    const session = { user: authUser }
 
     // Hole den Customer
     const customer = await prisma.customer.findUnique({

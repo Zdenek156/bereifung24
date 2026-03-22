@@ -1,0 +1,124 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
+import '../config/app_config.dart';
+import '../network/api_client.dart';
+
+class StripeService {
+  static final StripeService _instance = StripeService._internal();
+  factory StripeService() => _instance;
+  StripeService._internal();
+
+  static bool _initialized = false;
+
+  /// Initialize Stripe SDK — fetches publishable key from server
+  static Future<void> init() async {
+    if (_initialized) return;
+    try {
+      // Use full URL to avoid any baseUrl path resolution issues
+      final url = '${AppConfig.apiBaseUrl}/config/stripe';
+      debugPrint('Stripe init: fetching key from $url');
+      final dio = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 10),
+        receiveTimeout: const Duration(seconds: 10),
+        headers: {'Accept': 'application/json'},
+      ));
+      final response = await dio.get(url);
+      debugPrint('Stripe init: response status=${response.statusCode}, data=${response.data}');
+      
+      final data = response.data;
+      String? key;
+      if (data is Map) {
+        key = data['publishableKey'] as String?;
+      }
+      
+      if (key != null && key.isNotEmpty && key.startsWith('pk_')) {
+        Stripe.publishableKey = key;
+        debugPrint('Stripe init: key set, calling applySettings...');
+        await Stripe.instance.applySettings();
+        _initialized = true;
+        debugPrint('Stripe initialized successfully');
+      } else {
+        debugPrint('Stripe init: invalid key received: $key');
+      }
+    } catch (e, stack) {
+      debugPrint('Stripe init failed: $e');
+      debugPrint('Stack: $stack');
+    }
+  }
+
+  static bool get isInitialized => _initialized;
+
+  /// Create a payment for a booking and present the payment sheet.
+  /// Returns the paymentIntentId on success, null if cancelled.
+  Future<String?> processPayment({
+    required String bookingId,
+    required double amount,
+    String currency = 'eur',
+    String? paymentMethod,
+  }) async {
+    if (!_initialized) {
+      // Try to init one more time
+      await init();
+      if (!_initialized) {
+        throw Exception('Stripe ist nicht konfiguriert. Bitte versuche es später erneut.');
+      }
+    }
+    try {
+      // 1. Create payment intent on the server
+      final response = await ApiClient().createPaymentIntent({
+        'bookingId': bookingId,
+        'amount': amount,
+        'currency': currency,
+      });
+
+      final data = response.data;
+      final clientSecret = data['clientSecret'] as String?;
+      final paymentIntentId = data['paymentIntentId'] as String?;
+      if (clientSecret == null) throw Exception('No client secret');
+
+      // Build payment method order based on user selection
+      List<String>? methodOrder;
+      if (paymentMethod != null) {
+        const methodMap = {
+          'card': 'card',
+          'paypal': 'paypal',
+          'klarna': 'klarna',
+          'google_pay': 'googlePay',
+        };
+        final selected = methodMap[paymentMethod];
+        if (selected != null) {
+          methodOrder = [selected];
+        }
+      }
+
+      // 2. Initialize payment sheet
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'Bereifung24',
+          style: ThemeMode.system,
+          paymentMethodOrder: methodOrder,
+          appearance: const PaymentSheetAppearance(
+            colors: PaymentSheetAppearanceColors(
+              primary: Color(0xFF0284C7),
+            ),
+            shapes: PaymentSheetShape(
+              borderRadius: 12,
+            ),
+          ),
+        ),
+      );
+
+      // 3. Present payment sheet
+      await Stripe.instance.presentPaymentSheet();
+
+      return paymentIntentId ?? 'stripe_completed'; // payment succeeded
+    } on StripeException catch (e) {
+      if (e.error.code == FailureCode.Canceled) {
+        return null; // user cancelled
+      }
+      rethrow;
+    }
+  }
+}

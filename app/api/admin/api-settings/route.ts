@@ -93,6 +93,7 @@ function getDescriptionForKey(key: string): string {
     'PAYPAL_API_URL': 'PayPal API URL (Sandbox: https://api-m.sandbox.paypal.com | Live: https://api-m.paypal.com)',
     'STRIPE_SECRET_KEY': 'Stripe Secret Key (aus Stripe Dashboard > Developers > API keys - Format: sk_test_xxx oder sk_live_xxx)',
     'STRIPE_PUBLISHABLE_KEY': 'Stripe Publishable Key (aus Stripe Dashboard > Developers > API keys - Format: pk_test_xxx oder pk_live_xxx)',
+    'GOOGLE_SEARCH_CONSOLE_KEY': 'Google Search Console Service Account JSON Key (kompletter JSON-Inhalt des heruntergeladenen Schlüssels)',
   }
   return descriptions[key] || ''
 }

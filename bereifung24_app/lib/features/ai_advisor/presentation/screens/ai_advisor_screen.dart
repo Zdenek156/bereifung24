@@ -1,0 +1,745 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../vehicles/presentation/screens/vehicles_screen.dart';
+
+// ══════════════════════════════════════
+// 🤖 KI Reifen-Berater
+// ══════════════════════════════════════
+
+class _ChatMessage {
+  final String role; // 'user' | 'ai'
+  final String text;
+  final String time;
+  final List<_QuickChip>? chips;
+  final List<_RecommendedTire>? recommendedTires;
+
+  _ChatMessage({
+    required this.role,
+    required this.text,
+    required this.time,
+    this.chips,
+    this.recommendedTires,
+  });
+}
+
+class _RecommendedTire {
+  final String brand;
+  final String model;
+  final String size;
+  final String width;
+  final String height;
+  final String diameter;
+  final String season;
+  final String loadIndex;
+  final String speedIndex;
+  final String labelFuelEfficiency;
+  final String labelWetGrip;
+  final int labelNoise;
+
+  _RecommendedTire({
+    required this.brand,
+    required this.model,
+    required this.size,
+    required this.width,
+    required this.height,
+    required this.diameter,
+    required this.season,
+    required this.loadIndex,
+    required this.speedIndex,
+    required this.labelFuelEfficiency,
+    required this.labelWetGrip,
+    required this.labelNoise,
+  });
+
+  factory _RecommendedTire.fromJson(Map<String, dynamic> json) {
+    return _RecommendedTire(
+      brand: json['brand'] ?? '',
+      model: json['model'] ?? '',
+      size: json['size'] ?? '',
+      width: json['width']?.toString() ?? '',
+      height: json['height']?.toString() ?? '',
+      diameter: json['diameter']?.toString() ?? '',
+      season: json['season'] ?? '',
+      loadIndex: json['loadIndex']?.toString() ?? '-',
+      speedIndex: json['speedIndex']?.toString() ?? '-',
+      labelFuelEfficiency: json['labelFuelEfficiency']?.toString() ?? '-',
+      labelWetGrip: json['labelWetGrip']?.toString() ?? '-',
+      labelNoise: (json['labelNoise'] as num?)?.toInt() ?? 0,
+    );
+  }
+}
+
+class _QuickChip {
+  final String id;
+  final String label;
+  _QuickChip(this.id, this.label);
+}
+
+class AIAdvisorScreen extends ConsumerStatefulWidget {
+  const AIAdvisorScreen({super.key});
+
+  @override
+  ConsumerState<AIAdvisorScreen> createState() => _AIAdvisorScreenState();
+}
+
+class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
+  final _controller = TextEditingController();
+  final _scrollController = ScrollController();
+  final _focusNode = FocusNode();
+  final List<_ChatMessage> _messages = [];
+  List<Map<String, dynamic>> _chatHistory = [];
+  bool _isTyping = false;
+  String? _vehicleId;
+  _RecommendedTire? _selectedTire;
+
+  @override
+  void initState() {
+    super.initState();
+    _initChat();
+    _loadVehicle();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _loadVehicle() {
+    final vehiclesAsync = ref.read(vehiclesProvider);
+    vehiclesAsync.whenData((vehicles) {
+      if (vehicles.isNotEmpty && mounted) {
+        setState(() => _vehicleId = vehicles.first.id);
+      }
+    });
+  }
+
+  void _initChat() {
+    setState(() {
+      _messages.add(_ChatMessage(
+        role: 'ai',
+        text: 'Hallo! 👋 Ich bin dein **B24 Reifen-Berater**. Wie kann ich dir helfen?',
+        time: _timeStr(),
+        chips: [
+          _QuickChip('recommend', '🎯 Reifen-Empfehlung'),
+          _QuickChip('help', '❓ App-Hilfe'),
+          _QuickChip('workshop', '🔧 Werkstatt finden'),
+          _QuickChip('free', '💬 Frei fragen'),
+        ],
+      ));
+    });
+  }
+
+  String _timeStr() {
+    final t = DateTime.now();
+    return '${t.hour}:${t.minute.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _sendMessage(String text) async {
+    if (text.trim().isEmpty) return;
+    _controller.clear();
+
+    setState(() {
+      _messages.add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+      _isTyping = true;
+    });
+    _scrollToBottom();
+
+    try {
+      // Get GPS for workshop context
+      double? lat, lng;
+      try {
+        final pos = await LocationService().getCurrentPosition();
+        if (pos != null) {
+          lat = pos.latitude;
+          lng = pos.longitude;
+        }
+      } catch (_) {}
+
+      final response = await ApiClient().sendAIChat(
+        message: text.trim(),
+        chatHistory: _chatHistory,
+        vehicleId: _vehicleId,
+        latitude: lat,
+        longitude: lng,
+      );
+
+      if (!mounted) return;
+
+      final data = response.data;
+      final aiText = data['response'] as String? ?? 'Keine Antwort erhalten.';
+      final newHistory = data['chatHistory'] as List? ?? [];
+
+      // Parse recommended tires
+      List<_RecommendedTire>? recTires;
+      final rawTires = data['recommendedTires'] as List?;
+      if (rawTires != null && rawTires.isNotEmpty) {
+        recTires = rawTires
+            .map((e) => _RecommendedTire.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+
+      setState(() {
+        _chatHistory = newHistory.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _messages.add(_ChatMessage(role: 'ai', text: aiText, time: _timeStr(), recommendedTires: recTires));
+        _isTyping = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(_ChatMessage(
+          role: 'ai',
+          text: 'Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal. 🔄',
+          time: _timeStr(),
+        ));
+        _isTyping = false;
+      });
+    }
+    _scrollToBottom();
+  }
+
+  void _onChipTapped(_QuickChip chip) {
+    final chipMessages = {
+      'recommend': 'Ich möchte eine Reifen-Empfehlung',
+      'help': 'Wie funktioniert die B24 App?',
+      'workshop': 'Zeig mir Werkstätten in meiner Nähe',
+      'free': 'Ich habe eine Frage zu Reifen',
+    };
+    _sendMessage(chipMessages[chip.id] ?? chip.label);
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: B24Colors.primaryBlue,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.pop(),
+        ),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('🤖', style: TextStyle(fontSize: 20)),
+            SizedBox(width: 8),
+            Text(
+              'KI-Berater',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            ),
+          ],
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete_outline, size: 22),
+            tooltip: 'Chat löschen',
+            onPressed: () {
+              setState(() {
+                _messages.clear();
+                _chatHistory.clear();
+              });
+              _initChat();
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Chat messages
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              itemCount: _messages.length + (_isTyping ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == _messages.length) return _buildTypingIndicator();
+                return _buildMessageBubble(_messages[index], isDark);
+              },
+            ),
+          ),
+
+          // Input bar
+          _buildInputBar(isDark),
+        ],
+      ),
+    );
+  }
+
+  // ── Message Bubble ──
+
+  Widget _buildMessageBubble(_ChatMessage msg, bool isDark) {
+    final isUser = msg.role == 'user';
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment:
+            isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment:
+                isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!isUser) ...[
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: B24Colors.primaryPale,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text('🤖', style: TextStyle(fontSize: 16)),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isUser
+                        ? B24Colors.primaryBlue
+                        : (isDark ? B24Colors.darkSurface : Colors.white),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isUser ? 16 : 4),
+                      bottomRight: Radius.circular(isUser ? 4 : 16),
+                    ),
+                    border: isUser
+                        ? null
+                        : Border.all(
+                            color: isDark ? B24Colors.darkBorder : B24Colors.border),
+                  ),
+                  child: _RichTextContent(
+                    text: msg.text,
+                    isUser: isUser,
+                    isDark: isDark,
+                  ),
+                ),
+              ),
+              if (isUser) const SizedBox(width: 8),
+            ],
+          ),
+          // Time
+          Padding(
+            padding: EdgeInsets.only(
+              top: 4,
+              left: isUser ? 0 : 40,
+              right: isUser ? 8 : 0,
+            ),
+            child: Text(
+              msg.time,
+              style: TextStyle(
+                fontSize: 10,
+                color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+              ),
+            ),
+          ),
+          // Quick chips
+          if (msg.chips != null && msg.chips!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: msg.chips!.map((chip) {
+                return GestureDetector(
+                  onTap: () => _onChipTapped(chip),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? B24Colors.primaryBlue.withValues(alpha: 0.15)
+                          : B24Colors.primaryPale,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: B24Colors.primaryBlue.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Text(
+                      chip.label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: B24Colors.primaryBlue,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+          // Recommended tire cards
+          if (msg.recommendedTires != null && msg.recommendedTires!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ...msg.recommendedTires!.map((tire) => _buildTireCard(tire, isDark)),
+            if (_selectedTire != null && msg.recommendedTires!.any((t) => t.brand == _selectedTire!.brand && t.model == _selectedTire!.model)) ...[
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    final t = _selectedTire!;
+                    context.go('/search?service=TIRE_CHANGE'
+                        '&width=${Uri.encodeComponent(t.width)}'
+                        '&height=${Uri.encodeComponent(t.height)}'
+                        '&diameter=${Uri.encodeComponent(t.diameter)}'
+                        '&season=${Uri.encodeComponent(t.season)}'
+                        '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
+                        '&speedIndex=${Uri.encodeComponent(t.speedIndex)}');
+                  },
+                  icon: const Icon(Icons.search, size: 18),
+                  label: const Text('Werkstatt mit diesem Reifen finden'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: B24Colors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Tire Recommendation Card ──
+
+  Widget _buildTireCard(_RecommendedTire tire, bool isDark) {
+    final isSelected = _selectedTire != null && _selectedTire!.brand == tire.brand && _selectedTire!.model == tire.model;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6, left: 40),
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedTire = isSelected ? null : tire;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? B24Colors.primaryBlue.withValues(alpha: 0.08)
+                : (isDark ? B24Colors.darkSurface : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? B24Colors.primaryBlue : (isDark ? B24Colors.darkBorder : B24Colors.border),
+              width: isSelected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${tire.brand} ${tire.model}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  if (isSelected)
+                    const Icon(Icons.check_circle, size: 18, color: B24Colors.primaryBlue),
+                ],
+              ),
+              const SizedBox(height: 2),
+              Text(
+                '${tire.size} ${tire.loadIndex}${tire.speedIndex} · ${tire.season}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  _euBadge('⛽', tire.labelFuelEfficiency, isDark),
+                  const SizedBox(width: 8),
+                  _euBadge('💧', tire.labelWetGrip, isDark),
+                  const SizedBox(width: 8),
+                  _euBadge('🔊', '${tire.labelNoise}dB', isDark),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _euBadge(String icon, String value, bool isDark) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: isDark ? B24Colors.darkBackground : B24Colors.background,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        '$icon $value',
+        style: TextStyle(
+          fontSize: 11,
+          color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+        ),
+      ),
+    );
+  }
+
+  // ── Typing Indicator ──
+
+  Widget _buildTypingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: B24Colors.primaryPale,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: const Text('🤖', style: TextStyle(fontSize: 16)),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? B24Colors.darkSurface
+                  : Colors.white,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(16),
+              ),
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? B24Colors.darkBorder
+                    : B24Colors.border,
+              ),
+            ),
+            child: const _TypingDots(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Input Bar ──
+
+  Widget _buildInputBar(bool isDark) {
+    return Container(
+      padding: EdgeInsets.fromLTRB(
+        12, 8, 12,
+        8 + MediaQuery.of(context).padding.bottom,
+      ),
+      decoration: BoxDecoration(
+        color: isDark ? B24Colors.darkSurface : Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? B24Colors.darkBackground : B24Colors.background,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: TextField(
+                controller: _controller,
+                focusNode: _focusNode,
+                maxLines: 3,
+                minLines: 1,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (text) => _sendMessage(text),
+                decoration: InputDecoration(
+                  hintText: 'Frag mich etwas...',
+                  hintStyle: TextStyle(
+                    color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+                    fontSize: 14,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: _isTyping ? null : () => _sendMessage(_controller.text),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _isTyping
+                    ? B24Colors.textTertiary
+                    : B24Colors.primaryBlue,
+                borderRadius: BorderRadius.circular(22),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Rich Text Content (Markdown-lite: bold + emoji) ──
+
+class _RichTextContent extends StatelessWidget {
+  final String text;
+  final bool isUser;
+  final bool isDark;
+
+  const _RichTextContent({
+    required this.text,
+    required this.isUser,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isUser
+        ? Colors.white
+        : (isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary);
+
+    // Parse **bold** markdown
+    final spans = <TextSpan>[];
+    final pattern = RegExp(r'\*\*(.+?)\*\*');
+    int lastEnd = 0;
+
+    for (final match in pattern.allMatches(text)) {
+      if (match.start > lastEnd) {
+        spans.add(TextSpan(text: text.substring(lastEnd, match.start)));
+      }
+      spans.add(TextSpan(
+        text: match.group(1),
+        style: const TextStyle(fontWeight: FontWeight.w700),
+      ));
+      lastEnd = match.end;
+    }
+    if (lastEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastEnd)));
+    }
+
+    return RichText(
+      text: TextSpan(
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.45,
+          color: color,
+        ),
+        children: spans.isEmpty ? [TextSpan(text: text)] : spans,
+      ),
+    );
+  }
+}
+
+// ── Typing Dots Animation ──
+
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (i) {
+            final delay = i * 0.2;
+            final t = ((_controller.value - delay) % 1.0).clamp(0.0, 1.0);
+            final opacity = 0.3 + 0.7 * (t < 0.5 ? t * 2 : (1 - t) * 2).clamp(0.0, 1.0);
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Opacity(
+                opacity: opacity,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: B24Colors.primaryBlue,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}

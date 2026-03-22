@@ -8,6 +8,7 @@ import { Calendar, MapPin, Car, Euro, Clock, CheckCircle, XCircle, AlertCircle }
 interface DirectBooking {
   id: string
   serviceType: string
+  serviceSubtype: string | null
   date: string
   time: string
   status: string
@@ -19,9 +20,15 @@ interface DirectBooking {
   totalPrice: number
   hasBalancing: boolean
   hasStorage: boolean
+  hasWashing: boolean
   hasDisposal: boolean
+  washingPrice: number | null
   durationMinutes: number
   createdAt: string
+  // Coupon / Gutschein
+  couponCode: string | null
+  discountAmount: number | null
+  originalPrice: number | null
   // Tire fields (standard)
   tireBrand: string | null
   tireModel: string | null
@@ -61,6 +68,30 @@ const serviceTypeLabels: Record<string, string> = {
   MOTORCYCLE_TIRE: 'Motorradreifenmontage',
   ALIGNMENT_BOTH: 'Achsvermessung',
   CLIMATE_SERVICE: 'Klimaservice'
+}
+
+const subtypeLabels: Record<string, string> = {
+  'foreign_object': 'Fremdkörper-Entfernung',
+  'valve_damage': 'Ventilschaden',
+  'basic': 'Basis',
+  'comfort': 'Komfort',
+  'premium': 'Premium',
+  'check': 'Prüfung',
+  'measurement_front': 'Vermessung Vorderachse',
+  'measurement_rear': 'Vermessung Hinterachse',
+  'measurement_both': 'Vermessung beide Achsen',
+  'adjustment_front': 'Einstellung Vorderachse',
+  'adjustment_rear': 'Einstellung Hinterachse',
+  'adjustment_both': 'Einstellung beide Achsen',
+  'full_service': 'Komplett-Service'
+}
+
+function getServiceDisplayName(serviceType: string, serviceSubtype: string | null): string {
+  const base = serviceTypeLabels[serviceType] || serviceType
+  if (serviceSubtype && subtypeLabels[serviceSubtype]) {
+    return `${base} - ${subtypeLabels[serviceSubtype]}`
+  }
+  return base
 }
 
 const statusLabels: Record<string, { label: string, color: string, icon: JSX.Element }> = {
@@ -182,251 +213,265 @@ export default function BookingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Meine Buchungen
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Übersicht aller Ihrer Direktbuchungen
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+          Meine Buchungen
+        </h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          Übersicht aller Ihrer Direktbuchungen
+        </p>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="mb-4 flex flex-wrap items-center gap-1.5">
+        <button
+          onClick={() => setFilter('all')}
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            filter === 'all'
+              ? 'bg-primary-600 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'
+          }`}
+        >
+          Alle ({bookings.length})
+        </button>
+        <button
+          onClick={() => setFilter('upcoming')}
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            filter === 'upcoming'
+              ? 'bg-primary-600 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'
+          }`}
+        >
+          Anstehend ({bookings.filter(b => {
+            const bookingDate = new Date(b.date)
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            return bookingDate >= today && b.status !== 'CANCELLED' && b.status !== 'COMPLETED'
+          }).length})
+        </button>
+        <button
+          onClick={() => setFilter('past')}
+          className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+            filter === 'past'
+              ? 'bg-primary-600 text-white'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750'
+          }`}
+        >
+          Vergangen ({bookings.filter(b => {
+            const bookingDate = new Date(b.date)
+            const today = new Date()
+            today.setHours(0, 0, 0, 0)
+            return bookingDate < today || b.status === 'COMPLETED' || b.status === 'CANCELLED'
+          }).length})
+        </button>
+      </div>
+
+      {/* Bookings List */}
+      {filteredBookings.length === 0 ? (
+        <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="text-3xl mb-2">📋</div>
+          <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-1">
+            Keine Buchungen gefunden
+          </h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            {filter === 'all' 
+              ? 'Sie haben noch keine Buchungen vorgenommen.'
+              : filter === 'upcoming'
+              ? 'Sie haben keine anstehenden Buchungen.'
+              : 'Sie haben keine vergangenen Buchungen.'}
           </p>
+          {filter === 'all' && (
+            <button
+              onClick={() => router.push('/dashboard/customer/direct-booking')}
+              className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+            >
+              Jetzt buchen
+            </button>
+          )}
         </div>
-
-        {/* Filter Tabs */}
-        <div className="mb-6 flex gap-2 border-b border-gray-200 dark:border-gray-700">
-          <button
-            onClick={() => setFilter('all')}
-            className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-              filter === 'all'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            Alle ({bookings.length})
-          </button>
-          <button
-            onClick={() => setFilter('upcoming')}
-            className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-              filter === 'upcoming'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            Anstehend ({bookings.filter(b => {
-              const bookingDate = new Date(b.date)
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-              return bookingDate >= today && b.status !== 'CANCELLED' && b.status !== 'COMPLETED'
-            }).length})
-          </button>
-          <button
-            onClick={() => setFilter('past')}
-            className={`px-4 py-2 font-medium transition-colors border-b-2 ${
-              filter === 'past'
-                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-            }`}
-          >
-            Vergangen ({bookings.filter(b => {
-              const bookingDate = new Date(b.date)
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-              return bookingDate < today || b.status === 'COMPLETED' || b.status === 'CANCELLED'
-            }).length})
-          </button>
-        </div>
-
-        {/* Bookings List */}
-        {filteredBookings.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="text-6xl mb-4">📋</div>
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              Keine Buchungen gefunden
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
-              {filter === 'all' 
-                ? 'Sie haben noch keine Buchungen vorgenommen.'
-                : filter === 'upcoming'
-                ? 'Sie haben keine anstehenden Buchungen.'
-                : 'Sie haben keine vergangenen Buchungen.'}
-            </p>
-            {filter === 'all' && (
-              <button
-                onClick={() => router.push('/dashboard/customer/direct-booking')}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Jetzt buchen
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredBookings.map((booking) => (
-              <div
-                key={booking.id}
-                onClick={() => router.push(`/dashboard/customer/bookings/${booking.id}`)}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-all cursor-pointer overflow-hidden"
-              >
-                <div className="p-6">
-                  <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                          {serviceTypeLabels[booking.serviceType] || booking.serviceType}
-                        </h3>
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${statusLabels[booking.status]?.color || 'bg-gray-100 text-gray-800'}`}>
-                          {statusLabels[booking.status]?.icon}
-                          {statusLabels[booking.status]?.label || booking.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Buchungsnr.: {booking.id.substring(0, 12).toUpperCase()}
-                      </p>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                        {formatPrice(booking.totalPrice)}
-                      </div>
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${paymentStatusLabels[booking.paymentStatus]?.color || 'bg-gray-100 text-gray-800'}`}>
-                        {paymentStatusLabels[booking.paymentStatus]?.label || booking.paymentStatus}
+      ) : (
+        <div className="space-y-2.5">
+          {filteredBookings.map((booking) => (
+            <div
+              key={booking.id}
+              onClick={() => router.push(`/dashboard/customer/bookings/${booking.id}`)}
+              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all cursor-pointer overflow-hidden"
+            >
+              <div className="p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-white">
+                        {getServiceDisplayName(booking.serviceType, booking.serviceSubtype)}
+                      </h3>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium ${statusLabels[booking.status]?.color || 'bg-gray-100 text-gray-800'}`}>
+                        {statusLabels[booking.status]?.icon}
+                        {statusLabels[booking.status]?.label || booking.status}
                       </span>
                     </div>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500">
+                      Buchungsnr.: {booking.id.substring(0, 12).toUpperCase()}
+                    </p>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {/* Termin */}
-                    <div className="flex items-start gap-3">
-                      <Calendar className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Termin</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {formatDate(booking.date)}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {booking.time} Uhr
-                        </p>
-                      </div>
+                  
+                  <div className="text-right">
+                    <div className="text-lg font-bold text-gray-900 dark:text-white">
+                      {formatPrice(booking.totalPrice)}
                     </div>
-
-                    {/* Werkstatt */}
-                    <div className="flex items-start gap-3">
-                      <MapPin className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Werkstatt</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {booking.workshop.companyName}
-                        </p>
-                        {booking.workshop.user?.street && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300">
-                            {booking.workshop.user.street}
-                          </p>
-                        )}
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {booking.workshop.user?.zipCode || ''} {booking.workshop.user?.city || ''}
-                        </p>
+                    {booking.couponCode && booking.discountAmount && booking.discountAmount > 0 && (
+                      <div className="flex items-center gap-1 justify-end mt-0.5">
+                        <span className="text-[11px] line-through text-gray-400">
+                          {formatPrice(booking.originalPrice || (booking.totalPrice + booking.discountAmount))}
+                        </span>
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                          🎫 -{formatPrice(booking.discountAmount)}
+                        </span>
                       </div>
-                    </div>
+                    )}
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[11px] font-medium ${paymentStatusLabels[booking.paymentStatus]?.color || 'bg-gray-100 text-gray-800'}`}>
+                      {paymentStatusLabels[booking.paymentStatus]?.label || booking.paymentStatus}
+                    </span>
+                  </div>
+                </div>
 
-                    {/* Fahrzeug */}
-                    <div className="flex items-start gap-3">
-                      <Car className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Fahrzeug</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {booking.vehicle.make} {booking.vehicle.model}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {booking.vehicle.licensePlate}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Dauer */}
-                    <div className="flex items-start gap-3">
-                      <Clock className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Dauer</p>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {booking.durationMinutes} Minuten
-                        </p>
-                        {(booking.hasBalancing || booking.hasStorage) && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300">
-                            {booking.hasBalancing && 'Wuchten'}{booking.hasBalancing && booking.hasStorage && ' + '}
-                            {booking.hasStorage && 'Einlagerung'}
-                          </p>
-                        )}
-                      </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {/* Termin */}
+                  <div className="flex items-start gap-2">
+                    <Calendar className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Termin</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-white">
+                        {formatDate(booking.date)}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {booking.time} Uhr
+                      </p>
                     </div>
                   </div>
 
-                  {/* Tire Info (if applicable) */}
-                  {(booking.tireBrand || booking.tireData?.isMixedTires) && (
-                    <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">🛡 Gewählte Reifen</p>
-                      {booking.tireData?.isMixedTires ? (
-                        <div className="flex flex-col sm:flex-row gap-3">
-                          {booking.tireData.front && (
-                            <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                              <p className="text-xs text-primary-600 font-medium mb-1">🔹 Vorderachse</p>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {booking.tireData.front.quantity || 1}× {booking.tireData.front.brand} {booking.tireData.front.model}
-                              </p>
-                              {(booking.tireData.front.size || booking.tireData.front.loadIndex) && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {booking.tireData.front.size || `${booking.tireData.front.loadIndex || ''}${booking.tireData.front.speedIndex || ''}`}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                          {booking.tireData.rear && (
-                            <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                              <p className="text-xs text-primary-600 font-medium mb-1">🔸 Hinterachse</p>
-                              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                                {booking.tireData.rear.quantity || 1}× {booking.tireData.rear.brand} {booking.tireData.rear.model}
-                              </p>
-                              {(booking.tireData.rear.size || booking.tireData.rear.loadIndex) && (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {booking.tireData.rear.size || `${booking.tireData.rear.loadIndex || ''}${booking.tireData.rear.speedIndex || ''}`}
-                                </p>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ) : booking.tireBrand && (
-                        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {booking.tireQuantity || 4}× {booking.tireBrand} {booking.tireModel}
-                          </p>
-                          {(booking.tireSize || booking.tireLoadIndex) && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {booking.tireSize || ''}{booking.tireLoadIndex && !booking.tireSize?.includes(booking.tireLoadIndex) ? ` ${booking.tireLoadIndex}${booking.tireSpeedIndex || ''}` : (!booking.tireSize ? `${booking.tireLoadIndex || ''}${booking.tireSpeedIndex || ''}` : '')}
-                            </p>
-                          )}
-                        </div>
+                  {/* Werkstatt */}
+                  <div className="flex items-start gap-2">
+                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Werkstatt</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-white">
+                        {booking.workshop.companyName}
+                      </p>
+                      {booking.workshop.user?.street && (
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                          {booking.workshop.user.street}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {booking.workshop.user?.zipCode || ''} {booking.workshop.user?.city || ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Fahrzeug */}
+                  <div className="flex items-start gap-2">
+                    <Car className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Fahrzeug</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-white">
+                        {booking.vehicle.make} {booking.vehicle.model}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {booking.vehicle.licensePlate}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dauer */}
+                  <div className="flex items-start gap-2">
+                    <Clock className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500">Dauer</p>
+                      <p className="text-xs font-medium text-gray-900 dark:text-white">
+                        {booking.durationMinutes} Minuten
+                      </p>
+                      {(booking.hasBalancing || booking.hasStorage || booking.hasWashing) && (
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                          {[booking.hasBalancing && 'Wuchten', booking.hasStorage && 'Einlagerung', booking.hasWashing && 'Räder waschen'].filter(Boolean).join(' + ')}
+                        </p>
                       )}
                     </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className="px-6 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-500 dark:text-gray-400">
-                      Gebucht am: {new Date(booking.createdAt).toLocaleDateString('de-DE')}
-                    </span>
-                    <span className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
-                      Details anzeigen →
-                    </span>
                   </div>
                 </div>
+
+                {/* Tire Info (if applicable) */}
+                {(booking.tireBrand || booking.tireData?.isMixedTires) && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 mb-1.5">🛡 Gewählte Reifen</p>
+                    {booking.tireData?.isMixedTires ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        {booking.tireData.front && (
+                          <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-md p-2.5">
+                            <p className="text-[11px] text-primary-600 font-medium mb-0.5">🔹 Vorderachse</p>
+                            <p className="text-xs font-medium text-gray-900 dark:text-white">
+                              {booking.tireData.front.quantity || 1}× {booking.tireData.front.brand} {booking.tireData.front.model}
+                            </p>
+                            {(booking.tireData.front.size || booking.tireData.front.loadIndex) && (
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                {booking.tireData.front.size || `${booking.tireData.front.loadIndex || ''}${booking.tireData.front.speedIndex || ''}`}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {booking.tireData.rear && (
+                          <div className="flex-1 bg-gray-50 dark:bg-gray-900/50 rounded-md p-2.5">
+                            <p className="text-[11px] text-primary-600 font-medium mb-0.5">🔸 Hinterachse</p>
+                            <p className="text-xs font-medium text-gray-900 dark:text-white">
+                              {booking.tireData.rear.quantity || 1}× {booking.tireData.rear.brand} {booking.tireData.rear.model}
+                            </p>
+                            {(booking.tireData.rear.size || booking.tireData.rear.loadIndex) && (
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                {booking.tireData.rear.size || `${booking.tireData.rear.loadIndex || ''}${booking.tireData.rear.speedIndex || ''}`}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ) : booking.tireBrand && (
+                      <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-2.5">
+                        <p className="text-xs font-medium text-gray-900 dark:text-white">
+                          {booking.tireQuantity || 4}× {booking.tireBrand} {booking.tireModel}
+                        </p>
+                        {(booking.tireSize || booking.tireLoadIndex) && (
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                            {booking.tireSize || ''}{booking.tireLoadIndex && !booking.tireSize?.includes(booking.tireLoadIndex) ? ` ${booking.tireLoadIndex}${booking.tireSpeedIndex || ''}` : (!booking.tireSize ? `${booking.tireLoadIndex || ''}${booking.tireSpeedIndex || ''}` : '')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+
+              {/* Footer */}
+              <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 dark:text-gray-500">
+                      Gebucht am: {new Date(booking.createdAt).toLocaleDateString('de-DE')}
+                    </span>
+                    {booking.couponCode && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-[10px] font-medium">
+                        🎫 {booking.couponCode}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-primary-600 dark:text-primary-400 font-medium hover:underline">
+                    Details anzeigen →
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

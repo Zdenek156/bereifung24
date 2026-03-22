@@ -426,7 +426,7 @@ export default function PricingPage() {
 
               {/* Size Rows */}
               <div className="space-y-1">
-                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].map(size => {
                   const values = getTirePricingValue('AUTO', size)
                   const hasValue = values.enabled && (values.fixedMarkup > 0 || values.percentMarkup > 0)
                   const vk = calculateExample(100, false, values.fixedMarkup, values.percentMarkup, values.includeVat)
@@ -526,7 +526,7 @@ export default function PricingPage() {
 
               {/* Size Rows */}
               <div className="space-y-1">
-                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23].map(size => {
+                {[13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24].map(size => {
                   const values = getTirePricingValue('MOTO', size)
                   const hasValue = values.enabled && (values.fixedMarkup > 0 || values.percentMarkup > 0)
                   const vk = calculateExample(150, false, values.fixedMarkup, values.percentMarkup, values.includeVat)

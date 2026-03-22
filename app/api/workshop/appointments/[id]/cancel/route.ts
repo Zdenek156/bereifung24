@@ -4,6 +4,7 @@ import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { google } from 'googleapis'
 import { sendTemplateEmail, replacePlaceholders } from '@/lib/email'
+import { notifyBookingUpdate } from '@/lib/pushNotificationService'
 
 export async function POST(
   request: Request,
@@ -124,6 +125,16 @@ export async function POST(
           console.log('✅ Cancellation email sent to DirectBooking customer:', directBooking.customer.user.email)
         } catch (emailError) {
           console.error('❌ Error sending DirectBooking cancellation email:', emailError)
+        }
+      }
+
+      // Push-Benachrichtigung an Kunden
+      if (directBooking.customer?.user?.id) {
+        try {
+          await notifyBookingUpdate(directBooking.customer.user.id, appointmentId, 'CANCELLED')
+          console.log('📱 Cancellation push sent to user:', directBooking.customer.user.id)
+        } catch (pushError) {
+          console.error('❌ Error sending cancellation push:', pushError)
         }
       }
 

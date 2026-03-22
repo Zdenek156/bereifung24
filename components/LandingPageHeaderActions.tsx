@@ -36,10 +36,18 @@ export default function LandingPageHeaderActions() {
   const handleLogout = async () => {
     setShowUserMenu(false)
     try {
+      const cookieConsent = localStorage.getItem('cookieConsent')
+      const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+      const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
       await signOut({ redirect: false })
       await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+      localStorage.clear()
+      sessionStorage.clear()
+      if (cookieConsent) localStorage.setItem('cookieConsent', cookieConsent)
+      if (bereifung24Consent) localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+      if (bereifung24ConsentDate) localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
     } catch {}
-    window.location.reload()
+    window.location.href = '/'
   }
 
   if (status === 'loading') {
@@ -55,7 +63,11 @@ export default function LandingPageHeaderActions() {
           onClick={() => setShowUserMenu(!showUserMenu)}
           className="flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:border-gray-400 hover:text-gray-900 transition-colors"
         >
-          <User className="w-4 h-4" />
+          {session.user?.image ? (
+            <img src={session.user.image} alt="" className="w-5 h-5 rounded-full object-cover" referrerPolicy="no-referrer" />
+          ) : (
+            <User className="w-4 h-4" />
+          )}
           <span className="hidden sm:inline">{session.user?.name || 'Mein Konto'}</span>
           <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
         </button>

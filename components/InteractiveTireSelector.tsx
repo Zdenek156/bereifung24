@@ -5,7 +5,7 @@ import { useState } from 'react'
 // Auto-Reifengrößen (erweitert)
 const CAR_TIRE_WIDTHS = [125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395, 405, 415, 425]
 const CAR_ASPECT_RATIOS = [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90]
-const CAR_DIAMETERS = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26]
+const CAR_DIAMETERS = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
 
 // Motorrad-Reifengrößen (erweitert)
 const MOTORCYCLE_TIRE_WIDTHS = [70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220]

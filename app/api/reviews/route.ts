@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { getAuthUser } from '@/lib/getAuthUser'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -124,9 +125,9 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     console.log('[REVIEW API] Starting review submission')
-    const session = await getServerSession(authOptions)
+    const user = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!user?.id) {
       console.log('[REVIEW API] No session found')
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
@@ -141,12 +142,12 @@ export async function POST(req: NextRequest) {
 
     // Get customer ID
     const customer = await prisma.customer.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: user.id }
     })
     console.log('[REVIEW API] Customer found:', customer?.id)
 
     if (!customer) {
-      console.log('[REVIEW API] Customer not found for userId:', session.user.id)
+      console.log('[REVIEW API] Customer not found for userId:', user.id)
       return NextResponse.json(
         { error: 'Kunde nicht gefunden' },
         { status: 404 }
@@ -243,6 +244,15 @@ export async function POST(req: NextRequest) {
         data: reviewData
       })
       console.log('[REVIEW API] Review created successfully:', newReview.id)
+
+      // Mark ReviewPrompt as completed (if one exists for this direct booking)
+      if (isDirectBooking) {
+        await prisma.reviewPrompt.updateMany({
+          where: { directBookingId: validatedData.bookingId, completedAt: null },
+          data: { completedAt: new Date() },
+        })
+      }
+
       return NextResponse.json(newReview)
     }
   } catch (error) {

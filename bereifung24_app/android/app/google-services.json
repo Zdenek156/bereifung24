@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "609460599361",
+    "project_id": "bereifung24-app",
+    "storage_bucket": "bereifung24-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:609460599361:android:5943bf6e09c7f67d6d64c0",
+        "android_client_info": {
+          "package_name": "de.bereifung24.bereifung24_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "609460599361-tnf8m8cma9ghhpilfrdj9cv7puq9hnl4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.bereifung24.bereifung24_app",
+            "certificate_hash": "3ab5938dcb90756f3db41bdfd9a1360dd2cd55e1"
+          }
+        },
+        {
+          "client_id": "609460599361-mooec9e14rih5u78c1h7nlhok63n2o7t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAmsdjiALUt-3lUJ4SfKLFgmRTcSt7Dng"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "609460599361-mooec9e14rih5u78c1h7nlhok63n2o7t.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "609460599361-pjthgere0tf9pfssgv6j7fmu940rlqm1.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "de.bereifung24.bereifung24App"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

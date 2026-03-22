@@ -6,9 +6,38 @@ export const metadata = {
   description: 'Professioneller Räderwechsel von Sommer- auf Winterreifen. Schnell, günstig und unkompliziert bei geprüften Werkstätten buchen.'
 }
 
+const faqData = [
+  { question: 'Was kostet ein Räderwechsel?', answer: 'Ein Räderwechsel kostet zwischen 20-50€ für alle 4 Räder, je nach Werkstatt und Fahrzeugtyp. Bei Bereifung24 finden Sie transparente Festpreise.' },
+  { question: 'Was ist der Unterschied zwischen Räderwechsel und Reifenwechsel?', answer: 'Beim Räderwechsel werden die kompletten Räder (Reifen + Felge) getauscht. Beim Reifenwechsel werden die Reifen von der Felge demontiert und neue aufgezogen.' },
+  { question: 'Wie oft sollte man die Räder wechseln?', answer: 'Zweimal im Jahr: Im Oktober auf Winterreifen (O bis O: Oktober bis Ostern) und im April zurück auf Sommerreifen.' },
+  { question: 'Muss ich die Schrauben nach dem Räderwechsel nachziehen?', answer: 'Ja! Nach 50-100 km sollten die Radschrauben unbedingt mit dem korrekten Drehmoment nachgezogen werden. Dies ist sicherheitsrelevant.' },
+]
+
 export default function RaederwechselPage() {
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Räderwechsel', item: 'https://www.bereifung24.de/services/raederwechsel' },
+      ],
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqData.map(faq => ({
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+      })),
+    },
+  ]
+
   return (
     <div className="min-h-screen bg-white">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       {/* Navigation */}
       <nav className="bg-primary-600 sticky top-0 z-50 shadow-md">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -248,12 +277,50 @@ export default function RaederwechselPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Mit Räderwäsche */}
+              <div className="bg-white rounded-xl p-6 border-2 border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-3 flex items-center gap-2">
+                  Mit Räderwäsche
+                  <span className="text-sm font-normal text-cyan-600 bg-cyan-50 px-3 py-1 rounded-full">
+                    Beliebte Option
+                  </span>
+                </h3>
+                <p className="text-gray-700 mb-4">
+                  Räderwechsel inkl. professioneller Reinigung Ihrer abmontierten Räder — so nehmen Sie saubere Räder mit nach Hause
+                </p>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
+                    <span className="text-gray-700">Alle Leistungen vom Basis-Service</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
+                    <span className="text-gray-700"><strong>Gründliche Reinigung</strong> aller 4 abmontierten Räder</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
+                    <span className="text-gray-700">Entfernung von Bremsstaub, Schmutz und Salzresten</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
+                    <span className="text-gray-700">Felgen und Reifen gereinigt zur Mitnahme bereit</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-primary-600 mt-0.5" />
+                    <span className="text-gray-700">Schont die Felgen und verhindert Korrosion</span>
+                  </li>
+                </ul>
+                <div className="mt-4 p-4 bg-cyan-50 rounded-lg border border-cyan-200">
+                  <p className="text-sm text-cyan-900">
+                    <strong>🧼 Tipp:</strong> Besonders empfehlenswert nach der Wintersaison — Streusalz und Bremsstaub greifen ungereinigt die Felgen an. Saubere Räder lagern besser und halten länger.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
-
-      {/* Wichtige Hinweise */}
       <section className="py-16 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
@@ -292,6 +359,66 @@ export default function RaederwechselPage() {
                 <p className="text-gray-700">
                   Bei Fahrzeugen mit Reifendruckkontrollsystem (RDKS) müssen die Sensoren neu angelernt werden. Dies ist bei den meisten Werkstätten im Preis enthalten.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Häufige Fragen zum Räderwechsel</h2>
+            <div className="space-y-4">
+              {faqData.map((faq, i) => (
+                <div key={i} className="bg-white rounded-xl p-6 border border-gray-200">
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{faq.question}</h3>
+                  <p className="text-gray-700">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Cross-Links */}
+      <section className="py-12 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Weitere Services & beliebte Reifengrößen</h2>
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Unsere Services</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/services/reifenwechsel" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Reifenwechsel</Link>
+                  <Link href="/services/reifenreparatur" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Reifenreparatur</Link>
+                  <Link href="/services/achsvermessung" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Achsvermessung</Link>
+                  <Link href="/services/klimaservice" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Klimaservice</Link>
+                  <Link href="/services/motorradreifen" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Motorradreifen</Link>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Beliebte Reifengrößen</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Link href="/reifen/205-55-r16" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">205/55 R16</Link>
+                  <Link href="/reifen/225-45-r17" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">225/45 R17</Link>
+                  <Link href="/reifen/195-65-r15" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">195/65 R15</Link>
+                  <Link href="/reifen/225-40-r18" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">225/40 R18</Link>
+                  <Link href="/reifen/205-60-r16" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">205/60 R16</Link>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">Räderwechsel in deiner Stadt</h3>
+              <div className="flex flex-wrap gap-2">
+                <Link href="/werkstatt-werden/berlin" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Berlin</Link>
+                <Link href="/werkstatt-werden/muenchen" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">München</Link>
+                <Link href="/werkstatt-werden/hamburg" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Hamburg</Link>
+                <Link href="/werkstatt-werden/koeln" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Köln</Link>
+                <Link href="/werkstatt-werden/frankfurt-am-main" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Frankfurt</Link>
+                <Link href="/werkstatt-werden/stuttgart" className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors">Stuttgart</Link>
+                <Link href="/werkstatt-werden" className="px-4 py-2 bg-primary-50 text-primary-700 rounded-full text-sm font-medium transition-colors">Alle Städte →</Link>
               </div>
             </div>
           </div>

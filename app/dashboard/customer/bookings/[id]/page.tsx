@@ -22,7 +22,9 @@ interface Booking {
   totalTirePurchasePrice: number | null
   hasBalancing: boolean
   hasStorage: boolean
+  hasWashing: boolean
   hasDisposal: boolean
+  washingPrice: number | null
   tireRunFlat: boolean
   tireData: any | null
   durationMinutes: number
@@ -49,6 +51,10 @@ interface Booking {
   tireSpeedIndex: string | null
   tireQuantity: number | null
   tirePurchasePrice: number | null
+  // Coupon
+  couponCode: string | null
+  discountAmount: number | null
+  originalPrice: number | null
   workshop: {
     id: string
     companyName: string
@@ -252,9 +258,9 @@ export default function BookingDetailsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Lade Buchungsdetails...</div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5">
+        <div className="flex items-center justify-center h-40">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
         </div>
       </div>
     )
@@ -262,10 +268,10 @@ export default function BookingDetailsPage() {
 
   if (!booking) {
     return (
-      <div className="container mx-auto p-6">
-        <Card className="p-12 text-center">
-          <h2 className="text-2xl font-bold mb-4">Buchung nicht gefunden</h2>
-          <Button onClick={() => router.push('/dashboard/customer/bookings')}>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5">
+        <Card className="p-8 text-center border border-gray-200">
+          <h2 className="text-lg font-bold mb-3">Buchung nicht gefunden</h2>
+          <Button onClick={() => router.push('/dashboard/customer/bookings')} size="sm">
             Zurück zur Übersicht
           </Button>
         </Card>
@@ -282,79 +288,85 @@ export default function BookingDetailsPage() {
   })
 
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
-      <Button
-        variant="ghost"
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5">
+      {/* Back Button */}
+      <button
         onClick={() => router.push('/dashboard/customer/bookings')}
-        className="mb-6"
+        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 mb-4 transition-colors"
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
+        <ArrowLeft className="h-3.5 w-3.5" />
         Zurück zur Übersicht
-      </Button>
+      </button>
 
       {/* Success Header */}
-      <Card className="p-8 mb-6 bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
-        <div className="flex items-center justify-center mb-4">
-          <div className="bg-green-500 rounded-full p-3">
-            <CheckCircle className="h-8 w-8 text-white" />
+      <Card className="p-5 mb-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800">
+        <div className="flex items-center justify-center mb-3">
+          <div className="bg-green-500 rounded-full p-2">
+            <CheckCircle className="h-5 w-5 text-white" />
           </div>
         </div>
-        <h1 className="text-3xl font-bold text-center mb-2">Buchung bestätigt!</h1>
-        <p className="text-center text-gray-600 mb-4">
+        <h1 className="text-xl font-bold text-center mb-1">Buchung bestätigt!</h1>
+        <p className="text-center text-xs text-gray-600 dark:text-gray-400 mb-3">
           Ihre Buchung wurde erfolgreich abgeschlossen und bezahlt.
         </p>
         <div className="text-center">
-          <span className="text-sm text-gray-500">Buchungsnummer:</span>
-          <div className="text-2xl font-mono font-bold text-green-600 mt-1">
+          <span className="text-[11px] text-gray-500">Buchungsnummer:</span>
+          <div className="text-lg font-mono font-bold text-green-600 mt-0.5">
             {bookingNumber}
           </div>
         </div>
       </Card>
 
       {/* Appointment Details */}
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
-          <Calendar className="h-5 w-5 mr-2 text-blue-600" />
+      <Card className="p-4 mb-4 border border-gray-200 dark:border-gray-700">
+        <h2 className="text-base font-bold mb-3 flex items-center">
+          <Calendar className="h-4 w-4 mr-2 text-blue-600" />
           Termininformationen
         </h2>
-        <div className="space-y-4">
+        <div className="space-y-2.5 text-sm">
           <div className="flex items-start">
-            <div className="flex-shrink-0 w-32 text-gray-600">Service:</div>
-            <div className="font-semibold">{getServiceDisplayName(booking.serviceType, booking.serviceSubtype)}</div>
+            <div className="flex-shrink-0 w-28 text-gray-500 text-xs">Service:</div>
+            <div className="font-medium">{getServiceDisplayName(booking.serviceType, booking.serviceSubtype)}</div>
           </div>
           <div className="flex items-start">
-            <div className="flex-shrink-0 w-32 text-gray-600">Datum:</div>
-            <div className="font-semibold">{appointmentDate}</div>
+            <div className="flex-shrink-0 w-28 text-gray-500 text-xs">Datum:</div>
+            <div className="font-medium">{appointmentDate}</div>
           </div>
           <div className="flex items-start">
-            <div className="flex-shrink-0 w-32 text-gray-600">Uhrzeit:</div>
-            <div className="font-semibold">{booking.time} Uhr</div>
+            <div className="flex-shrink-0 w-28 text-gray-500 text-xs">Uhrzeit:</div>
+            <div className="font-medium">{booking.time} Uhr</div>
           </div>
           <div className="flex items-start">
-            <div className="flex-shrink-0 w-32 text-gray-600">Dauer:</div>
-            <div className="font-semibold">{booking.durationMinutes} Minuten</div>
+            <div className="flex-shrink-0 w-28 text-gray-500 text-xs">Dauer:</div>
+            <div className="font-medium">{booking.durationMinutes} Minuten</div>
           </div>
           {/* Additional Services (Auswuchten, Einlagerung, Klimaservice, Achsvermessung, etc.) */}
-          {(booking.hasBalancing || booking.hasStorage || (booking.additionalServicesData && booking.additionalServicesData.length > 0)) && (
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <div className="text-sm font-semibold text-gray-700 mb-2">Zusatzleistungen:</div>
+          {(booking.hasBalancing || booking.hasStorage || booking.hasWashing || (booking.additionalServicesData && booking.additionalServicesData.length > 0)) && (
+            <div className="mt-2.5 pt-2.5 border-t border-gray-200">
+              <div className="text-xs font-semibold text-gray-700 mb-1.5">Zusatzleistungen:</div>
               {booking.hasBalancing && (
-                <div className="flex items-center text-green-600 mb-1">
-                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                <div className="flex items-center text-green-600 text-xs mb-1">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
                   <span>Mit Auswuchten</span>
                 </div>
               )}
               {booking.hasStorage && (
-                <div className="flex items-center text-green-600 mb-1">
-                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                <div className="flex items-center text-green-600 text-xs mb-1">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
                   <span>Mit Einlagerung</span>
                 </div>
               )}
+              {booking.hasWashing && (
+                <div className="flex items-center text-green-600 text-xs mb-1">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                  <span>Räder waschen</span>
+                </div>
+              )}
               {booking.additionalServicesData && booking.additionalServicesData.map((svc, idx) => (
-                <div key={idx} className="flex items-center text-green-600 mb-1">
-                  <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+                <div key={idx} className="flex items-center text-green-600 text-xs mb-1">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
                   <span>{svc.name}{svc.packageName && svc.packageName !== svc.name ? ` (${svc.packageName})` : ''}</span>
-                  {svc.duration > 0 && <span className="ml-auto text-gray-600 text-sm">+{svc.duration} Min.</span>}
+                  {svc.duration > 0 && <span className="ml-auto text-gray-500 text-[11px]">+{svc.duration} Min.</span>}
                 </div>
               ))}
             </div>
@@ -363,24 +375,24 @@ export default function BookingDetailsPage() {
       </Card>
 
       {/* Workshop Details */}
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
-          <MapPin className="h-5 w-5 mr-2 text-blue-600" />
+      <Card className="p-4 mb-4 border border-gray-200 dark:border-gray-700">
+        <h2 className="text-base font-bold mb-3 flex items-center">
+          <MapPin className="h-4 w-4 mr-2 text-blue-600" />
           Werkstatt
         </h2>
-        <div className="space-y-2">
-          <div className="font-semibold text-lg">{booking.workshop.companyName}</div>
-          <div className="text-gray-600">{booking.workshop.user.street || 'Keine Adresse'}</div>
-          <div className="text-gray-600">{booking.workshop.user.zipCode} {booking.workshop.user.city}</div>
-          <div className="mt-4 space-y-1">
-            <div className="text-sm">
-              <span className="text-gray-600">Telefon:</span>{' '}
+        <div className="space-y-1 text-sm">
+          <div className="font-semibold">{booking.workshop.companyName}</div>
+          <div className="text-gray-500 text-xs">{booking.workshop.user.street || 'Keine Adresse'}</div>
+          <div className="text-gray-500 text-xs">{booking.workshop.user.zipCode} {booking.workshop.user.city}</div>
+          <div className="mt-2.5 pt-2.5 border-t border-gray-100 space-y-1">
+            <div className="text-xs">
+              <span className="text-gray-500">Telefon:</span>{' '}
               <a href={`tel:${booking.workshop.user.phone}`} className="text-blue-600 hover:underline">
                 {booking.workshop.user.phone || 'Keine Telefonnummer'}
               </a>
             </div>
-            <div className="text-sm">
-              <span className="text-gray-600">E-Mail:</span>{' '}
+            <div className="text-xs">
+              <span className="text-gray-500">E-Mail:</span>{' '}
               <a href={`mailto:${booking.workshop.user.email}`} className="text-blue-600 hover:underline">
                 {booking.workshop.user.email}
               </a>
@@ -390,143 +402,143 @@ export default function BookingDetailsPage() {
       </Card>
 
       {/* Vehicle Details */}
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4 flex items-center">
-          <Car className="h-5 w-5 mr-2 text-blue-600" />
+      <Card className="p-4 mb-4 border border-gray-200 dark:border-gray-700">
+        <h2 className="text-base font-bold mb-3 flex items-center">
+          <Car className="h-4 w-4 mr-2 text-blue-600" />
           Fahrzeug
         </h2>
-        <div className="space-y-2">
-          <div className="font-semibold text-lg">
+        <div className="space-y-1 text-sm">
+          <div className="font-semibold">
             {booking.vehicle.make} {booking.vehicle.model}
           </div>
-          <div className="text-gray-600">Kennzeichen: {booking.vehicle.licensePlate}</div>
-          <div className="text-gray-600">Baujahr: {booking.vehicle.year}</div>
+          <div className="text-gray-500 text-xs">Kennzeichen: {booking.vehicle.licensePlate}</div>
+          <div className="text-gray-500 text-xs">Baujahr: {booking.vehicle.year}</div>
         </div>
       </Card>
 
       {/* Tire Details - Only show if tires were purchased */}
       {(booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0) || booking.tireData?.isMixedTires ? (
-        <Card className="p-6 mb-6 bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
-          <h2 className="text-xl font-bold mb-4">Gekaufte Reifen</h2>
+        <Card className="p-4 mb-4 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800">
+          <h2 className="text-base font-bold mb-3">Gekaufte Reifen</h2>
           {booking.tireData?.isMixedTires ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Front tire */}
               {booking.tireData.front && (
-                <div className="bg-white/60 rounded-lg p-4">
-                  <p className="text-xs text-primary-600 font-semibold mb-2">🔹 Vorderachse</p>
-                  <div className="font-semibold text-lg text-blue-900">
+                <div className="bg-white/60 dark:bg-gray-800/40 rounded-lg p-3">
+                  <p className="text-[10px] text-primary-600 font-semibold mb-1">🔹 Vorderachse</p>
+                  <div className="font-semibold text-sm text-blue-900 dark:text-blue-200">
                     {booking.tireData.front.brand} {booking.tireData.front.model}
                   </div>
                   {(booking.tireData.front.size || booking.tireData.front.loadIndex) && (
-                    <div className="flex items-start mt-2">
-                      <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
-                      <div className="font-semibold">{booking.tireData.front.size || `${booking.tireData.front.loadIndex || ''}${booking.tireData.front.speedIndex || ''}`}</div>
+                    <div className="flex items-start mt-1.5 text-xs">
+                      <div className="flex-shrink-0 w-28 text-gray-500">Größe:</div>
+                      <div className="font-medium">{booking.tireData.front.size || `${booking.tireData.front.loadIndex || ''}${booking.tireData.front.speedIndex || ''}`}</div>
                     </div>
                   )}
                   {(booking.tireData.front.loadIndex || booking.tireData.front.speedIndex) && (
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
-                      <div className="font-semibold">{booking.tireData.front.loadIndex || '-'} / {booking.tireData.front.speedIndex || '-'}</div>
+                    <div className="flex items-start text-xs">
+                      <div className="flex-shrink-0 w-28 text-gray-500">Load/Speed:</div>
+                      <div className="font-medium">{booking.tireData.front.loadIndex || '-'} / {booking.tireData.front.speedIndex || '-'}</div>
                     </div>
                   )}
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
-                    <div className="font-semibold">{booking.tireData.front.quantity || 1} Stück</div>
+                  <div className="flex items-start text-xs">
+                    <div className="flex-shrink-0 w-28 text-gray-500">Anzahl:</div>
+                    <div className="font-medium">{booking.tireData.front.quantity || 1} Stück</div>
                   </div>
                   {booking.tireData.front.purchasePrice && (
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
-                      <div className="font-semibold">{booking.tireData.front.purchasePrice.toFixed(2)} €</div>
+                    <div className="flex items-start text-xs">
+                      <div className="flex-shrink-0 w-28 text-gray-500">Preis pro Reifen:</div>
+                      <div className="font-medium">{booking.tireData.front.purchasePrice.toFixed(2)} €</div>
                     </div>
                   )}
                 </div>
               )}
               {/* Rear tire */}
               {booking.tireData.rear && (
-                <div className="bg-white/60 rounded-lg p-4">
-                  <p className="text-xs text-orange-600 font-semibold mb-2">🔸 Hinterachse</p>
-                  <div className="font-semibold text-lg text-blue-900">
+                <div className="bg-white/60 dark:bg-gray-800/40 rounded-lg p-3">
+                  <p className="text-[10px] text-orange-600 font-semibold mb-1">🔸 Hinterachse</p>
+                  <div className="font-semibold text-sm text-blue-900 dark:text-blue-200">
                     {booking.tireData.rear.brand} {booking.tireData.rear.model}
                   </div>
                   {(booking.tireData.rear.size || booking.tireData.rear.loadIndex) && (
-                    <div className="flex items-start mt-2">
-                      <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
-                      <div className="font-semibold">{booking.tireData.rear.size || `${booking.tireData.rear.loadIndex || ''}${booking.tireData.rear.speedIndex || ''}`}</div>
+                    <div className="flex items-start mt-1.5 text-xs">
+                      <div className="flex-shrink-0 w-28 text-gray-500">Größe:</div>
+                      <div className="font-medium">{booking.tireData.rear.size || `${booking.tireData.rear.loadIndex || ''}${booking.tireData.rear.speedIndex || ''}`}</div>
                     </div>
                   )}
                   {(booking.tireData.rear.loadIndex || booking.tireData.rear.speedIndex) && (
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
-                      <div className="font-semibold">{booking.tireData.rear.loadIndex || '-'} / {booking.tireData.rear.speedIndex || '-'}</div>
+                    <div className="flex items-start text-xs">
+                      <div className="flex-shrink-0 w-28 text-gray-500">Load/Speed:</div>
+                      <div className="font-medium">{booking.tireData.rear.loadIndex || '-'} / {booking.tireData.rear.speedIndex || '-'}</div>
                     </div>
                   )}
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
-                    <div className="font-semibold">{booking.tireData.rear.quantity || 1} Stück</div>
+                  <div className="flex items-start text-xs">
+                    <div className="flex-shrink-0 w-28 text-gray-500">Anzahl:</div>
+                    <div className="font-medium">{booking.tireData.rear.quantity || 1} Stück</div>
                   </div>
                   {booking.tireData.rear.purchasePrice && (
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
-                      <div className="font-semibold">{booking.tireData.rear.purchasePrice.toFixed(2)} €</div>
+                    <div className="flex items-start text-xs">
+                      <div className="flex-shrink-0 w-28 text-gray-500">Preis pro Reifen:</div>
+                      <div className="font-medium">{booking.tireData.rear.purchasePrice.toFixed(2)} €</div>
                     </div>
                   )}
                 </div>
               )}
               {/* Total */}
-              <div className="pt-3 mt-3 border-t border-blue-300">
+              <div className="pt-2 mt-2 border-t border-blue-300">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-700 font-semibold">Gesamt Reifen:</span>
-                  <span className="text-xl font-bold text-blue-700">
+                  <span className="text-gray-700 text-sm font-semibold">Gesamt Reifen:</span>
+                  <span className="text-base font-bold text-blue-700">
                     {((booking.tireData.front?.totalPrice || 0) + (booking.tireData.rear?.totalPrice || 0)).toFixed(2)} €
                   </span>
                 </div>
               </div>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {booking.tireBrand && booking.tireModel && (
                 <div>
-                  <div className="font-semibold text-lg text-blue-900">
+                  <div className="font-semibold text-sm text-blue-900 dark:text-blue-200">
                     {booking.tireBrand} {booking.tireModel}
                   </div>
                 </div>
               )}
               {(booking.tireSize || booking.tireLoadIndex) && (
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-32 text-gray-600">Größe:</div>
-                  <div className="font-semibold">{booking.tireSize || `${booking.tireLoadIndex || ''}${booking.tireSpeedIndex || ''}`}</div>
+                <div className="flex items-start text-xs">
+                  <div className="flex-shrink-0 w-28 text-gray-500">Größe:</div>
+                  <div className="font-medium">{booking.tireSize || `${booking.tireLoadIndex || ''}${booking.tireSpeedIndex || ''}`}</div>
                 </div>
               )}
               {(booking.tireLoadIndex || booking.tireSpeedIndex) && (
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-32 text-gray-600">Load/Speed:</div>
-                  <div className="font-semibold">
+                <div className="flex items-start text-xs">
+                  <div className="flex-shrink-0 w-28 text-gray-500">Load/Speed:</div>
+                  <div className="font-medium">
                     {booking.tireLoadIndex || '-'} / {booking.tireSpeedIndex || '-'}
                   </div>
                 </div>
               )}
               {booking.tireQuantity && (
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-32 text-gray-600">Anzahl:</div>
-                  <div className="font-semibold">{booking.tireQuantity} Stück</div>
+                <div className="flex items-start text-xs">
+                  <div className="flex-shrink-0 w-28 text-gray-500">Anzahl:</div>
+                  <div className="font-medium">{booking.tireQuantity} Stück</div>
                 </div>
               )}
               {booking.tirePurchasePrice && (
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 w-32 text-gray-600">Preis pro Reifen:</div>
-                  <div className="font-semibold">{booking.tirePurchasePrice.toFixed(2)} €</div>
+                <div className="flex items-start text-xs">
+                  <div className="flex-shrink-0 w-28 text-gray-500">Preis pro Reifen:</div>
+                  <div className="font-medium">{booking.tirePurchasePrice.toFixed(2)} €</div>
                 </div>
               )}
               {booking.tireRunFlat && (
-                <div className="flex items-center text-blue-600 mt-2">
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                <div className="flex items-center text-blue-600 text-xs mt-1.5">
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
                   Runflat-Reifen
                 </div>
               )}
-              <div className="pt-3 mt-3 border-t border-blue-300">
+              <div className="pt-2 mt-2 border-t border-blue-300">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-700 font-semibold">Gesamt Reifen:</span>
-                  <span className="text-xl font-bold text-blue-700">
+                  <span className="text-gray-700 text-sm font-semibold">Gesamt Reifen:</span>
+                  <span className="text-base font-bold text-blue-700">
                     {booking.totalTirePurchasePrice?.toFixed(2) || '0.00'} €
                   </span>
                 </div>
@@ -537,9 +549,9 @@ export default function BookingDetailsPage() {
       ) : null}
 
       {/* Payment Details */}
-      <Card className="p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">Zahlungsdetails</h2>
-        <div className="space-y-3">
+      <Card className="p-4 mb-4 border border-gray-200 dark:border-gray-700">
+        <h2 className="text-base font-bold mb-3">Zahlungsdetails</h2>
+        <div className="space-y-2 text-sm">
           {booking.tireData?.isMixedTires ? (
             <>
               {booking.tireData.front && (
@@ -598,13 +610,19 @@ export default function BookingDetailsPage() {
               <span className="font-semibold">{booking.storagePrice.toFixed(2)} €</span>
             </div>
           )}
+          {booking.hasWashing && booking.washingPrice && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Räder waschen:</span>
+              <span className="font-semibold">{booking.washingPrice.toFixed(2)} €</span>
+            </div>
+          )}
           {booking.hasDisposal && booking.disposalFee && (
             <div className="flex justify-between">
               <span className="text-gray-600">Entsorgung:</span>
               <span className="font-semibold">{booking.disposalFee.toFixed(2)} €</span>
             </div>
           )}
-          {booking.tireRunFlat && booking.runFlatSurcharge && (
+          {booking.runFlatSurcharge && Number(booking.runFlatSurcharge) > 0 && (
             <div className="flex justify-between">
               <span className="text-gray-600">Runflat-Zuschlag:</span>
               <span className="font-semibold">{booking.runFlatSurcharge.toFixed(2)} €</span>
@@ -617,42 +635,63 @@ export default function BookingDetailsPage() {
               <span className="font-semibold">{svc.price.toFixed(2)} €</span>
             </div>
           ))}
-          <div className="pt-3 border-t-2 border-gray-300">
+          {/* Coupon discount */}
+          {booking.couponCode && booking.discountAmount && booking.originalPrice ? (
+            <>
+              <div className="pt-2 border-t border-dashed border-gray-200 dark:border-gray-600">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Zwischensumme:</span>
+                  <span className="text-gray-400 line-through">{booking.originalPrice.toFixed(2)} €</span>
+                </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-green-600 text-sm flex items-center gap-1">
+                  🎫 Gutschein <span className="font-mono font-bold">{booking.couponCode}</span>
+                </span>
+                <span className="text-green-600 font-semibold">-{booking.discountAmount.toFixed(2)} €</span>
+              </div>
+            </>
+          ) : null}
+          <div className="pt-2.5 border-t-2 border-gray-300 dark:border-gray-600">
             <div className="flex justify-between items-center">
-              <span className="text-lg font-bold">Gesamtbetrag:</span>
-              <span className="text-2xl font-bold text-green-600">
+              <span className="text-sm font-bold">Gesamtbetrag:</span>
+              <span className="text-lg font-bold text-green-600">
                 {booking.totalPrice.toFixed(2)} €
               </span>
             </div>
           </div>
-          <div className="flex justify-between text-sm pt-2">
-            <span className="text-gray-600">Zahlungsmethode:</span>
-            <span className="font-semibold">
+          <div className="flex justify-between text-xs pt-1.5">
+            <span className="text-gray-500">Zahlungsmethode:</span>
+            <span className="font-medium">
               {getPaymentMethodLabel(booking.paymentMethod)}
             </span>
           </div>
-          <div className="flex items-center justify-center mt-4 p-3 bg-green-50 rounded-lg">
-            <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-            <span className="text-green-700 font-semibold">Bereits bezahlt</span>
+          <div className="flex items-center justify-center mt-3 p-2 bg-green-50 dark:bg-green-900/30 rounded-lg">
+            <CheckCircle className="h-4 w-4 text-green-600 mr-1.5" />
+            <span className="text-green-700 dark:text-green-400 text-xs font-semibold">Bereits bezahlt</span>
           </div>
         </div>
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-4 justify-center">
+      <div className="flex gap-3 justify-center">
         <Button
           variant="outline"
+          size="sm"
           onClick={handleAddToCalendar}
+          className="text-xs"
         >
-          <Calendar className="h-4 w-4 mr-2" />
+          <Calendar className="h-3.5 w-3.5 mr-1.5" />
           Zu Kalender hinzufügen
         </Button>
         <Button
           variant="outline"
+          size="sm"
           onClick={handleInvoiceDownload}
           disabled={requestingInvoice}
+          className="text-xs"
         >
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-3.5 w-3.5 mr-1.5" />
           {booking.invoiceUrl ? 'Rechnung herunterladen' : 
            requestingInvoice ? 'Anfrage wird gesendet...' : 
            'Rechnung anfordern'}
@@ -661,14 +700,14 @@ export default function BookingDetailsPage() {
 
       {/* Invoice Request Confirmation */}
       {(invoiceRequested || booking.invoiceRequestedAt) && !booking.invoiceUrl && (
-        <Card className="p-4 mt-6 bg-orange-50 border-orange-200">
+        <Card className="p-3 mt-4 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
           <div className="flex items-start">
-            <CheckCircle className="h-5 w-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />
+            <CheckCircle className="h-4 w-4 text-orange-600 mr-2 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-orange-900 mb-1">
+              <p className="text-xs font-semibold text-orange-900 dark:text-orange-300 mb-0.5">
                 Werkstatt wurde informiert
               </p>
-              <p className="text-sm text-orange-800">
+              <p className="text-xs text-orange-800 dark:text-orange-400">
                 Die Werkstatt wurde über Ihre Rechnungsanforderung informiert und 
                 wird diese in Kürze hochladen. Sie erhalten eine Benachrichtigung, 
                 sobald die Rechnung verfügbar ist.
@@ -679,8 +718,8 @@ export default function BookingDetailsPage() {
       )}
 
       {/* Email Confirmation Notice */}
-      <Card className="p-4 mt-6 bg-blue-50 border-blue-200">
-        <p className="text-sm text-center text-blue-800">
+      <Card className="p-3 mt-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+        <p className="text-xs text-center text-blue-800 dark:text-blue-300">
           📧 Eine Bestätigungs-E-Mail wurde an Ihre E-Mail-Adresse gesendet.
         </p>
       </Card>

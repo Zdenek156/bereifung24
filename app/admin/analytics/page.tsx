@@ -18,12 +18,30 @@ interface AnalyticsData {
   topReferrers: Array<{ referrer: string; count: number }>
 }
 
+interface GSCData {
+  overview: {
+    totalClicks: number
+    totalImpressions: number
+    avgCtr: number
+    avgPosition: number
+  }
+  topQueries: Array<{ query: string; clicks: number; impressions: number; ctr: number; position: number }>
+  topPages: Array<{ page: string; clicks: number; impressions: number; ctr: number; position: number }>
+  dailyData: Array<{ date: string; clicks: number; impressions: number }>
+}
+
 export default function AdminAnalyticsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [timeRange, setTimeRange] = useState('7d')
+  const [gscData, setGscData] = useState<GSCData | null>(null)
+  const [gscLoading, setGscLoading] = useState(false)
+  const [gscError, setGscError] = useState<string | null>(null)
+  const [gscConfigured, setGscConfigured] = useState(true)
+  const [gscFilter, setGscFilter] = useState('')
+  const [gscTimeRange, setGscTimeRange] = useState('7d')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -34,6 +52,7 @@ export default function AdminAnalyticsPage() {
     }
 
     fetchAnalytics()
+    fetchGSCData()
   }, [session, status, router, timeRange])
 
   const fetchAnalytics = async () => {
@@ -55,6 +74,43 @@ export default function AdminAnalyticsPage() {
     }
   }
 
+  const fetchGSCData = async (tr?: string, filter?: string) => {
+    try {
+      setGscLoading(true)
+      setGscError(null)
+      const range = tr || gscTimeRange
+      const filterParam = filter !== undefined ? filter : gscFilter
+      let url = `/api/admin/analytics/search-console?timeRange=${range}`
+      if (filterParam) url += `&filter=${encodeURIComponent(filterParam)}`
+      
+      const response = await fetch(url)
+      const data = await response.json()
+
+      if (response.ok) {
+        setGscData(data)
+        setGscConfigured(true)
+      } else {
+        setGscError(data.error)
+        setGscConfigured(data.configured !== false)
+      }
+    } catch (error) {
+      console.error('Error fetching GSC data:', error)
+      setGscError('Verbindungsfehler')
+    } finally {
+      setGscLoading(false)
+    }
+  }
+
+  const handleGscTimeRangeChange = (range: string) => {
+    setGscTimeRange(range)
+    fetchGSCData(range)
+  }
+
+  const handleGscFilterChange = (filter: string) => {
+    setGscFilter(filter)
+    fetchGSCData(undefined, filter)
+  }
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -73,7 +129,7 @@ export default function AdminAnalyticsPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">📊 Analytics & Besucherstatistik</h1>
               <p className="mt-1 text-sm text-gray-600">
-                Seitenaufrufe und Besucher-Tracking
+                Seitenaufrufe, Besucher-Tracking und Google Search Console
               </p>
             </div>
           </div>
@@ -83,76 +139,263 @@ export default function AdminAnalyticsPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Time Range Filter */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Zeitraum
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {[
-              { value: '24h', label: 'Letzte 24 Stunden' },
-              { value: '7d', label: 'Letzte 7 Tage' },
-              { value: '30d', label: 'Letzte 30 Tage' },
-              { value: '90d', label: 'Letzte 90 Tage' },
-              { value: 'year', label: 'Letztes Jahr' },
-              { value: 'all', label: 'Gesamt' },
-            ].map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setTimeRange(option.value)}
-                className={`px-4 py-2 rounded-lg ${
-                  timeRange === option.value
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {option.label}
-              </button>
-            ))}
+          <div className="flex flex-wrap gap-6 items-end">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Zeitraum (Website)</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: '24h', label: 'Letzte 24 Stunden' },
+                  { value: '7d', label: 'Letzte 7 Tage' },
+                  { value: '30d', label: 'Letzte 30 Tage' },
+                  { value: '90d', label: 'Letzte 90 Tage' },
+                  { value: 'year', label: 'Letztes Jahr' },
+                  { value: 'all', label: 'Gesamt' },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setTimeRange(option.value)}
+                    className={`px-4 py-2 rounded-lg ${
+                      timeRange === option.value
+                        ? 'bg-primary-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {gscConfigured && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Zeitraum (Google)</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: '7d', label: '7 Tage' },
+                      { value: '30d', label: '30 Tage' },
+                      { value: '90d', label: '90 Tage' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => handleGscTimeRangeChange(option.value)}
+                        className={`px-3 py-2 rounded-lg text-sm ${gscTimeRange === option.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Google Filter</label>
+                  <div className="flex gap-2">
+                    {[
+                      { value: '', label: 'Alle Seiten' },
+                      { value: 'werkstatt', label: 'Werkstatt-SEO' },
+                      { value: 'ratgeber', label: 'Blog' },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => handleGscFilterChange(option.value)}
+                        className={`px-3 py-2 rounded-lg text-sm ${gscFilter === option.value ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {analytics && (
-          <>
-            {/* Overview Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-blue-100 rounded-lg p-3">
-                    <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Gesamt Seitenaufrufe</p>
-                    <p className="text-2xl font-bold text-gray-900">{analytics.totalViews.toLocaleString()}</p>
-                  </div>
+        {/* Overview Stats - Combined */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+          {/* Website Stats */}
+          {analytics && (
+            <>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Seitenaufrufe</p>
                 </div>
+                <p className="text-2xl font-bold text-gray-900">{analytics.totalViews.toLocaleString()}</p>
               </div>
-
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0 bg-green-100 rounded-lg p-3">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">Eindeutige Besucher</p>
-                    <p className="text-2xl font-bold text-gray-900">{analytics.uniqueVisitors.toLocaleString()}</p>
-                  </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Besucher</p>
                 </div>
+                <p className="text-2xl font-bold text-gray-900">{analytics.uniqueVisitors.toLocaleString()}</p>
+              </div>
+            </>
+          )}
+          {/* GSC Stats */}
+          {gscData && (
+            <>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Google Klicks</p>
+                </div>
+                <p className="text-2xl font-bold text-blue-600">{gscData.overview.totalClicks.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Impressions</p>
+                </div>
+                <p className="text-2xl font-bold text-purple-600">{gscData.overview.totalImpressions.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Klickrate (CTR)</p>
+                </div>
+                <p className="text-2xl font-bold text-green-600">{(gscData.overview.avgCtr * 100).toFixed(1)}%</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Ø Position</p>
+                </div>
+                <p className="text-2xl font-bold text-orange-600">{gscData.overview.avgPosition.toFixed(1)}</p>
+              </div>
+            </>
+          )}
+          {!gscConfigured && (
+            <div className="col-span-2 md:col-span-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <p className="text-sm text-yellow-700">
+                🔍 Google Search Console nicht konfiguriert.{' '}
+                <Link href="/admin/api-settings" className="font-medium underline hover:text-yellow-900">API-Einstellungen öffnen</Link>
+              </p>
+            </div>
+          )}
+          {gscLoading && !gscData && (
+            <div className="col-span-2 md:col-span-4 flex items-center justify-center py-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            </div>
+          )}
+        </div>
+
+        {/* GSC Daily Chart - Klicks & Impressions */}
+        {gscData && gscData.dailyData.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">📈 Google Klicks & Impressions pro Tag</h2>
+            <div className="overflow-x-auto">
+              <div className="flex items-end gap-1 min-w-max" style={{ height: '180px' }}>
+                {gscData.dailyData.map((day, index) => {
+                  const maxImpressions = Math.max(...gscData.dailyData.map(d => d.impressions))
+                  const impressionHeight = maxImpressions > 0 ? (day.impressions / maxImpressions) * 140 : 0
+                  const clickHeight = maxImpressions > 0 ? (day.clicks / maxImpressions) * 140 : 0
+                  return (
+                    <div key={index} className="flex flex-col items-center relative group" style={{ minWidth: '28px' }}>
+                      <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                        {day.clicks} Klicks / {day.impressions} Impressions
+                      </div>
+                      <div className="w-5 bg-purple-200 rounded-t relative" style={{ height: `${impressionHeight}px` }}>
+                        <div className="absolute bottom-0 w-full bg-blue-500 rounded-t" style={{ height: `${clickHeight}px` }}></div>
+                      </div>
+                      <p className="text-[9px] text-gray-500 mt-1 rotate-45 origin-top-left w-12">
+                        {new Date(day.date).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+              <div className="flex gap-4 mt-4 text-xs text-gray-500">
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-500 rounded"></span> Klicks</span>
+                <span className="flex items-center gap-1"><span className="w-3 h-3 bg-purple-200 rounded"></span> Impressions</span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* GSC Top Keywords */}
+        {gscData && gscData.topQueries.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">🔑 Top Suchanfragen (Google)</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Suchanfrage</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Klicks</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Impressions</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">CTR</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Position</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {gscData.topQueries.map((q, i) => (
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">{q.query}</td>
+                      <td className="px-4 py-3 text-sm text-right font-semibold text-blue-600">{q.clicks}</td>
+                      <td className="px-4 py-3 text-sm text-right text-gray-600">{q.impressions.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm text-right text-gray-600">{(q.ctr * 100).toFixed(1)}%</td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        <span className={`font-semibold ${q.position <= 10 ? 'text-green-600' : q.position <= 20 ? 'text-yellow-600' : 'text-red-600'}`}>
+                          {q.position.toFixed(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* GSC Top Pages */}
+        {gscData && gscData.topPages.length > 0 && (
+          <div className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">📄 Top Seiten (Google)</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Seite</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Klicks</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Impressions</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">CTR</th>
+                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Position</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {gscData.topPages.map((p, i) => (
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-sm text-gray-900 font-mono">{p.page}</td>
+                      <td className="px-4 py-3 text-sm text-right font-semibold text-blue-600">{p.clicks}</td>
+                      <td className="px-4 py-3 text-sm text-right text-gray-600">{p.impressions.toLocaleString()}</td>
+                      <td className="px-4 py-3 text-sm text-right text-gray-600">{(p.ctr * 100).toFixed(1)}%</td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        <span className={`font-semibold ${p.position <= 10 ? 'text-green-600' : p.position <= 20 ? 'text-yellow-600' : 'text-red-600'}`}>
+                          {p.position.toFixed(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Website Analytics Section */}
+        {analytics && (
+          <>
+            {/* Divider */}
+            <div className="border-t my-8"></div>
+            <h2 className="text-xl font-bold text-gray-900 mb-6">🌐 Website-Statistiken</h2>
 
             {/* Views by Day Chart */}
             {analytics.viewsByDay.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">📈 Aufrufe pro Tag</h2>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Seitenaufrufe pro Tag</h3>
                 <div className="overflow-x-auto">
                   <div className="flex items-end gap-2 min-w-max" style={{ height: '200px' }}>
                     {analytics.viewsByDay.map((day, index) => {
                       const maxCount = Math.max(...analytics.viewsByDay.map(d => d.count))
-                      const height = (day.count / maxCount) * 160
+                      const height = maxCount > 0 ? (day.count / maxCount) * 160 : 0
                       return (
                         <div key={index} className="flex flex-col items-center">
                           <div
@@ -176,7 +419,7 @@ export default function AdminAnalyticsPage() {
 
             {/* Views by Page */}
             <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">📄 Top Seiten</h2>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">📄 Top Seiten (Website)</h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
@@ -206,7 +449,7 @@ export default function AdminAnalyticsPage() {
             {/* Workshop Landing Page Views */}
             {analytics.workshopViews.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">🏪 Werkstatt Landing Pages</h2>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">🏪 Werkstatt Landing Pages</h3>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead>
@@ -233,7 +476,7 @@ export default function AdminAnalyticsPage() {
             {/* Top Referrers */}
             {analytics.topReferrers.length > 0 && (
               <div className="bg-white rounded-lg shadow p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">🔗 Top Referrer</h2>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">🔗 Top Referrer</h3>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead>

@@ -77,9 +77,7 @@ export default function WerkstattInfoPage() {
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-4">
               <Link href="/" className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xl font-bold">B24</span>
-                </div>
+                <img src="/logos/B24_Logo_blau_gray.png" alt="Bereifung24" className="h-10 w-auto" />
                 <div>
                   <h1 className="text-2xl font-bold">Bereifung24</h1>
                   <p className="text-xs text-gray-400">Für Werkstätten</p>
@@ -388,6 +386,173 @@ export default function WerkstattInfoPage() {
         </div>
       </section>
 
+      {/* Regional Section - Internal Links for SEO */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto">
+            <AnimatedSection className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Bereifung24 deutschlandweit
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                In über 100 Städten verfügbar – finde heraus, wie Bereifung24 in deiner Stadt funktioniert.
+              </p>
+            </AnimatedSection>
+            
+            {/* Top Städte nach Region */}
+            {[
+              {
+                region: 'Baden-Württemberg',
+                cities: [
+                  { name: 'Stuttgart', slug: 'stuttgart' },
+                  { name: 'Karlsruhe', slug: 'karlsruhe' },
+                  { name: 'Mannheim', slug: 'mannheim' },
+                  { name: 'Freiburg', slug: 'freiburg' },
+                  { name: 'Heidelberg', slug: 'heidelberg' },
+                  { name: 'Ulm', slug: 'ulm' },
+                  { name: 'Heilbronn', slug: 'heilbronn' },
+                  { name: 'Pforzheim', slug: 'pforzheim' },
+                  { name: 'Reutlingen', slug: 'reutlingen' },
+                  { name: 'Esslingen', slug: 'esslingen' },
+                ]
+              },
+              {
+                region: 'Bayern',
+                cities: [
+                  { name: 'München', slug: 'muenchen' },
+                  { name: 'Nürnberg', slug: 'nuernberg' },
+                  { name: 'Augsburg', slug: 'augsburg' },
+                  { name: 'Regensburg', slug: 'regensburg' },
+                  { name: 'Ingolstadt', slug: 'ingolstadt' },
+                  { name: 'Würzburg', slug: 'wuerzburg' },
+                  { name: 'Fürth', slug: 'fuerth' },
+                  { name: 'Erlangen', slug: 'erlangen' },
+                ]
+              },
+              {
+                region: 'Nordrhein-Westfalen',
+                cities: [
+                  { name: 'Köln', slug: 'koeln' },
+                  { name: 'Düsseldorf', slug: 'duesseldorf' },
+                  { name: 'Dortmund', slug: 'dortmund' },
+                  { name: 'Essen', slug: 'essen' },
+                  { name: 'Duisburg', slug: 'duisburg' },
+                  { name: 'Bochum', slug: 'bochum' },
+                  { name: 'Bonn', slug: 'bonn' },
+                  { name: 'Münster', slug: 'muenster' },
+                  { name: 'Bielefeld', slug: 'bielefeld' },
+                  { name: 'Aachen', slug: 'aachen' },
+                ]
+              },
+              {
+                region: 'Niedersachsen & Bremen',
+                cities: [
+                  { name: 'Hannover', slug: 'hannover' },
+                  { name: 'Braunschweig', slug: 'braunschweig' },
+                  { name: 'Oldenburg', slug: 'oldenburg' },
+                  { name: 'Osnabrück', slug: 'osnabrueck' },
+                  { name: 'Wolfsburg', slug: 'wolfsburg' },
+                  { name: 'Bremen', slug: 'bremen' },
+                ]
+              },
+              {
+                region: 'Hessen',
+                cities: [
+                  { name: 'Frankfurt am Main', slug: 'frankfurt-am-main' },
+                  { name: 'Wiesbaden', slug: 'wiesbaden' },
+                  { name: 'Kassel', slug: 'kassel' },
+                  { name: 'Darmstadt', slug: 'darmstadt' },
+                  { name: 'Offenbach', slug: 'offenbach-am-main' },
+                ]
+              },
+              {
+                region: 'Sachsen & Thüringen',
+                cities: [
+                  { name: 'Leipzig', slug: 'leipzig' },
+                  { name: 'Dresden', slug: 'dresden' },
+                  { name: 'Chemnitz', slug: 'chemnitz' },
+                  { name: 'Erfurt', slug: 'erfurt' },
+                  { name: 'Jena', slug: 'jena' },
+                ]
+              },
+              {
+                region: 'Nord- & Ostdeutschland',
+                cities: [
+                  { name: 'Berlin', slug: 'berlin' },
+                  { name: 'Hamburg', slug: 'hamburg' },
+                  { name: 'Kiel', slug: 'kiel' },
+                  { name: 'Lübeck', slug: 'luebeck' },
+                  { name: 'Rostock', slug: 'rostock' },
+                  { name: 'Potsdam', slug: 'potsdam' },
+                  { name: 'Magdeburg', slug: 'magdeburg' },
+                ]
+              },
+              {
+                region: 'Rheinland-Pfalz & Saarland',
+                cities: [
+                  { name: 'Mainz', slug: 'mainz' },
+                  { name: 'Koblenz', slug: 'koblenz' },
+                  { name: 'Trier', slug: 'trier' },
+                  { name: 'Kaiserslautern', slug: 'kaiserslautern' },
+                  { name: 'Saarbrücken', slug: 'saarbruecken' },
+                ]
+              },
+            ].map((group) => (
+              <div key={group.region} className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">{group.region}</h3>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {group.cities.map((city) => (
+                    <Link
+                      key={city.slug}
+                      href={`/werkstatt-werden/${city.slug}`}
+                      className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors"
+                    >
+                      {city.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="text-center mt-8">
+              <Link
+                href="/werkstatt-werden"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"
+              >
+                Alle 100+ Städte ansehen →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SEO Blog Section - Internal Links */}
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h3 className="text-2xl font-bold mb-6">Ratgeber für Werkstätten</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+              <Link href="/ratgeber/werkstatt-kunden-gewinnen-7-strategien-2026" className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                <p className="font-semibold text-gray-900">7 Strategien: Mehr Kunden gewinnen</p>
+                <p className="text-sm text-gray-500 mt-1">Praxiserprobte Methoden für KFZ-Werkstätten</p>
+              </Link>
+              <Link href="/ratgeber/online-terminbuchung-werkstatt-telefon-veraltet" className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                <p className="font-semibold text-gray-900">Online-Terminbuchung für Werkstätten</p>
+                <p className="text-sm text-gray-500 mt-1">Warum Telefon-Termine 2026 veraltet sind</p>
+              </Link>
+              <Link href="/ratgeber/reifenservice-ohne-lagerhaltung-automatisches-bestellsystem" className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                <p className="font-semibold text-gray-900">Reifenservice ohne Lagerhaltung</p>
+                <p className="text-sm text-gray-500 mt-1">Automatisches Bestellsystem erklärt</p>
+              </Link>
+              <Link href="/ratgeber/werkstatt-digitalisieren-2026-schritt-fuer-schritt" className="p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                <p className="font-semibold text-gray-900">Werkstatt digitalisieren 2026</p>
+                <p className="text-sm text-gray-500 mt-1">Schritt-für-Schritt Anleitung</p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -395,9 +560,7 @@ export default function WerkstattInfoPage() {
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xl font-bold">B24</span>
-                </div>
+                <img src="/logos/B24_Logo_blau_gray.png" alt="Bereifung24" className="h-10 w-auto" />
                 <h3 className="text-2xl font-bold">Bereifung24</h3>
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">

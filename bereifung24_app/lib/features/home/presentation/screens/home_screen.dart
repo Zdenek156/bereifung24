@@ -1,0 +1,1067 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../data/models/models.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../bookings/presentation/screens/bookings_screen.dart';
+import '../../../search/presentation/screens/search_screen.dart';
+import '../../../vehicles/presentation/screens/vehicles_screen.dart';
+
+// ══════════════════════════════════════
+// Card shadow helper
+// ══════════════════════════════════════
+
+BoxShadow _cardShadow({bool isDark = false}) => BoxShadow(
+  color: isDark
+      ? Colors.black.withValues(alpha: 0.3)
+      : const Color(0xFF0F172A).withValues(alpha: 0.08),
+  blurRadius: 16,
+  offset: const Offset(0, 4),
+  spreadRadius: 0,
+);
+
+BoxShadow _cardShadowLight({bool isDark = false}) => BoxShadow(
+  color: isDark
+      ? Colors.black.withValues(alpha: 0.2)
+      : const Color(0xFF0F172A).withValues(alpha: 0.05),
+  blurRadius: 10,
+  offset: const Offset(0, 2),
+  spreadRadius: 0,
+);
+
+String _roleName(String role) => switch (role) {
+  'WORKSHOP' => 'Werkstatt',
+  'FREELANCER' => 'Freelancer',
+  'EMPLOYEE' => 'Mitarbeiter',
+  'ADMIN' => 'Administrator',
+  _ => role,
+};
+
+class HomeScreen extends ConsumerWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+    final user = authState.user;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(bookingsProvider);
+            ref.invalidate(vehiclesProvider);
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header (compact) ──
+                _FadeSlideIn(
+                  delay: 0,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hallo${user?.firstName != null ? ', ${user!.firstName}' : ''}! 👋',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w800,
+                                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Was steht heute an?',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => context.go('/profile'),
+                      child: (user?.profileImage != null && user!.profileImage!.isNotEmpty)
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              user.profileImage!,
+                              width: 38,
+                              height: 38,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                width: 38,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: B24Colors.primaryBlue,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  user.firstName![0].toUpperCase(),
+                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: B24Colors.primaryBlue,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          (user?.firstName?.isNotEmpty == true)
+                              ? user!.firstName![0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // ── Role warning for non-customer users ──
+                if (user != null && user.role != 'CUSTOMER') ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.shade300),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.orange[800], size: 22),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Angemeldet als ${_roleName(user.role)}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.orange[900],
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Diese App ist für Kunden. Für die Werkstattverwaltung nutze bitte das Web-Dashboard.',
+                                style: TextStyle(fontSize: 11, color: Colors.orange[800]),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // ── Nächster Termin (above the fold!) ──
+                _FadeSlideIn(delay: 1, child: _NextAppointmentCard()),
+
+                const SizedBox(height: 16),
+
+                // ── Schnellbuchung / Fahrzeug-Kontext ──
+                _FadeSlideIn(delay: 2, child: _VehicleQuickBookCard()),
+
+                const SizedBox(height: 16),
+
+                // ── KI-Berater + Pannenhilfe ──
+                _FadeSlideIn(
+                  delay: 3,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _AIAdvisorCard()),
+                        const SizedBox(width: 12),
+                        Expanded(child: _SOSCard()),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // ── Services (kompaktes 3×2 Grid) ──
+                _FadeSlideIn(
+                  delay: 4,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Alle Services',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.go('/search'),
+                        child: const Text(
+                          'Alle →',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: B24Colors.primaryBlue,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                _FadeSlideIn(delay: 5, child: _ServicesGrid()),
+
+                const SizedBox(height: 16),
+
+                // ── Saisonaler Hinweis ──
+                _FadeSlideIn(delay: 6, child: _SeasonTipCard()),
+
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// KI-Berater Card
+// ══════════════════════════════════════
+
+class _AIAdvisorCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () => context.push('/ai-advisor'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? const Color(0xFF0284C7).withValues(alpha: 0.18)
+              : const Color(0xFFDBEAFE),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [_cardShadow(isDark: isDark)],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+              child: Image.asset(
+                'assets/images/services/ki_berater.jpg',
+                width: double.infinity,
+                height: 120,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'KI-Berater',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'Dein Reifen-Experte',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// SOS / Pannen-Modus Card (compact)
+// ══════════════════════════════════════
+
+class _SOSCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () => context.push('/emergency'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark
+              ? const Color(0xFF7F1D1D).withValues(alpha: 0.3)
+              : const Color(0xFFFEE2E2),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [_cardShadow(isDark: isDark)],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+              child: Image.asset(
+                'assets/images/services/sos.jpg',
+                width: double.infinity,
+                height: 120,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Pannenhilfe',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Text(
+                'Werkstatt sofort finden',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// Next Appointment Card (Hero)
+// ══════════════════════════════════════
+
+class _NextAppointmentCard extends ConsumerWidget {
+  static const _serviceLabels = {
+    'TIRE_CHANGE': 'Reifenwechsel',
+    'WHEEL_CHANGE': 'Räderwechsel',
+    'TIRE_REPAIR': 'Reifenreparatur',
+    'MOTORCYCLE_TIRE': 'Motorrad-Reifen',
+    'ALIGNMENT_BOTH': 'Achsvermessung',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bookingsAsync = ref.watch(bookingsProvider);
+
+    return bookingsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (bookings) {
+        final now = DateTime.now();
+        final upcoming = bookings
+            .where((b) {
+                // Build full DateTime including time
+                var apptDateTime = b.appointmentDate;
+                if (b.appointmentTime != null && b.appointmentTime!.isNotEmpty) {
+                  final parts = b.appointmentTime!.split(':');
+                  if (parts.length >= 2) {
+                    final h = int.tryParse(parts[0]) ?? 0;
+                    final m = int.tryParse(parts[1]) ?? 0;
+                    apptDateTime = DateTime(
+                      apptDateTime.year, apptDateTime.month, apptDateTime.day, h, m,
+                    );
+                  }
+                }
+                return apptDateTime.isAfter(now) &&
+                    b.status != 'CANCELLED' &&
+                    b.status != 'NO_SHOW';
+            })
+            .toList()
+          ..sort((a, b) => a.appointmentDate.compareTo(b.appointmentDate));
+
+        if (upcoming.isEmpty) return const SizedBox.shrink();
+
+        final next = upcoming.first;
+        final dateStr = DateFormat('EEE, d. MMM yyyy', 'de_DE').format(next.appointmentDate);
+        final timeStr = next.appointmentTime ?? '';
+        final daysUntil = next.appointmentDate.difference(now).inDays;
+        final daysLabel = daysUntil == 0
+            ? 'Heute'
+            : daysUntil == 1
+                ? 'Morgen'
+                : 'In $daysUntil Tagen';
+
+        return GestureDetector(
+          onTap: () => context.go('/bookings'),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                  : const Color(0xFFE0F2FE),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [_cardShadowLight(isDark: isDark)],
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _serviceLabels[next.serviceType] ?? next.serviceTypeDisplay,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '$dateStr ($daysLabel)${timeStr.isNotEmpty ? '\n$timeStr Uhr' : ''}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                          ),
+                        ),
+                        if (next.workshopName != null) ...[    
+                          const SizedBox(height: 1),
+                          Text(
+                            '📍 ${next.workshopName}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topRight: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                  child: Image.asset(
+                    'assets/images/services/termin.jpg',
+                    width: 100,
+                    height: 100,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// Vehicle Quick Book Card
+// ══════════════════════════════════════
+
+final _homeVehicleIndexProvider = StateProvider<int>((ref) => 0);
+
+/// Load saved vehicle index from SharedPreferences
+Future<void> _loadSavedVehicleIndex(WidgetRef ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  final savedIdx = prefs.getInt('selectedVehicleIndex') ?? 0;
+  ref.read(_homeVehicleIndexProvider.notifier).state = savedIdx;
+}
+
+/// Save vehicle index to SharedPreferences
+Future<void> _saveVehicleIndex(int index) async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setInt('selectedVehicleIndex', index);
+}
+
+class _VehicleQuickBookCard extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_VehicleQuickBookCard> createState() => _VehicleQuickBookCardState();
+}
+
+class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedVehicleIndex(ref).then((_) {
+      if (mounted) setState(() => _loaded = true);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final vehiclesAsync = ref.watch(vehiclesProvider);
+
+    return vehiclesAsync.when(
+      loading: () => _buildEmpty(context),
+      error: (_, __) => _buildEmpty(context),
+      data: (vehicles) {
+        if (vehicles.isEmpty) return _buildEmpty(context);
+        final idx = ref.watch(_homeVehicleIndexProvider).clamp(0, vehicles.length - 1);
+        final v = vehicles[idx];
+
+        // Always keep search provider in sync with home selection
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(selectedVehicleProvider.notifier).state = v;
+        });
+
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? B24Colors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [_cardShadow(isDark: isDark)],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${v.make} ${v.model}',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${v.licensePlate ?? ''}${v.year != null ? ' · ${v.year}' : ''}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                        ),
+                      ),
+                      if (vehicles.length > 1) ...[    
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: () => _showVehiclePicker(context, vehicles, idx),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                            side: BorderSide(
+                              color: isDark
+                                  ? Colors.white.withValues(alpha: 0.3)
+                                  : Colors.grey.withValues(alpha: 0.3),
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text(
+                            'Fahrzeug wechseln',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                child: Image.asset(
+                  'assets/images/services/fahrzeug.jpg',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showVehiclePicker(BuildContext context, List<Vehicle> vehicles, int currentIdx) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(ctx).size.height * 0.7,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Fahrzeug wählen',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: B24Colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: vehicles.length,
+                    itemBuilder: (ctx, i) {
+                      final veh = vehicles[i];
+                      final isSelected = i == currentIdx;
+                      return GestureDetector(
+                        onTap: () {
+                          ref.read(_homeVehicleIndexProvider.notifier).state = i;
+                          ref.read(selectedVehicleProvider.notifier).state = vehicles[i];
+                          _saveVehicleIndex(i);
+                          Navigator.pop(ctx);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? B24Colors.primaryPale : Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? B24Colors.primaryBlue : B24Colors.border,
+                              width: isSelected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                veh.vehicleType == 'MOTORCYCLE' ? '🏍️' : '🚗',
+                                style: const TextStyle(fontSize: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${veh.make} ${veh.model}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                        color: B24Colors.textPrimary,
+                                      ),
+                                    ),
+                                    if (veh.licensePlate != null)
+                                      Text(
+                                        veh.licensePlate!,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: B24Colors.textSecondary,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected)
+                                const Icon(Icons.check_circle, color: B24Colors.primaryBlue, size: 22),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEmpty(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? B24Colors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [_cardShadow(isDark: isDark)],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: isDark
+                  ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                  : B24Colors.primaryPale,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: const Text('🚗', style: TextStyle(fontSize: 20)),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Füge ein Fahrzeug hinzu',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'für personalisierte Empfehlungen',
+            style: TextStyle(fontSize: 12, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => context.go('/vehicles/add'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: B24Colors.primaryBlue,
+                side: const BorderSide(color: B24Colors.primaryBlue),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: const Text(
+                'Fahrzeug hinzufügen',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// Services Grid (compact 3×2)
+// ══════════════════════════════════════
+
+class _ServicesGrid extends StatelessWidget {
+  static const _services = [
+    _ServiceItem('🔄', 'Reifen-\nwechsel', 'ab 59,90 €', 'TIRE_CHANGE', true, 'assets/images/services/reifenwechsel.jpg'),
+    _ServiceItem('🔧', 'Räder-\nwechsel', 'ab 29,90 €', 'WHEEL_CHANGE', true, 'assets/images/services/raederwechsel.jpg'),
+    _ServiceItem('🔨', 'Reifen-\nreparatur', 'ab 24,90 €', 'TIRE_REPAIR', false, 'assets/images/services/reifenreparatur.jpg'),
+    _ServiceItem('📏', 'Achsver-\nmessung', 'ab 49,90 €', 'ALIGNMENT_BOTH', false, 'assets/images/services/achsvermessung.jpg'),
+    _ServiceItem('🏍️', 'Motorrad-\nReifen', 'ab 39,90 €', 'MOTORCYCLE_TIRE', false, 'assets/images/services/motorradreifen.jpg'),
+    _ServiceItem('❄️', 'Klima-\nservice', 'ab 69,90 €', 'CLIMATE_SERVICE', false, 'assets/images/services/klimaservice.jpg'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 3,
+      mainAxisSpacing: 8,
+      crossAxisSpacing: 8,
+      childAspectRatio: 0.7,
+      children: _services.map((s) => _ServiceTile(service: s)).toList(),
+    );
+  }
+}
+
+class _ServiceItem {
+  final String icon;
+  final String name;
+  final String price;
+  final String serviceType;
+  final bool popular;
+  final String? imagePath;
+  const _ServiceItem(this.icon, this.name, this.price, this.serviceType, this.popular, [this.imagePath]);
+}
+
+class _ServiceTile extends StatelessWidget {
+  final _ServiceItem service;
+  const _ServiceTile({required this.service});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () => context.go('/search?service=${service.serviceType}'),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? B24Colors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [_cardShadowLight(isDark: isDark)],
+        ),
+        child: Stack(
+          children: [
+            if (service.popular)
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: B24Colors.primaryBlue,
+                  ),
+                ),
+              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                if (service.imagePath != null)
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(14),
+                      topRight: Radius.circular(14),
+                    ),
+                    child: Image.asset(
+                      service.imagePath!,
+                      width: double.infinity,
+                      height: 80,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                            : B24Colors.primaryPale,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(service.icon, style: const TextStyle(fontSize: 18)),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                Text(
+                  service.name,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  service.price,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: B24Colors.primaryBlue,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// Season Tip Card
+// ══════════════════════════════════════
+
+class _SeasonTipCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final month = DateTime.now().month;
+    final isWinterSeason = month >= 10 || month <= 3;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark
+            ? (isWinterSeason ? const Color(0xFF0284C7).withValues(alpha: 0.15) : const Color(0xFFF59E0B).withValues(alpha: 0.12))
+            : (isWinterSeason ? const Color(0xFFE0F2FE) : const Color(0xFFFEF3C7)),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [_cardShadowLight(isDark: isDark)],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isWinterSeason
+                  ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                  : const Color(0xFFF59E0B).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              isWinterSeason ? '❄️' : '☀️',
+              style: const TextStyle(fontSize: 20),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isWinterSeason ? 'Winterreifen-Saison' : 'Sommerreifen-Saison',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isWinterSeason
+                      ? 'Von O bis O: Oktober bis Ostern. Jetzt Winterreifen aufziehen lassen!'
+                      : 'Zeit für den Wechsel! Jetzt Termin sichern bevor es voll wird.',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// Staggered Fade + Slide-Up Animation
+// ══════════════════════════════════════
+
+class _FadeSlideIn extends StatefulWidget {
+  final int delay; // stagger index (0, 1, 2, ...)
+  final Widget child;
+  const _FadeSlideIn({required this.delay, required this.child});
+
+  @override
+  State<_FadeSlideIn> createState() => _FadeSlideInState();
+}
+
+class _FadeSlideInState extends State<_FadeSlideIn>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+  late final Animation<Offset> _offset;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _offset = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+    Future.delayed(Duration(milliseconds: 80 * widget.delay), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: SlideTransition(
+        position: _offset,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+

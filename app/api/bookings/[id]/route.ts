@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/getAuthUser'
 
 // PATCH /api/bookings/[id] - Update booking (e.g., cancel)
 export async function PATCH(
@@ -9,14 +10,15 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
       )
     }
+    const session = { user: authUser }
 
     const { id } = params
     const body = await req.json()

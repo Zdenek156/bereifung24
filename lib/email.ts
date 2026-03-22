@@ -1536,6 +1536,7 @@ export function directBookingConfirmationCustomerEmail(data: {
   basePrice: number
   balancingPrice?: number
   storagePrice?: number
+  washingPrice?: number
   disposalFee?: number
   runFlatSurcharge?: number
   totalPrice: number
@@ -1543,9 +1544,14 @@ export function directBookingConfirmationCustomerEmail(data: {
   // Options
   hasBalancing?: boolean
   hasStorage?: boolean
+  hasWashing?: boolean
   hasDisposal?: boolean
   customerNotes?: string
   additionalServicesData?: any[] // Additional services (Klimaservice, Achsvermessung, etc.)
+  // Coupon / Gutschein
+  couponCode?: string
+  discountAmount?: number
+  originalPrice?: number
 }) {
   const serviceLabels: Record<string, string> = {
     'WHEEL_CHANGE': 'Räderwechsel',
@@ -1692,12 +1698,13 @@ export function directBookingConfirmationCustomerEmail(data: {
             </div>
             ` : ''}
 
-            ${data.hasBalancing || data.hasStorage || data.hasDisposal || (data.additionalServicesData && data.additionalServicesData.length > 0) ? `
+            ${data.hasBalancing || data.hasStorage || data.hasWashing || data.hasDisposal || (data.additionalServicesData && data.additionalServicesData.length > 0) ? `
             <div style="margin-top: 15px;">
               <strong>Zusatzleistungen:</strong>
               <ul style="margin: 5px 0; padding-left: 20px;">
                 ${data.hasBalancing ? `<li>✅ Auswuchtung (+${data.balancingPrice?.toFixed(2) || '0.00'}€)</li>` : ''}
                 ${data.hasStorage ? `<li>✅ Einlagerung (+${data.storagePrice?.toFixed(2) || '0.00'}€)</li>` : ''}
+                ${data.hasWashing ? `<li>✅ Räder waschen (+${data.washingPrice?.toFixed(2) || '0.00'}€)</li>` : ''}
                 ${data.hasDisposal ? `<li>✅ Reifenentsorgung (+${data.disposalFee?.toFixed(2) || '0.00'}€)</li>` : ''}
                 ${data.runFlatSurcharge && data.runFlatSurcharge > 0 ? `<li>✅ RunFlat-Aufschlag (+${data.runFlatSurcharge.toFixed(2)}€)</li>` : ''}
                 ${data.additionalServicesData ? data.additionalServicesData.map((svc: any) => {
@@ -1735,6 +1742,12 @@ export function directBookingConfirmationCustomerEmail(data: {
               <span class="detail-value">+${data.storagePrice.toFixed(2)}€</span>
             </div>
             ` : ''}
+            ${data.washingPrice && data.washingPrice > 0 ? `
+            <div class="detail-row">
+              <span class="detail-label">Räder waschen:</span>
+              <span class="detail-value">+${data.washingPrice.toFixed(2)}€</span>
+            </div>
+            ` : ''}
             ${data.disposalFee && data.disposalFee > 0 ? `
             <div class="detail-row">
               <span class="detail-label">Entsorgung:</span>
@@ -1756,11 +1769,23 @@ export function directBookingConfirmationCustomerEmail(data: {
               <span class="detail-value">+${Number(svc.price || 0).toFixed(2)}€</span>
             </div>`
             }).join('') : ''}
+            ${data.couponCode && data.discountAmount && data.discountAmount > 0 ? `
+            <div class="detail-row" style="border-bottom: 2px solid #10b981;">
+              <span class="detail-label" style="color: #059669;">🎫 Gutschein (${data.couponCode}):</span>
+              <span class="detail-value" style="color: #059669; font-weight: bold;">-${data.discountAmount.toFixed(2)}€</span>
+            </div>
+            ` : ''}
           </div>
 
           <div class="price-total">
             <div style="font-size: 14px; opacity: 0.9;">Gesamtsumme</div>
+            ${data.originalPrice && data.discountAmount && data.discountAmount > 0 ? `
+            <div style="font-size: 16px; text-decoration: line-through; opacity: 0.7; margin-top: 5px;">${data.originalPrice.toFixed(2)}€</div>
+            ` : ''}
             <div style="font-size: 36px; font-weight: bold; margin: 10px 0;">${data.totalPrice.toFixed(2)}€</div>
+            ${data.couponCode && data.discountAmount && data.discountAmount > 0 ? `
+            <div style="font-size: 13px; opacity: 0.9; margin-bottom: 5px;">🎫 ${data.discountAmount.toFixed(2)}€ Rabatt mit Gutschein ${data.couponCode}</div>
+            ` : ''}
             <div style="font-size: 14px; opacity: 0.9;">✅ BEZAHLT per ${data.paymentMethod}</div>
           </div>
 
@@ -1852,6 +1877,7 @@ export function directBookingNotificationWorkshopEmail(data: {
   basePrice: number
   balancingPrice?: number
   storagePrice?: number
+  washingPrice?: number
   disposalFee?: number
   runFlatSurcharge?: number
   totalPrice: number
@@ -1861,6 +1887,7 @@ export function directBookingNotificationWorkshopEmail(data: {
   // Options
   hasBalancing?: boolean
   hasStorage?: boolean
+  hasWashing?: boolean
   hasDisposal?: boolean
   additionalServicesData?: any[] // Additional services (Klimaservice, Achsvermessung, etc.)
   // Auto-order result
@@ -1870,8 +1897,16 @@ export function directBookingNotificationWorkshopEmail(data: {
   // Storage info (Reifen aus Einlagerung)
   fromStorageBookingId?: string
   storageLocationFromStorage?: string
+  // Coupon data
+  couponCode?: string
+  discountAmount?: number
+  originalPrice?: number
+  couponCostBearer?: string
 }) {
-  const isTireService = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT' || data.serviceType === 'MOTORCYCLE_TIRE'
+  const isTireServiceType = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT' || data.serviceType === 'MOTORCYCLE_TIRE'
+  // Only show tire ordering when tires were actually purchased (not for "Nur Montage")
+  const hasTirePurchase = !!(data.tireBrand || data.tireData?.isMixedTires)
+  const isTireService = isTireServiceType && hasTirePurchase
   const isAPISupplier = data.supplierConnectionType === 'API'
   const isCSVSupplier = data.supplierConnectionType === 'CSV'
   const isAutoOrdered = data.autoOrderSuccess === true && !!data.autoOrderNumber
@@ -2007,8 +2042,9 @@ export function directBookingNotificationWorkshopEmail(data: {
               <span class="detail-label">Service:</span>
               <span class="detail-value"><strong>${data.serviceName}</strong></span>
             </div>
-            ${data.hasBalancing ? '<div class="detail-row"><span class="detail-label">Auswuchtung:</span><span class="detail-value">✅ Ja</span></div>' : ''}
-            ${data.hasStorage ? '<div class="detail-row"><span class="detail-label">Einlagerung:</span><span class="detail-value">✅ Ja</span></div>' : ''}
+            ${data.hasBalancing ? `<div class="detail-row"><span class="detail-label">Auswuchtung:</span><span class="detail-value">✅ Ja (+${data.balancingPrice?.toFixed(2) || '0.00'}€)</span></div>` : ''}
+            ${data.hasStorage ? `<div class="detail-row"><span class="detail-label">Einlagerung:</span><span class="detail-value">✅ Ja (+${data.storagePrice?.toFixed(2) || '0.00'}€)</span></div>` : ''}
+            ${data.hasWashing ? `<div class="detail-row"><span class="detail-label">Räder waschen:</span><span class="detail-value">✅ Ja (+${data.washingPrice?.toFixed(2) || '0.00'}€)</span></div>` : ''}
             ${data.hasDisposal ? `<div class="detail-row"><span class="detail-label">Reifenentsorgung:</span><span class="detail-value">✅ Ja (+${data.disposalFee?.toFixed(2) || '0.00'}€)</span></div>` : ''}
             ${data.runFlatSurcharge && data.runFlatSurcharge > 0 ? `<div class="detail-row"><span class="detail-label">RunFlat-Aufschlag:</span><span class="detail-value">+${data.runFlatSurcharge.toFixed(2)}€</span></div>` : ''}
             ${data.additionalServicesData ? data.additionalServicesData.map((svc: any) => {
@@ -2227,7 +2263,26 @@ export function directBookingNotificationWorkshopEmail(data: {
           <!-- Financial Overview -->
           <div class="section">
             <div class="section-header">💰 Finanzielle Übersicht</div>
+            ${data.couponCode && data.couponCostBearer === 'WORKSHOP' && data.discountAmount ? `
+            <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 15px;">
+              <strong style="color: #92400e;">⚠️ Gutschein zu Ihren Lasten</strong>
+              <p style="margin: 5px 0 0; font-size: 13px; color: #92400e;">
+                Gutschein <strong>${data.couponCode}</strong> mit ${data.discountAmount.toFixed(2)}€ Rabatt geht zu Lasten der Werkstatt. 
+                Der Rabattbetrag wird von Ihrer Auszahlung abgezogen.
+              </p>
+            </div>
+            ` : ''}
             <table class="price-table">
+              ${data.originalPrice && data.discountAmount ? `
+              <tr>
+                <td>Originalpreis:</td>
+                <td style="text-align: right; text-decoration: line-through; color: #9ca3af;">${data.originalPrice.toFixed(2)}€</td>
+              </tr>
+              <tr>
+                <td style="color: #059669;">🎫 Gutschein (${data.couponCode}):</td>
+                <td style="text-align: right; color: #059669;">-${data.discountAmount.toFixed(2)}€</td>
+              </tr>
+              ` : ''}
               <tr>
                 <td>Kunde bezahlt:</td>
                 <td style="text-align: right; font-weight: bold;">${data.totalPrice.toFixed(2)}€</td>

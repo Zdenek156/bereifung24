@@ -76,7 +76,7 @@ export default function VehiclesPage() {
       const res = await fetch('/api/vehicles')
       if (res.ok) {
         const data = await res.json()
-        setVehicles(data)
+        setVehicles(Array.isArray(data) ? data : (data.vehicles ?? []))
       }
     } catch (error) {
       console.error('Fehler beim Laden der Fahrzeuge:', error)
@@ -102,8 +102,8 @@ export default function VehiclesPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
       </div>
     )
   }
@@ -113,74 +113,60 @@ export default function VehiclesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          {/* Zurück Button */}
-          <a
-            href="/dashboard/customer"
-            className="inline-flex items-center text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 mb-4 transition-colors"
-          >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Zurück zum Dashboard
-          </a>
-          
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Meine Fahrzeuge</h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-2">
-                Verwalten Sie Ihre Fahrzeuge und Reifengrößen
-              </p>
-            </div>
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Fahrzeug hinzufügen
-            </button>
-          </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Meine Fahrzeuge</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">
+            Verwalten Sie Ihre Fahrzeuge und Reifengrößen
+          </p>
         </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-1.5"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Hinzufügen
+        </button>
+      </div>
 
         {/* Vehicles Grid */}
-        {vehicles.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-transparent dark:border-gray-700 p-12 text-center">
-            <div className="text-gray-400 text-6xl mb-4">🚗</div>
-            <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+      {vehicles.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+            <div className="text-gray-400 text-3xl mb-3">🚗</div>
+            <h3 className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">
               Noch keine Fahrzeuge
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Fügen Sie Ihr erstes Fahrzeug hinzu, um schneller Reifenanfragen zu erstellen
             </p>
             <button
               onClick={() => setShowModal(true)}
-              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              className="px-4 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Erstes Fahrzeug hinzufügen
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {vehicles.map(vehicle => (
-              <div key={vehicle.id} className="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all">
+              <div key={vehicle.id} className="bg-gradient-to-br from-primary-600 via-primary-500 to-primary-400 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all">
                 {/* Vehicle Header with Icons */}
-                <div className="p-6 pb-4">
-                  <div className="flex justify-between items-start mb-4">
+                <div className="p-4 pb-3">
+                  <div className="flex justify-between items-start mb-3">
                     {/* Icon Badges */}
-                    <div className="flex gap-2">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2.5">
-                        <span className="text-2xl">
+                    <div className="flex gap-1.5">
+                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+                        <span className="text-lg">
                           {vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '🚗'}
                         </span>
                       </div>
                       {(vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN' && (
-                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2.5">
-                          <span className="text-xl">
+                        <div className="bg-white/20 backdrop-blur-sm rounded-lg p-2">
+                          <span className="text-base">
                             {(vehicle as any).fuelType === 'PETROL' && '⛽'}
                             {(vehicle as any).fuelType === 'DIESEL' && '⛽'}
                             {(vehicle as any).fuelType === 'ELECTRIC' && '⚡'}
@@ -193,22 +179,22 @@ export default function VehiclesPage() {
                       )}
                     </div>
                     {/* Action Buttons */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-1.5">
                       <button
                         onClick={() => setEditingVehicle(vehicle)}
-                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg p-2 transition-colors"
+                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg p-1.5 transition-colors"
                         title="Bearbeiten"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       <button
                         onClick={() => deleteVehicle(vehicle.id)}
-                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg p-2 transition-colors"
+                        className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white rounded-lg p-1.5 transition-colors"
                         title="Löschen"
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
@@ -216,21 +202,21 @@ export default function VehiclesPage() {
                   </div>
 
                   {/* Vehicle Name */}
-                  <h3 className="text-3xl font-bold text-white mb-3">
+                  <h3 className="text-xl font-bold text-white mb-2">
                     {vehicle.make} {vehicle.model}
                   </h3>
 
                   {/* License Plate and Year Badges */}
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-1.5 mb-3">
                     {vehicle.licensePlate && (
-                      <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
-                        <span className="text-primary-700 font-bold font-mono text-sm">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-md px-2 py-1">
+                        <span className="text-primary-700 font-bold font-mono text-xs">
                           {vehicle.licensePlate}
                         </span>
                       </div>
                     )}
-                    <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1.5">
-                      <span className="text-primary-700 font-semibold text-sm">
+                    <div className="bg-white/90 backdrop-blur-sm rounded-md px-2 py-1">
+                      <span className="text-primary-700 font-semibold text-xs">
                         Baujahr {vehicle.year}
                       </span>
                     </div>
@@ -238,21 +224,21 @@ export default function VehiclesPage() {
                 </div>
 
                 {/* Tire Sizes */}
-                <div className="px-6 pb-6 space-y-3">
+                <div className="px-4 pb-4 space-y-2">
                   {vehicle.summerTires && (
-                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">{vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
-                        <span className="font-bold text-primary-600 text-xs tracking-wider uppercase">
+                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-lg p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-base">{vehicle.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
+                        <span className="font-bold text-primary-600 text-[10px] tracking-wider uppercase">
                           {vehicle.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
                         </span>
                       </div>
-                      <p className="text-2xl font-bold font-mono text-gray-900">
+                      <p className="text-lg font-bold font-mono text-gray-900">
                         {vehicle.summerTires.hasDifferentSizes ? (
                           <>
                             <span className="block">
                               {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
-                              <span className="text-lg font-normal text-gray-700 ml-1">
+                              <span className="text-sm font-normal text-gray-600 ml-1">
                                 {vehicle.summerTires.loadIndex && `${vehicle.summerTires.loadIndex}`}
                                 {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
                               </span>
@@ -260,7 +246,7 @@ export default function VehiclesPage() {
                             <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
                             <span className="block">
                               {vehicle.summerTires.rearWidth}/{vehicle.summerTires.rearAspectRatio} R{vehicle.summerTires.rearDiameter}
-                              <span className="text-lg font-normal text-gray-700 ml-1">
+                              <span className="text-sm font-normal text-gray-600 ml-1">
                                 {vehicle.summerTires.rearLoadIndex && `${vehicle.summerTires.rearLoadIndex}`}
                                 {vehicle.summerTires.rearSpeedRating && vehicle.summerTires.rearSpeedRating}
                               </span>
@@ -269,7 +255,7 @@ export default function VehiclesPage() {
                         ) : (
                           <>
                             {vehicle.summerTires.width}/{vehicle.summerTires.aspectRatio} R{vehicle.summerTires.diameter}
-                            <span className="text-lg font-normal text-gray-700 ml-1">
+                            <span className="text-sm font-normal text-gray-600 ml-1">
                               {vehicle.summerTires.loadIndex && `${vehicle.summerTires.loadIndex}`}
                               {vehicle.summerTires.speedRating && vehicle.summerTires.speedRating}
                             </span>
@@ -280,17 +266,17 @@ export default function VehiclesPage() {
                   )}
 
                   {vehicle.winterTires && (
-                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">❄️</span>
-                        <span className="font-bold text-primary-600 text-xs tracking-wider uppercase">Winterreifen</span>
+                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-lg p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-base">❄️</span>
+                        <span className="font-bold text-primary-600 text-[10px] tracking-wider uppercase">Winterreifen</span>
                       </div>
-                      <p className="text-2xl font-bold font-mono text-gray-900">
+                      <p className="text-lg font-bold font-mono text-gray-900">
                         {vehicle.winterTires.hasDifferentSizes ? (
                           <>
                             <span className="block">
                               {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
-                              <span className="text-lg font-normal text-gray-700 ml-1">
+                              <span className="text-sm font-normal text-gray-600 ml-1">
                                 {vehicle.winterTires.loadIndex && `${vehicle.winterTires.loadIndex}`}
                                 {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
                               </span>
@@ -298,7 +284,7 @@ export default function VehiclesPage() {
                             <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
                             <span className="block">
                               {vehicle.winterTires.rearWidth}/{vehicle.winterTires.rearAspectRatio} R{vehicle.winterTires.rearDiameter}
-                              <span className="text-lg font-normal text-gray-700 ml-1">
+                              <span className="text-sm font-normal text-gray-600 ml-1">
                                 {vehicle.winterTires.rearLoadIndex && `${vehicle.winterTires.rearLoadIndex}`}
                                 {vehicle.winterTires.rearSpeedRating && vehicle.winterTires.rearSpeedRating}
                               </span>
@@ -307,7 +293,7 @@ export default function VehiclesPage() {
                         ) : (
                           <>
                             {vehicle.winterTires.width}/{vehicle.winterTires.aspectRatio} R{vehicle.winterTires.diameter}
-                            <span className="text-lg font-normal text-gray-700 ml-1">
+                            <span className="text-sm font-normal text-gray-600 ml-1">
                               {vehicle.winterTires.loadIndex && `${vehicle.winterTires.loadIndex}`}
                               {vehicle.winterTires.speedRating && vehicle.winterTires.speedRating}
                             </span>
@@ -318,17 +304,17 @@ export default function VehiclesPage() {
                   )}
 
                   {vehicle.allSeasonTires && (
-                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-xl p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl">🌤️</span>
-                        <span className="font-bold text-primary-600 text-xs tracking-wider uppercase">Ganzjahresreifen</span>
+                    <div className="bg-blue-50/95 backdrop-blur-sm rounded-lg p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-base">🌤️</span>
+                        <span className="font-bold text-primary-600 text-[10px] tracking-wider uppercase">Ganzjahresreifen</span>
                       </div>
-                      <p className="text-2xl font-bold font-mono text-gray-900">
+                      <p className="text-lg font-bold font-mono text-gray-900">
                         {vehicle.allSeasonTires.hasDifferentSizes ? (
                           <>
                             <span className="block">
                               {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
-                              <span className="text-lg font-normal text-gray-700 ml-1">
+                              <span className="text-sm font-normal text-gray-600 ml-1">
                                 {vehicle.allSeasonTires.loadIndex && `${vehicle.allSeasonTires.loadIndex}`}
                                 {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
                               </span>
@@ -336,7 +322,7 @@ export default function VehiclesPage() {
                             <span className="block text-sm text-gray-500 mt-2 mb-1">Hinten:</span>
                             <span className="block">
                               {vehicle.allSeasonTires.rearWidth}/{vehicle.allSeasonTires.rearAspectRatio} R{vehicle.allSeasonTires.rearDiameter}
-                              <span className="text-lg font-normal text-gray-700 ml-1">
+                              <span className="text-sm font-normal text-gray-600 ml-1">
                                 {vehicle.allSeasonTires.rearLoadIndex && `${vehicle.allSeasonTires.rearLoadIndex}`}
                                 {vehicle.allSeasonTires.rearSpeedRating && vehicle.allSeasonTires.rearSpeedRating}
                               </span>
@@ -345,7 +331,7 @@ export default function VehiclesPage() {
                         ) : (
                           <>
                             {vehicle.allSeasonTires.width}/{vehicle.allSeasonTires.aspectRatio} R{vehicle.allSeasonTires.diameter}
-                            <span className="text-lg font-normal text-gray-700 ml-1">
+                            <span className="text-sm font-normal text-gray-600 ml-1">
                               {vehicle.allSeasonTires.loadIndex && `${vehicle.allSeasonTires.loadIndex}`}
                               {vehicle.allSeasonTires.speedRating && vehicle.allSeasonTires.speedRating}
                             </span>
@@ -356,7 +342,7 @@ export default function VehiclesPage() {
                   )}
 
                   {!vehicle.summerTires && !vehicle.winterTires && !vehicle.allSeasonTires && (
-                    <p className="text-white/70 text-sm italic text-center py-4">
+                    <p className="text-white/70 text-xs italic text-center py-3">
                       {vehicle.vehicleType === 'MOTORCYCLE'
                         ? 'Noch keine Motorrad-Reifengrößen hinterlegt'
                         : 'Noch keine Reifengrößen hinterlegt'}
@@ -374,11 +360,11 @@ export default function VehiclesPage() {
 
                   {/* Inspection Date Display as Badge */}
                   {vehicle.nextInspectionDate && (
-                    <div className={`${vehicle.vin ? 'mt-2' : 'mt-2 pt-3 border-t border-white/20'}`}>
-                      <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-lg p-3">
+                    <div className={`${vehicle.vin ? 'mt-1.5' : 'mt-1.5 pt-2 border-t border-white/20'}`}>
+                      <div className="flex items-center justify-between bg-white/90 backdrop-blur-sm rounded-md p-2">
                         <div>
-                          <p className="text-xs text-gray-600 font-semibold">Nächster TÜV:</p>
-                          <p className="text-sm font-bold text-gray-900">
+                          <p className="text-[10px] text-gray-600 font-semibold">Nächster TÜV:</p>
+                          <p className="text-xs font-bold text-gray-900">
                             {new Date(vehicle.nextInspectionDate).toLocaleDateString('de-DE', { 
                               month: 'long', 
                               year: 'numeric' 
@@ -390,9 +376,9 @@ export default function VehiclesPage() {
                           const inspectionDate = new Date(vehicle.nextInspectionDate)
                           const daysUntil = Math.floor((inspectionDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
                           return (
-                            <div className={`${daysUntil <= 30 ? 'bg-yellow-400' : 'bg-green-400'} rounded-lg px-3 py-1.5`}>
+                            <div className={`${daysUntil <= 30 ? 'bg-yellow-400' : 'bg-green-400'} rounded-md px-2 py-1`}>
                               <p className="text-xs font-bold text-gray-900">⚠️ {daysUntil > 0 ? daysUntil : 0}</p>
-                              <p className="text-xs font-semibold text-gray-900">Tage</p>
+                              <p className="text-[10px] font-semibold text-gray-900">Tage</p>
                             </div>
                           )
                         })()}
@@ -403,7 +389,7 @@ export default function VehiclesPage() {
                   {/* Fuel Type Display */}
                   {(vehicle as any).fuelType && (vehicle as any).fuelType !== 'UNKNOWN' && (
                     <div className={`${vehicle.vin || vehicle.nextInspectionDate ? 'mt-2' : 'mt-2 pt-3 border-t border-white/20'}`}>
-                      <p className="text-sm text-white/70">
+                      <p className="text-xs text-white/70">
                         <span className="font-semibold">⛽ Kraftstoff:</span>{' '}
                         {(vehicle as any).fuelType === 'PETROL' && 'Benzin'}
                         {(vehicle as any).fuelType === 'DIESEL' && 'Diesel'}
@@ -453,7 +439,6 @@ export default function VehiclesPage() {
             }}
           />
         )}
-      </div>
     </div>
   )
 }
@@ -758,17 +743,17 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
           {/* Body - Same as AddVehicleModal */}
           <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Fahrzeugdaten</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">Fahrzeugdaten</h3>
               <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Fahrzeugtyp *
                   </label>
                   <select
                     name="vehicleType"
                     value={formData.vehicleType}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="CAR">🚗 Auto</option>
                     <option value="MOTORCYCLE">🏍️ Motorrad</option>
@@ -777,7 +762,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
                   {formData.vehicleType === 'MOTORCYCLE' ? (
@@ -787,14 +772,14 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       value={formData.make}
                       onChange={handleChange}
                       placeholder="z.B. Honda, Yamaha, Kawasaki, Ducati"
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     />
                   ) : (
                     <select
                       name="make"
                       value={formData.make}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Hersteller wählen...</option>
                       <option value="Alfa Romeo">Alfa Romeo</option>
@@ -845,7 +830,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Modell *
                   </label>
                   <input
@@ -854,12 +839,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     value={formData.model}
                     onChange={handleChange}
                     placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. MT-07' : formData.vehicleType === 'TRAILER' ? 'z.B. HA 752513' : 'z.B. Golf'}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Baujahr *
                   </label>
                   <input
@@ -869,12 +854,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     max={new Date().getFullYear() + 1}
                     value={formData.year}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Kennzeichen (optional)
                   </label>
                   <input
@@ -883,12 +868,12 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     value={formData.licensePlate}
                     onChange={handleChange}
                     placeholder="z.B. B-XY 1234"
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     VIN (optional)
                   </label>
                   <input
@@ -898,17 +883,17 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     onChange={handleChange}
                     placeholder="z.B. WDB1234567890"
                     maxLength={17}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Nächster TÜV-Termin (optional)
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[10px] sm:text-xs text-gray-500 mb-1">Monat</label>
+                      <label className="block text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">Monat</label>
                     <select
                       value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[1] || '' : ''}
                       onChange={(e) => {
@@ -922,7 +907,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                           setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
                         }
                       }}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Monat wählen...</option>
                       <option value="01">Januar</option>
@@ -940,7 +925,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] sm:text-xs text-gray-500 mb-1">Jahr</label>
+                      <label className="block text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-1">Jahr</label>
                     <select
                       value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[0] || '' : ''}
                       onChange={(e) => {
@@ -954,7 +939,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                           setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
                         }
                       }}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Jahr wählen...</option>
                       {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + i).map(y => (
@@ -977,7 +962,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                           onChange={handleChange}
                           className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                         />
-                        <label htmlFor="inspectionReminderEdit" className="ml-2 sm:ml-3 text-xs sm:text-sm font-medium text-gray-700">
+                        <label htmlFor="inspectionReminderEdit" className="ml-2 sm:ml-3 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
                           Erinnerung vor TÜV-Termin erhalten
                         </label>
                       </div>
@@ -985,14 +970,14 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
                     {formData.inspectionReminder && (
                       <div>
-                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                           Tage vor TÜV-Termin
                         </label>
                         <select
                           name="inspectionReminderDays"
                           value={formData.inspectionReminderDays}
                           onChange={handleChange}
-                          className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                         >
                           <option value="7">7 Tage vorher</option>
                           <option value="30">1 Monat vorher (30 Tage)</option>
@@ -1006,7 +991,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
             {/* Fuel and Consumption (for CO₂ tracking) */}
             <div className="border-t dark:border-gray-700 pt-4 sm:pt-6">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4 flex items-center">
                 <span className="text-xl sm:text-2xl mr-2">⛽</span>
                 Kraftstoff & Verbrauch (optional)
               </h3>
@@ -1016,14 +1001,14 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
 
               <div className="space-y-3 sm:space-y-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Kraftstoffart
                   </label>
                   <select
                     name="fuelType"
                     value={formData.fuelType}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="UNKNOWN">Unbekannt</option>
                     <option value="PETROL">Benzin</option>
@@ -1034,14 +1019,14 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     <option value="LPG">Autogas (LPG)</option>
                     <option value="CNG">Erdgas (CNG)</option>
                   </select>
-                  <p className="mt-1 text-xs text-gray-500">Wählen Sie die Kraftstoffart Ihres Fahrzeugs</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Wählen Sie die Kraftstoffart Ihres Fahrzeugs</p>
                 </div>
 
                 {(formData.fuelType === 'PETROL' || formData.fuelType === 'DIESEL' || 
                   formData.fuelType === 'LPG' || formData.fuelType === 'CNG' || 
                   formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                       Kraftstoffverbrauch (L/100km)
                     </label>
                     <input
@@ -1053,15 +1038,15 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       value={formData.fuelConsumption}
                       onChange={handleChange}
                       placeholder="z.B. 6.5"
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     />
-                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Verbrauch laut Hersteller oder Bordcomputer</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Durchschnittlicher Verbrauch laut Hersteller oder Bordcomputer</p>
                   </div>
                 )}
 
                 {(formData.fuelType === 'ELECTRIC' || formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
                   <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                       Stromverbrauch (kWh/100km)
                     </label>
                     <input
@@ -1073,9 +1058,9 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       value={formData.electricConsumption}
                       onChange={handleChange}
                       placeholder="z.B. 18.5"
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     />
-                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Stromverbrauch laut Hersteller oder Fahrzeug</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Durchschnittlicher Stromverbrauch laut Hersteller oder Fahrzeug</p>
                   </div>
                 )}
               </div>
@@ -1094,7 +1079,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                     className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
                 )}
-                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-2 sm:ml-3' : ''} text-base sm:text-lg font-semibold text-gray-900 flex items-center`}>
+                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-2 sm:ml-3' : ''} text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center`}>
                   <span className="text-xl sm:text-2xl mr-2">{formData.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
                   {formData.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
                 </label>
@@ -1111,7 +1096,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="summerDifferentSizes" className="ml-2 text-sm font-medium text-gray-700">
+                    <label htmlFor="summerDifferentSizes" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       {formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
@@ -1171,7 +1156,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   onChange={handleChange}
                   className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="hasWinterTires" className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                <label htmlFor="hasWinterTires" className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                   <span className="text-xl sm:text-2xl mr-2">❄️</span>
                   Winterreifen
                 </label>
@@ -1188,7 +1173,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="winterDifferentSizes" className="ml-2 text-xs sm:text-sm font-medium text-gray-700">{formData.vehicleType === 'MOTORCYCLE' 
+                    <label htmlFor="winterDifferentSizes" className="ml-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">{formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
                     </label>
@@ -1213,7 +1198,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   </div>
 
                   {formData.winterDifferentSizes && formData.winterWidth && formData.winterAspectRatio && formData.winterDiameter && (
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                       <InteractiveTireSelector
                         tireData={{
                           width: formData.winterRearWidth,
@@ -1248,7 +1233,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   onChange={handleChange}
                   className="w-4 sm:w-5 h-4 sm:h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="hasAllSeasonTires" className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                <label htmlFor="hasAllSeasonTires" className="ml-2 sm:ml-3 text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                   <span className="text-xl sm:text-2xl mr-2">🌤️</span>
                   Ganzjahresreifen
                 </label>
@@ -1265,7 +1250,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="allSeasonDifferentSizes" className="ml-2 text-xs sm:text-sm font-medium text-gray-700">{formData.vehicleType === 'MOTORCYCLE' 
+                    <label htmlFor="allSeasonDifferentSizes" className="ml-2 text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">{formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
                     </label>
@@ -1290,7 +1275,7 @@ function EditVehicleModal({ vehicle, onClose, onSuccess }: { vehicle: Vehicle, o
                   </div>
 
                   {formData.allSeasonDifferentSizes && formData.allSeasonWidth && formData.allSeasonAspectRatio && formData.allSeasonDiameter && (
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                       <InteractiveTireSelector
                         tireData={{
                           width: formData.allSeasonRearWidth,
@@ -1626,11 +1611,11 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-full sm:max-w-2xl lg:max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmitAdd}>
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Fahrzeug hinzufügen</h2>
+          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white">Fahrzeug hinzufügen</h2>
             <button
               type="button"
               onClick={onClose}
@@ -1645,17 +1630,17 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
           {/* Body */}
           <div className="px-3 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
             <div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Fahrzeugdaten</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">Fahrzeugdaten</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Fahrzeugtyp *
                   </label>
                   <select
                     name="vehicleType"
                     value={formData.vehicleType}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="CAR">🚗 Auto</option>
                     <option value="MOTORCYCLE">🏍️ Motorrad</option>
@@ -1664,7 +1649,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Hersteller *
                   </label>
                   {(formData.vehicleType === 'MOTORCYCLE' || formData.vehicleType === 'TRAILER') ? (
@@ -1674,14 +1659,14 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       value={formData.make}
                       onChange={handleChange}
                       placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. Honda, Yamaha, Kawasaki, Ducati' : 'z.B. Humbaur, Böckmann, Saris'}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     />
                   ) : (
                     <select
                       name="make"
                       value={formData.make}
                       onChange={handleChange}
-                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Hersteller wählen...</option>
                       <option value="Alfa Romeo">Alfa Romeo</option>
@@ -1724,7 +1709,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Modell *
                   </label>
                   <input
@@ -1733,12 +1718,12 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     value={formData.model}
                     onChange={handleChange}
                     placeholder={formData.vehicleType === 'MOTORCYCLE' ? 'z.B. MT-07' : formData.vehicleType === 'TRAILER' ? 'z.B. HA 752513' : 'z.B. Golf'}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Baujahr *
                   </label>
                   <input
@@ -1748,12 +1733,12 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     max={new Date().getFullYear() + 1}
                     value={formData.year}
                     onChange={handleChange}
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
                     Kennzeichen {(formData.vehicleType === 'CAR' || formData.vehicleType === 'TRAILER') ? '*' : '(optional)'}
                   </label>
                   <input
@@ -1762,12 +1747,12 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     value={formData.licensePlate}
                     onChange={handleChange}
                     placeholder="z.B. B-XY 1234"
-                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     VIN (optional)
                   </label>
                   <input
@@ -1777,17 +1762,17 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     onChange={handleChange}
                     placeholder="z.B. WDB1234567890"
                     maxLength={17}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   />
                 </div>
 
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Nächster TÜV-Termin (optional)
                   </label>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Monat</label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Monat</label>
                     <select
                       value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[1] || '' : ''}
                       onChange={(e) => {
@@ -1801,7 +1786,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                           setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
                         }
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Monat wählen...</option>
                       <option value="01">Januar</option>
@@ -1819,7 +1804,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     </select>
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">Jahr</label>
+                      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jahr</label>
                     <select
                       value={formData.nextInspectionDate ? formData.nextInspectionDate.split('-')[0] || '' : ''}
                       onChange={(e) => {
@@ -1833,7 +1818,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                           setFormData(prev => ({ ...prev, nextInspectionDate: '' }));
                         }
                       }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="">Jahr wählen...</option>
                       {Array.from({ length: 4 }, (_, i) => new Date().getFullYear() + i).map(y => (
@@ -1856,7 +1841,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                           onChange={handleChange}
                           className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                         />
-                        <label htmlFor="inspectionReminderAdd" className="ml-3 text-sm font-medium text-gray-700">
+                        <label htmlFor="inspectionReminderAdd" className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
                           Erinnerung vor TÜV-Termin erhalten
                         </label>
                       </div>
@@ -1864,14 +1849,14 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
                     {formData.inspectionReminder && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                           Tage vor TÜV-Termin
                         </label>
                         <select
                           name="inspectionReminderDays"
                           value={formData.inspectionReminderDays}
                           onChange={handleChange}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                         >
                           <option value="7">7 Tage vorher</option>
                           <option value="30">1 Monat vorher (30 Tage)</option>
@@ -1884,25 +1869,25 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
             </div>
 
             {/* Fuel and Consumption (for CO₂ tracking) */}
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="border-t dark:border-gray-600 pt-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                 <span className="text-2xl mr-2">⛽</span>
                 Kraftstoff & Verbrauch (optional)
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Diese Angaben werden für die CO₂-Berechnung verwendet. Je genauer die Werte, desto präziser die Berechnung.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Kraftstoffart
                   </label>
                   <select
                     name="fuelType"
                     value={formData.fuelType}
                     onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="UNKNOWN">Unbekannt</option>
                     <option value="PETROL">Benzin</option>
@@ -1913,14 +1898,14 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     <option value="LPG">Autogas (LPG)</option>
                     <option value="CNG">Erdgas (CNG)</option>
                   </select>
-                  <p className="mt-1 text-xs text-gray-500">Wählen Sie die Kraftstoffart Ihres Fahrzeugs</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Wählen Sie die Kraftstoffart Ihres Fahrzeugs</p>
                 </div>
 
                 {(formData.fuelType === 'PETROL' || formData.fuelType === 'DIESEL' || 
                   formData.fuelType === 'LPG' || formData.fuelType === 'CNG' || 
                   formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Kraftstoffverbrauch (L/100km)
                     </label>
                     <input
@@ -1932,15 +1917,15 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       value={formData.fuelConsumption}
                       onChange={handleChange}
                       placeholder="z.B. 6.5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     />
-                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Verbrauch laut Hersteller oder Bordcomputer</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Durchschnittlicher Verbrauch laut Hersteller oder Bordcomputer</p>
                   </div>
                 )}
 
                 {(formData.fuelType === 'ELECTRIC' || formData.fuelType === 'HYBRID' || formData.fuelType === 'PLUGIN_HYBRID') && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Stromverbrauch (kWh/100km)
                     </label>
                     <input
@@ -1952,16 +1937,16 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       value={formData.electricConsumption}
                       onChange={handleChange}
                       placeholder="z.B. 18.5"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white"
                     />
-                    <p className="mt-1 text-xs text-gray-500">Durchschnittlicher Stromverbrauch laut Hersteller oder Fahrzeug</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Durchschnittlicher Stromverbrauch laut Hersteller oder Fahrzeug</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Summer Tires (Reifengrößen for motorcycles) */}
-            <div className="border-t pt-6">
+            <div className="border-t dark:border-gray-600 pt-6">
               <div className="flex items-center mb-4">
                 {formData.vehicleType !== 'MOTORCYCLE' && (
                   <input
@@ -1973,7 +1958,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                     className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                   />
                 )}
-                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-3' : ''} text-lg font-semibold text-gray-900 flex items-center`}>
+                <label htmlFor="hasSummerTires" className={`${formData.vehicleType !== 'MOTORCYCLE' ? 'ml-3' : ''} text-lg font-semibold text-gray-900 dark:text-white flex items-center`}>
                   <span className="text-2xl mr-2">{formData.vehicleType === 'MOTORCYCLE' ? '🏍️' : '☀️'}</span>
                   {formData.vehicleType === 'MOTORCYCLE' ? 'Reifengrößen' : 'Sommerreifen'}
                 </label>
@@ -1990,7 +1975,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="summerDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
+                    <label htmlFor="summerDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       {formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
@@ -2016,7 +2001,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   </div>
 
                   {formData.summerDifferentSizes && formData.summerWidth && formData.summerAspectRatio && formData.summerDiameter && (
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                       <InteractiveTireSelector
                         tireData={{
                           width: formData.summerRearWidth,
@@ -2040,7 +2025,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
             {/* Winter Tires (not used for motorcycles) */}
             {formData.vehicleType !== 'MOTORCYCLE' && (
-            <div className="border-t pt-6">
+            <div className="border-t dark:border-gray-600 pt-6">
               <div className="flex items-center mb-4">
                 <input
                   type="checkbox"
@@ -2050,7 +2035,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   onChange={handleChange}
                   className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="hasWinterTires" className="ml-3 text-lg font-semibold text-gray-900 flex items-center">
+                <label htmlFor="hasWinterTires" className="ml-3 text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                   <span className="text-2xl mr-2">❄️</span>
                   Winterreifen
                 </label>
@@ -2067,7 +2052,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="winterDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
+                    <label htmlFor="winterDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       {formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
@@ -2093,7 +2078,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   </div>
 
                   {formData.winterDifferentSizes && formData.winterWidth && formData.winterAspectRatio && formData.winterDiameter && (
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                       <InteractiveTireSelector
                         tireData={{
                           width: formData.winterRearWidth,
@@ -2118,7 +2103,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
 
             {/* All Season Tires (not used for motorcycles) */}
             {formData.vehicleType !== 'MOTORCYCLE' && (
-            <div className="border-t pt-6">
+            <div className="border-t dark:border-gray-600 pt-6">
               <div className="flex items-center mb-4">
                 <input
                   type="checkbox"
@@ -2128,7 +2113,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   onChange={handleChange}
                   className="w-5 h-5 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                 />
-                <label htmlFor="hasAllSeasonTires" className="ml-3 text-lg font-semibold text-gray-900 flex items-center">
+                <label htmlFor="hasAllSeasonTires" className="ml-3 text-lg font-semibold text-gray-900 dark:text-white flex items-center">
                   <span className="text-2xl mr-2">🌤️</span>
                   Ganzjahresreifen
                 </label>
@@ -2145,7 +2130,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                       onChange={handleChange}
                       className="w-4 h-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
                     />
-                    <label htmlFor="allSeasonDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700">
+                    <label htmlFor="allSeasonDifferentSizesAdd" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                       {formData.vehicleType === 'MOTORCYCLE' 
                         ? 'Unterschiedliche Vorder- und Hinterreifen'
                         : 'Mischbereifung (unterschiedliche Größen vorne/hinten)'}
@@ -2171,7 +2156,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
                   </div>
 
                   {formData.allSeasonDifferentSizes && formData.allSeasonWidth && formData.allSeasonAspectRatio && formData.allSeasonDiameter && (
-                    <div className="pt-4 border-t border-gray-200">
+                    <div className="pt-4 border-t border-gray-200 dark:border-gray-600">
                       <InteractiveTireSelector
                         tireData={{
                           width: formData.allSeasonRearWidth,
@@ -2196,7 +2181,7 @@ function AddVehicleModal({ onClose, onSuccess }: { onClose: () => void, onSucces
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
+          <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 px-3 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-end gap-2 sm:gap-4">
             <button
               type="button"
               onClick={onClose}

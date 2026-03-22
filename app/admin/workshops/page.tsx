@@ -6,15 +6,27 @@ import { useEffect, useState } from 'react'
 import BackButton from '@/components/BackButton'
 import { WorkshopCRMDialog } from '@/components/WorkshopCRMDialog'
 
+interface ProfileDetails {
+  hasCalendar: boolean
+  hasStripe: boolean
+  hasServices: boolean
+  hasPricing: boolean
+  hasSupplier: boolean
+  hasLandingPage: boolean
+}
+
 interface Workshop {
   id: string
   customerNumber: string
   companyName: string
+  logoUrl: string | null
   isVerified: boolean
   createdAt: string
   distance: number | null
   offersCount: number
   revenue: number
+  profileScore?: number
+  profileDetails?: ProfileDetails
   freelancer: { id: string; name: string } | null
   user: {
     email: string
@@ -306,7 +318,21 @@ export default function WorkshopManagementPage() {
               <div key={workshop.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
                 <div className="p-6">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex items-start gap-4 flex-1">
+                      {/* Workshop Logo */}
+                      <div className="flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                        {workshop.logoUrl ? (
+                          <img src={workshop.logoUrl} alt={workshop.companyName} className="w-full h-full object-contain p-1" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
                         <h3 className="text-xl font-bold text-gray-900">
                           {workshop.companyName}
@@ -329,6 +355,20 @@ export default function WorkshopManagementPage() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
                             FL: {workshop.freelancer.name}
+                          </span>
+                        )}
+                        {workshop.profileDetails && (
+                          <span
+                            className={`px-3 py-1 text-xs font-semibold rounded-full cursor-help ${
+                              (workshop.profileScore || 0) >= 5
+                                ? 'bg-green-100 text-green-800'
+                                : (workshop.profileScore || 0) >= 3
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                            title={`Werkstatt-Einrichtung:\n${workshop.profileDetails.hasCalendar ? '✅' : '❌'} Google Kalender\n${workshop.profileDetails.hasStripe ? '✅' : '❌'} Stripe Konto\n${workshop.profileDetails.hasServices ? '✅' : '❌'} Services\n${workshop.profileDetails.hasPricing ? '✅' : '❌'} Preiskalkulation\n${workshop.profileDetails.hasSupplier ? '✅' : '❌'} Lieferant\n${workshop.profileDetails.hasLandingPage ? '✅' : '❌'} Landing Page`}
+                          >
+                            Profil: {workshop.profileScore}/6
                           </span>
                         )}
                       </div>
@@ -375,6 +415,7 @@ export default function WorkshopManagementPage() {
                           })}
                         </p>
                       </div>
+                    </div>
                     </div>
 
                     {/* Actions */}

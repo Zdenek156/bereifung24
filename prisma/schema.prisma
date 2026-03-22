@@ -80,14 +80,15 @@ model User {
   role     String @default("CUSTOMER") // CUSTOMER, WORKSHOP, ADMIN, B24_EMPLOYEE, FREELANCER
 
   // Profile
-  firstName String
-  lastName  String
-  phone     String?
-  street    String?
-  zipCode   String?
-  city      String?
-  latitude  Float?
-  longitude Float?
+  firstName    String
+  lastName     String
+  phone        String?
+  street       String?
+  zipCode      String?
+  city         String?
+  latitude     Float?
+  longitude    Float?
+  profileImage String?
 
   // Customer Type (for billing)
   customerType String? @default("PRIVATE") // PRIVATE, BUSINESS
@@ -100,6 +101,7 @@ model User {
 
   // OAuth
   googleId String? @unique
+  appleId  String? @unique
 
   // Password Reset
   resetToken       String?
@@ -107,6 +109,20 @@ model User {
 
   // Email Verification
   verificationToken String?
+
+  // Mobile App
+  refreshToken         String?   @unique
+  refreshTokenExpiry   DateTime?
+  fcmToken             String?
+  fcmTokenUpdatedAt    DateTime?
+  lastAppLogin         DateTime?
+  lastAppVersion       String?
+
+  // Push Notification Settings
+  notifyBookingConfirmation Boolean @default(true)
+  notifyReminder            Boolean @default(true)
+  notifySeason              Boolean @default(true)
+  notifyBookingUpdate       Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -145,6 +161,9 @@ model User {
 
   // Customer Reminders
   createdReminders CustomerReminder[] @relation("ReminderCreatedBy")
+
+  // Review Prompts
+  reviewPrompts ReviewPrompt[]
 
   // Freelancer
   freelancer Freelancer?
@@ -228,6 +247,7 @@ model Workshop {
   website        String?
   description    String?
   logoUrl        String? // Workshop Logo URL
+  cardImageUrl   String? // Workshop Card-Foto für Suchergebnisse
   taxMode        String  @default("STANDARD") // STANDARD (inkl. MwSt.), KLEINUNTERNEHMER (§19 UStG)
 
   // Opening Hours (JSON String)
@@ -240,6 +260,14 @@ model Workshop {
   // Stripe Connect (All payments handled via Stripe)
   stripeAccountId String? @map("stripe_account_id") // Stripe Connected Account ID
   stripeEnabled   Boolean @default(false) @map("stripe_enabled") // Ob Stripe-Zahlungen akzeptiert werden
+
+  // GoCardless SEPA
+  gocardlessCustomerId       String?   // GoCardless Customer ID
+  gocardlessMandateId        String?   // GoCardless Mandate ID
+  gocardlessMandateStatus    String?   // pending_submission, submitted, active, cancelled, failed
+  gocardlessMandateRef       String?   // SEPA Mandate Reference
+  gocardlessMandateCreatedAt DateTime? // When mandate was created
+  gocardlessBankAccountId    String?   // GoCardless Bank Account ID
 
   // Payment Methods (JSON String)
   paymentMethods String? @map("paymentmethods") // JSON: {"cash": true, "bankTransfer": true, ...}
@@ -306,9 +334,13 @@ model Workshop {
 
   // Tire Supplier Integration
   tirePricingBySizes TirePricingBySize[] @relation("WorkshopTirePricing")
+  tireChangePricing  TireChangePricingBySize[] @relation("WorkshopTireChangePricing")
   suppliers          WorkshopSupplier[]  @relation("WorkshopSuppliers")
   inventory          WorkshopInventory[] @relation("WorkshopInventory")
   tirePriceCache     TirePriceCache[]    @relation("WorkshopTirePriceCache")
+
+  // Review Prompts
+  reviewPrompts ReviewPrompt[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -396,7 +428,7 @@ model TirePricingBySize {
   workshop   Workshop @relation("WorkshopTirePricing", fields: [workshopId], references: [id], onDelete: Cascade)
 
   // Tire Size Configuration
-  rimSize    Int      @map("rim_size") // Zollgröße (13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
+  rimSize    Int      @map("rim_size") // Zollgröße (13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24)
   vehicleType String  @default("AUTO") @map("vehicle_type") // AUTO or MOTO
 
   // Pricing Configuration
@@ -409,6 +441,33 @@ model TirePricingBySize {
 
   @@unique([workshopId, rimSize, vehicleType])
   @@map("tire_pricing_by_size")
+}
+
+// ============================================
+// TIRE CHANGE SERVICE PRICING BY RIM SIZE
+// Montagepreis pro Reifen nach Zollgröße (13"-23")
+// ============================================
+
+model TireChangePricingBySize {
+  id         String   @id @default(cuid())
+  workshopId String   @map("workshop_id")
+  workshop   Workshop @relation("WorkshopTireChangePricing", fields: [workshopId], references: [id], onDelete: Cascade)
+
+  // Rim Size (13-23 Zoll)
+  rimSize Int @map("rim_size")
+
+  // Pricing per Tire
+  pricePerTire    Float @map("price_per_tire")     // Montagepreis pro Reifen in EUR
+  durationPerTire Int   @map("duration_per_tire")   // Dauer pro Reifen in Minuten
+
+  // Availability
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([workshopId, rimSize])
+  @@map("tire_change_pricing_by_size")
 }
 
 // ============================================
@@ -977,6 +1036,9 @@ model Review {
   rating  Int // 1-5 Sterne
   comment String?
 
+  // Status
+  status ReviewStatus @default(PUBLISHED)
+
   // Response
   workshopResponse String?
   respondedAt      DateTime?
@@ -985,6 +1047,38 @@ model Review {
   updatedAt DateTime @updatedAt
 
   @@map("reviews")
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+  FLAGGED
+}
+
+// ============================================
+// REVIEW PROMPT (time-based push after appointment)
+// ============================================
+
+model ReviewPrompt {
+  id              String        @id @default(cuid())
+  directBookingId String        @unique @map("direct_booking_id")
+  directBooking   DirectBooking @relation(fields: [directBookingId], references: [id], onDelete: Cascade)
+  userId          String        @map("user_id")
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workshopId      String        @map("workshop_id")
+  workshop        Workshop      @relation(fields: [workshopId], references: [id], onDelete: Cascade)
+
+  scheduledAt DateTime  @map("scheduled_at") // When push should be sent (booking time + 2h)
+  sentAt      DateTime? @map("sent_at")      // When push was actually sent
+  completedAt DateTime? @map("completed_at") // When review was submitted
+  dismissedAt DateTime? @map("dismissed_at") // When user dismissed the prompt
+  expiredAt   DateTime? @map("expired_at")   // When prompt expired (7 days)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([scheduledAt])
+  @@index([userId])
+  @@map("review_prompts")
 }
 
 // ============================================
@@ -1178,14 +1272,20 @@ model WorkshopService {
   wheelSizeSurcharge       Json? // {"17": 5, "18": 10, "19": 15} - Aufpreis nach Radgröße
   balancingPrice           Float?  @map("balancingprice") // Wuchten-Preis (pro Rad bei WHEEL_CHANGE)
   storagePrice             Float?  @map("storageprice") // Einlagerungspreis (pro Saison bei WHEEL_CHANGE) - Optional
+  washingPrice             Float?  @map("washingprice") // Räder-Wasch-Preis (pauschal bei WHEEL_CHANGE) - Optional
   allowsDirectBooking      Boolean @default(false) @map("allows_direct_booking") // Werkstatt erlaubt Direktbuchungen für diesen Service
   refrigerantPricePer100ml Float? // Preis pro 100ml Kältemittel (nur bei CLIMATE_SERVICE)
+
+  // Nur Montage (TIRE_CHANGE): Kunde bringt eigene Reifen mit
+  acceptsMountingOnly      Boolean @default(true) @map("accepts_mounting_only") // Akzeptiert mitgebrachte Reifen
+  mountingOnlySurcharge    Float?  @default(0) @map("mounting_only_surcharge") // Aufschlag pro Reifen bei Nur Montage (€)
 
   // Duration
   durationMinutes  Int // Dauer in Minuten (für 2 Reifen bei TIRE_CHANGE, für 1 Reifen bei MOTORCYCLE_TIRE)
   durationMinutes4 Int? // Dauer für 4 Reifen (TIRE_CHANGE) oder 2 Reifen (MOTORCYCLE_TIRE)
   balancingMinutes Int?     @map("balancingminutes") // Zusätzliche Dauer für Wuchten (pro Rad bei WHEEL_CHANGE)
   storageAvailable Boolean? @default(false) @map("storageavailable") // Einlagerung verfügbar
+  washingAvailable Boolean? @default(false) @map("washingavailable") // Räder waschen verfügbar
 
   // Service Packages (JSON structure for service-specific options - DEPRECATED, use ServicePackage relation instead)
   packages Json? // Legacy field - use servicePackages relation for new implementations
@@ -5682,6 +5782,7 @@ model DirectBooking {
   // Options (for wheel change)
   hasBalancing Boolean @default(false) @map("has_balancing")
   hasStorage   Boolean @default(false) @map("has_storage")
+  hasWashing   Boolean @default(false) @map("has_washing")
   hasDisposal  Boolean @default(false) @map("has_disposal")
 
   // Tire Storage
@@ -5713,6 +5814,7 @@ model DirectBooking {
   basePrice       Decimal  @map("base_price") @db.Decimal(10, 2)
   balancingPrice  Decimal? @map("balancing_price") @db.Decimal(10, 2)
   storagePrice    Decimal? @map("storage_price") @db.Decimal(10, 2)
+  washingPrice    Decimal? @map("washing_price") @db.Decimal(10, 2)
   disposalFee     Decimal? @map("disposal_fee") @db.Decimal(10, 2)
   runFlatSurcharge Decimal? @map("runflat_surcharge") @db.Decimal(10, 2)
   totalPrice      Decimal  @map("total_price") @db.Decimal(10, 2)
@@ -5750,12 +5852,21 @@ model DirectBooking {
   // Commission Billing (for monthly commission invoices)
   commissionBilledAt DateTime? @map("commission_billed_at") // When commission was included in monthly invoice
 
+  // Coupon / Gutschein
+  couponId       String?  @map("coupon_id")
+  couponCode       String?  @map("coupon_code") @db.VarChar(50)
+  discountAmount   Decimal? @map("discount_amount") @db.Decimal(10, 2) // Rabattbetrag
+  originalPrice    Decimal? @map("original_price") @db.Decimal(10, 2)  // Originalpreis vor Rabatt
+  couponCostBearer String?  @map("coupon_cost_bearer") // PLATFORM oder WORKSHOP
+  coupon           Coupon?  @relation(fields: [couponId], references: [id])
+
   // Booking
   bookingId String?  @unique @map("booking_id")
   booking   Booking? @relation(fields: [bookingId], references: [id])
 
   // Review (one-to-one optional)
-  review Review?
+  review       Review?
+  reviewPrompt ReviewPrompt?
 
   // Metadata
   createdAt DateTime @default(now()) @map("created_at")
@@ -6208,6 +6319,70 @@ model FreelancerMaterialDownload {
   @@map("freelancer_material_downloads")
 }
 
+// ============================================
+// COUPON / GUTSCHEIN SYSTEM
+// ============================================
+
+model Coupon {
+  id          String  @id @default(cuid())
+  code        String  @unique // z.B. "WINTER25", "NEUKUNDE10"
+  description String? // Interne Beschreibung
+
+  // Rabatt-Typ
+  type  String // PERCENTAGE oder FIXED
+  value Float  // Rabattwert (10 = 10% oder 10€)
+
+  // Einschränkungen
+  minOrderValue    Float? @map("min_order_value") // Mindestbestellwert in €
+  maxDiscount      Float? @map("max_discount") // Maximaler Rabatt bei Prozent-Gutscheinen
+  maxUsages        Int?   @map("max_usages") // Max. Einlösungen gesamt (null = unbegrenzt)
+  usedCount        Int    @default(0) @map("used_count") // Bereits eingelöst
+  maxUsagesPerUser Int    @default(1) @map("max_usages_per_user") // Max. pro Kunde
+
+  // Gültigkeit
+  validFrom  DateTime  @default(now()) @map("valid_from")
+  validUntil DateTime? @map("valid_until") // null = unbegrenzt
+
+  // Kostenträger
+  costBearer String @default("PLATFORM") @map("cost_bearer") // PLATFORM oder WORKSHOP
+
+  // Status
+  isActive Boolean @default(true) @map("is_active")
+
+  // Ersteller
+  createdById String? @map("created_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  usages         CouponUsage[]
+  directBookings DirectBooking[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("coupons")
+}
+
+model CouponUsage {
+  id         String  @id @default(cuid())
+  couponId   String  @map("coupon_id")
+  coupon     Coupon  @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  customerId String? @map("customer_id") // User-ID des Kunden
+  bookingId  String? @map("booking_id") // DirectBooking-ID (optional)
+
+  // Rabatt-Details zum Zeitpunkt der Einlösung
+  originalAmount  Float @map("original_amount") // Ursprünglicher Betrag
+  discountAmount  Float @map("discount_amount") // Rabatt in €
+  finalAmount     Float @map("final_amount") // Endbetrag
+
+  redeemedAt DateTime @default(now()) @map("redeemed_at")
+
+  @@index([couponId])
+  @@index([customerId])
+  @@map("coupon_usages")
+}
+
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -6226,4 +6401,73 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+// ============================================
+// MOBILE APP VERSION (Force Update)
+// ============================================
+
+model AppVersion {
+  id              String   @id @default(cuid())
+  platform        String   // ios, android
+  minVersion      String   // Minimum required version (e.g., "1.0.0")
+  latestVersion   String   // Latest available version
+  updateUrl       String   // App Store / Play Store URL
+  forceUpdate     Boolean  @default(false)
+  releaseNotes    String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([platform])
+  @@map("app_versions")
+}
+
+// ============================================
+// PUSH NOTIFICATION LOG
+// ============================================
+
+model PushNotificationLog {
+  id     String  @id @default(cuid())
+  userId String? @map("user_id")
+
+  // Notification content
+  title String
+  body  String  @db.Text
+  type  String // booking_confirmation, booking_reminder, season_tip, booking_update, manual
+  data  Json? // Additional data payload (route info, ids)
+
+  // Delivery
+  fcmToken String? @map("fcm_token") @db.Text
+  status   String  @default("SENT") // SENT, FAILED
+  error    String? @db.Text
+
+  // Broadcast tracking
+  isBroadcast Boolean @default(false) @map("is_broadcast")
+  sentBy      String? @map("sent_by") // Admin user who triggered it
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([type])
+  @@index([createdAt])
+  @@index([status])
+  @@map("push_notification_logs")
+}
+
+// ============================================
+// APP FEEDBACK
+// ============================================
+
+model AppFeedback {
+  id      String  @id @default(cuid())
+  userId  String  @map("user_id")
+  rating  Int     // 1-5
+  comment String? @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([rating])
+  @@index([createdAt])
+  @@map("app_feedback")
 }

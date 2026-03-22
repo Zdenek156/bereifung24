@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getAuthUser } from '@/lib/getAuthUser'
 import { z } from 'zod'
 
 // Validation Schema
@@ -41,11 +42,13 @@ const vehicleSchema = z.object({
 // GET /api/vehicles - Get all vehicles for logged-in customer
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
+    // Compatibility alias
+    const session = { user: authUser }
 
     // Get customer first, then their vehicles
     const customer = await prisma.customer.findUnique({
@@ -190,14 +193,15 @@ export async function GET(req: NextRequest) {
 // POST /api/vehicles - Create new vehicle
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
+    const session = { user: authUser }
 
     const customer = await prisma.customer.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: authUser.id }
     })
 
     if (!customer) {

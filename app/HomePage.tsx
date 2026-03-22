@@ -36,7 +36,8 @@ import {
   RotateCw,
   Bike,
   Ruler,
-  Snowflake
+  Snowflake,
+  Sparkles
 } from 'lucide-react'
 import ServiceFilters from './components/ServiceFilters'
 import { useScrollReveal, useCountUp } from './hooks/useAnimations'
@@ -359,6 +360,37 @@ export default function NewHomePage({
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
   // Track if filters changed during loading — triggers re-search after loading completes
   const pendingSearchRef = useRef(false)
+
+  // AI-selected tire (from KI Berater)
+  const [aiSelectedTire, setAiSelectedTire] = useState<{
+    brand: string; model: string; width: string; height: string; diameter: string;
+    season: string; loadIndex: string; speedIndex: string;
+  } | null>(null)
+
+  // Read AI tire params from URL (when coming from KI Berater "Werkstatt suchen")
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('ai_tire') === '1') {
+      const brand = params.get('tire_brand') || ''
+      const model = params.get('tire_model') || ''
+      const width = params.get('tire_width') || ''
+      const height = params.get('tire_height') || ''
+      const diameter = params.get('tire_diameter') || ''
+      const season = params.get('tire_season') || 's'
+      const loadIndex = params.get('tire_load') || ''
+      const speedIndex = params.get('tire_speed') || ''
+      if (width && height && diameter) {
+        setSelectedService('TIRE_CHANGE')
+        setSelectedPackages(['with_tire_purchase', 'four_tires', 'with_disposal'])
+        setTireDimensions({ width, height, diameter, loadIndex, speedIndex })
+        setSelectedSeason(season)
+        setAiSelectedTire({ brand, model, width, height, diameter, season, loadIndex, speedIndex })
+        // Clean up URL
+        window.history.replaceState({}, '', '/')
+      }
+    }
+  }, [])
   
   // Load reviews on page load — skip if SSR data was provided
   useEffect(() => {
@@ -396,6 +428,10 @@ export default function NewHomePage({
         console.log('🎯 [page.tsx] Setting includeTires=true (Mit Reifenkauf - Motorrad)')
         setIncludeTires(true)
       }
+    } else {
+      // Non-tire services (WHEEL_CHANGE, TIRE_REPAIR, ALIGNMENT_BOTH, CLIMATE_SERVICE, etc.)
+      console.log('🎯 [page.tsx] Setting includeTires=false (kein Reifenkauf für', selectedService, ')')
+      setIncludeTires(false)
     }
   }, [selectedPackages, selectedService])
 
@@ -557,28 +593,33 @@ export default function NewHomePage({
     }
   }, [showUserMenu])
   
-  // Auto-search after vehicle selection if user has already searched
+  // Auto-search after vehicle dimensions change (triggered by vehicle selection)
+  // IMPORTANT: Do NOT include selectedVehicleId in dependencies!
+  // Vehicle selection → fetches new dimensions → dimensions change → this triggers
+  // Including selectedVehicleId would cause double-fire with stale dimensions
   useEffect(() => {
-    // Only trigger if:
-    // 1. User has searched before (hasSearched = true)
-    // 2. Location is available (customerLocation not null)
-    // 3. Service is TIRE_CHANGE or MOTORCYCLE_TIRE with tires included
-    // 4. We have valid tire dimensions
     if (
       hasSearched && 
       customerLocation && 
-      includeTires && 
       selectedVehicleId
     ) {
+      // Standard tires: need width + diameter
       if (selectedService === 'TIRE_CHANGE' && tireDimensions.width && tireDimensions.diameter) {
-        console.log('🔄 [Auto-Search] Triggering search after vehicle change (TIRE_CHANGE)')
+        console.log('🔄 [Auto-Search] Dimensions changed (standard), triggering search. Diameter:', tireDimensions.diameter)
         searchWorkshops(customerLocation)
-      } else if (selectedService === 'MOTORCYCLE_TIRE' && tireDimensionsFront && tireDimensionsRear) {
-        console.log('🔄 [Auto-Search] Triggering search after vehicle change (MOTORCYCLE_TIRE)')
+      }
+      // Mixed tires: need front dimensions
+      else if (selectedService === 'TIRE_CHANGE' && tireDimensionsFront) {
+        console.log('🔄 [Auto-Search] Dimensions changed (mixed), triggering search. Front:', tireDimensionsFront)
+        searchWorkshops(customerLocation)
+      }
+      // Motorcycle
+      else if (selectedService === 'MOTORCYCLE_TIRE' && includeTires && tireDimensionsFront && tireDimensionsRear) {
+        console.log('🔄 [Auto-Search] Dimensions changed (motorcycle), triggering search')
         searchWorkshops(customerLocation)
       }
     }
-  }, [selectedVehicleId, tireDimensions.width, tireDimensions.diameter, tireDimensionsFront, tireDimensionsRear])
+  }, [tireDimensions.width, tireDimensions.diameter, tireDimensionsFront, tireDimensionsRear])
   
   // Auto-search when motorcycle tire construction filter changes
   useEffect(() => {
@@ -1292,9 +1333,10 @@ export default function NewHomePage({
           forcedWorkshopSlug: fixedWorkshopContext?.landingPageSlug,
           // Tire search parameters (only for TIRE_CHANGE service)
           includeTires: selectedService === 'TIRE_CHANGE' ? includeTires : false,
-          tireDimensions: (selectedService === 'TIRE_CHANGE' && includeTires && !mixedTiresData.hasMixed) ? tireDimsToUse : undefined,
-          // Mixed tire dimensions (if vehicle has different front/rear sizes)
-          tireDimensionsFront: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && mixedTiresData.front) ? 
+          // ALWAYS send tireDimensions for TIRE_CHANGE (needed for rim-size pricing even without tire purchase)
+          tireDimensions: (selectedService === 'TIRE_CHANGE' && !mixedTiresData.hasMixed) ? tireDimsToUse : undefined,
+          // Mixed tire dimensions — ALWAYS send for TIRE_CHANGE (needed for rim-size pricing)
+          tireDimensionsFront: (selectedService === 'TIRE_CHANGE' && mixedTiresData.hasMixed && mixedTiresData.front) ? 
             (() => {
               // Regex accepts optional load/speed index: "245/35 R21" or "245/35 R21 96Y"
               const match = mixedTiresData.front.match(/^(\d+)\/(\d+)\s*R(\d+)(?:\s+\d+[A-Z]+)?$/);
@@ -1302,7 +1344,7 @@ export default function NewHomePage({
               console.log('🎯 [searchWorkshops] Parsing front dimensions:', mixedTiresData.front, '→', parsed);
               return parsed;
             })() : undefined,
-          tireDimensionsRear: (selectedService === 'TIRE_CHANGE' && includeTires && mixedTiresData.hasMixed && mixedTiresData.rear) ? 
+          tireDimensionsRear: (selectedService === 'TIRE_CHANGE' && mixedTiresData.hasMixed && mixedTiresData.rear) ? 
             (() => {
               // Regex accepts optional load/speed index: "275/30 R21" or "275/30 R21 98Y"
               const match = mixedTiresData.rear.match(/^(\d+)\/(\d+)\s*R(\d+)(?:\s+\d+[A-Z]+)?$/);
@@ -1691,7 +1733,7 @@ export default function NewHomePage({
       hasDisposal: (selectedService === 'TIRE_CHANGE' || selectedService === 'MOTORCYCLE_TIRE') && selectedPackages.includes('with_disposal'),
       disposalPrice: (selectedService === 'TIRE_CHANGE' || selectedService === 'MOTORCYCLE_TIRE') ? (workshop.disposalFeeApplied || 0) : 0,
       hasRunflat: selectedPackages.includes('runflat'),
-      runflatPrice: workshop.runflatSurcharge || 0,
+      runflatPrice: workshop.runFlatSurchargeApplied || 0,
       // Tire count for per-tire calculations
       tireCount: workshop.isMixedTires
         ? ((selectedFrontRec ? 1 : 0) + (selectedRearRec ? 1 : 0))
@@ -1952,7 +1994,11 @@ export default function NewHomePage({
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 rounded-lg transition-colors"
                   >
-                    <User className="w-5 h-5" />
+                    {session.user?.image ? (
+                      <img src={session.user.image} alt="" className="w-6 h-6 rounded-full object-cover" referrerPolicy="no-referrer" />
+                    ) : (
+                      <User className="w-5 h-5" />
+                    )}
                     <span className="hidden sm:inline">{session.user?.name || 'Mein Konto'}</span>
                     <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                   </button>
@@ -2173,32 +2219,21 @@ export default function NewHomePage({
       />
 
       {/* Hero Section - Booking.com Style */}
-      <section className={`relative overflow-hidden ${useServiceCards ? 'bg-transparent text-gray-900 pt-0 pb-0' : hideHeroHeader ? 'bg-white text-gray-900 pt-4 pb-8' : 'bg-primary-800 text-white pt-12 pb-32'}`}>
-        {/* Hero Background Image */}
+      <section className={`relative overflow-hidden ${useServiceCards ? 'bg-transparent text-gray-900 pt-0 pb-0' : hideHeroHeader ? 'bg-white text-gray-900 pt-4 pb-8' : 'text-white pt-16 pb-40'}`}
+        style={!useServiceCards && !hideHeroHeader ? { backgroundImage: 'url(/bereifung24-hero-bg.webp)', backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
+        {/* Hero Overlay for readability */}
         {!hideHeroHeader && (
-          <div className="absolute inset-0 z-0">
-            <Image
-              src="/bereifung24-hero-bg.webp"
-              alt="Reifenwechsel in einer Werkstatt – Bereifung24 Reifenservice zum Festpreis"
-              fill
-              priority
-              sizes="100vw"
-              quality={85}
-              placeholder="blur"
-              blurDataURL="data:image/webp;base64,UklGRkgAAABXRUJQVlA4IDwAAADwAgCdASoUAAkAPzmEuVO0qKWisAgCkCcJYgCw7C5JAAD+3/fktUurN2tah969dPeAalnjL+g1troAAAA="
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-700/50 via-primary-800/40 to-primary-900/60" />
-          </div>
+          <div className="absolute inset-0 z-0 bg-gradient-to-b from-gray-900/70 via-gray-900/55 to-primary-900/70" />
         )}
 
-        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
           {!hideHeroHeader && (
-            <div className="max-w-4xl mx-auto text-center mb-12">
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+            <div className="max-w-4xl mx-auto text-center mb-16">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.5)' }}>
                 Reifenservice zum Festpreis – in 2 Minuten gebucht
               </h2>
-              <p className="text-xl text-primary-100">
+              <p className="text-xl text-gray-100" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
                 Vergleiche geprüfte Werkstätten in deiner Nähe und buche direkt online
               </p>
             </div>
@@ -2297,6 +2332,31 @@ export default function NewHomePage({
             )}
 
             {!useServiceCards && (
+            <>
+            {/* AI-selected tire info banner */}
+            {aiSelectedTire && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-3 flex items-start gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-blue-900">KI-Empfehlung ausgewählt</p>
+                  <p className="text-sm text-blue-700 mt-0.5">
+                    <span className="font-bold">{aiSelectedTire.brand} {aiSelectedTire.model}</span>
+                    {' · '}{aiSelectedTire.width}/{aiSelectedTire.height} R{aiSelectedTire.diameter}
+                    {' · '}{aiSelectedTire.season === 's' ? 'Sommer' : aiSelectedTire.season === 'w' ? 'Winter' : 'Ganzjahr'}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">Gib deine PLZ ein und suche eine Werkstatt mit diesem Reifen!</p>
+                </div>
+                <button
+                  onClick={() => setAiSelectedTire(null)}
+                  className="p-1 hover:bg-blue-100 rounded-lg transition-colors flex-shrink-0"
+                  title="Auswahl entfernen"
+                >
+                  <X className="w-4 h-4 text-blue-400" />
+                </button>
+              </div>
+            )}
             <div ref={serviceDetailsRef} className="bg-white rounded-2xl p-4" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
               <div className="flex flex-col md:flex-row gap-4">
 
@@ -2390,9 +2450,8 @@ export default function NewHomePage({
                 )}
               </div>
             </div>
+            </>
             )}
-            
-            {/* Micro Social Proof under search */}
             {!useServiceCards && (
             <div className="max-w-5xl mx-auto mt-4 flex flex-wrap items-center justify-center gap-4 text-primary-100 text-sm">
               <div className="flex items-center gap-2">
@@ -2436,7 +2495,7 @@ export default function NewHomePage({
       </section>
 
       {/* Search Results Section */}
-      {hasSearched && (!useServiceCards || workshops.length > 0) && (
+      {hasSearched && (
         <section ref={searchResultsRef} className="py-8 bg-gray-50">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className={isWorkshopFixed ? 'max-w-5xl mx-auto flex flex-col gap-4' : 'flex flex-col lg:flex-row gap-6'}>
@@ -3084,15 +3143,32 @@ export default function NewHomePage({
                 )}
 
                 {/* No Results */}
-                {!loading && !error && workshops.length === 0 && (
+                {!loading && !error && workshops.length === 0 && hasSearched && (
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
-                    <div className="text-6xl mb-4">🔍</div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                      Keine Werkstätten gefunden
-                    </h3>
-                    <p className="text-gray-600">
-                      Versuchen Sie einen größeren Umkreis oder eine andere PLZ
-                    </p>
+                    {isWorkshopFixed ? (
+                      <>
+                        <div className="text-6xl mb-4">⏳</div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          Online-Buchung wird eingerichtet
+                        </h3>
+                        <p className="text-gray-600 mb-2">
+                          Diese Werkstatt befindet sich aktuell noch im Verifizierungsprozess für die Online-Buchung.
+                        </p>
+                        <p className="text-gray-500 text-sm">
+                          Die Online-Terminbuchung ist in Kürze verfügbar – schauen Sie bald wieder vorbei!
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-6xl mb-4">🔍</div>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                          Keine Werkstätten gefunden
+                        </h3>
+                        <p className="text-gray-600">
+                          Versuchen Sie einen größeren Umkreis oder eine andere PLZ
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -3227,13 +3303,13 @@ export default function NewHomePage({
                             {/* Left: Logo + Badge (homepage only) */}
                             {!isWorkshopFixed && (
                               <div className="relative flex-shrink-0 w-full sm:w-40 md:w-44 lg:w-48 h-40 sm:h-auto bg-gradient-to-br from-primary-500 to-primary-700">
-                                {workshop.logoUrl ? (
+                                {(workshop.cardImageUrl || workshop.logoUrl) ? (
                                   <img
-                                    src={workshop.logoUrl}
+                                    src={workshop.cardImageUrl || workshop.logoUrl}
                                     alt={`Werkstatt ${workshop.name} in ${workshop.city}`}
                                     width={192}
                                     height={160}
-                                    className="w-full h-full object-contain p-4"
+                                    className={`w-full h-full ${workshop.cardImageUrl ? 'object-cover' : 'object-contain p-4'}`}
                                     onError={(e) => {
                                       const parent = e.currentTarget.parentElement
                                       if (parent) {
@@ -3903,6 +3979,24 @@ export default function NewHomePage({
                                           }
                                           return null
                                         })()}
+                                        {((workshop.runFlatSurchargeApplied || 0) > 0) && (() => {
+                                          let tireCount = 0
+                                          if (workshop.isMixedTires) {
+                                            tireCount = 4
+                                          } else if (selectedRec) {
+                                            tireCount = selectedRec.quantity || 0
+                                          }
+                                          if (tireCount > 0) {
+                                            const perTire = (workshop.runFlatSurchargeApplied || 0) / tireCount
+                                            return (
+                                              <div className="flex justify-between gap-4">
+                                                <span>Runflat-Zuschlag ({tireCount}× {formatEUR(perTire)})</span>
+                                                <span className="font-medium">{formatEUR(workshop.runFlatSurchargeApplied)}</span>
+                                              </div>
+                                            )
+                                          }
+                                          return null
+                                        })()}
                                       </div>
                                       {/* Total price — CHECK24-style prominent */}
                                       <div className="flex items-center justify-between gap-4 bg-primary-50 border border-primary-200 rounded-lg px-3 py-2 mt-1">
@@ -3934,6 +4028,12 @@ export default function NewHomePage({
                                                 <span className="font-medium">+ {formatEUR(workshop.wheelChangeBreakdown.storageSurcharge)}</span>
                                               </div>
                                             )}
+                                            {workshop.wheelChangeBreakdown?.washingSurcharge > 0 && (
+                                              <div className="flex justify-between gap-4">
+                                                <span>Räder waschen</span>
+                                                <span className="font-medium">+ {formatEUR(workshop.wheelChangeBreakdown.washingSurcharge)}</span>
+                                              </div>
+                                            )}
                                           </div>
                                           {/* Total price — CHECK24-style prominent */}
                                           <div className="flex items-center justify-between gap-4 bg-primary-50 border border-primary-200 rounded-lg px-3 py-2 mt-1">
@@ -3950,15 +4050,31 @@ export default function NewHomePage({
                                   ) : !includeTires ? (
                                     <>
                                       {/* Price breakdown for Nur Montage */}
-                                      {workshop.totalPrice > 0 ? (
+                                      {selectedService === 'TIRE_CHANGE' && !selectedVehicleId && workshop.basePrice === 0 ? (
+                                        /* No vehicle selected — show warning */
+                                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                          <p className="text-sm text-yellow-800 font-semibold mb-1">⚠️ Fahrzeug auswählen</p>
+                                          <p className="text-xs text-yellow-700">Bitte wählen Sie links unter &quot;Fahrzeug wählen&quot; Ihr Fahrzeug aus, um passende Reifen anzuzeigen.</p>
+                                        </div>
+                                      ) : workshop.totalPrice > 0 ? (
                                         <>
                                           <div className="text-sm text-gray-600 space-y-1 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100 mb-1">
-                                            {workshop.basePrice > 0 && (
+                                            {((workshop.basePrice || 0) + (workshop.mountingOnlySurchargeApplied || 0)) > 0 && (
                                               <div className="flex justify-between gap-4">
                                                 <span>Montage</span>
-                                                <span className="font-medium">{formatEUR(workshop.basePrice)}</span>
+                                                <span className="font-medium">{formatEUR((workshop.basePrice || 0) + (workshop.mountingOnlySurchargeApplied || 0))}</span>
                                               </div>
                                             )}
+                                            {((workshop.runFlatSurchargeApplied || 0) > 0) && (() => {
+                                              let tireCount = selectedPackages.includes('two_tires') ? 2 : 4
+                                              const perTire = (workshop.runFlatSurchargeApplied || 0) / tireCount
+                                              return (
+                                                <div className="flex justify-between gap-4">
+                                                  <span>Runflat ({tireCount}× {formatEUR(perTire)})</span>
+                                                  <span className="font-medium">{formatEUR(workshop.runFlatSurchargeApplied)}</span>
+                                                </div>
+                                              )
+                                            })()}
                                             {((workshop.disposalFeeApplied || 0) > 0) && (() => {
                                               // Determine tire count based on service type
                                               let tireCount = 4
@@ -3988,24 +4104,36 @@ export default function NewHomePage({
                                         <span className="text-lg font-semibold text-gray-500">Preis auf Anfrage</span>
                                       )}
                                     </>
+                                  ) : showTires && !workshop.tireAvailable ? (
+                                    <div>
+                                      <p className="text-sm text-gray-500">Keine Reifen für diese Größe verfügbar</p>
+                                      <p className="text-xs text-gray-400 mt-1">Montagepreis: {formatEUR(workshop.basePrice)}</p>
+                                    </div>
                                   ) : (
                                     <div>
-                                      <p className="text-sm text-gray-600">
-                                        {selectedService === 'TIRE_REPAIR' 
-                                          ? (selectedPackages.includes('valve_damage') ? 'Ventilschaden' : 'Fremdkörper-Reparatur')
-                                          : selectedService === 'ALIGNMENT_BOTH'
-                                          ? 'Achsvermessung'
-                                          : 'Nur Montage'
-                                        }
-                                      </p>
-                                      <span className="text-2xl font-extrabold text-primary-700">{formatEUR(workshop.basePrice || workshop.totalPrice)}</span>
+                                      {selectedService === 'TIRE_CHANGE' && !selectedVehicleId ? (
+                                        /* Warning already shown above in tire availability section */
+                                        null
+                                      ) : (
+                                        <>
+                                          <p className="text-sm text-gray-600">
+                                            {selectedService === 'TIRE_REPAIR' 
+                                              ? (selectedPackages.includes('valve_damage') ? 'Ventilschaden' : 'Fremdkörper-Reparatur')
+                                              : selectedService === 'ALIGNMENT_BOTH'
+                                              ? 'Achsvermessung'
+                                              : 'Nur Montage'
+                                            }
+                                          </p>
+                                          <span className="text-2xl font-extrabold text-primary-700">{formatEUR(workshop.basePrice || workshop.totalPrice)}</span>
+                                        </>
+                                      )}
                                     </div>
                                   )}
                                   <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                                    {workshop.estimatedDuration && (
+                                    {workshop.estimatedDuration > 0 && (
                                       <span>~ {workshop.estimatedDuration} Min.</span>
                                     )}
-                                    {selectedService !== 'WHEEL_CHANGE' && workshop.estimatedDuration && selectedPackages.includes('with_balancing') && (
+                                    {selectedService !== 'WHEEL_CHANGE' && workshop.estimatedDuration > 0 && selectedPackages.includes('with_balancing') && (
                                       <span>·</span>
                                     )}
                                     {selectedService !== 'WHEEL_CHANGE' && selectedPackages.includes('with_balancing') && (
@@ -4015,15 +4143,17 @@ export default function NewHomePage({
                                 </div>
                                 <button
                                   onClick={() => handleBooking(workshop)}
-                                  disabled={session && !selectedVehicleId}
+                                  disabled={(session && !selectedVehicleId) || (showTires && !workshop.tireAvailable)}
                                   className={`flex-shrink-0 px-6 py-3 font-semibold rounded-xl transition-colors whitespace-nowrap shadow-sm hover:shadow-md ${
-                                    session && !selectedVehicleId
+                                    (session && !selectedVehicleId) || (showTires && !workshop.tireAvailable)
                                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                       : 'bg-primary-600 hover:bg-primary-700 text-white'
                                   }`}
                                 >
                                   {session && !selectedVehicleId
                                     ? 'Bitte Fahrzeug wählen'
+                                    : showTires && !workshop.tireAvailable
+                                    ? 'Keine Reifen verfügbar'
                                     : selectedService === 'WHEEL_CHANGE' 
                                     ? 'Räderwechsel buchen →'
                                     : selectedService === 'TIRE_REPAIR'
@@ -4218,15 +4348,13 @@ export default function NewHomePage({
       {!useServiceCards && (
       <footer className="bg-gray-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-12">
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src="/logos/B24_Logo_weiss.png"
+                  src="/logos/B24_Logo_blau_gray.png"
                   alt="Bereifung24"
-                  width={160}
-                  height={40}
                   className="h-10 w-auto object-contain"
                 />
               </div>
@@ -4268,20 +4396,6 @@ export default function NewHomePage({
                 <li><Link href="/pricing" className="hover:text-white transition-colors">Preise & Konditionen</Link></li>
                 <li><Link href="/support" className="hover:text-white transition-colors">Support</Link></li>
               </ul>
-            </div>
-
-            {/* Partner Program */}
-            <div className="bg-gradient-to-br from-primary-600/10 to-primary-700/10 rounded-lg p-4 border border-primary-500/20">
-              <h4 className="text-lg font-bold mb-3 text-primary-400">💰 Partner werden</h4>
-              <p className="text-gray-300 text-sm mb-4">
-                Verdiene als Influencer mit unserem Partner-Programm!
-              </p>
-              <Link 
-                href="/influencer" 
-                className="inline-block px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-semibold text-sm transition-colors"
-              >
-                Mehr erfahren →
-              </Link>
             </div>
 
             {/* Karriere */}

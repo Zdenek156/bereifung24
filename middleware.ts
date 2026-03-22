@@ -8,10 +8,11 @@ const STATIC_ROUTES = [
   '/api', '/admin', '/dashboard', '/auth', '/login', '/register', '/forgot-password',
   '/reset-password', '/verify-email', '/agb', '/datenschutz', '/impressum',
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
-  '/werkstatt', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
+  '/werkstatt', '/werkstatt-werden', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder', '/logos',
-  '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/app-download', '/demo',
-  '/smart-tire-advisor', '/invoices', '/workshop', '/services', '/freelancer'
+  '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/sitemap-werkstatt.xml', '/sitemap-reifen.xml', '/app-download', '/demo',
+  '/smart-tire-advisor', '/invoices', '/workshop', '/services', '/freelancer', '/reifen',
+  '/api/mobile-auth'
 ]
 
 // Map admin routes to application keys for permission checking
@@ -47,6 +48,9 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/support': 'support',
   '/admin/supplier-management': 'lieferanten',
   '/admin/freelancers': 'freelancers',
+  '/admin/gutscheine': 'gutscheine',
+  '/admin/push-notifications': 'push-benachrichtigungen',
+  '/admin/feedback': 'feedback',
 }
 
 // API routes to application mapping
@@ -72,6 +76,9 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/supplier-management': 'lieferanten',
   '/api/admin/support': 'support',
   '/api/admin/freelancers': 'freelancers',
+  '/api/admin/coupons': 'gutscheine',
+  '/api/admin/push-notifications': 'push-benachrichtigungen',
+  '/api/admin/feedback': 'feedback',
 }
 
 /**

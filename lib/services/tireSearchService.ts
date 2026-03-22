@@ -470,7 +470,7 @@ async function searchTiresViaDatabase(
     sortOrder = 'asc',
   } = filters
 
-  console.log(`💾 [Database Mode] Searching WorkshopInventory for ${width}/${height}R${diameter}`)
+  console.log(`💾 [Database Mode] Searching WorkshopInventory for ${width}/${height}R${diameter} | minStock=${minStock} | runFlat=${runFlat} | season=${season} | quality=${quality}`)
 
   // Quality category brand mapping
   const PREMIUM_BRANDS = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Goodyear', 'Dunlop']

@@ -434,6 +434,8 @@ export default function WorkshopDetailPage() {
             workshopData.postalCode = data.workshop.postalCode || ''
             workshopData.phone = data.workshop.phone || ''
             workshopData.website = data.workshop.companySettings?.website || ''
+            workshopData.logoUrl = data.workshop.logoUrl || ''
+            workshopData.heroImage = data.workshop.heroImage || ''
             
             // Check if workshop is small business (Kleinunternehmer)
             if (data.workshop.taxMode === 'KLEINUNTERNEHMER') {
@@ -448,7 +450,60 @@ export default function WorkshopDetailPage() {
             if (data.workshop.services) {
               setAvailableServices(data.workshop.services)
               const serviceData = data.workshop.services.find((s: any) => s.serviceType === service)
-              if (serviceData && serviceData.servicePackages && serviceData.servicePackages.length > 0) {
+              
+              // TIRE_CHANGE: Use rim-size pricing if available
+              if (service === 'TIRE_CHANGE' && data.workshop.tireChangePricing && data.workshop.tireChangePricing.length > 0) {
+                const savedTireData = sessionStorage.getItem('tireBookingData')
+                let tireCount = 4
+                let rimSize: number | null = null
+                
+                let hasTires = true
+                if (savedTireData) {
+                  try {
+                    const tireData = JSON.parse(savedTireData)
+                    tireCount = tireData.tireCount || 4
+                    hasTires = tireData.hasTires !== false
+                    // Extract rim size from tire dimensions
+                    if (tireData.tireDimensions?.diameter) {
+                      rimSize = parseInt(tireData.tireDimensions.diameter)
+                    } else if (tireData.tireDimensionsFront?.diameter) {
+                      rimSize = parseInt(tireData.tireDimensionsFront.diameter)
+                    }
+                  } catch (e) {}
+                }
+                
+                // Also check sessionStorage for vehicle rim size
+                if (!rimSize) {
+                  const vehicleData = sessionStorage.getItem('selectedVehicle')
+                  if (vehicleData) {
+                    try {
+                      const vehicle = JSON.parse(vehicleData)
+                      if (vehicle.rimSize) rimSize = parseInt(vehicle.rimSize)
+                    } catch (e) {}
+                  }
+                }
+                
+                const pricingForSize = rimSize 
+                  ? data.workshop.tireChangePricing.find((p: any) => p.rimSize === rimSize)
+                  : data.workshop.tireChangePricing.sort((a: any, b: any) => a.pricePerTire - b.pricePerTire)[0]
+                
+                if (pricingForSize) {
+                  workshopData.totalPrice = Number(pricingForSize.pricePerTire) * tireCount
+                  workshopData.estimatedDuration = pricingForSize.durationPerTire * tireCount
+                  
+                  // Add mounting-only surcharge for "Nur Montage" (tire installation without tire purchase)
+                  if (!hasTires && serviceData?.mountingOnlySurcharge) {
+                    const mountingSurcharge = Number(serviceData.mountingOnlySurcharge) * tireCount
+                    workshopData.totalPrice += mountingSurcharge
+                    console.log(`📏 [WORKSHOP] Added mounting-only surcharge: ${serviceData.mountingOnlySurcharge}€/tire × ${tireCount} = ${mountingSurcharge}€`)
+                  }
+                  
+                  console.log(`📏 [WORKSHOP] TIRE_CHANGE rim-size pricing: ${rimSize}" → ${pricingForSize.pricePerTire}€/tire × ${tireCount} = ${workshopData.totalPrice}€`)
+                } else if (serviceData) {
+                  workshopData.totalPrice = serviceData.basePrice || 0
+                  workshopData.estimatedDuration = serviceData.durationMinutes || 60
+                }
+              } else if (serviceData && serviceData.servicePackages && serviceData.servicePackages.length > 0) {
                 let selectedPackage = null
                 
                 const savedTireData = sessionStorage.getItem('tireBookingData')
@@ -476,8 +531,16 @@ export default function WorkshopDetailPage() {
                   if (savedServiceBooking) {
                     try {
                       const svcData = JSON.parse(savedServiceBooking)
+                      // For WHEEL_CHANGE: skip add-on packages (with_balancing, with_storage, with_washing)
+                      // These are surcharges, NOT the base package. They're handled as additionalServices.
+                      const wheelChangeAddOns = ['with_balancing', 'with_storage', 'with_washing']
                       if (svcData.selectedPackages && svcData.selectedPackages.length > 0) {
                         for (const pkgType of svcData.selectedPackages) {
+                          // Skip WHEEL_CHANGE add-on packages - they should not set the base price
+                          if (service === 'WHEEL_CHANGE' && wheelChangeAddOns.includes(pkgType)) {
+                            console.log(`⏭️ [WORKSHOP] Skipping WHEEL_CHANGE add-on for base price: ${pkgType}`)
+                            continue
+                          }
                           const found = serviceData.servicePackages.find((p: any) => p.packageType === pkgType)
                           if (found) {
                             selectedPackage = found
@@ -676,7 +739,7 @@ export default function WorkshopDetailPage() {
                   // For WHEEL_CHANGE: use surcharge (package price - basic price)
                   // because the base price already covers the basic service
                   if (currentServiceType === 'WHEEL_CHANGE' && wheelChangeBasicPrice > 0 && 
-                      (packageType === 'with_balancing' || packageType === 'with_storage')) {
+                      (packageType === 'with_balancing' || packageType === 'with_storage' || packageType === 'with_washing')) {
                     servicePrice = Math.max(0, Number(pkg.price) - wheelChangeBasicPrice)
                     console.log(`💰 [WORKSHOP] WHEEL_CHANGE surcharge for ${packageType}: ${pkg.price} - ${wheelChangeBasicPrice} = ${servicePrice}`)
                   } else {
@@ -686,14 +749,18 @@ export default function WorkshopDetailPage() {
                 }
               }
               
-              // Fallback: Use packageType to determine service name (for legacy data)
+              // Fallback: Use WorkshopService prices directly (no packages)
               if (!serviceName) {
-                if (packageType === 'with_balancing') {
+                const wsService = availableServices.find((s: any) => s.serviceType === currentServiceType)
+                if (packageType === 'with_balancing' && wsService?.balancingPrice) {
                   serviceName = 'Auswuchten'
-                  servicePrice = 1000 // 10.00 EUR fallback
-                } else if (packageType === 'with_storage') {
+                  servicePrice = Number(wsService.balancingPrice)
+                } else if (packageType === 'with_storage' && wsService?.storagePrice) {
                   serviceName = 'Einlagerung'
-                  servicePrice = 5000 // 50.00 EUR fallback
+                  servicePrice = Number(wsService.storagePrice)
+                } else if (packageType === 'with_washing' && wsService?.washingPrice) {
+                  serviceName = 'Räder waschen'
+                  servicePrice = Number(wsService.washingPrice)
                 }
               }
               
@@ -702,6 +769,7 @@ export default function WorkshopDetailPage() {
                 let serviceTypeTag = ''
                 if (packageType === 'with_balancing') serviceTypeTag = 'BALANCING'
                 else if (packageType === 'with_storage') serviceTypeTag = 'STORAGE'
+                else if (packageType === 'with_washing') serviceTypeTag = 'WASHING'
                 
                 servicesFromFilters.push({
                   serviceName,
@@ -756,6 +824,10 @@ export default function WorkshopDetailPage() {
             const pkg = svc.servicePackages?.find((p: any) => p.packageType === 'with_balancing')
             if (pkg) { name = pkg.name || 'Auswuchten'; price = wheelChangeBasicPrice > 0 ? Math.max(0, Number(pkg.price) - wheelChangeBasicPrice) : Number(pkg.price); break }
           }
+          if (price === 0) {
+            const wsService = availableServices.find((s: any) => s.serviceType === currentServiceType)
+            if (wsService?.balancingPrice) price = Number(wsService.balancingPrice)
+          }
           servicesFromUrl.push({ serviceName: name, name, price, duration: 0, type: 'BALANCING', packageType: 'with_balancing', packageName: '' })
         }
         if (urlStorage) {
@@ -763,6 +835,10 @@ export default function WorkshopDetailPage() {
           for (const svc of availableServices) {
             const pkg = svc.servicePackages?.find((p: any) => p.packageType === 'with_storage')
             if (pkg) { name = pkg.name || 'Einlagerung'; price = wheelChangeBasicPrice > 0 ? Math.max(0, Number(pkg.price) - wheelChangeBasicPrice) : Number(pkg.price); break }
+          }
+          if (price === 0) {
+            const wsService = availableServices.find((s: any) => s.serviceType === currentServiceType)
+            if (wsService?.storagePrice) price = Number(wsService.storagePrice)
           }
           servicesFromUrl.push({ serviceName: name, name, price, duration: 0, type: 'STORAGE', packageType: 'with_storage', packageName: '' })
         }
@@ -906,7 +982,7 @@ export default function WorkshopDetailPage() {
                       serviceName = pkg.name
                       // For WHEEL_CHANGE: use surcharge (package price - basic price)
                       if (currentServiceType === 'WHEEL_CHANGE' && wheelChangeBasicPrice > 0 && 
-                          (packageType === 'with_balancing' || packageType === 'with_storage')) {
+                          (packageType === 'with_balancing' || packageType === 'with_storage' || packageType === 'with_washing')) {
                         servicePrice = Math.max(0, Number(pkg.price) - wheelChangeBasicPrice)
                       } else {
                         servicePrice = pkg.price
@@ -916,12 +992,16 @@ export default function WorkshopDetailPage() {
                   }
                   
                   if (!serviceName) {
-                    if (packageType === 'with_balancing') {
+                    const wsService = availableServices.find((s: any) => s.serviceType === currentServiceType)
+                    if (packageType === 'with_balancing' && wsService?.balancingPrice) {
                       serviceName = 'Auswuchten'
-                      servicePrice = 1000
-                    } else if (packageType === 'with_storage') {
+                      servicePrice = Number(wsService.balancingPrice)
+                    } else if (packageType === 'with_storage' && wsService?.storagePrice) {
                       serviceName = 'Einlagerung'
-                      servicePrice = 5000
+                      servicePrice = Number(wsService.storagePrice)
+                    } else if (packageType === 'with_washing' && wsService?.washingPrice) {
+                      serviceName = 'Räder waschen'
+                      servicePrice = Number(wsService.washingPrice)
                     }
                   }
                   
@@ -930,6 +1010,7 @@ export default function WorkshopDetailPage() {
                     let serviceTypeTag = ''
                     if (packageType === 'with_balancing') serviceTypeTag = 'BALANCING'
                     else if (packageType === 'with_storage') serviceTypeTag = 'STORAGE'
+                    else if (packageType === 'with_washing') serviceTypeTag = 'WASHING'
                     
                     servicesFromFilters.push({
                       serviceName,
@@ -1400,8 +1481,23 @@ export default function WorkshopDetailPage() {
                   <button
                     onClick={async () => {
                       setShowUserMenu(false)
-                      await signOut({ redirect: false })
-                      router.push('/')
+                      try {
+                        const cookieConsent = localStorage.getItem('cookieConsent')
+                        const bereifung24Consent = localStorage.getItem('bereifung24_cookie_consent')
+                        const bereifung24ConsentDate = localStorage.getItem('bereifung24_cookie_consent_date')
+                        await signOut({ redirect: false })
+                        await fetch('/api/logout', { method: 'POST', credentials: 'include' })
+                        localStorage.clear()
+                        sessionStorage.clear()
+                        if (cookieConsent) localStorage.setItem('cookieConsent', cookieConsent)
+                        if (bereifung24Consent) localStorage.setItem('bereifung24_cookie_consent', bereifung24Consent)
+                        if (bereifung24ConsentDate) localStorage.setItem('bereifung24_cookie_consent_date', bereifung24ConsentDate)
+                      } catch (error) {
+                        console.error('[LOGOUT] Error:', error)
+                        localStorage.clear()
+                        sessionStorage.clear()
+                      }
+                      window.location.href = '/'
                     }}
                     className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
@@ -1422,15 +1518,40 @@ export default function WorkshopDetailPage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Workshop Header */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              {/* Workshop Image Placeholder */}
-              <div className="h-48 bg-gradient-to-br from-primary-500 to-primary-700 relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-white">
-                    <Wrench className="w-16 h-16 mx-auto mb-2 opacity-50" />
-                    <p className="text-lg font-semibold opacity-75">{workshop.name}</p>
+              {/* Workshop Hero Image / Fallback */}
+              {workshop.heroImage ? (
+                <div className="h-48 relative overflow-hidden">
+                  <img
+                    src={workshop.heroImage}
+                    alt={workshop.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Overlay with workshop name */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute bottom-4 left-4">
+                    <p className="text-lg font-semibold text-white drop-shadow-lg">{workshop.name}</p>
                   </div>
                 </div>
-              </div>
+              ) : workshop.logoUrl ? (
+                <div className="h-48 bg-gradient-to-br from-primary-500 to-primary-700 relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <img
+                      src={workshop.logoUrl}
+                      alt={workshop.name}
+                      className="max-h-24 max-w-[200px] object-contain"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="h-48 bg-gradient-to-br from-primary-500 to-primary-700 relative">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center text-white">
+                      <Wrench className="w-16 h-16 mx-auto mb-2 opacity-50" />
+                      <p className="text-lg font-semibold opacity-75">{workshop.name}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Workshop Info */}
               <div className="p-6">
@@ -1534,7 +1655,7 @@ export default function WorkshopDetailPage() {
                       <div className="mt-3 space-y-1">
                         {additionalServices.map((service, idx) => (
                           <p key={idx} className="text-sm text-gray-600">
-                            + {removeEmojis(service.serviceName || service.name)}{service.packageName && service.packageName !== (service.serviceName || service.name) ? ` (${service.packageName})` : ''}
+                            {removeEmojis((service.serviceName || service.name || '').replace(/^Mit /, ''))}{service.packageName && service.packageName !== (service.serviceName || service.name) ? ` (${service.packageName})` : ''}
                           </p>
                         ))}
                       </div>
@@ -1700,27 +1821,27 @@ export default function WorkshopDetailPage() {
               )}
               
               {additionalServices.filter(service => {
-                // For WHEEL_CHANGE, exclude balancing and storage (they're additional LEISTUNGEN, not SERVICES)
+                // For WHEEL_CHANGE, exclude balancing, storage, and washing (they're additional LEISTUNGEN, not SERVICES)
                 const serviceName = (service.serviceName || service.name || '').toLowerCase()
                 if (serviceType === 'WHEEL_CHANGE') {
-                  return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
+                  return !serviceName.includes('auswuchten') && !serviceName.includes('einlager') && !serviceName.includes('waschen')
                 }
                 return true
               }).length > 0 && (
                 <div className="mt-4 space-y-2">
                   {additionalServices
                     .filter(service => {
-                      // For WHEEL_CHANGE, exclude balancing and storage (they're additional LEISTUNGEN, not SERVICES)
+                      // For WHEEL_CHANGE, exclude balancing, storage, and washing (they're additional LEISTUNGEN, not SERVICES)
                       const serviceName = (service.serviceName || service.name || '').toLowerCase()
                       if (serviceType === 'WHEEL_CHANGE') {
-                        return !serviceName.includes('auswuchten') && !serviceName.includes('einlager')
+                        return !serviceName.includes('auswuchten') && !serviceName.includes('einlager') && !serviceName.includes('waschen')
                       }
                       return true
                     })
                     .map((service, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg group hover:bg-gray-100 transition-colors">
                       <div className="flex-1">
-                        <span className="text-sm font-medium text-gray-900">{removeEmojis(service.serviceName || service.name)}</span>
+                        <span className="text-sm font-medium text-gray-900">{removeEmojis((service.serviceName || service.name || '').replace(/^Mit /, ''))}</span>
                         {service.packageName && service.packageName !== (service.serviceName || service.name) && (
                           <span className="text-xs text-gray-500 ml-2">({service.packageName})</span>
                         )}
@@ -1926,7 +2047,7 @@ export default function WorkshopDetailPage() {
                   {/* Additional Services / Leistungen */}
                   {additionalServices.map((service, idx) => (
                     <div key={idx} className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{removeEmojis(service.serviceName || service.name)}</span>
+                      <span className="text-gray-600">{removeEmojis((service.serviceName || service.name || '').replace(/^Mit /, ''))}</span>
                       <span className="font-medium text-gray-900">{formatEUR(service.price)}</span>
                     </div>
                   ))}

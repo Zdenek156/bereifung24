@@ -111,9 +111,7 @@ export default function KarrierePage() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xl font-bold">B24</span>
-              </div>
+              <img src="/logos/B24_Logo_blau_wei%C3%9F.png" alt="Bereifung24" className="h-10 w-auto" />
               <span className="text-2xl font-bold">Bereifung24</span>
             </Link>
             <Link href="/">

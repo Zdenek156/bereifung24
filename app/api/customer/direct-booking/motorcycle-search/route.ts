@@ -2,6 +2,24 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { findCheapestTire, findTireRecommendations, searchTires } from '@/lib/services/tireSearchService'
 
+// Geocode German ZIP code or city to coordinates via Nominatim
+async function geocodeLocation(zipCode: string | null, city: string | null): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const query = zipCode ? `${zipCode}, Germany` : `${city}, Germany`
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=de`
+    const response = await fetch(url, {
+      headers: { 'User-Agent': 'Bereifung24-App/1.0' },
+    })
+    const data = await response.json()
+    if (data.length > 0) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+    }
+  } catch (e) {
+    console.error('Geocoding error:', e)
+  }
+  return null
+}
+
 /**
  * POST /api/customer/direct-booking/motorcycle-search
  * Search workshops for motorcycle tire services with direct booking
@@ -38,6 +56,8 @@ export async function POST(request: NextRequest) {
       radiusKm,
       customerLat,
       customerLon,
+      zipCode,
+      city,
       includeTires = false,
       tireDimensionsFront,
       tireDimensionsRear,
@@ -118,6 +138,17 @@ export async function POST(request: NextRequest) {
       tireDimensionsFront,
       tireDimensionsRear,
     })
+
+    // Geocode from zipCode/city if coordinates not provided
+    if (effectiveCustomerLat === undefined || effectiveCustomerLon === undefined || effectiveCustomerLat === null || effectiveCustomerLon === null) {
+      if (zipCode || city) {
+        const geo = await geocodeLocation(zipCode, city)
+        if (geo) {
+          effectiveCustomerLat = geo.lat
+          effectiveCustomerLon = geo.lng
+        }
+      }
+    }
 
     // Validate location parameters
     if (effectiveCustomerLat === undefined || effectiveCustomerLon === undefined || effectiveCustomerLat === null || effectiveCustomerLon === null) {

@@ -17,8 +17,12 @@ export async function GET(
         companyName: true,
         description: true,
         website: true,
+        logoUrl: true,
+        cardImageUrl: true,
         stripeEnabled: true,
         taxMode: true,
+        latitude: true,
+        longitude: true,
         user: {
           select: {
             city: true,
@@ -27,12 +31,24 @@ export async function GET(
             phone: true
           }
         },
+        landingPage: {
+          select: {
+            heroImage: true,
+            isActive: true
+          }
+        },
         workshopServices: {
           select: {
             id: true,
             serviceType: true,
             basePrice: true,
+            basePrice4: true,
             durationMinutes: true,
+            durationMinutes4: true,
+            balancingMinutes: true,
+            balancingPrice: true,
+            storagePrice: true,
+            washingPrice: true,
             allowsDirectBooking: true,
             servicePackages: {
               select: {
@@ -50,6 +66,19 @@ export async function GET(
           },
           where: {
             isActive: true
+          }
+        },
+        tireChangePricing: {
+          where: {
+            isActive: true
+          },
+          select: {
+            rimSize: true,
+            pricePerTire: true,
+            durationPerTire: true
+          },
+          orderBy: {
+            rimSize: 'asc'
           }
         },
         _count: {
@@ -82,19 +111,46 @@ export async function GET(
       workshop: {
         id: workshop.id,
         name: workshop.companyName,
+        logoUrl: workshop.logoUrl || null,
+        cardImageUrl: workshop.cardImageUrl || null,
+        heroImage: workshop.landingPage?.isActive ? (workshop.landingPage?.heroImage || null) : null,
         city: workshop.user.city || null,
-        postalCode: workshop.user.zipCode || null,
+        zipCode: workshop.user.zipCode || null,
         street: workshop.user.street || null,
         phone: workshop.user.phone || null,
-        rating: avgRating,
+        latitude: workshop.latitude || null,
+        longitude: workshop.longitude || null,
+        averageRating: avgRating,
         reviewCount: workshop._count.reviews,
         stripeEnabled: workshop.stripeEnabled || false,
         taxMode: workshop.taxMode || 'STANDARD',
+        description: workshop.description || null,
         companySettings: {
           description: workshop.description || null,
           website: workshop.website || null
         },
-        services: workshop.workshopServices || []
+        // Flat pricing for mobile app
+        pricing: (() => {
+          const wheelChange = workshop.workshopServices.find(s => s.serviceType === 'WHEEL_CHANGE')
+          const tireChange = workshop.workshopServices.find(s => s.serviceType === 'TIRE_CHANGE')
+          const mainService = wheelChange || tireChange
+          // Find lowest tire change price for PKW (rim 15-18)
+          const pkwPricing = workshop.tireChangePricing.find(p => p.rimSize >= 15 && p.rimSize <= 18)
+          const tireChangePricePKW = pkwPricing ? pkwPricing.pricePerTire * 4 : null
+          return {
+            basePrice: mainService?.basePrice || null,
+            basePrice4: mainService?.basePrice4 || null,
+            tireChangePricePKW: tireChangePricePKW,
+            balancingPrice: mainService?.balancingPrice || null,
+            storagePrice: mainService?.storagePrice || null,
+            washingPrice: mainService?.washingPrice || null,
+            durationMinutes: mainService?.durationMinutes || null,
+            durationMinutes4: mainService?.durationMinutes4 || null,
+            balancingMinutes: mainService?.balancingMinutes || null,
+          }
+        })(),
+        services: workshop.workshopServices || [],
+        tireChangePricing: workshop.tireChangePricing || []
       }
     })
   } catch (error) {

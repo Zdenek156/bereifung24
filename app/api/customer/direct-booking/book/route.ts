@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { getAuthUser } from '@/lib/getAuthUser'
 import { prisma } from '@/lib/prisma'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, createICSFile, directBookingConfirmationCustomerEmail, directBookingNotificationWorkshopEmail } from '@/lib/email'
+import { createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
+import { createBerlinDate } from '@/lib/timezone-utils'
 import { Decimal } from '@prisma/client/runtime/library'
-import Handlebars from 'handlebars'
-import fs from 'fs'
-import path from 'path'
 
 /**
  * POST /api/customer/direct-booking/book
@@ -22,17 +22,32 @@ import path from 'path'
 export async function POST(request: NextRequest) {
   try {
     console.log('[BOOK API] Starting booking')
-    const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
+    // Support both mobile Bearer token and web NextAuth session
+    let userId: string | null = null
+    let userEmail: string | null = null
+    
+    const authUser = await getAuthUser(request)
+    if (authUser?.id) {
+      userId = authUser.id
+      userEmail = authUser.email || null
+      console.log('[BOOK API] ✅ User authenticated via Bearer token:', userId)
+    } else {
+      const session = await getServerSession(authOptions)
+      if (session?.user?.id) {
+        userId = session.user.id
+        userEmail = session.user.email || null
+        console.log('[BOOK API] ✅ User authenticated via session:', userId)
+      }
+    }
+    
+    if (!userId) {
       console.log('[BOOK API] ❌ Not authenticated')
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
       )
     }
-
-    console.log('[BOOK API] ✅ User authenticated:', session.user.id)
     const body = await request.json()
     console.log('[BOOK API] Request body:', body)
 
@@ -49,13 +64,25 @@ export async function POST(request: NextRequest) {
         time, 
         hasBalancing, 
         hasStorage, 
+        hasWashing,
         basePrice,
         balancingPrice,
         storagePrice,
+        washingPrice,
         totalPrice, 
         durationMinutes,
         paymentMethod, 
-        paymentId 
+        paymentId,
+        tireBrand,
+        tireModel,
+        tireArticleNumber,
+        tireQuantity,
+        tirePricePerUnit,
+        tireTotalPrice,
+        tireSize,
+        tireData,
+        serviceSubtype,
+        serviceDisplayName,
       } = body
       
       if (!workshopId || !serviceType || !vehicleId || !date || !time || totalPrice === undefined || basePrice === undefined) {
@@ -75,17 +102,17 @@ export async function POST(request: NextRequest) {
       }
 
       // Get or create Customer record
-      console.log('🔍 [BOOK] Looking for customer, User:', session.user.email)
+      console.log('🔍 [BOOK] Looking for customer, User:', userEmail)
       
       let customer = await prisma.customer.findUnique({
-        where: { userId: session.user.id }
+        where: { userId: userId }
       })
 
       if (!customer) {
-        console.log('[BOOK API] Creating new Customer record for user:', session.user.id)
+        console.log('[BOOK API] Creating new Customer record for user:', userId)
         customer = await prisma.customer.create({
           data: {
-            userId: session.user.id
+            userId: userId
           }
         })
       }
@@ -99,129 +126,226 @@ export async function POST(request: NextRequest) {
         data: {
           workshopId,
           serviceType,
+          ...(serviceSubtype ? { serviceSubtype } : {}),
           vehicleId,
           customerId: customer.id,
           date: new Date(date + 'T00:00:00'), // Convert YYYY-MM-DD to Date at midnight
           time,
           hasBalancing: hasBalancing || false,
           hasStorage: hasStorage || false,
+          hasWashing: hasWashing || false,
           basePrice: new Decimal(basePrice),
           balancingPrice: balancingPrice ? new Decimal(balancingPrice) : null,
           storagePrice: storagePrice ? new Decimal(storagePrice) : null,
+          washingPrice: washingPrice ? new Decimal(washingPrice) : null,
           totalPrice: new Decimal(totalPrice),
           durationMinutes: durationMinutes || 60,
           status: 'CONFIRMED',
           paymentStatus: 'PAID',
           paymentMethod: paymentMethod,
           paymentId: paymentId,
-          paidAt: new Date()
+          paidAt: new Date(),
+          // Tire data
+          ...(tireBrand ? { tireBrand } : {}),
+          ...(tireModel ? { tireModel } : {}),
+          ...(tireArticleNumber ? { tireArticleId: tireArticleNumber } : {}),
+          ...(tireQuantity ? { tireQuantity: Number(tireQuantity) } : {}),
+          ...(tirePricePerUnit ? { tirePurchasePrice: new Decimal(tirePricePerUnit) } : {}),
+          ...(tireTotalPrice ? { totalTirePurchasePrice: new Decimal(tireTotalPrice) } : {}),
+          ...(tireSize ? { tireSize } : {}),
+          ...(tireData ? { tireData } : {}),
         },
         include: {
-          workshop: true,
+          workshop: { include: { user: true } },
           vehicle: true,
-          customer: true
+          customer: { include: { user: true } }
         }
       })
 
       console.log('[BOOK API] ✅ Booking created:', booking.id)
 
+      // Derived fields for convenience
+      const customerName = `${booking.customer.user.firstName || ''} ${booking.customer.user.lastName || ''}`.trim() || 'Kunde'
+      const customerEmail = booking.customer.user.email
+      const customerPhone = booking.customer.user.phone
+      const workshopName = booking.workshop.companyName
+      const workshopAddress = booking.workshop.user.street || ''
+      const workshopZip = booking.workshop.user.zipCode || ''
+      const workshopCity = booking.workshop.user.city || ''
+      const workshopPhone = booking.workshop.user.phone || ''
+      const workshopEmail = booking.workshop.user.email || ''
+      const vehicleMake = booking.vehicle.make
+
       // Create Google Calendar event
       try {
-        const calendarUrl = booking.workshop.googleCalendarUrl
-        const calendarId = calendarUrl?.match(/calendar\/embed\?src=([^&]+)/)?.[1]
-        
-        if (calendarId) {
-          const { google } = require('googleapis')
-          const auth = new google.auth.GoogleAuth({
-            credentials: {
-              client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-              private_key: process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n')
-            },
-            scopes: ['https://www.googleapis.com/auth/calendar']
-          })
+        if (booking.workshop.googleAccessToken && booking.workshop.googleRefreshToken && booking.workshop.googleCalendarId) {
+          console.log('[BOOK API] Creating Google Calendar event via OAuth...')
           
-          const calendar = google.calendar({ version: 'v3', auth })
-          
-          const startDateTime = new Date(booking.date)
-          startDateTime.setHours(parseInt(booking.time.split(':')[0]), parseInt(booking.time.split(':')[1]))
-          
-          const endDateTime = new Date(startDateTime)
-          endDateTime.setMinutes(endDateTime.getMinutes() + booking.durationMinutes)
-          
-          const serviceTypes: any = {
-            WHEEL_CHANGE: 'Räderwechsel',
-            TIRE_REPAIR: 'Reifenreparatur',
-            WHEEL_ALIGNMENT: 'Achsvermessung',
-            AC_SERVICE: 'Klimaanlagen-Service',
-            OTHER: 'Sonstige Reifendienste'
+          let accessToken = booking.workshop.googleAccessToken
+
+          // Refresh token if expired
+          if (!accessToken || (booking.workshop.googleTokenExpiry && new Date() > booking.workshop.googleTokenExpiry)) {
+            console.log('[BOOK API] Refreshing workshop Google token...')
+            const newTokens = await refreshAccessToken(booking.workshop.googleRefreshToken)
+            accessToken = newTokens.access_token || accessToken
+
+            await prisma.workshop.update({
+              where: { id: workshopId },
+              data: {
+                googleAccessToken: accessToken,
+                googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
+              }
+            })
           }
           
-          await calendar.events.insert({
-            calendarId: decodeURIComponent(calendarId),
-            requestBody: {
-              summary: `${serviceTypes[booking.serviceType] || booking.serviceType} - ${booking.vehicle.brand} ${booking.vehicle.model}`,
-              description: `Kunde: ${booking.customer.name}\nKennzeichen: ${booking.vehicle.licensePlate}\nTelefon: ${booking.customer.phone || 'Nicht angegeben'}\nEmail: ${booking.customer.email}\n\nBuchungsnummer: DB-${booking.id.slice(-8).toUpperCase()}`,
-              start: { dateTime: startDateTime.toISOString(), timeZone: 'Europe/Berlin' },
-              end: { dateTime: endDateTime.toISOString(), timeZone: 'Europe/Berlin' },
-              attendees: [{ email: booking.customer.email }],
-              reminders: { useDefault: false, overrides: [{ method: 'email', minutes: 24 * 60 }] }
+          const bookingDate = new Date(booking.date)
+          const [calHours, calMinutes] = booking.time.split(':').map(Number)
+          const startDateTime = createBerlinDate(bookingDate.getUTCFullYear(), bookingDate.getUTCMonth() + 1, bookingDate.getUTCDate(), calHours, calMinutes)
+          const endDateTime = new Date(startDateTime.getTime() + booking.durationMinutes * 60000)
+          
+          const serviceLabels: Record<string, string> = {
+            'WHEEL_CHANGE': 'Räderwechsel',
+            'TIRE_CHANGE': 'Reifenwechsel',
+            'TIRE_REPAIR': 'Reifenreparatur',
+            'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+            'ALIGNMENT_BOTH': 'Achsvermessung',
+            'CLIMATE_SERVICE': 'Klimaservice'
+          }
+          
+          const calDescription = [
+            `${customerName}`,
+            `${customerEmail}`,
+            `Telefon: ${customerPhone || 'Nicht angegeben'}`,
+            '',
+            `Fahrzeug: ${vehicleMake} ${booking.vehicle.model}${booking.vehicle.licensePlate ? ` - ${booking.vehicle.licensePlate}` : ''}`,
+            `Service: ${serviceDisplayName || serviceLabels[booking.serviceType] || booking.serviceType}`,
+          ]
+          if (booking.hasBalancing) calDescription.push('✅ Auswuchtung')
+          if (booking.hasStorage) calDescription.push('✅ Einlagerung')
+          if (booking.hasWashing) calDescription.push('✅ Räder waschen')
+          // Add tire info to calendar
+          if (tireData?.isMixedTires) {
+            calDescription.push('', '🛞 Reifen (Mischbereifung):')
+            if (tireData.front) {
+              calDescription.push(`VA: ${tireData.front.quantity || 2}× ${tireData.front.brand} ${tireData.front.model}`)
+              if (tireData.front.size) calDescription.push(`   Größe: ${tireData.front.size}`)
             }
-          })
+            if (tireData.rear) {
+              calDescription.push(`HA: ${tireData.rear.quantity || 2}× ${tireData.rear.brand} ${tireData.rear.model}`)
+              if (tireData.rear.size) calDescription.push(`   Größe: ${tireData.rear.size}`)
+            }
+          } else if (tireBrand) {
+            calDescription.push('', `🛞 Reifen: ${tireQuantity || 4}× ${tireBrand} ${tireModel || ''}`)
+            if (tireSize) calDescription.push(`   Größe: ${tireSize}`)
+          }
+          calDescription.push('', `Gesamtpreis: ${Number(booking.totalPrice).toFixed(2)} €`)
+          
+          const calSummaryTire = tireData?.isMixedTires
+            ? ` - ${tireData.front?.brand || ''} / ${tireData.rear?.brand || ''}`
+            : tireBrand ? ` - ${tireBrand}` : ''
+          
+          await createCalendarEvent(
+            accessToken,
+            booking.workshop.googleRefreshToken,
+            booking.workshop.googleCalendarId,
+            {
+              summary: `${serviceDisplayName || serviceLabels[booking.serviceType] || booking.serviceType} - ${vehicleMake} ${booking.vehicle.model}${calSummaryTire}`,
+              description: calDescription.join('\n'),
+              start: startDateTime.toISOString(),
+              end: endDateTime.toISOString(),
+              attendees: [{ email: customerEmail }]
+            }
+          )
           
           console.log('[BOOK API] ✅ Google Calendar event created')
+        } else {
+          console.log('[BOOK API] ⏭️ Workshop has no Google Calendar connected')
         }
       } catch (calendarError) {
         console.error('[BOOK API] Error creating calendar event:', calendarError)
       }
 
-      // Send confirmation email to customer
+      // Send confirmation email to customer (same mechanism as web booking)
       try {
-        const templatePath = path.join(process.cwd(), 'email-templates', 'direct-booking-confirmation.js')
-        const template = require(templatePath)
+        const formattedDate = new Date(booking.date).toLocaleDateString('de-DE', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
         
-        const compiledTemplate = Handlebars.compile(template.html)
-        
-        const serviceTypes: any = {
-          WHEEL_CHANGE: '🔄 Räderwechsel',
-          TIRE_REPAIR: '🔧 Reifenreparatur',
-          WHEEL_ALIGNMENT: '📐 Achsvermessung',
-          AC_SERVICE: '❄️ Klimaanlagen-Service',
-          OTHER: '🛠️ Sonstige Reifendienste'
+        const serviceLabelsEmail: Record<string, string> = {
+          'WHEEL_CHANGE': 'Räderwechsel',
+          'TIRE_CHANGE': 'Reifenwechsel',
+          'TIRE_REPAIR': 'Reifenreparatur',
+          'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+          'ALIGNMENT_BOTH': 'Achsvermessung',
+          'CLIMATE_SERVICE': 'Klimaservice'
         }
-        
-        const emailHtml = compiledTemplate({
-          customerName: booking.customer.name || 'Kunde',
-          workshopName: booking.workshop.name,
-          workshopAddress: `${booking.workshop.address}, ${booking.workshop.postalCode} ${booking.workshop.city}`,
-          workshopPhone: booking.workshop.phone || 'Nicht angegeben',
-          workshopEmail: booking.workshop.email || 'Nicht angegeben',
-          bookingNumber: `DB-${booking.id.slice(-8).toUpperCase()}`,
-          serviceType: serviceTypes[booking.serviceType] || booking.serviceType,
-          appointmentDate: new Date(booking.date).toLocaleDateString('de-DE', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          }),
+        const serviceName = serviceDisplayName || serviceLabelsEmail[booking.serviceType] || booking.serviceType
+
+        // Generate ICS calendar file
+        const icsBookingDate = new Date(booking.date)
+        const [icsHours, icsMinutes] = booking.time.split(':').map(Number)
+        const startDateTime = createBerlinDate(icsBookingDate.getUTCFullYear(), icsBookingDate.getUTCMonth() + 1, icsBookingDate.getUTCDate(), icsHours, icsMinutes)
+        const endDateTime = new Date(startDateTime.getTime() + booking.durationMinutes * 60000)
+
+        const icsContent = createICSFile({
+          start: startDateTime,
+          end: endDateTime,
+          summary: `Termin: ${serviceName} bei ${workshopName}`,
+          description: `${serviceName} bei ${workshopName}\\n\\n📅 Termin: ${formattedDate} um ${booking.time} Uhr\\n🚗 Fahrzeug: ${vehicleMake} ${booking.vehicle.model}${booking.vehicle.licensePlate ? ` - ${booking.vehicle.licensePlate}` : ''}\\n💰 Gesamtpreis: ${Number(booking.totalPrice).toFixed(2)} €\\n\\n📍 Adresse:\\n${workshopName}\\n${workshopAddress}, ${workshopZip} ${workshopCity}`,
+          location: `${workshopName}, ${workshopAddress}, ${workshopZip} ${workshopCity}`,
+          organizerEmail: workshopEmail,
+          organizerName: workshopName,
+          attendeeEmail: customerEmail,
+          attendeeName: customerName
+        })
+
+        const customerEmailData = directBookingConfirmationCustomerEmail({
+          bookingId: booking.id,
+          customerName,
+          workshopName,
+          workshopAddress: `${workshopAddress}, ${workshopZip} ${workshopCity}`,
+          workshopPhone: workshopPhone || 'Nicht angegeben',
+          workshopEmail,
+          serviceType: booking.serviceType,
+          serviceName,
+          appointmentDate: formattedDate,
           appointmentTime: booking.time,
-          vehicleBrand: booking.vehicle.brand,
+          durationMinutes: booking.durationMinutes,
+          vehicleBrand: vehicleMake,
           vehicleModel: booking.vehicle.model,
-          licensePlate: booking.vehicle.licensePlate,
-          totalPrice: booking.totalPrice.toString(),
-          hasBalancing: booking.hasBalancing,
-          hasStorage: booking.hasStorage,
-          dashboardLink: `${process.env.NEXTAUTH_URL}/dashboard/customer/bookings`,
-          platformUrl: process.env.NEXTAUTH_URL,
-          supportUrl: `${process.env.NEXTAUTH_URL}/support`
+          vehicleLicensePlate: booking.vehicle.licensePlate || undefined,
+          basePrice: Number(booking.basePrice),
+          balancingPrice: booking.balancingPrice ? Number(booking.balancingPrice) : undefined,
+          storagePrice: booking.storagePrice ? Number(booking.storagePrice) : undefined,
+          washingPrice: booking.washingPrice ? Number(booking.washingPrice) : undefined,
+          totalPrice: Number(booking.totalPrice),
+          paymentMethod: booking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : booking.paymentMethod || 'Online',
+          hasBalancing: booking.hasBalancing || undefined,
+          hasStorage: booking.hasStorage || undefined,
+          hasWashing: booking.hasWashing || undefined,
+          tireBrand: tireBrand || undefined,
+          tireModel: tireModel || undefined,
+          tireSize: tireSize || undefined,
+          tireQuantity: tireQuantity || undefined,
+          tireData: tireData || undefined,
+          totalTirePurchasePrice: tireTotalPrice ? Number(tireTotalPrice) : undefined,
         })
         
         await sendEmail({
-          to: booking.customer.email,
-          subject: `Buchungsbestätigung - ${booking.workshop.name}`,
-          html: emailHtml
+          to: customerEmail,
+          subject: customerEmailData.subject,
+          html: customerEmailData.html,
+          attachments: icsContent ? [{
+            filename: 'termin.ics',
+            content: icsContent,
+            contentType: 'text/calendar; charset=utf-8; method=REQUEST'
+          }] : []
         })
         
-        console.log(`✅ Confirmation email sent to ${booking.customer.email}`)
+        console.log(`[BOOK API] ✅ Confirmation email sent to ${customerEmail}`)
       } catch (emailError) {
         console.error('[BOOK API] Error sending confirmation email:', emailError)
       }
@@ -229,67 +353,81 @@ export async function POST(request: NextRequest) {
       // Send notification email to workshop (if enabled)
       if (booking.workshop.emailNotifyBookings) {
         try {
-          const workshopTemplateContent = await prisma.emailTemplate.findFirst({
-            where: { key: 'direct_booking_workshop_notification' }
+          const formattedDateWs = new Date(booking.date).toLocaleDateString('de-DE', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })
+          const serviceLabelsWs: Record<string, string> = {
+            'WHEEL_CHANGE': 'Räderwechsel',
+            'TIRE_CHANGE': 'Reifenwechsel',
+            'TIRE_REPAIR': 'Reifenreparatur',
+            'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+            'ALIGNMENT_BOTH': 'Achsvermessung',
+            'CLIMATE_SERVICE': 'Klimaservice'
+          }
+          const serviceNameWs = serviceDisplayName || serviceLabelsWs[booking.serviceType] || booking.serviceType
+
+          const PLATFORM_COMMISSION_RATE = 0.069
+          const platformCommission = Number(booking.totalPrice) * PLATFORM_COMMISSION_RATE
+          const workshopPayout = Number(booking.totalPrice) - platformCommission
+
+          const workshopEmailData = directBookingNotificationWorkshopEmail({
+            bookingId: booking.id,
+            workshopName,
+            customerName,
+            customerEmail,
+            customerPhone: customerPhone || 'Nicht angegeben',
+            serviceType: booking.serviceType,
+            serviceName: serviceNameWs,
+            appointmentDate: formattedDateWs,
+            appointmentTime: booking.time,
+            durationMinutes: booking.durationMinutes,
+            vehicleBrand: vehicleMake,
+            vehicleModel: booking.vehicle.model,
+            vehicleLicensePlate: booking.vehicle.licensePlate || undefined,
+            basePrice: Number(booking.basePrice),
+            balancingPrice: booking.balancingPrice ? Number(booking.balancingPrice) : undefined,
+            storagePrice: booking.storagePrice ? Number(booking.storagePrice) : undefined,
+            washingPrice: booking.washingPrice ? Number(booking.washingPrice) : undefined,
+            totalPrice: Number(booking.totalPrice),
+            platformCommission,
+            workshopPayout,
+            paymentMethod: booking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : booking.paymentMethod || 'Online',
+            hasBalancing: booking.hasBalancing || undefined,
+            hasStorage: booking.hasStorage || undefined,
+            hasWashing: booking.hasWashing || undefined,
+            tireBrand: tireBrand || undefined,
+            tireModel: tireModel || undefined,
+            tireSize: tireSize || undefined,
+            tireArticleId: tireArticleNumber || undefined,
+            tireQuantity: tireQuantity || undefined,
+            tireData: tireData || undefined,
+          })
+
+          await sendEmail({
+            to: workshopEmail,
+            subject: workshopEmailData.subject,
+            html: workshopEmailData.html
           })
           
-          if (workshopTemplateContent) {
-            const compiledWorkshopTemplate = Handlebars.compile(workshopTemplateContent.htmlContent)
-            
-            const serviceTypes: any = {
-              WHEEL_CHANGE: 'Räderwechsel',
-              TIRE_REPAIR: 'Reifenreparatur',
-              WHEEL_ALIGNMENT: 'Achsvermessung',
-              AC_SERVICE: 'Klimaanlagen-Service',
-              OTHER: 'Sonstige Reifendienste'
-            }
-            
-            const workshopEmailHtml = compiledWorkshopTemplate({
-              workshopName: booking.workshop.name,
-              customerName: booking.customer.name || 'Kunde',
-              customerEmail: booking.customer.email,
-              customerPhone: booking.customer.phone || 'Nicht angegeben',
-              bookingNumber: `DB-${booking.id.slice(-8).toUpperCase()}`,
-              serviceType: serviceTypes[booking.serviceType] || booking.serviceType,
-              appointmentDate: new Date(booking.date).toLocaleDateString('de-DE', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              }),
-              appointmentTime: booking.time,
-              vehicleBrand: booking.vehicle.brand,
-              vehicleModel: booking.vehicle.model,
-              licensePlate: booking.vehicle.licensePlate,
-              totalPrice: booking.totalPrice.toString(),
-              hasBalancing: booking.hasBalancing,
-              hasStorage: booking.hasStorage,
-              dashboardLink: `${process.env.NEXTAUTH_URL}/dashboard/workshop/bookings`
-            })
-            
-            await sendEmail({
-              to: booking.workshop.email,
-              subject: `Neue Direktbuchung - ${serviceTypes[booking.serviceType] || booking.serviceType}`,
-              html: workshopEmailHtml
-            })
-            
-            console.log(`✅ Workshop notification sent to ${booking.workshop.email}`)
-          }
+          console.log(`[BOOK API] ✅ Workshop notification sent to ${workshopEmail}`)
         } catch (workshopEmailError) {
           console.error('[BOOK API] Error sending workshop notification:', workshopEmailError)
         }
       } else {
-        console.log(`⏭️  Workshop ${booking.workshopId} has disabled booking notifications`)
+        console.log(`[BOOK API] ⏭️ Workshop ${booking.workshopId} has disabled booking notifications`)
       }
 
       return NextResponse.json({
         success: true,
         booking: {
           id: booking.id,
-          workshopName: booking.workshop.name,
+          workshopName: workshopName,
           date: booking.date,
           time: booking.time,
-          vehicleBrand: booking.vehicle.brand,
+          vehicleBrand: vehicleMake,
           vehicleModel: booking.vehicle.model,
           totalPrice: booking.totalPrice,
           confirmationNumber: `DB-${booking.id.slice(-8).toUpperCase()}`
@@ -354,73 +492,241 @@ export async function POST(request: NextRequest) {
         reservedUntil: null
       },
       include: {
-        workshop: true,
+        workshop: { include: { user: true } },
         vehicle: true,
-        customer: true
+        customer: { include: { user: true } }
       }
     })
 
+    // Derived fields for reservation flow
+    const rCustomerName = `${booking.customer.user.firstName || ''} ${booking.customer.user.lastName || ''}`.trim() || 'Kunde'
+    const rCustomerEmail = booking.customer.user.email
+    const rCustomerPhone = booking.customer.user.phone
+    const rWorkshopName = booking.workshop.companyName
+    const rWorkshopAddress = booking.workshop.user.street || ''
+    const rWorkshopZip = booking.workshop.user.zipCode || ''
+    const rWorkshopCity = booking.workshop.user.city || ''
+    const rWorkshopPhone = booking.workshop.user.phone || ''
+    const rWorkshopEmail = booking.workshop.user.email || ''
+    const rVehicleMake = booking.vehicle.make
+
+    // Create Google Calendar event for reservation
+    try {
+      if (booking.workshop.googleAccessToken && booking.workshop.googleRefreshToken && booking.workshop.googleCalendarId) {
+        console.log('[BOOK API] Creating Google Calendar event for reservation via OAuth...')
+        
+        let accessToken = booking.workshop.googleAccessToken
+
+        if (!accessToken || (booking.workshop.googleTokenExpiry && new Date() > booking.workshop.googleTokenExpiry)) {
+          console.log('[BOOK API] Refreshing workshop Google token...')
+          const newTokens = await refreshAccessToken(booking.workshop.googleRefreshToken)
+          accessToken = newTokens.access_token || accessToken
+
+          await prisma.workshop.update({
+            where: { id: booking.workshopId },
+            data: {
+              googleAccessToken: accessToken,
+              googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
+            }
+          })
+        }
+        
+        const rServiceLabels: Record<string, string> = {
+          'WHEEL_CHANGE': 'Räderwechsel',
+          'TIRE_CHANGE': 'Reifenwechsel',
+          'TIRE_REPAIR': 'Reifenreparatur',
+          'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+          'ALIGNMENT_BOTH': 'Achsvermessung',
+          'CLIMATE_SERVICE': 'Klimaservice'
+        }
+
+        const rBookingDate = new Date(booking.date)
+        const [rCalHours, rCalMinutes] = booking.time.split(':').map(Number)
+        const rStartDateTime = createBerlinDate(rBookingDate.getUTCFullYear(), rBookingDate.getUTCMonth() + 1, rBookingDate.getUTCDate(), rCalHours, rCalMinutes)
+        const rEndDateTime = new Date(rStartDateTime.getTime() + booking.durationMinutes * 60000)
+        
+        const rCalDescription = [
+          `${rCustomerName}`,
+          `${rCustomerEmail}`,
+          `Telefon: ${rCustomerPhone || 'Nicht angegeben'}`,
+          '',
+          `Fahrzeug: ${rVehicleMake} ${booking.vehicle.model}${booking.vehicle.licensePlate ? ` - ${booking.vehicle.licensePlate}` : ''}`,
+          `Service: ${rServiceLabels[booking.serviceType] || booking.serviceType}`,
+        ]
+        if (booking.hasBalancing) rCalDescription.push('✅ Auswuchtung')
+        if (booking.hasStorage) rCalDescription.push('✅ Einlagerung')
+        if (booking.hasWashing) rCalDescription.push('✅ Räder waschen')
+        rCalDescription.push('', `Gesamtpreis: ${Number(booking.totalPrice).toFixed(2)} €`)
+        
+        await createCalendarEvent(
+          accessToken,
+          booking.workshop.googleRefreshToken,
+          booking.workshop.googleCalendarId,
+          {
+            summary: `${rServiceLabels[booking.serviceType] || booking.serviceType} - ${rVehicleMake} ${booking.vehicle.model}`,
+            description: rCalDescription.join('\n'),
+            start: rStartDateTime.toISOString(),
+            end: rEndDateTime.toISOString(),
+            attendees: [{ email: rCustomerEmail }]
+          }
+        )
+        
+        console.log('[BOOK API] ✅ Google Calendar event created for reservation')
+      } else {
+        console.log('[BOOK API] ⏭️ Workshop has no Google Calendar connected')
+      }
+    } catch (calendarError) {
+      console.error('[BOOK API] Error creating calendar event for reservation:', calendarError)
+    }
+
     // Send confirmation email
     try {
-      const templatePath = path.join(process.cwd(), 'email-templates', 'direct-booking-confirmation.js')
-      const template = require(templatePath)
-      
-      const compiledTemplate = Handlebars.compile(template.html)
-      
-      const serviceTypes: any = {
-        WHEEL_CHANGE: '🔄 Räderwechsel',
-        TIRE_REPAIR: '🔧 Reifenreparatur',
-        WHEEL_ALIGNMENT: '📐 Achsvermessung',
-        AC_SERVICE: '❄️ Klimaanlagen-Service',
-        OTHER: '🛠️ Sonstige Reifendienste'
+      const rFormattedDate = new Date(booking.date).toLocaleDateString('de-DE', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+      const rServiceLabelsEmail: Record<string, string> = {
+        'WHEEL_CHANGE': 'Räderwechsel',
+        'TIRE_CHANGE': 'Reifenwechsel',
+        'TIRE_REPAIR': 'Reifenreparatur',
+        'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+        'ALIGNMENT_BOTH': 'Achsvermessung',
+        'CLIMATE_SERVICE': 'Klimaservice'
       }
+      const rServiceName = rServiceLabelsEmail[booking.serviceType] || booking.serviceType
+
+      // Generate ICS calendar file
+      const rIcsBookingDate = new Date(booking.date)
+      const [rIcsHours, rIcsMinutes] = booking.time.split(':').map(Number)
+      const rIcsStart = createBerlinDate(rIcsBookingDate.getUTCFullYear(), rIcsBookingDate.getUTCMonth() + 1, rIcsBookingDate.getUTCDate(), rIcsHours, rIcsMinutes)
+      const rIcsEnd = new Date(rIcsStart.getTime() + booking.durationMinutes * 60000)
+
+      const rIcsContent = createICSFile({
+        start: rIcsStart,
+        end: rIcsEnd,
+        summary: `Termin: ${rServiceName} bei ${rWorkshopName}`,
+        description: `${rServiceName} bei ${rWorkshopName}\\n\\n📅 Termin: ${rFormattedDate} um ${booking.time} Uhr\\n🚗 Fahrzeug: ${rVehicleMake} ${booking.vehicle.model}${booking.vehicle.licensePlate ? ` - ${booking.vehicle.licensePlate}` : ''}\\n💰 Gesamtpreis: ${Number(booking.totalPrice).toFixed(2)} €\\n\\n📍 Adresse:\\n${rWorkshopName}\\n${rWorkshopAddress}, ${rWorkshopZip} ${rWorkshopCity}`,
+        location: `${rWorkshopName}, ${rWorkshopAddress}, ${rWorkshopZip} ${rWorkshopCity}`,
+        organizerEmail: rWorkshopEmail,
+        organizerName: rWorkshopName,
+        attendeeEmail: rCustomerEmail,
+        attendeeName: rCustomerName
+      })
+
+      const rCustomerEmailData = directBookingConfirmationCustomerEmail({
+        bookingId: booking.id,
+        customerName: rCustomerName,
+        workshopName: rWorkshopName,
+        workshopAddress: `${rWorkshopAddress}, ${rWorkshopZip} ${rWorkshopCity}`,
+        workshopPhone: rWorkshopPhone || 'Nicht angegeben',
+        workshopEmail: rWorkshopEmail,
+        serviceType: booking.serviceType,
+        serviceName: rServiceName,
+        appointmentDate: rFormattedDate,
+        appointmentTime: booking.time,
+        durationMinutes: booking.durationMinutes,
+        vehicleBrand: rVehicleMake,
+        vehicleModel: booking.vehicle.model,
+        vehicleLicensePlate: booking.vehicle.licensePlate || undefined,
+        basePrice: Number(booking.basePrice),
+        balancingPrice: booking.balancingPrice ? Number(booking.balancingPrice) : undefined,
+        storagePrice: booking.storagePrice ? Number(booking.storagePrice) : undefined,
+        washingPrice: booking.washingPrice ? Number(booking.washingPrice) : undefined,
+        totalPrice: Number(booking.totalPrice),
+        paymentMethod: booking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : booking.paymentMethod || 'Online',
+        hasBalancing: booking.hasBalancing || undefined,
+        hasStorage: booking.hasStorage || undefined,
+        hasWashing: booking.hasWashing || undefined,
+      })
       
-      const emailHtml = compiledTemplate({
-        customerName: booking.customer.name || 'Kunde',
-        workshopName: booking.workshop.name,
-        workshopAddress: `${booking.workshop.address}, ${booking.workshop.postalCode} ${booking.workshop.city}`,
-        workshopPhone: booking.workshop.phone || 'Nicht angegeben',
-        workshopEmail: booking.workshop.email || 'Nicht angegeben',
-        bookingNumber: `DB-${booking.id.slice(-8).toUpperCase()}`,
-        serviceType: serviceTypes[booking.serviceType] || booking.serviceType,
-        appointmentDate: new Date(booking.date).toLocaleDateString('de-DE', {
+      await sendEmail({
+        to: rCustomerEmail,
+        subject: rCustomerEmailData.subject,
+        html: rCustomerEmailData.html,
+        attachments: rIcsContent ? [{
+          filename: 'termin.ics',
+          content: rIcsContent,
+          contentType: 'text/calendar; charset=utf-8; method=REQUEST'
+        }] : []
+      })
+      
+      console.log(`[BOOK API] ✅ Confirmation email sent to ${rCustomerEmail}`)
+    } catch (emailError) {
+      console.error('[BOOK API] Error sending confirmation email:', emailError)
+    }
+
+    // Send workshop notification for reservation
+    if (booking.workshop.emailNotifyBookings) {
+      try {
+        const rFormattedDateWs = new Date(booking.date).toLocaleDateString('de-DE', {
           weekday: 'long',
           year: 'numeric',
           month: 'long',
           day: 'numeric'
-        }),
-        appointmentTime: booking.time,
-        vehicleBrand: booking.vehicle.brand,
-        vehicleModel: booking.vehicle.model,
-        licensePlate: booking.vehicle.licensePlate,
-        totalPrice: booking.totalPrice.toString(),
-        hasBalancing: booking.hasBalancing,
-        hasStorage: booking.hasStorage,
-        dashboardLink: `${process.env.NEXTAUTH_URL}/dashboard/customer/bookings`,
-        platformUrl: process.env.NEXTAUTH_URL,
-        supportUrl: `${process.env.NEXTAUTH_URL}/support`
-      })
-      
-      await sendEmail({
-        to: booking.customer.email,
-        subject: `Buchungsbestätigung - ${booking.workshop.name}`,
-        html: emailHtml
-      })
-      
-      console.log(`✅ Confirmation email sent to ${booking.customer.email}`)
-    } catch (emailError) {
-      console.error('Error sending confirmation email:', emailError)
-      // Don't fail the booking if email fails
+        })
+        const rServiceLabelsWs: Record<string, string> = {
+          'WHEEL_CHANGE': 'Räderwechsel',
+          'TIRE_CHANGE': 'Reifenwechsel',
+          'TIRE_REPAIR': 'Reifenreparatur',
+          'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+          'ALIGNMENT_BOTH': 'Achsvermessung',
+          'CLIMATE_SERVICE': 'Klimaservice'
+        }
+        const rServiceNameWs = rServiceLabelsWs[booking.serviceType] || booking.serviceType
+
+        const PLATFORM_COMMISSION_RATE = 0.069
+        const rPlatformCommission = Number(booking.totalPrice) * PLATFORM_COMMISSION_RATE
+        const rWorkshopPayout = Number(booking.totalPrice) - rPlatformCommission
+
+        const rWorkshopEmailData = directBookingNotificationWorkshopEmail({
+          bookingId: booking.id,
+          workshopName: rWorkshopName,
+          customerName: rCustomerName,
+          customerEmail: rCustomerEmail,
+          customerPhone: rCustomerPhone || 'Nicht angegeben',
+          serviceType: booking.serviceType,
+          serviceName: rServiceNameWs,
+          appointmentDate: rFormattedDateWs,
+          appointmentTime: booking.time,
+          durationMinutes: booking.durationMinutes,
+          vehicleBrand: rVehicleMake,
+          vehicleModel: booking.vehicle.model,
+          vehicleLicensePlate: booking.vehicle.licensePlate || undefined,
+          basePrice: Number(booking.basePrice),
+          balancingPrice: booking.balancingPrice ? Number(booking.balancingPrice) : undefined,
+          storagePrice: booking.storagePrice ? Number(booking.storagePrice) : undefined,
+          washingPrice: booking.washingPrice ? Number(booking.washingPrice) : undefined,
+          totalPrice: Number(booking.totalPrice),
+          platformCommission: rPlatformCommission,
+          workshopPayout: rWorkshopPayout,
+          paymentMethod: booking.paymentMethod === 'STRIPE' ? 'Kreditkarte' : booking.paymentMethod || 'Online',
+          hasBalancing: booking.hasBalancing || undefined,
+          hasStorage: booking.hasStorage || undefined,
+          hasWashing: booking.hasWashing || undefined,
+        })
+
+        await sendEmail({
+          to: rWorkshopEmail,
+          subject: rWorkshopEmailData.subject,
+          html: rWorkshopEmailData.html
+        })
+        
+        console.log(`[BOOK API] ✅ Workshop notification sent to ${rWorkshopEmail}`)
+      } catch (workshopEmailError) {
+        console.error('[BOOK API] Error sending workshop notification:', workshopEmailError)
+      }
     }
 
     return NextResponse.json({
       success: true,
       booking: {
         id: booking.id,
-        workshopName: booking.workshop.name,
+        workshopName: rWorkshopName,
         date: booking.date,
         time: booking.time,
-        vehicleBrand: booking.vehicle.brand,
+        vehicleBrand: rVehicleMake,
         vehicleModel: booking.vehicle.model,
         totalPrice: booking.totalPrice,
         confirmationNumber: `DB-${booking.id.slice(-8).toUpperCase()}`

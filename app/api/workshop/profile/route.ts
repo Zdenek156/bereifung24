@@ -48,6 +48,7 @@ export async function GET() {
       website: user.workshop.website,
       description: user.workshop.description,
       logoUrl: user.workshop.logoUrl,
+      cardImageUrl: user.workshop.cardImageUrl,
       openingHours: user.workshop.openingHours,
       isVerified: user.workshop.isVerified,
       verifiedAt: user.workshop.verifiedAt,

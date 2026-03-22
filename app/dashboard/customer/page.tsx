@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import WeatherWidgetCompact from './components/WeatherWidgetCompact'
 import CO2CompactBar from './components/CO2CompactBar'
-import TireAdvisorWidget from './components/TireAdvisorWidget'
 import NextAppointmentCard from './components/NextAppointmentCard'
 import TireStorageCard from './components/TireStorageCard'
+import AIChatWidget from './components/AIChatWidget'
 import SeasonalRecommendation from './components/SeasonalRecommendation'
 
 interface DashboardSummary {
@@ -17,6 +17,11 @@ interface DashboardSummary {
   totalCompletedBookings: number
 }
 
+interface ProfileStatus {
+  incomplete: boolean
+  missing: string[]
+}
+
 export default function CustomerDashboard() {
   const { data: session } = useSession()
   const router = useRouter()
@@ -24,6 +29,7 @@ export default function CustomerDashboard() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(true)
+  const [profileStatus, setProfileStatus] = useState<ProfileStatus | null>(null)
 
   // Check URL parameters for success message
   useEffect(() => {
@@ -71,6 +77,29 @@ export default function CustomerDashboard() {
     fetchSummary()
   }, [])
 
+  // Check if profile is complete (address, phone)
+  useEffect(() => {
+    const checkProfile = async () => {
+      try {
+        const res = await fetch('/api/user/profile')
+        if (res.ok) {
+          const data = await res.json()
+          const missing: string[] = []
+          if (!data.street?.trim()) missing.push('Straße')
+          if (!data.zipCode?.trim()) missing.push('PLZ')
+          if (!data.city?.trim()) missing.push('Stadt')
+          if (!data.phone?.trim()) missing.push('Telefonnummer')
+          if (missing.length > 0) {
+            setProfileStatus({ incomplete: true, missing })
+          }
+        }
+      } catch (error) {
+        console.error('Error checking profile:', error)
+      }
+    }
+    checkProfile()
+  }, [])
+
   // Seasonal CTA text
   const getCtaText = () => {
     const month = new Date().getMonth() + 1
@@ -97,6 +126,42 @@ export default function CustomerDashboard() {
           Schön, dass Sie da sind. Hier finden Sie eine Übersicht über Ihre Aktivitäten.
         </p>
       </div>
+
+      {/* Profile Completion Banner */}
+      {profileStatus?.incomplete && (
+        <div className="mb-6 bg-amber-50 dark:bg-amber-900/30 border-l-4 border-amber-400 p-4 rounded-lg shadow-md">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-amber-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-semibold text-amber-800 dark:text-amber-200">Profil vervollständigen</h3>
+              <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                Bitte ergänzen Sie Ihre Adressdaten, um Buchungen durchführen zu können. Es fehlen: <strong>{profileStatus.missing.join(', ')}</strong>
+              </p>
+              <button
+                onClick={() => router.push('/dashboard/customer/settings')}
+                className="mt-2 inline-flex items-center gap-1 px-4 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                Jetzt vervollständigen
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            </div>
+            <button
+              onClick={() => setProfileStatus(null)}
+              className="ml-3 inline-flex text-amber-400 hover:text-amber-500 focus:outline-none"
+            >
+              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Success Message */}
       {successMessage && (
@@ -165,34 +230,27 @@ export default function CustomerDashboard() {
       {/* Three-column widget grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         {/* Left: Weather Widget (compact) */}
-        <div className="flex w-full">
-          <div className="w-full">
-            <WeatherWidgetCompact />
-          </div>
-        </div>
+        <WeatherWidgetCompact />
 
         {/* Middle: Next Appointment / Bookings */}
-        <div className="flex w-full">
-          <div className="w-full">
-            <NextAppointmentCard
-              nextAppointment={summary?.nextAppointment || null}
-              recentBookings={summary?.recentBookings || []}
-              loading={summaryLoading}
-            />
-          </div>
-        </div>
+        <NextAppointmentCard
+          nextAppointment={summary?.nextAppointment || null}
+          recentBookings={summary?.recentBookings || []}
+          loading={summaryLoading}
+        />
 
-        {/* Right: Smart Tire Advisor */}
-        <div className="flex w-full">
-          <TireAdvisorWidget />
-        </div>
+        {/* Right: Tire Storage */}
+        <TireStorageCard
+          tireStorage={summary?.tireStorage || []}
+          loading={summaryLoading}
+          compact
+        />
       </div>
 
-      {/* Tire Storage Cards (only shown when active storage exists) */}
-      <TireStorageCard
-        tireStorage={summary?.tireStorage || []}
-        loading={summaryLoading}
-      />
+      {/* KI Reifen-Berater Chat */}
+      <div className="mb-6">
+        <AIChatWidget />
+      </div>
 
       {/* Seasonal Recommendation (full width, replaces "So funktioniert Bereifung24") */}
       <SeasonalRecommendation />

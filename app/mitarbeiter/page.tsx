@@ -301,117 +301,89 @@ export default function MitarbeiterDashboard() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 xl:grid-cols-7 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
         {/* Neue E-Mails */}
-        <Link href="/mitarbeiter/email" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">📧</span>
-              </div>
+        <Link href="/mitarbeiter/email" className="bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow">
+          <p className="text-xs font-medium text-gray-600 text-center mb-2">Neue E-Mails</p>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-9 h-9 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">📧</span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Neue E-Mails</p>
-              <p className="text-xl font-bold text-gray-900">{stats.unreadEmails}</p>
-              <p className="text-xs text-gray-500 truncate">Ungelesen</p>
-            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.unreadEmails}</p>
           </div>
+          <p className="text-xs text-gray-500 text-center mt-1">Ungelesen</p>
         </Link>
 
         {/* Neue Support-Anfragen */}
-        <Link href="/admin/support?status=NEW" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">🎫</span>
-              </div>
+        <Link href="/admin/support?status=NEW" className="bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow">
+          <p className="text-xs font-medium text-gray-600 text-center mb-2">Support-Anfragen</p>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">🎫</span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Neue Support-Anfragen</p>
-              <p className="text-xl font-bold text-gray-900">{stats.newSupportRequests}</p>
-              <p className="text-xs text-gray-500 truncate">Neu</p>
-            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.newSupportRequests}</p>
           </div>
+          <p className="text-xs text-gray-500 text-center mt-1">Neu</p>
         </Link>
 
         {/* Nicht freigeschaltete Werkstätten */}
-        <Link href="/admin/workshops?filter=not-activated" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">⏳</span>
-              </div>
+        <Link href="/admin/workshops?filter=not-activated" className="bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow">
+          <p className="text-xs font-medium text-gray-600 text-center mb-2">Nicht freigeschaltet</p>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-9 h-9 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">⏳</span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Nicht freigeschaltet</p>
-              <p className="text-xl font-bold text-gray-900">{stats.notActivatedWorkshops}</p>
-              <p className="text-xs text-gray-500 truncate">Werkstätten</p>
-            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.notActivatedWorkshops}</p>
           </div>
+          <p className="text-xs text-gray-500 text-center mt-1">Werkstätten</p>
         </Link>
 
         {/* Offene Aufgaben */}
-        <Link href="/mitarbeiter/aufgaben" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">✓</span>
-              </div>
+        <Link href="/mitarbeiter/aufgaben" className="bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow">
+          <p className="text-xs font-medium text-gray-600 text-center mb-2">Offene Aufgaben</p>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-9 h-9 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">✓</span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Offene Aufgaben</p>
-              <p className="text-xl font-bold text-gray-900">{stats.pendingTasks}</p>
-              <p className="text-xs text-gray-500 truncate">Zu erledigen</p>
-            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.pendingTasks}</p>
           </div>
+          <p className="text-xs text-gray-500 text-center mt-1">Zu erledigen</p>
         </Link>
 
         {/* Anzahl Kunden */}
-        <Link href="/admin/customers" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">👥</span>
-              </div>
+        <Link href="/admin/customers" className="bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow">
+          <p className="text-xs font-medium text-gray-600 text-center mb-2">Anzahl Kunden</p>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-9 h-9 bg-pink-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">👥</span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Anzahl Kunden</p>
-              <p className="text-xl font-bold text-gray-900">{stats.totalCustomers}</p>
-              <p className="text-xs text-gray-500 truncate">Registriert</p>
-            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
           </div>
+          <p className="text-xs text-gray-500 text-center mt-1">Registriert</p>
         </Link>
 
         {/* Anzahl Werkstätten */}
-        <Link href="/admin/workshops" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">🔧</span>
-              </div>
+        <Link href="/admin/workshops" className="bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow">
+          <p className="text-xs font-medium text-gray-600 text-center mb-2">Anzahl Werkstätten</p>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-9 h-9 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">🔧</span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Anzahl Werkstätten</p>
-              <p className="text-xl font-bold text-gray-900">{stats.totalWorkshops}</p>
-              <p className="text-xs text-gray-500 truncate">Registriert</p>
-            </div>
+            <p className="text-2xl font-bold text-gray-900">{stats.totalWorkshops}</p>
           </div>
+          <p className="text-xs text-gray-500 text-center mt-1">Registriert</p>
         </Link>
 
         {/* Provision */}
-        <Link href="/admin/commissions" className="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                <span className="text-xl">💰</span>
-              </div>
+        <Link href="/admin/commissions" className="bg-white rounded-lg shadow p-3 hover:shadow-lg transition-shadow">
+          <p className="text-xs font-medium text-gray-600 text-center mb-2">Provision</p>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">💰</span>
             </div>
-            <div className="ml-3 flex-1 min-w-0">
-              <p className="text-xs font-medium text-gray-600 truncate">Provision</p>
-              <p className="text-xl font-bold text-gray-900 truncate">{stats.totalCommissions.toFixed(2)} €</p>
-              <p className="text-xs text-gray-500 truncate">Aktueller Monat</p>
-            </div>
+            <p className="text-xl font-bold text-gray-900">{stats.totalCommissions.toFixed(2)} €</p>
           </div>
+          <p className="text-xs text-gray-500 text-center mt-1">Aktueller Monat</p>
         </Link>
       </div>
 

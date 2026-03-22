@@ -334,7 +334,7 @@ export default function TireAdvisorWidget() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">Wählen Sie Ihr Fahrzeug:</p>
-                  <span className="text-xs text-gray-500">Schritt 1/5</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Schritt 1/5</span>
                 </div>
 
                 {loading ? (
@@ -359,7 +359,7 @@ export default function TireAdvisorWidget() {
                       >
                         <div className="font-semibold text-sm text-gray-900 dark:text-white">{vehicle.make} {vehicle.model}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">Baujahr: {vehicle.year}</div>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           {vehicle.summerTires && '☀️ Sommer'}
                           {vehicle.winterTires && ' ❄️ Winter'}
                           {vehicle.allSeasonTires && ' 🌦️ Ganzjahr'}
@@ -376,7 +376,7 @@ export default function TireAdvisorWidget() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm">Welche Reifen benötigen Sie?</h3>
-                  <span className="text-xs text-gray-500">Schritt 2/5</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Schritt 2/5</span>
                 </div>
                 
                 <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -401,7 +401,7 @@ export default function TireAdvisorWidget() {
                           <div className="text-2xl">{getTireTypeIcon(type)}</div>
                           <div className="flex-1">
                             <div className="font-semibold text-sm">{getTireTypeName(type)}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
                               {size?.width}/{size?.aspectRatio} R{size?.diameter}
                             </div>
                           </div>
@@ -418,13 +418,13 @@ export default function TireAdvisorWidget() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm">Nutzungsprofil</h3>
-                  <span className="text-xs text-gray-500">Schritt 3/5</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Schritt 3/5</span>
                 </div>
                 
                 <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <div className="text-sm">
                     <strong>{selectedVehicle?.make} {selectedVehicle?.model}</strong> • {getTireTypeIcon(selectedTireType!)} {getTireTypeName(selectedTireType!)}
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       Größe: {profile.width}/{profile.aspectRatio} R{profile.diameter}
                     </div>
                   </div>
@@ -503,7 +503,7 @@ export default function TireAdvisorWidget() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm">Ihre Prioritäten</h3>
-                  <span className="text-xs text-gray-500">Schritt 4/5</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Schritt 4/5</span>
                 </div>
                 
                 <div className="space-y-3">
@@ -575,7 +575,7 @@ export default function TireAdvisorWidget() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-semibold text-sm">Zusätzliche Anforderungen</h3>
-                  <span className="text-xs text-gray-500">Schritt 5/5</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Schritt 5/5</span>
                 </div>
 
                 {(profile.season === 'winter' || profile.season === 'all-season') && (
@@ -654,7 +654,7 @@ export default function TireAdvisorWidget() {
               <Sparkles className="h-5 w-5 text-blue-600" />
               Top 5 Reifenempfehlungen
             </DialogTitle>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Basierend auf EU-Label-Daten & Ihrem Profil • Score 0–100
             </p>
           </DialogHeader>

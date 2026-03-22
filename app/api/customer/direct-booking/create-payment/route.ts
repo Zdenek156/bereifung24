@@ -50,9 +50,11 @@ export async function POST(request: NextRequest) {
       serviceType,
       hasBalancing,
       hasStorage,
+      hasWashing,
       basePrice,
       balancingPrice,
       storagePrice,
+      washingPrice,
       totalPrice,
       durationMinutes,
       paymentMethod
@@ -119,9 +121,11 @@ export async function POST(request: NextRequest) {
         serviceType,
         hasBalancing,
         hasStorage,
+        hasWashing,
         basePrice,
         balancingPrice: balancingPrice || 0,
         storagePrice: storagePrice || 0,
+        washingPrice: washingPrice || 0,
         totalPrice,
         durationMinutes,
         paymentMethod,
@@ -139,7 +143,8 @@ export async function POST(request: NextRequest) {
       const serviceDescription = [
         `Räderwechsel (${vehicle.manufacturer} ${vehicle.model})`,
         hasBalancing ? 'mit Wuchten' : '',
-        hasStorage ? 'mit Einlagerung' : ''
+        hasStorage ? 'mit Einlagerung' : '',
+        hasWashing ? 'mit Räder waschen' : ''
       ].filter(Boolean).join(', ')
 
       const checkoutSession = await stripe.checkout.sessions.create({

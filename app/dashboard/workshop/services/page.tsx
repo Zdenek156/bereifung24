@@ -30,6 +30,8 @@ interface Service {
   balancingMinutes: number | null
   storageAvailable: boolean | null
   allowsDirectBooking: boolean | null
+  acceptsMountingOnly: boolean | null
+  mountingOnlySurcharge: number | null
   description: string | null
   internalNotes: string | null
   isActive: boolean
@@ -43,6 +45,15 @@ const serviceTypeLabels: { [key: string]: string } = {
   MOTORCYCLE_TIRE: 'Motorradreifen',
   ALIGNMENT_BOTH: 'Achsvermessung + Einstellung',
   CLIMATE_SERVICE: 'Klimaservice'
+}
+
+const serviceTypeUrls: { [key: string]: string } = {
+  TIRE_CHANGE: '/services/reifenwechsel',
+  WHEEL_CHANGE: '/services/raederwechsel',
+  TIRE_REPAIR: '/services/reifenreparatur',
+  MOTORCYCLE_TIRE: '/services/motorradreifen',
+  ALIGNMENT_BOTH: '/services/achsvermessung',
+  CLIMATE_SERVICE: '/services/klimaservice'
 }
 
 const availableServiceTypes = [
@@ -106,8 +117,22 @@ export default function WorkshopServicesPage() {
   const [runFlatSurcharge, setRunFlatSurcharge] = useState<string>('')
   const [disposalFee, setDisposalFee] = useState<string>('')
   
+  // Nur Montage (TIRE_CHANGE): Kunde bringt eigene Reifen mit
+  const [acceptsMountingOnly, setAcceptsMountingOnly] = useState<boolean>(true)
+  const [mountingOnlySurcharge, setMountingOnlySurcharge] = useState<string>('0')
+  
   // Package form state
   const [packages, setPackages] = useState<{ [key: string]: { price: string; duration: string; active: boolean } }>({})
+  
+  // Tire Change Pricing by Rim Size (13-24 Zoll)
+  interface TireChangePricingEntry {
+    pricePerTire: string
+    durationPerTire: string
+    isActive: boolean
+  }
+  const [tireChangePricing, setTireChangePricing] = useState<{ [rimSize: number]: TireChangePricingEntry }>({})
+  const [tireChangePricingTemplate, setTireChangePricingTemplate] = useState({ pricePerTire: '', durationPerTire: '15' })
+  const [savingTireChangePricing, setSavingTireChangePricing] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -129,6 +154,83 @@ export default function WorkshopServicesPage() {
       console.error('Error fetching services:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchTireChangePricing = async () => {
+    try {
+      const response = await fetch('/api/workshop/tire-change-pricing')
+      if (response.ok) {
+        const data = await response.json()
+        const pricingMap: { [rimSize: number]: TireChangePricingEntry } = {}
+        // Initialize all sizes 13-23
+        for (let s = 13; s <= 23; s++) {
+          pricingMap[s] = { pricePerTire: '', durationPerTire: '15', isActive: false }
+        }
+        // Override with saved values
+        if (data.pricing) {
+          for (const entry of data.pricing) {
+            pricingMap[entry.rimSize] = {
+              pricePerTire: entry.pricePerTire.toString(),
+              durationPerTire: entry.durationPerTire.toString(),
+              isActive: entry.isActive
+            }
+          }
+        }
+        setTireChangePricing(pricingMap)
+      }
+    } catch (error) {
+      console.error('Error fetching tire change pricing:', error)
+    }
+  }
+
+  const initializeTireChangePricing = () => {
+    const pricingMap: { [rimSize: number]: TireChangePricingEntry } = {}
+    for (let s = 13; s <= 23; s++) {
+      pricingMap[s] = { pricePerTire: '', durationPerTire: '15', isActive: false }
+    }
+    setTireChangePricing(pricingMap)
+  }
+
+  const applyTemplateToAllSizes = () => {
+    const newPricing = { ...tireChangePricing }
+    for (let s = 13; s <= 23; s++) {
+      newPricing[s] = {
+        pricePerTire: tireChangePricingTemplate.pricePerTire,
+        durationPerTire: tireChangePricingTemplate.durationPerTire,
+        isActive: true
+      }
+    }
+    setTireChangePricing(newPricing)
+  }
+
+  const saveTireChangePricing = async () => {
+    setSavingTireChangePricing(true)
+    try {
+      const pricingArray = Object.entries(tireChangePricing)
+        .filter(([_, entry]) => entry.isActive && entry.pricePerTire)
+        .map(([rimSize, entry]) => ({
+          rimSize: parseInt(rimSize),
+          pricePerTire: parseFloat(entry.pricePerTire),
+          durationPerTire: parseInt(entry.durationPerTire) || 15,
+          isActive: entry.isActive
+        }))
+
+      const response = await fetch('/api/workshop/tire-change-pricing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pricing: pricingArray })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save tire change pricing')
+      }
+      return true
+    } catch (error) {
+      console.error('Error saving tire change pricing:', error)
+      return false
+    } finally {
+      setSavingTireChangePricing(false)
     }
   }
 
@@ -159,12 +261,22 @@ export default function WorkshopServicesPage() {
   const handleServiceTypeChange = (serviceType: string) => {
     setSelectedServiceType(serviceType)
     
+    // Initialize TIRE_CHANGE with rim size pricing
+    if (serviceType === 'TIRE_CHANGE') {
+      initializeTireChangePricing()
+      setPackages({
+        directBooking: { price: '', duration: '', active: true }
+      })
+      return
+    }
+    
     // Initialize WHEEL_CHANGE with simple structure
     if (serviceType === 'WHEEL_CHANGE') {
       setPackages({
         base: { price: '', duration: '60', active: true },
         balancing: { price: '', duration: '5', active: false },
         storage: { price: '', duration: '0', active: false },
+        washing: { price: '', duration: '0', active: false },
         directBooking: { price: '', duration: '', active: false }
       })
     } else {
@@ -196,8 +308,8 @@ export default function WorkshopServicesPage() {
     })
     
     try {
-      // Prepare packages data (skip for WHEEL_CHANGE - it has custom logic)
-      const packagesData = selectedServiceType === 'WHEEL_CHANGE' 
+      // Prepare packages data (skip for WHEEL_CHANGE and TIRE_CHANGE - they have custom logic)
+      const packagesData = (selectedServiceType === 'WHEEL_CHANGE' || selectedServiceType === 'TIRE_CHANGE')
         ? [] 
         : Object.entries(packages)
             .filter(([type, pkg]) => pkg.active && pkg.price && (pkg.duration || type === 'disposal'))
@@ -266,7 +378,7 @@ export default function WorkshopServicesPage() {
           const balancingPrice = parseFloat(packages.balancing.price)
           wheelPackages.push({
             packageType: 'with_balancing',
-            name: 'Mit Auswuchten',
+            name: 'Auswuchten',
             price: basePrice + (balancingPrice * 4), // Price per wheel * 4 wheels
             durationMinutes: (packages.base?.duration ? parseInt(packages.base.duration) : 60) + 
                            (packages.balancing?.duration ? parseInt(packages.balancing.duration) * 4 : 0),
@@ -280,8 +392,21 @@ export default function WorkshopServicesPage() {
           const storagePrice = parseFloat(packages.storage.price)
           wheelPackages.push({
             packageType: 'with_storage',
-            name: 'Mit Einlagerung',
+            name: 'Einlagerung',
             price: basePrice + storagePrice,
+            durationMinutes: packages.base?.duration ? parseInt(packages.base.duration) : 60,
+            isActive: true
+          })
+        }
+        
+        // Add with_washing package if washing is active
+        if (packages.washing?.active && packages.washing?.price) {
+          const basePrice = packages.base?.price ? parseFloat(packages.base.price) : 0
+          const washingPrice = parseFloat(packages.washing.price)
+          wheelPackages.push({
+            packageType: 'with_washing',
+            name: 'Räder waschen',
+            price: basePrice + washingPrice,
             durationMinutes: packages.base?.duration ? parseInt(packages.base.duration) : 60,
             isActive: true
           })
@@ -298,6 +423,8 @@ export default function WorkshopServicesPage() {
         requestBody.balancingMinutes = packages.balancing?.active && packages.balancing?.duration ? parseInt(packages.balancing.duration) : null
         requestBody.storagePrice = packages.storage?.active && packages.storage?.price ? parseFloat(packages.storage.price) : null
         requestBody.storageAvailable = packages.storage?.active && !!packages.storage?.price
+        requestBody.washingPrice = packages.washing?.active && packages.washing?.price ? parseFloat(packages.washing.price) : null
+        requestBody.washingAvailable = packages.washing?.active && !!packages.washing?.price
       }
 
       // Add refrigerant price for CLIMATE_SERVICE
@@ -313,6 +440,9 @@ export default function WorkshopServicesPage() {
         if (disposalFee) {
           requestBody.disposalFee = parseFloat(disposalFee)
         }
+        // Nur-Montage settings
+        requestBody.acceptsMountingOnly = acceptsMountingOnly
+        requestBody.mountingOnlySurcharge = mountingOnlySurcharge ? parseFloat(mountingOnlySurcharge) : 0
         // Add allowsDirectBooking for TIRE_CHANGE (always enabled)
         requestBody.allowsDirectBooking = true
       }
@@ -329,6 +459,10 @@ export default function WorkshopServicesPage() {
       })
 
       if (response.ok) {
+        // For TIRE_CHANGE: also save rim-size pricing
+        if (selectedServiceType === 'TIRE_CHANGE') {
+          await saveTireChangePricing()
+        }
         setMessage({ 
           type: 'success', 
           text: editingService ? 'Service aktualisiert' : 'Service hinzugefügt'
@@ -361,6 +495,14 @@ export default function WorkshopServicesPage() {
       if (service.disposalFee) {
         setDisposalFee(service.disposalFee.toString())
       }
+      // Load Nur-Montage settings
+      setAcceptsMountingOnly(service.acceptsMountingOnly !== false)
+      setMountingOnlySurcharge(service.mountingOnlySurcharge?.toString() || '0')
+      // Load rim-size pricing from API
+      fetchTireChangePricing()
+      setPackages({
+        directBooking: { price: '', duration: '', active: service.allowsDirectBooking || false }
+      })
     }
     
     // Load WHEEL_CHANGE simple pricing
@@ -380,6 +522,11 @@ export default function WorkshopServicesPage() {
           price: service.storagePrice?.toString() || '', 
           duration: '0', 
           active: !!service.storagePrice 
+        },
+        washing: {
+          price: service.washingPrice?.toString() || '',
+          duration: '0',
+          active: !!service.washingPrice
         },
         directBooking: {
           price: '',
@@ -482,6 +629,8 @@ export default function WorkshopServicesPage() {
     setRefrigerantPrice('')
     setRunFlatSurcharge('')
     setDisposalFee('')
+    setAcceptsMountingOnly(true)
+    setMountingOnlySurcharge('0')
     setEditingService(null)
     setShowAddForm(false)
   }
@@ -578,6 +727,17 @@ export default function WorkshopServicesPage() {
                     </option>
                   ))}
                 </select>
+                {selectedServiceType && serviceTypeUrls[selectedServiceType] && (
+                  <a
+                    href={`https://www.bereifung24.de${serviceTypeUrls[selectedServiceType]}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    Was sieht der Kunde? → Service-Beschreibung ansehen
+                  </a>
+                )}
               </div>
 
               {/* Refrigerant Price for Climate Service */}
@@ -611,56 +771,75 @@ export default function WorkshopServicesPage() {
 
               {/* RunFlat Surcharge and Disposal Fee for Tire Change */}
               {selectedServiceType === 'TIRE_CHANGE' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* RunFlat-Aufpreis */}
                   <div className="rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-900/10 overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-100/60 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
-                      <span className="text-base">🛞</span>
-                      <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300">RunFlat-Aufpreis</h3>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-blue-100/60 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800">
+                      <span className="text-sm">🛞</span>
+                      <h3 className="text-xs font-bold text-blue-800 dark:text-blue-300">RunFlat-Aufpreis</h3>
                     </div>
-                    <div className="px-4 py-3">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Aufpreis pro Reifen — wird automatisch dazugerechnet</p>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Pro Reifen (€)</label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={runFlatSurcharge}
-                            onChange={(e) => setRunFlatSurcharge(e.target.value)}
-                            className="w-full pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            placeholder="5.00"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
-                        </div>
-                        <p className="text-[10px] text-gray-400 mt-1">Optional</p>
+                    <div className="px-3 py-2.5">
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Pro Reifen — automatisch dazugerechnet</p>
+                      <div className="relative">
+                        <input type="number" step="0.01" min="0" value={runFlatSurcharge}
+                          onChange={(e) => setRunFlatSurcharge(e.target.value)}
+                          className="w-full pl-3 pr-7 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                          placeholder="5.00" />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
                       </div>
+                      <p className="text-[10px] text-gray-400 mt-1">Optional</p>
                     </div>
                   </div>
 
+                  {/* Altreifenentsorgung */}
                   <div className="rounded-xl border-2 border-green-200 dark:border-green-800 bg-green-50/50 dark:bg-green-900/10 overflow-hidden">
-                    <div className="flex items-center gap-2 px-4 py-2.5 bg-green-100/60 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
-                      <span className="text-base">♻️</span>
-                      <h3 className="text-sm font-bold text-green-800 dark:text-green-300">Altreifenentsorgung</h3>
+                    <div className="flex items-center gap-2 px-3 py-2 bg-green-100/60 dark:bg-green-900/20 border-b border-green-200 dark:border-green-800">
+                      <span className="text-sm">♻️</span>
+                      <h3 className="text-xs font-bold text-green-800 dark:text-green-300">Altreifenentsorgung</h3>
                     </div>
-                    <div className="px-4 py-3">
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Pro Reifen — wird berechnet wenn Kunde Entsorgung wählt</p>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Pro Reifen (€)</label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={disposalFee}
-                            onChange={(e) => setDisposalFee(e.target.value)}
-                            className="w-full pl-3 pr-8 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                            placeholder="3.00"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
-                        </div>
-                        <p className="text-[10px] text-gray-400 mt-1">Optional</p>
+                    <div className="px-3 py-2.5">
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">Pro Reifen — wenn Kunde Entsorgung wählt</p>
+                      <div className="relative">
+                        <input type="number" step="0.01" min="0" value={disposalFee}
+                          onChange={(e) => setDisposalFee(e.target.value)}
+                          className="w-full pl-3 pr-7 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-green-500"
+                          placeholder="3.00" />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
                       </div>
+                      <p className="text-[10px] text-gray-400 mt-1">Optional</p>
+                    </div>
+                  </div>
+
+                  {/* Nur Montage */}
+                  <div className="rounded-xl border-2 border-orange-200 dark:border-orange-800 bg-orange-50/50 dark:bg-orange-900/10 overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2 bg-orange-100/60 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">🔧</span>
+                        <h3 className="text-xs font-bold text-orange-800 dark:text-orange-300">Nur Montage</h3>
+                      </div>
+                      <button type="button" onClick={() => setAcceptsMountingOnly(!acceptsMountingOnly)}
+                        className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${acceptsMountingOnly ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${acceptsMountingOnly ? 'translate-x-4' : 'translate-x-0'}`} />
+                      </button>
+                    </div>
+                    <div className="px-3 py-2.5">
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-2">
+                        {acceptsMountingOnly ? 'Kunden bringen eigene Reifen mit' : 'Nicht für Nur-Montage angezeigt'}
+                      </p>
+                      {acceptsMountingOnly ? (
+                        <>
+                          <div className="relative">
+                            <input type="number" step="0.01" min="0" value={mountingOnlySurcharge}
+                              onChange={(e) => setMountingOnlySurcharge(e.target.value)}
+                              className="w-full pl-3 pr-7 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-orange-500"
+                              placeholder="0" />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                          </div>
+                          <p className="text-[10px] text-gray-400 mt-1">Aufschlag/Reifen (0 = kein)</p>
+                        </>
+                      ) : (
+                        <p className="text-[10px] text-gray-400">Nur Reifenwechsel mit Kauf</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -800,6 +979,46 @@ export default function WorkshopServicesPage() {
                         </div>
                       )
                     })()}
+
+                    {/* Räder waschen */}
+                    {(() => {
+                      const washActive = packages.washing?.active === true
+                      return (
+                        <div className={`rounded-xl border-2 transition-all duration-200 overflow-hidden ${
+                          washActive ? 'border-blue-300 dark:border-blue-600 bg-white dark:bg-gray-800 shadow-sm' : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 opacity-60'
+                        }`}>
+                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <span>🧼</span>
+                              <span className="text-sm font-bold text-gray-900 dark:text-white">Räder waschen</span>
+                            </div>
+                            <button type="button" onClick={() => {
+                              const newActive = !washActive
+                              handlePackageChange('washing', 'active', newActive)
+                              // Auto-fill default price when activating with empty price
+                              if (newActive && !packages.washing?.price) {
+                                handlePackageChange('washing', 'price', '15')
+                              }
+                            }}
+                              className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${washActive ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}`}>
+                              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform duration-200 ${washActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                            </button>
+                          </div>
+                          <div className="px-4 py-3 space-y-2">
+                            <p className="text-[10px] text-gray-500">Alle Räder werden vor Rückgabe/Einlagerung gewaschen — keine Extra-Dauer</p>
+                            <div>
+                              <label className="block text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Preis</label>
+                              <div className="relative">
+                                <input type="number" step="0.01" min="0" value={packages.washing?.price || ''}
+                                  onChange={(e) => handlePackageChange('washing', 'price', e.target.value)} disabled={!washActive}
+                                  className="w-full pl-3 pr-7 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50" placeholder="15" />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
 
                   {/* Live Calculation */}
@@ -812,12 +1031,16 @@ export default function WorkshopServicesPage() {
                       {packages.storage?.active && (
                         <> + Einlagerung {packages.storage?.price || '0'} €</>
                       )}
+                      {packages.washing?.active && (
+                        <> + Räder waschen {packages.washing?.price || '0'} €</>
+                      )}
                       {' → '}
                       <span className="font-bold text-primary-600 dark:text-primary-400">
                         {(
                           parseFloat(packages.base?.price || '0') +
                           (packages.balancing?.active ? parseFloat(packages.balancing?.price || '0') * 4 : 0) +
-                          (packages.storage?.active ? parseFloat(packages.storage?.price || '0') : 0)
+                          (packages.storage?.active ? parseFloat(packages.storage?.price || '0') : 0) +
+                          (packages.washing?.active ? parseFloat(packages.washing?.price || '0') : 0)
                         ).toFixed(2)} € / {
                           parseInt(packages.base?.duration || '0') +
                           (packages.balancing?.active ? parseInt(packages.balancing?.duration || '0') * 4 : 0)
@@ -828,8 +1051,167 @@ export default function WorkshopServicesPage() {
                 </div>
               )}
 
+              {/* TIRE_CHANGE: Rim-Size Pricing Configuration */}
+              {selectedServiceType === 'TIRE_CHANGE' && (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <span className="text-base">📏</span>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900 dark:text-white">Preise pro Zollgröße</h3>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Preis pro Reifen je Felgengröße — wird bei Buchung × Reifenanzahl (2 oder 4) gerechnet
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Apply to All Template */}
+                  <div className="rounded-xl border-2 border-dashed border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-900/10 p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm">⚡</span>
+                      <span className="text-sm font-bold text-blue-800 dark:text-blue-300">Auf alle Größen anwenden</span>
+                    </div>
+                    <div className="flex items-end gap-3 flex-wrap">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Preis/Reifen (€)</label>
+                        <div className="relative">
+                          <input
+                            type="number" step="0.01" min="0"
+                            value={tireChangePricingTemplate.pricePerTire}
+                            onChange={(e) => setTireChangePricingTemplate(t => ({ ...t, pricePerTire: e.target.value }))}
+                            className="w-28 pl-3 pr-7 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                            placeholder="25.00"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Dauer/Reifen (Min.)</label>
+                        <div className="relative">
+                          <input
+                            type="number" min="1"
+                            value={tireChangePricingTemplate.durationPerTire}
+                            onChange={(e) => setTireChangePricingTemplate(t => ({ ...t, durationPerTire: e.target.value }))}
+                            className="w-24 pl-3 pr-10 py-2 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500"
+                            placeholder="15"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">Min</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={applyTemplateToAllSizes}
+                        disabled={!tireChangePricingTemplate.pricePerTire}
+                        className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium shadow-sm transition-colors"
+                      >
+                        ✓ Auf alle anwenden
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Rim Size Grid */}
+                  <div className="space-y-1.5">
+                    {/* Header */}
+                    <div className="grid grid-cols-[60px_1fr_100px_80px_50px] gap-2 px-3 py-2 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                      <span>Zoll</span>
+                      <span></span>
+                      <span>Preis/Reifen</span>
+                      <span>Dauer/Reifen</span>
+                      <span className="text-center">Aktiv</span>
+                    </div>
+                    {Array.from({ length: 12 }, (_, i) => i + 13).map(rimSize => {
+                      const entry = tireChangePricing[rimSize] || { pricePerTire: '', durationPerTire: '15', isActive: false }
+                      return (
+                        <div
+                          key={rimSize}
+                          className={`grid grid-cols-[60px_1fr_100px_80px_50px] gap-2 items-center rounded-lg px-3 py-2 transition-all ${
+                            entry.isActive
+                              ? 'bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-700 shadow-sm'
+                              : 'bg-gray-50 dark:bg-gray-800/30 border border-gray-100 dark:border-gray-700/50 opacity-60'
+                          }`}
+                        >
+                          <span className={`font-bold text-sm ${entry.isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'}`}>
+                            {rimSize}&quot;
+                          </span>
+                          <span className="text-[10px] text-gray-400">
+                            {rimSize <= 15 ? 'Kleinwagen' : rimSize <= 17 ? 'Mittelklasse' : rimSize <= 19 ? 'Oberklasse' : 'SUV / Luxus'}
+                          </span>
+                          <div className="relative">
+                            <input
+                              type="number" step="0.01" min="0"
+                              value={entry.pricePerTire}
+                              onChange={(e) => setTireChangePricing(prev => ({
+                                ...prev,
+                                [rimSize]: { ...prev[rimSize], pricePerTire: e.target.value }
+                              }))}
+                              disabled={!entry.isActive}
+                              className="w-full pl-2 pr-6 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50"
+                              placeholder="0.00"
+                            />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">€</span>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="number" min="1"
+                              value={entry.durationPerTire}
+                              onChange={(e) => setTireChangePricing(prev => ({
+                                ...prev,
+                                [rimSize]: { ...prev[rimSize], durationPerTire: e.target.value }
+                              }))}
+                              disabled={!entry.isActive}
+                              className="w-full pl-2 pr-8 py-1.5 text-sm border border-gray-200 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-700/50"
+                              placeholder="15"
+                            />
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">Min</span>
+                          </div>
+                          <div className="flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => setTireChangePricing(prev => ({
+                                ...prev,
+                                [rimSize]: { ...prev[rimSize], isActive: !entry.isActive }
+                              }))}
+                              className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${
+                                entry.isActive ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                              }`}
+                            >
+                              <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                                entry.isActive ? 'translate-x-4' : 'translate-x-0'
+                              }`} />
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Summary */}
+                  {(() => {
+                    const activeSizes = Object.entries(tireChangePricing).filter(([_, e]) => e.isActive && e.pricePerTire)
+                    if (activeSizes.length === 0) return null
+                    const prices = activeSizes.map(([_, e]) => parseFloat(e.pricePerTire))
+                    const minPrice = Math.min(...prices)
+                    const maxPrice = Math.max(...prices)
+                    return (
+                      <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-3">
+                        <p className="text-xs text-blue-800 dark:text-blue-300">
+                          <span className="font-semibold">📊 Übersicht:</span>{' '}
+                          {activeSizes.length} von 11 Größen aktiv — 
+                          Preis/Reifen: {minPrice === maxPrice 
+                            ? `${minPrice.toFixed(2).replace('.', ',')} €` 
+                            : `${minPrice.toFixed(2).replace('.', ',')} € – ${maxPrice.toFixed(2).replace('.', ',')} €`
+                          }
+                          {' · '}4 Reifen: {(minPrice * 4).toFixed(2).replace('.', ',')} € – {(maxPrice * 4).toFixed(2).replace('.', ',')} €
+                        </p>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+
               {/* Package Configuration */}
-              {hasPackages && selectedServiceType && packageConfig.length > 0 && (
+              {hasPackages && selectedServiceType && selectedServiceType !== 'TIRE_CHANGE' && packageConfig.length > 0 && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
@@ -963,7 +1345,11 @@ export default function WorkshopServicesPage() {
               <div className="flex items-center gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <button
                   type="submit"
-                  disabled={!selectedServiceType || (hasPackages && Object.values(packages).filter(p => p.active).length === 0)}
+                  disabled={!selectedServiceType || (
+                    selectedServiceType === 'TIRE_CHANGE' 
+                      ? Object.values(tireChangePricing).filter(e => e.isActive && e.pricePerTire).length === 0
+                      : (hasPackages && Object.values(packages).filter(p => p.active).length === 0)
+                  )}
                   className="px-6 py-2.5 bg-primary-600 text-white rounded-xl hover:bg-primary-700 disabled:bg-gray-300 disabled:cursor-not-allowed font-medium text-sm shadow-sm hover:shadow transition-all"
                 >
                   {editingService ? '✓ Aktualisieren' : '+ Hinzufügen'}
@@ -1026,13 +1412,27 @@ export default function WorkshopServicesPage() {
                           <h3 className="font-bold text-gray-900 dark:text-white text-sm leading-tight">
                             {serviceTypeLabels[service.serviceType] || service.serviceType}
                           </h3>
-                          <span className={`inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                            service.isActive 
-                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                              : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-                          }`}>
-                            {service.isActive ? '● Aktiv' : '○ Inaktiv'}
-                          </span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                              service.isActive 
+                                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                                : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                            }`}>
+                              {service.isActive ? '● Aktiv' : '○ Inaktiv'}
+                            </span>
+                            {serviceTypeUrls[service.serviceType] && (
+                              <a
+                                href={`https://www.bereifung24.de${serviceTypeUrls[service.serviceType]}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 transition-colors"
+                                title="Kundenansicht dieses Service öffnen"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                                Kundenansicht
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -1093,46 +1493,85 @@ export default function WorkshopServicesPage() {
 
                   {/* Card Body — Packages as mini-cards */}
                   <div className="px-4 py-3 border-t border-gray-100 dark:border-gray-700">
-                    {service.servicePackages && service.servicePackages.length > 0 ? (
+                    {/* TIRE_CHANGE: Show rim-size pricing info */}
+                    {service.serviceType === 'TIRE_CHANGE' ? (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Preise nach Zollgröße</p>
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700">
+                          <span className="text-base">📏</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-medium text-blue-800 dark:text-blue-300">Pro Reifen × Zollgröße (13&quot; – 23&quot;)</p>
+                            <p className="text-[10px] text-blue-600 dark:text-blue-400">Preis wird bei Buchung × Reifenanzahl gerechnet</p>
+                          </div>
+                          <button
+                            onClick={() => handleEdit(service)}
+                            className="flex-shrink-0 text-[10px] font-medium text-blue-700 dark:text-blue-300 hover:underline"
+                          >
+                            Bearbeiten →
+                          </button>
+                        </div>
+                      </div>
+                    ) : service.servicePackages && service.servicePackages.length > 0 ? (
                       <div className="space-y-1.5">
                         <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Pakete</p>
-                        {service.servicePackages.map(pkg => (
-                          <div
-                            key={pkg.id}
-                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
-                              pkg.isActive
-                                ? `${colors.bg} border border-gray-200 dark:border-gray-600`
-                                : 'bg-gray-50 dark:bg-gray-700/50 border border-dashed border-gray-200 dark:border-gray-600 opacity-60'
-                            }`}
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <button
-                                onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
-                                className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                                  pkg.isActive
-                                    ? 'border-green-500 bg-green-500'
-                                    : 'border-gray-300 dark:border-gray-500 hover:border-green-400'
-                                }`}
-                                title={pkg.isActive ? 'Deaktivieren' : 'Aktivieren'}
-                              >
-                                {pkg.isActive && (
-                                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
+                        {(() => {
+                          // For WHEEL_CHANGE: find the basic package price to show surcharges
+                          const basicPkg = service.serviceType === 'WHEEL_CHANGE' 
+                            ? service.servicePackages.find(p => p.packageType === 'basic') 
+                            : null
+                          const basicPrice = basicPkg ? basicPkg.price : 0
+                          const wheelChangeAddOns = ['with_balancing', 'with_storage', 'with_washing']
+                          
+                          return service.servicePackages.map(pkg => {
+                            const isWheelChangeAddOn = service.serviceType === 'WHEEL_CHANGE' && wheelChangeAddOns.includes(pkg.packageType)
+                            const displayPrice = isWheelChangeAddOn ? pkg.price - basicPrice : pkg.price
+                            const surchargeLabel = isWheelChangeAddOn ? {
+                              'with_balancing': 'Auswuchten',
+                              'with_storage': 'Einlagerung',
+                              'with_washing': 'Räder waschen'
+                            }[pkg.packageType] || pkg.name : pkg.name
+                            
+                            return (
+                            <div
+                              key={pkg.id}
+                              className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs ${
+                                pkg.isActive
+                                  ? `${colors.bg} border border-gray-200 dark:border-gray-600`
+                                  : 'bg-gray-50 dark:bg-gray-700/50 border border-dashed border-gray-200 dark:border-gray-600 opacity-60'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <button
+                                  onClick={() => togglePackageActive(service.id, pkg.id, pkg.isActive)}
+                                  className={`flex-shrink-0 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    pkg.isActive
+                                      ? 'border-green-500 bg-green-500'
+                                      : 'border-gray-300 dark:border-gray-500 hover:border-green-400'
+                                  }`}
+                                  title={pkg.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                                >
+                                  {pkg.isActive && (
+                                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </button>
+                                <span className={`font-medium truncate ${pkg.isActive ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400 line-through'}`}>
+                                  {isWheelChangeAddOn ? surchargeLabel : pkg.name}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                {!isWheelChangeAddOn && (
+                                  <span className="text-[10px] text-gray-400 dark:text-gray-500">{pkg.durationMinutes} Min.</span>
                                 )}
-                              </button>
-                              <span className={`font-medium truncate ${pkg.isActive ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400 line-through'}`}>
-                                {pkg.name}
-                              </span>
+                                <span className={`font-bold ${pkg.isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400'}`}>
+                                  {displayPrice.toFixed(2).replace('.', ',')} €
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                              <span className="text-[10px] text-gray-400 dark:text-gray-500">{pkg.durationMinutes} Min.</span>
-                              <span className={`font-bold ${pkg.isActive ? 'text-primary-600 dark:text-primary-400' : 'text-gray-400'}`}>
-                                {pkg.price.toFixed(2).replace('.', ',')} €
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+                            )
+                          })
+                        })()}
                       </div>
                     ) : (
                       <div className="flex items-center justify-between">

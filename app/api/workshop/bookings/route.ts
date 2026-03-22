@@ -102,13 +102,16 @@ export async function GET(request: NextRequest) {
       storagePrice: booking.storagePrice ? Number(booking.storagePrice) : null,
       disposalFee: booking.disposalFee ? Number(booking.disposalFee) : null,
       runFlatSurcharge: booking.runFlatSurcharge ? Number(booking.runFlatSurcharge) : null,
+      washingPrice: booking.washingPrice ? Number(booking.washingPrice) : null,
       tirePurchasePrice: booking.tirePurchasePrice ? Number(booking.tirePurchasePrice) : null,
       totalTirePurchasePrice: booking.totalTirePurchasePrice ? Number(booking.totalTirePurchasePrice) : null,
       totalPrice: Number(booking.totalPrice),
       platformCommission: booking.platformCommission ? Number(booking.platformCommission) : null,
       workshopPayout: booking.workshopPayout ? Number(booking.workshopPayout) : null,
       stripeFeesEstimate: booking.stripeFeesEstimate ? Number(booking.stripeFeesEstimate) : null,
-      platformNetCommission: booking.platformNetCommission ? Number(booking.platformNetCommission) : null
+      platformNetCommission: booking.platformNetCommission ? Number(booking.platformNetCommission) : null,
+      discountAmount: booking.discountAmount ? Number(booking.discountAmount) : null,
+      originalPrice: booking.originalPrice ? Number(booking.originalPrice) : null,
     }))
 
     return NextResponse.json({ bookings: bookingsData })

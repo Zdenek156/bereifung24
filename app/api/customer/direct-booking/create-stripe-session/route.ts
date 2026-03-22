@@ -12,12 +12,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { 
-      workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, disposalFee, runFlatSurcharge,
-      hasBalancing, hasStorage, hasDisposal,
+      workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, washingPrice, disposalFee, runFlatSurcharge,
+      hasBalancing, hasStorage, hasWashing, hasDisposal,
       workshopName, serviceName, vehicleInfo, paymentMethodType, reservationId,
       // Tire data (for TIRE_CHANGE, TIRE_MOUNT services)
       tireBrand, tireModel, tireSize, tireLoadIndex, tireSpeedIndex, tireEAN, tireQuantity,
-      tirePurchasePrice, totalTirePurchasePrice, tireRunFlat, tire3PMSF
+      tirePurchasePrice, totalTirePurchasePrice, tireRunFlat, tire3PMSF,
+      // Coupon data (if applied)
+      couponId, couponCode, discountAmount, originalPrice, costBearer
     } = await request.json()
 
     // Get Stripe keys from database
@@ -61,6 +63,7 @@ export async function POST(request: NextRequest) {
       TIRE_CHANGE: 'Reifenwechsel',
       BALANCING: 'Auswuchten',
       STORAGE: 'Einlagerung',
+      WASHING: 'Räder waschen',
     }
 
     // Map payment method types to Stripe payment_method_types
@@ -82,13 +85,20 @@ export async function POST(request: NextRequest) {
     
     // Calculate application fee (6.9% commission for platform)
     const PLATFORM_COMMISSION_RATE = 0.069 // 6.9%
-    const applicationFeeAmount = Math.round(totalPrice * 100 * PLATFORM_COMMISSION_RATE) // in cents
+    // When WORKSHOP bears the coupon cost, calculate commission on original (pre-discount) price
+    // so the platform keeps its full commission and the discount comes from workshop's share
+    const commissionBase = (costBearer === 'WORKSHOP' && originalPrice) ? originalPrice : totalPrice
+    const applicationFeeAmount = Math.round(commissionBase * 100 * PLATFORM_COMMISSION_RATE) // in cents
     
     console.log('[STRIPE] Payment breakdown:', {
       totalPrice: totalPrice,
-      platformCommission: `${(totalPrice * PLATFORM_COMMISSION_RATE).toFixed(2)}€`,
-      workshopReceives: `${(totalPrice * (1 - PLATFORM_COMMISSION_RATE)).toFixed(2)}€`,
-      note: 'Stripe fees will be deducted from platform commission'
+      commissionBase: commissionBase,
+      costBearer: costBearer || 'PLATFORM',
+      platformCommission: `${(commissionBase * PLATFORM_COMMISSION_RATE).toFixed(2)}€`,
+      workshopReceives: `${(totalPrice - (commissionBase * PLATFORM_COMMISSION_RATE)).toFixed(2)}€`,
+      note: costBearer === 'WORKSHOP' 
+        ? 'Workshop bears coupon cost - commission on original price' 
+        : 'Stripe fees will be deducted from platform commission'
     })
     
     // Build session configuration
@@ -124,11 +134,13 @@ export async function POST(request: NextRequest) {
         basePrice: basePrice?.toString() || '0',
         balancingPrice: balancingPrice?.toString() || '0',
         storagePrice: storagePrice?.toString() || '0',
+        washingPrice: washingPrice?.toString() || '0',
         disposalFee: disposalFee?.toString() || '0',
         runFlatSurcharge: runFlatSurcharge?.toString() || '0',
         totalPrice: totalPrice.toString(),
         hasBalancing: hasBalancing?.toString() || 'false',
         hasStorage: hasStorage?.toString() || 'false',
+        hasWashing: hasWashing?.toString() || 'false',
         hasDisposal: hasDisposal?.toString() || 'false',
         // Tire data
         tireBrand: tireBrand || '',
@@ -142,6 +154,12 @@ export async function POST(request: NextRequest) {
         totalTirePurchasePrice: totalTirePurchasePrice?.toString() || '0',
         tireRunFlat: tireRunFlat?.toString() || 'false',
         tire3PMSF: tire3PMSF?.toString() || 'false',
+        // Coupon data
+        ...(couponId && { couponId }),
+        ...(couponCode && { couponCode }),
+        ...(discountAmount && { discountAmount: discountAmount.toString() }),
+        ...(originalPrice && { originalPrice: originalPrice.toString() }),
+        ...(costBearer && { costBearer }),
       },
     }
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getApiSetting } from '@/lib/api-settings'
 import Stripe from 'stripe'
+import { notifyBookingUpdate } from '@/lib/pushNotificationService'
 
 /**
  * Stripe Webhook Handler
@@ -133,8 +134,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       // Calculate commission breakdown (6.9% platform commission)
       const PLATFORM_COMMISSION_RATE = 0.069
       const totalPriceNum = totalPrice
-      const platformCommission = totalPriceNum * PLATFORM_COMMISSION_RATE
-      const workshopPayout = totalPriceNum * (1 - PLATFORM_COMMISSION_RATE)
+      // When WORKSHOP bears coupon cost, calculate commission on original price
+      const couponCostBearer = session.metadata?.costBearer || 'PLATFORM'
+      const originalPriceNum = session.metadata?.originalPrice ? parseFloat(session.metadata.originalPrice) : null
+      const commissionBase = (couponCostBearer === 'WORKSHOP' && originalPriceNum) ? originalPriceNum : totalPriceNum
+      const platformCommission = commissionBase * PLATFORM_COMMISSION_RATE
+      const workshopPayout = totalPriceNum - platformCommission
       const platformCommissionCents = Math.round(platformCommission * 100)
       
       // Estimate Stripe fees (1.5% + 0.25€ for EU cards)
@@ -143,6 +148,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       
       console.log('💰 Payment breakdown:', {
         total: `${totalPriceNum.toFixed(2)}€`,
+        commissionBase: `${commissionBase.toFixed(2)}€`,
+        costBearer: couponCostBearer,
         platformCommission: `${platformCommission.toFixed(2)}€`,
         workshopPayout: `${workshopPayout.toFixed(2)}€`,
         stripeFeesEstimate: `${stripeFeesEstimate.toFixed(2)}€`,
@@ -222,6 +229,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           disposalFee: session.metadata?.disposalFee ? parseFloat(session.metadata.disposalFee) : null,
           runFlatSurcharge: session.metadata?.runFlatSurcharge ? parseFloat(session.metadata.runFlatSurcharge) : null,
           hasDisposal: session.metadata?.hasDisposal === 'true',
+          // Coupon data
+          couponId: session.metadata?.couponId || null,
+          couponCode: session.metadata?.couponCode || null,
+          discountAmount: session.metadata?.discountAmount ? parseFloat(session.metadata.discountAmount) : null,
+          originalPrice: session.metadata?.originalPrice ? parseFloat(session.metadata.originalPrice) : null,
+          couponCostBearer: session.metadata?.costBearer || null,
         }
       })
       console.log('✅ DirectBooking updated:', existingBooking.id)
@@ -230,8 +243,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       // Calculate commission breakdown (6.9% platform commission)
       const PLATFORM_COMMISSION_RATE = 0.069
       const totalPriceNum = totalPrice
-      const platformCommission = totalPriceNum * PLATFORM_COMMISSION_RATE
-      const workshopPayout = totalPriceNum * (1 - PLATFORM_COMMISSION_RATE)
+      // When WORKSHOP bears coupon cost, calculate commission on original price
+      const couponCostBearer = session.metadata?.costBearer || 'PLATFORM'
+      const originalPriceNum = session.metadata?.originalPrice ? parseFloat(session.metadata.originalPrice) : null
+      const commissionBase = (couponCostBearer === 'WORKSHOP' && originalPriceNum) ? originalPriceNum : totalPriceNum
+      const platformCommission = commissionBase * PLATFORM_COMMISSION_RATE
+      const workshopPayout = totalPriceNum - platformCommission
       const platformCommissionCents = Math.round(platformCommission * 100)
       
       // Estimate Stripe fees (1.5% + 0.25€ for EU cards)
@@ -240,6 +257,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       
       console.log('💰 Payment breakdown:', {
         total: `${totalPriceNum.toFixed(2)}€`,
+        commissionBase: `${commissionBase.toFixed(2)}€`,
+        costBearer: couponCostBearer,
         platformCommission: `${platformCommission.toFixed(2)}€`,
         workshopPayout: `${workshopPayout.toFixed(2)}€`,
         stripeFeesEstimate: `${stripeFeesEstimate.toFixed(2)}€`,
@@ -288,11 +307,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         console.error('⚠️ Error retrieving Stripe fee:', feeError)
       }
       
-      // Auto-detect stored tires for WHEEL_CHANGE/TIRE_CHANGE
-      // IMPORTANT: Must match vehicleId to prevent cross-vehicle detection
+      // Auto-detect stored tires for WHEEL_CHANGE (or TIRE_CHANGE with tire purchase)
+      // Skip for TIRE_CHANGE "Nur Montage" (no tire purchase) — customer brings own tires
       let fromStorageBookingId: string | null = null
       const sType = serviceType || ''
-      if (sType === 'WHEEL_CHANGE' || sType === 'TIRE_CHANGE') {
+      const hasWebhookTirePurchase = !!(session.metadata?.tireBrand || session.metadata?.tireBrandFront)
+      const shouldCheckStorage = sType === 'WHEEL_CHANGE' || (sType === 'TIRE_CHANGE' && hasWebhookTirePurchase)
+      if (shouldCheckStorage) {
         try {
           const storageBooking = await prisma.directBooking.findFirst({
             where: {
@@ -326,11 +347,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           basePrice: parseFloat(session.metadata?.basePrice || '0'),
           balancingPrice: session.metadata?.balancingPrice ? parseFloat(session.metadata.balancingPrice) : null,
           storagePrice: session.metadata?.storagePrice ? parseFloat(session.metadata.storagePrice) : null,
+          washingPrice: session.metadata?.washingPrice ? parseFloat(session.metadata.washingPrice) : null,
           disposalFee: session.metadata?.disposalFee ? parseFloat(session.metadata.disposalFee) : null,
           runFlatSurcharge: session.metadata?.runFlatSurcharge ? parseFloat(session.metadata.runFlatSurcharge) : null,
           totalPrice,
           hasBalancing: session.metadata?.hasBalancing === 'true',
           hasStorage: session.metadata?.hasStorage === 'true',
+          hasWashing: session.metadata?.hasWashing === 'true',
           hasDisposal: session.metadata?.hasDisposal === 'true',
           // Tire data
           tireBrand: session.metadata?.tireBrand || null,
@@ -344,7 +367,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           totalTirePurchasePrice: session.metadata?.totalTirePurchasePrice ? parseFloat(session.metadata.totalTirePurchasePrice) : null,
           tireRunFlat: session.metadata?.tireRunFlat === 'true',
           tire3PMSF: session.metadata?.tire3PMSF === 'true',
-          durationMinutes: 60, // Default
+          durationMinutes: session.metadata?.durationMinutes ? parseInt(session.metadata.durationMinutes) : 60,
           status: 'CONFIRMED',
           paymentMethod: 'STRIPE',
           paymentStatus: 'PAID',
@@ -358,7 +381,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           workshopPayout,
           stripeFeesEstimate,
           platformNetCommission,
-          fromStorageBookingId
+          fromStorageBookingId,
+          // Coupon data
+          couponId: session.metadata?.couponId || null,
+          couponCode: session.metadata?.couponCode || null,
+          discountAmount: session.metadata?.discountAmount ? parseFloat(session.metadata.discountAmount) : null,
+          originalPrice: session.metadata?.originalPrice ? parseFloat(session.metadata.originalPrice) : null,
+          couponCostBearer: session.metadata?.costBearer || null,
         }
       })
 
@@ -371,6 +400,35 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     if (!bookingId) {
       console.error('❌ No booking ID found after create/update')
       return
+    }
+
+    // Redeem coupon if one was used
+    if (session.metadata?.couponId) {
+      try {
+        const couponId = session.metadata.couponId
+        const originalAmount = session.metadata.originalPrice ? parseFloat(session.metadata.originalPrice) : totalPrice
+        const couponDiscountAmount = session.metadata.discountAmount ? parseFloat(session.metadata.discountAmount) : 0
+
+        await prisma.$transaction(async (tx) => {
+          await tx.couponUsage.create({
+            data: {
+              couponId,
+              customerId,
+              bookingId,
+              originalAmount,
+              discountAmount: couponDiscountAmount,
+              finalAmount: totalPrice,
+            }
+          })
+          await tx.coupon.update({
+            where: { id: couponId },
+            data: { usedCount: { increment: 1 } }
+          })
+        })
+        console.log('🎫 Coupon redeemed:', session.metadata.couponCode, '| Discount:', couponDiscountAmount.toFixed(2), '€')
+      } catch (couponError) {
+        console.error('⚠️ Error redeeming coupon:', couponError)
+      }
     }
 
     const completeBooking = await prisma.directBooking.findUnique({
@@ -425,9 +483,32 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     const serviceLabels: Record<string, string> = {
       'WHEEL_CHANGE': 'Räderwechsel',
       'TIRE_CHANGE': 'Reifenwechsel',
-      'TIRE_MOUNT': 'Reifenmontage'
+      'TIRE_MOUNT': 'Reifenmontage',
+      'TIRE_REPAIR': 'Reifenreparatur',
+      'MOTORCYCLE_TIRE': 'Motorradreifenmontage',
+      'ALIGNMENT_BOTH': 'Achsvermessung',
+      'CLIMATE_SERVICE': 'Klimaservice'
     }
-    const serviceName = serviceLabels[completeBooking.serviceType] || completeBooking.serviceType
+    const packageLabels: Record<string, string> = {
+      'foreign_object': 'Fremdkörper-Reparatur',
+      'valve_damage': 'Ventilschaden-Reparatur',
+      'measurement_both': 'Vermessung — Beide Achsen',
+      'measurement_front': 'Vermessung — Vorderachse',
+      'measurement_rear': 'Vermessung — Hinterachse',
+      'adjustment_both': 'Einstellung — Beide Achsen',
+      'adjustment_front': 'Einstellung — Vorderachse',
+      'adjustment_rear': 'Einstellung — Hinterachse',
+      'full_service': 'Komplett mit Inspektion',
+      'check': 'Klima Basis-Check',
+      'basic': 'Klima Standard-Service',
+      'comfort': 'Klima Komfort-Service',
+      'premium': 'Klima Premium-Service',
+    }
+    const baseServiceName = serviceLabels[completeBooking.serviceType] || completeBooking.serviceType
+    const subtypeLabel = completeBooking.serviceSubtype ? packageLabels[completeBooking.serviceSubtype] : null
+    const serviceName = subtypeLabel
+      ? `${baseServiceName} - ${subtypeLabel}`
+      : baseServiceName
 
     // Generate ICS file for customer
     const { generateICSFile, getServiceLabel } = await import('@/lib/calendar')
@@ -445,6 +526,79 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       customerEmail: completeBooking.customer.user.email,
       customerPhone: completeBooking.customer.user.phone,
     })
+
+    // Create Google Calendar event for workshop
+    try {
+      if (completeBooking.workshop.googleAccessToken && completeBooking.workshop.googleRefreshToken && completeBooking.workshop.googleCalendarId) {
+        const { createCalendarEvent, refreshAccessToken } = await import('@/lib/google-calendar')
+        const { createBerlinDate } = await import('@/lib/timezone-utils')
+        
+        let accessToken = completeBooking.workshop.googleAccessToken
+        if (!accessToken || (completeBooking.workshop.googleTokenExpiry && new Date() > completeBooking.workshop.googleTokenExpiry)) {
+          const newTokens = await refreshAccessToken(completeBooking.workshop.googleRefreshToken)
+          accessToken = newTokens.access_token || accessToken
+          await prisma.workshop.update({
+            where: { id: completeBooking.workshopId },
+            data: {
+              googleAccessToken: accessToken,
+              googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
+            }
+          })
+        }
+        
+        const calBookingDate = completeBooking.date
+        const [calH, calM] = completeBooking.time.split(':').map(Number)
+        const calStart = createBerlinDate(calBookingDate.getUTCFullYear(), calBookingDate.getUTCMonth() + 1, calBookingDate.getUTCDate(), calH, calM)
+        const calEnd = new Date(calStart.getTime() + completeBooking.durationMinutes * 60000)
+        
+        const vehicleStr = completeBooking.vehicle
+          ? `${completeBooking.vehicle.brand} ${completeBooking.vehicle.model}${completeBooking.vehicle.licensePlate ? ` - ${completeBooking.vehicle.licensePlate}` : ''}`
+          : 'Nicht angegeben'
+        
+        const calDesc = [
+          completeBooking.customer.user.name || 'Kunde',
+          completeBooking.customer.user.email,
+          `Telefon: ${completeBooking.customer.user.phone || 'Nicht angegeben'}`,
+          '',
+          `Fahrzeug: ${vehicleStr}`,
+          `Service: ${serviceName}`,
+        ]
+        if (completeBooking.hasBalancing) calDesc.push('✅ Auswuchtung')
+        if (completeBooking.hasStorage) calDesc.push('✅ Einlagerung')
+        if (completeBooking.hasWashing) calDesc.push('✅ Räder waschen')
+        // Tire info
+        const td = completeBooking.tireData as any
+        if (td?.isMixedTires) {
+          calDesc.push('', '🛞 Reifen (Mischbereifung):')
+          if (td.front) calDesc.push(`VA: ${td.front.quantity || 2}× ${td.front.brand} ${td.front.model}${td.front.size ? ` (${td.front.size})` : ''}`)
+          if (td.rear) calDesc.push(`HA: ${td.rear.quantity || 2}× ${td.rear.brand} ${td.rear.model}${td.rear.size ? ` (${td.rear.size})` : ''}`)
+        } else if (completeBooking.tireBrand) {
+          calDesc.push('', `🛞 Reifen: ${completeBooking.tireQuantity || 4}× ${completeBooking.tireBrand} ${completeBooking.tireModel || ''}`)
+          if (completeBooking.tireSize) calDesc.push(`   Größe: ${completeBooking.tireSize} ${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`.trim())
+        }
+        calDesc.push('', `Gesamtpreis: ${Number(completeBooking.totalPrice).toFixed(2)} €`)
+        
+        const calSummaryTire = td?.isMixedTires
+          ? ` - ${td.front?.brand || ''} / ${td.rear?.brand || ''}`
+          : completeBooking.tireBrand ? ` - ${completeBooking.tireBrand}` : ''
+        
+        await createCalendarEvent(
+          accessToken,
+          completeBooking.workshop.googleRefreshToken,
+          completeBooking.workshop.googleCalendarId,
+          {
+            summary: `${serviceName} - ${vehicleStr}${calSummaryTire}`,
+            description: calDesc.join('\n'),
+            start: calStart.toISOString(),
+            end: calEnd.toISOString(),
+            attendees: [{ email: completeBooking.customer.user.email }]
+          }
+        )
+        console.log('✅ Google Calendar event created from Stripe webhook')
+      }
+    } catch (calError) {
+      console.error('❌ Error creating calendar event from Stripe webhook:', calError)
+    }
 
     // Send customer confirmation email
     try {
@@ -475,17 +629,26 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         tireQuantity: completeBooking.tireQuantity || undefined,
         tireRunFlat: completeBooking.tireRunFlat,
         tire3PMSF: completeBooking.tire3PMSF,
+        tireEAN: completeBooking.tireEAN || undefined,
+        tireData: completeBooking.tireData || undefined,
+        totalTirePurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
         // Pricing
         basePrice: Number(completeBooking.basePrice),
         balancingPrice: completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined,
         storagePrice: completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined,
+        washingPrice: completeBooking.washingPrice ? Number(completeBooking.washingPrice) : undefined,
         disposalFee: completeBooking.disposalFee ? Number(completeBooking.disposalFee) : undefined,
         runFlatSurcharge: completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : undefined,
         totalPrice: Number(completeBooking.totalPrice),
         paymentMethod: 'Stripe',
         hasBalancing: completeBooking.hasBalancing,
         hasStorage: completeBooking.hasStorage,
+        hasWashing: completeBooking.hasWashing,
         hasDisposal: completeBooking.hasDisposal,
+        // Coupon data
+        couponCode: completeBooking.couponCode || undefined,
+        discountAmount: completeBooking.discountAmount ? Number(completeBooking.discountAmount) : undefined,
+        originalPrice: completeBooking.originalPrice ? Number(completeBooking.originalPrice) : undefined,
       })
 
       const attachments = icsContent ? [{
@@ -539,6 +702,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         tireEAN: completeBooking.tireEAN || undefined,
         tireRunFlat: completeBooking.tireRunFlat,
         tire3PMSF: completeBooking.tire3PMSF,
+        tireArticleId: completeBooking.tireArticleId || undefined,
+        tireData: completeBooking.tireData || undefined,
         tirePurchasePrice: completeBooking.tirePurchasePrice ? Number(completeBooking.tirePurchasePrice) : undefined,
         totalPurchasePrice: completeBooking.totalTirePurchasePrice ? Number(completeBooking.totalTirePurchasePrice) : undefined,
         // Supplier
@@ -551,6 +716,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         basePrice: Number(completeBooking.basePrice),
         balancingPrice: completeBooking.balancingPrice ? Number(completeBooking.balancingPrice) : undefined,
         storagePrice: completeBooking.storagePrice ? Number(completeBooking.storagePrice) : undefined,
+        washingPrice: completeBooking.washingPrice ? Number(completeBooking.washingPrice) : undefined,
+        disposalFee: completeBooking.disposalFee ? Number(completeBooking.disposalFee) : undefined,
+        runFlatSurcharge: completeBooking.runFlatSurcharge ? Number(completeBooking.runFlatSurcharge) : undefined,
         totalPrice: Number(completeBooking.totalPrice),
         platformCommission: Number(completeBooking.platformCommission),
         workshopPayout: Number(completeBooking.workshopPayout),
@@ -559,8 +727,15 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           : undefined,
         hasBalancing: completeBooking.hasBalancing,
         hasStorage: completeBooking.hasStorage,
+        hasWashing: completeBooking.hasWashing,
+        hasDisposal: (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) || undefined,
         fromStorageBookingId: webhookFromStorageId || undefined,
         storageLocationFromStorage: webhookStorageLocation || undefined,
+        // Coupon data for workshop
+        couponCode: completeBooking.couponCode || undefined,
+        discountAmount: completeBooking.discountAmount ? Number(completeBooking.discountAmount) : undefined,
+        originalPrice: completeBooking.originalPrice ? Number(completeBooking.originalPrice) : undefined,
+        couponCostBearer: (completeBooking as any).couponCostBearer || undefined,
       })
 
       await sendTemplateEmail(
@@ -688,6 +863,21 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
     })
 
     console.log('🚫 [STRIPE WEBHOOK] Booking marked as CANCELLED:', booking?.id)
+
+    // Push notification to customer
+    if (booking?.id) {
+      try {
+        const fullBooking = await prisma.directBooking.findUnique({
+          where: { id: booking.id },
+          include: { customer: { select: { user: { select: { id: true } } } } }
+        })
+        if (fullBooking?.customer?.user?.id) {
+          await notifyBookingUpdate(fullBooking.customer.user.id, booking.id, 'CANCELLED')
+        }
+      } catch (pushErr) {
+        console.error('❌ Push notification error:', pushErr)
+      }
+    }
   } catch (error) {
     console.error('❌ Error handling payment failure:', error)
   }
@@ -719,6 +909,19 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     })
 
     console.log('✅ Booking refunded')
+
+    // Push notification to customer
+    try {
+      const refundedBooking = await prisma.directBooking.findFirst({
+        where: { stripePaymentId: paymentIntentId },
+        include: { customer: { select: { user: { select: { id: true } } } } }
+      })
+      if (refundedBooking?.customer?.user?.id) {
+        await notifyBookingUpdate(refundedBooking.customer.user.id, refundedBooking.id, 'CANCELLED')
+      }
+    } catch (pushErr) {
+      console.error('❌ Push notification error:', pushErr)
+    }
   } catch (error) {
     console.error('❌ Error handling refund:', error)
   }

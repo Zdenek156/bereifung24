@@ -173,7 +173,7 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       // Nur Google OAuth für Kunden erlauben
-      if (account?.provider === 'google-customer') {
+      if (account?.provider === 'google') {
         if (!user.email) {
           return false
         }
@@ -258,17 +258,50 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, account }) {
       // Initial sign in
       if (user) {
-        token.id = user.id
-        token.email = user.email
-        token.role = user.role
-        token.firstName = user.firstName
-        token.lastName = user.lastName
-        token.customerId = user.customerId
-        token.workshopId = user.workshopId
-        token.employeeId = user.employeeId
-        token.b24EmployeeId = user.b24EmployeeId
-        token.isB24Employee = user.isB24Employee
-        token.freelancerId = user.freelancerId
+        // For Google sign-in: the user object comes from NextAuth's OAuth adapter,
+        // NOT from our database. We need to fetch the full DB user to get customerId etc.
+        if (account?.provider === 'google' && user.email) {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+            include: { customer: true, workshop: true, freelancer: true }
+          })
+          if (dbUser) {
+            token.id = dbUser.id
+            token.email = dbUser.email
+            token.role = dbUser.role
+            token.firstName = dbUser.firstName
+            token.lastName = dbUser.lastName
+            token.customerId = dbUser.customer?.id
+            token.workshopId = dbUser.workshop?.id
+            token.freelancerId = dbUser.freelancer?.id
+            // Store Google profile image
+            if (user.image) {
+              token.image = user.image
+            }
+            // Check for B24Employee
+            if (dbUser.role === 'ADMIN') {
+              const employee = await prisma.b24Employee.findUnique({
+                where: { email: dbUser.email }
+              })
+              if (employee) {
+                token.b24EmployeeId = employee.id
+              }
+            }
+          }
+        } else {
+          // Credentials login: user object already has all fields from authorize()
+          token.id = user.id
+          token.email = user.email
+          token.role = user.role
+          token.firstName = user.firstName
+          token.lastName = user.lastName
+          token.customerId = user.customerId
+          token.workshopId = user.workshopId
+          token.employeeId = user.employeeId
+          token.b24EmployeeId = user.b24EmployeeId
+          token.isB24Employee = user.isB24Employee
+          token.freelancerId = user.freelancerId
+        }
       }
       
       return token
@@ -287,6 +320,9 @@ export const authOptions: NextAuthOptions = {
         session.user.employeeId = token.employeeId as string | undefined
         session.user.b24EmployeeId = token.b24EmployeeId as string | undefined
         session.user.freelancerId = token.freelancerId as string | undefined
+        if (token.image) {
+          session.user.image = token.image as string
+        }
 
         console.log('[AUTH SESSION] Session created:', {
           email: session.user.email,

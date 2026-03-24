@@ -159,8 +159,16 @@ class _SplashScreenState extends State<SplashScreen>
                 final centerY = size.height * 0.5;
 
                 // ── Einheitliche Höhe für beide Logo-Teile ──────────────────
-                final logoHeight = size.height * 0.26;
-                final gap        = size.width  * 0.025;
+                // Logo-Breite max 88% der Screenbreite → Höhe daraus ableiten
+                const _ratioSum   = _reifenspurRatio + _b24Ratio; // 2.868
+                final gap         = size.width * 0.02;
+                final maxLogoW    = size.width * 0.88;
+                // Höhe so wählen dass totalW = maxLogoW, aber max 22% der Höhe
+                final logoHeightByWidth  = (maxLogoW - gap) / _ratioSum;
+                final logoHeightByHeight = size.height * 0.22;
+                final logoHeight  = logoHeightByWidth < logoHeightByHeight
+                    ? logoHeightByWidth
+                    : logoHeightByHeight;
 
                 final reifenspurW = logoHeight * _reifenspurRatio;
                 final b24W        = logoHeight * _b24Ratio;

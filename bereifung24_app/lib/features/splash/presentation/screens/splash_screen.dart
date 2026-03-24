@@ -168,11 +168,17 @@ class _SplashScreenState extends State<SplashScreen>
                     ? logoHeightByB24
                     : logoHeightByScreen;
 
-                final reifenspurW = logoHeight * _reifenspurRatio;
                 final b24W        = logoHeight * _b24Ratio;
 
+                // ── Reifenspur: 30% über B24-Top, 40% unter B24-Bottom ──────
+                final b24Top         = centerY - logoHeight / 2;
+                final b24Bottom      = centerY + logoHeight / 2;
+                final reifenspurTop  = b24Top    - logoHeight * 0.30;
+                final reifenspurH    = logoHeight * 1.70; // 30% oben + 40% unten
+                final reifenspurWNew = reifenspurH * _reifenspurRatio;
+
                 // Naht (Join-Point) = Screenmitte, kein Gap
-                final reifenspurLeft = centerX - reifenspurW;
+                final reifenspurLeft = centerX - reifenspurWNew;
                 final b24Left        = centerX;
 
                 return Stack(
@@ -202,9 +208,9 @@ class _SplashScreenState extends State<SplashScreen>
                     // ── Reifenspur ───────────────────────────────────────────
                     Positioned(
                       left:   reifenspurLeft,
-                      top:    centerY - logoHeight / 2,
-                      width:  reifenspurW,
-                      height: logoHeight,
+                      top:    reifenspurTop,
+                      width:  reifenspurWNew,
+                      height: reifenspurH,
                       child: Opacity(
                         opacity: _reifenspurFade.value * contentOpacity,
                         child: Transform.translate(

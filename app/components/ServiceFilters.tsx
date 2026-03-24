@@ -44,7 +44,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
         options: [
           { 
             packageType: 'with_tire_purchase', 
-            label: 'Mit Reifenkauf', 
+            label: 'Mit Reifen', 
             info: 'Neue Reifen bei der Werkstatt kaufen und montieren lassen. Sie können aus verschiedenen Marken und Modellen wählen.'
           },
           { 
@@ -183,7 +183,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
         options: [
           { 
             packageType: 'motorcycle_with_tire_purchase', 
-            label: 'Mit Reifenkauf', 
+            label: 'Mit Reifen', 
             info: 'Neue Motorradreifen bei der Werkstatt kaufen und montieren lassen. Sie können aus verschiedenen Marken und Modellen wählen.',
             hint: 'Räder müssen ausgebaut zur Werkstatt gebracht werden'
           },
@@ -222,7 +222,7 @@ const FILTER_CONFIG: Record<string, ServiceFilterConfig> = {
         options: [
           { 
             packageType: 'with_disposal', 
-            label: 'Altreifenentsorgung', 
+            label: 'Entsorgung', 
             info: 'Umweltgerechte Entsorgung Ihrer alten Reifen (+3,50 € pro Reifen)'
           }
         ]
@@ -314,10 +314,10 @@ export default function ServiceFilters({
   }
 
   return (
-    <div className={stackGroups ? 'grid grid-cols-1 gap-y-4' : config.groups.length >= 3 ? 'grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-2' : config.groups.length === 2 ? 'grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2' : ''}>
+    <div className={stackGroups ? 'grid grid-cols-1 gap-y-4' : config.groups.length >= 3 ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4' : config.groups.length === 2 ? 'grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2' : ''}>
       {config.groups.map((group, groupIndex) => (
-        <div key={groupIndex}>
-          <h4 className="font-semibold mb-3 flex items-center gap-2">
+        <div key={groupIndex} className="min-w-0">
+          <h4 className="font-semibold mb-3 flex items-center gap-2 text-sm">
             {group.label}
           </h4>
           
@@ -325,22 +325,24 @@ export default function ServiceFilters({
             {group.options.map((option) => (
               <label
                 key={option.packageType}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors min-h-[44px]"
+                className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors min-h-[44px]"
               >
                 <input
                   type={group.multiSelect ? 'checkbox' : 'radio'}
                   name={group.multiSelect ? undefined : config?.singleSelection ? `${selectedService}-filter-global` : `${selectedService}-filter-${groupIndex}`}
                   checked={selectedPackages.includes(option.packageType)}
                   onChange={() => togglePackage(option.packageType, group)}
-                  className={`w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500${group.multiSelect ? ' rounded' : ''}`}
+                  className={`w-4 h-4 mt-0.5 text-primary-600 border-gray-300 focus:ring-primary-500${group.multiSelect ? ' rounded' : ''}`}
                 />
-                <span className="text-sm flex items-center gap-1">
-                  {option.label}
-                  <InfoTooltip content={option.info} />
-                </span>
-                {option.hint && selectedPackages.includes(option.packageType) && (
-                  <p className="text-xs text-gray-500 ml-7 -mt-1 mb-1">💡 {option.hint}</p>
-                )}
+                <div className="min-w-0">
+                  <span className="text-sm flex items-center gap-1">
+                    {option.label}
+                    <InfoTooltip content={option.info} />
+                  </span>
+                  {option.hint && selectedPackages.includes(option.packageType) && (
+                    <p className="text-xs text-gray-500 mt-0.5">💡 {option.hint}</p>
+                  )}
+                </div>
               </label>
             ))}
           </div>

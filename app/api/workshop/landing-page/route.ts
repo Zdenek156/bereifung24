@@ -1,20 +1,20 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { authenticateWorkshopRequest } from '@/lib/workshop-auth'
 
 // GET - Get workshop's landing page
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
+    const auth = await authenticateWorkshopRequest(request)
+    if (!auth) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
 
     // Get workshop for current user
     const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id },
+      where: { id: auth.workshopId },
       include: {
         landingPage: true
       }
@@ -142,16 +142,15 @@ export async function PATCH(request: Request) {
 }
 
 // DELETE - Delete landing page
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
+    const auth = await authenticateWorkshopRequest(request)
+    if (!auth) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
 
     const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id },
+      where: { id: auth.workshopId },
       include: { landingPage: true }
     })
 

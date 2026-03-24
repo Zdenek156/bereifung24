@@ -1,17 +1,15 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { authenticateWorkshopRequest } from '@/lib/workshop-auth'
 
 // POST /api/workshop/reviews/[id]/respond - Respond to a review
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'WORKSHOP') {
+    const auth = await authenticateWorkshopRequest(request)
+    if (!auth) {
       return NextResponse.json(
         { error: 'Nicht autorisiert' },
         { status: 401 }
@@ -27,19 +25,6 @@ export async function POST(
       )
     }
 
-    // Get workshop ID
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { workshop: true },
-    })
-
-    if (!user?.workshop) {
-      return NextResponse.json(
-        { error: 'Werkstatt nicht gefunden' },
-        { status: 404 }
-      )
-    }
-
     // Verify that this review belongs to this workshop
     const review = await prisma.review.findUnique({
       where: { id: params.id },
@@ -52,7 +37,7 @@ export async function POST(
       )
     }
 
-    if (review.workshopId !== user.workshop.id) {
+    if (review.workshopId !== auth.workshopId) {
       return NextResponse.json(
         { error: 'Nicht autorisiert' },
         { status: 403 }

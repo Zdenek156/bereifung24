@@ -101,6 +101,7 @@ export async function GET(req: NextRequest) {
       const hasPricing = !!(workshop as any).pricingSettings
       const hasSupplier = (workshop as any).suppliers?.length > 0
       const hasLandingPage = !!(workshop as any).landingPage?.isActive
+      const hasLandingPageExists = !!(workshop as any).landingPage
       const profileScore = [hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage].filter(Boolean).length
 
       return {
@@ -114,7 +115,7 @@ export async function GET(req: NextRequest) {
         offersCount,
         revenue,
         profileScore,
-        profileDetails: { hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage },
+        profileDetails: { hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage, hasLandingPageExists },
         freelancer: workshop.freelancer ? {
           id: workshop.freelancer.id,
           name: `${workshop.freelancer.user.firstName} ${workshop.freelancer.user.lastName}`

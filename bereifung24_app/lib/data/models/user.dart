@@ -9,6 +9,8 @@ class User {
   final String? city;
   final String? profileImage;
   final String role;
+  final String? workshopId;
+  final String? workshopName;
   final bool notifyBookingConfirmation;
   final bool notifyReminder;
   final bool notifySeason;
@@ -26,6 +28,8 @@ class User {
     this.city,
     this.profileImage,
     this.role = 'CUSTOMER',
+    this.workshopId,
+    this.workshopName,
     this.notifyBookingConfirmation = true,
     this.notifyReminder = true,
     this.notifySeason = true,
@@ -33,7 +37,8 @@ class User {
     this.createdAt,
   });
 
-  String get fullName => [firstName, lastName].where((e) => e != null).join(' ');
+  String get fullName =>
+      [firstName, lastName].where((e) => e != null).join(' ');
 
   factory User.fromJson(Map<String, dynamic> json) => User(
         id: json['id']?.toString() ?? '',
@@ -46,6 +51,8 @@ class User {
         city: json['city'],
         profileImage: json['profileImage'],
         role: json['role'] ?? 'CUSTOMER',
+        workshopId: json['workshopId'],
+        workshopName: json['workshopName'],
         notifyBookingConfirmation: json['notifyBookingConfirmation'] ?? true,
         notifyReminder: json['notifyReminder'] ?? true,
         notifySeason: json['notifySeason'] ?? true,
@@ -66,6 +73,8 @@ class User {
         'city': city,
         'profileImage': profileImage,
         'role': role,
+        'workshopId': workshopId,
+        'workshopName': workshopName,
         'notifyBookingConfirmation': notifyBookingConfirmation,
         'notifyReminder': notifyReminder,
         'notifySeason': notifySeason,
@@ -80,6 +89,8 @@ class User {
     String? zipCode,
     String? city,
     String? profileImage,
+    String? workshopId,
+    String? workshopName,
     bool? notifyBookingConfirmation,
     bool? notifyReminder,
     bool? notifySeason,
@@ -96,6 +107,8 @@ class User {
         city: city ?? this.city,
         profileImage: profileImage ?? this.profileImage,
         role: role,
+        workshopId: workshopId ?? this.workshopId,
+        workshopName: workshopName ?? this.workshopName,
         notifyBookingConfirmation:
             notifyBookingConfirmation ?? this.notifyBookingConfirmation,
         notifyReminder: notifyReminder ?? this.notifyReminder,

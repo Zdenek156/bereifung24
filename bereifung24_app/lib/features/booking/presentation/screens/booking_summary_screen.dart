@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/stripe_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -283,8 +284,12 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       }
     } catch (e) {
       if (mounted) {
+        String message = 'Buchung fehlgeschlagen. Bitte versuche es erneut.';
+        if (e is DioException && e.response?.statusCode == 409) {
+          message = e.response?.data?['error'] ?? 'Dieser Termin ist leider nicht mehr verfügbar. Bitte wähle einen anderen Zeitslot.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Buchung fehlgeschlagen: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
         );
         setState(() => _isSubmitting = false);
       }

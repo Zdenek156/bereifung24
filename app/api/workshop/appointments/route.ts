@@ -1,36 +1,23 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { authenticateWorkshopRequest } from '@/lib/workshop-auth'
 
 // GET /api/workshop/appointments - Get all appointments/bookings for the workshop
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'WORKSHOP') {
+    const auth = await authenticateWorkshopRequest(request)
+    if (!auth) {
       return NextResponse.json(
         { error: 'Nicht autorisiert' },
         { status: 401 }
       )
     }
 
-    // Get workshop ID
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: { workshop: true },
-    })
-
-    if (!user?.workshop) {
-      return NextResponse.json(
-        { error: 'Werkstatt nicht gefunden' },
-        { status: 404 }
-      )
-    }
+    const workshopId = auth.workshopId
 
     // Get all regular bookings with related data
     const bookings = await prisma.booking.findMany({
-      where: { workshopId: user.workshop.id },
+      where: { workshopId },
       include: {
         customer: {
           include: {
@@ -56,11 +43,11 @@ export async function GET() {
 
     // Get all direct bookings (PayPal/Stripe)
     // Note: ALL direct bookings have customerId and vehicleId (validated at creation)
-    console.log('🔍 [WORKSHOP APPOINTMENTS] Loading for workshop:', user.workshop.id, user.workshop.companyName)
+    console.log('🔍 [WORKSHOP APPOINTMENTS] Loading for workshop:', workshopId)
     
     const directBookings = await prisma.directBooking.findMany({
       where: { 
-        workshopId: user.workshop.id
+        workshopId
       },
       include: {
         customer: {

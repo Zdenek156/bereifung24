@@ -119,6 +119,36 @@ export async function POST(request: NextRequest) {
 
       console.log('✅ [BOOK] Customer found/created:', customer.id)
 
+      // Check for slot conflicts (prevent double booking)
+      const existingBookings = await prisma.directBooking.findMany({
+        where: {
+          workshopId,
+          date: new Date(date + 'T00:00:00'),
+          time,
+          status: { in: ['CONFIRMED', 'COMPLETED'] }
+        },
+        select: { id: true }
+      })
+      // Also check active reservations (not expired)
+      const activeReservations = await prisma.directBooking.findMany({
+        where: {
+          workshopId,
+          date: new Date(date + 'T00:00:00'),
+          time,
+          status: 'RESERVED',
+          reservedUntil: { gt: new Date() },
+          customerId: { not: customer.id } // allow own reservation
+        },
+        select: { id: true }
+      })
+      if (existingBookings.length > 0 || activeReservations.length > 0) {
+        console.log('[BOOK API] ❌ Slot conflict:', { date, time, existingBookings: existingBookings.length, activeReservations: activeReservations.length })
+        return NextResponse.json(
+          { error: 'Dieser Termin ist leider nicht mehr verfügbar. Bitte wähle einen anderen Zeitslot.' },
+          { status: 409 }
+        )
+      }
+
       // Create booking after successful payment
       console.log('💰 [BOOK] Creating CONFIRMED booking:', { workshop: workshopId, date, totalPrice })
       

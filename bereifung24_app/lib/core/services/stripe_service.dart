@@ -12,8 +12,8 @@ class StripeService {
   static bool _initialized = false;
 
   /// Initialize Stripe SDK — fetches publishable key from server
-  static Future<void> init() async {
-    if (_initialized) return;
+  static Future<void> init({bool force = false}) async {
+    if (_initialized && !force) return;
     try {
       // Use full URL to avoid any baseUrl path resolution issues
       final url = '${AppConfig.apiBaseUrl}/config/stripe';
@@ -58,8 +58,8 @@ class StripeService {
     String? paymentMethod,
   }) async {
     if (!_initialized) {
-      // Try to init one more time
-      await init();
+      // Try to init one more time (force re-fetch to ensure correct key)
+      await init(force: true);
       if (!_initialized) {
         throw Exception('Stripe ist nicht konfiguriert. Bitte versuche es später erneut.');
       }

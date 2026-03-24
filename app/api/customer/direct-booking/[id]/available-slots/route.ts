@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getBusySlots } from '@/lib/google-calendar'
+import { isPublicHolidayByZip } from '@/lib/german-holidays'
 
 /**
  * GET /api/customer/direct-booking/[id]/available-slots
@@ -39,6 +40,7 @@ export async function GET(
         googleCalendarId: true,
         googleAccessToken: true,
         googleRefreshToken: true,
+        user: { select: { zipCode: true } },
         employees: {
           select: {
             id: true,
@@ -46,7 +48,15 @@ export async function GET(
             googleAccessToken: true,
             googleRefreshToken: true,
             name: true,
-            email: true
+            email: true,
+            workingHours: true,
+            employeeVacations: {
+              where: {
+                startDate: { lte: new Date(endDate) },
+                endDate:   { gte: new Date(startDate) },
+              },
+              select: { startDate: true, endDate: true }
+            }
           }
         },
         workshopVacations: {
@@ -138,24 +148,24 @@ export async function GET(
     console.log(`[CUSTOMER SLOTS API] Workshop has googleAccessToken: ${!!workshop.googleAccessToken}`)
     console.log(`[CUSTOMER SLOTS API] Employees count: ${workshop.employees.length}`)
     
-    // Use workshop calendar or first employee calendar
+    // Use workshop calendar or ALL employee calendars
     if (workshop.calendarMode === 'workshop' && workshop.googleCalendarId) {
       googleCalendarId = workshop.googleCalendarId
       googleAccessToken = workshop.googleAccessToken
       googleRefreshToken = workshop.googleRefreshToken
       console.log(`[CUSTOMER SLOTS API] ✅ Using WORKSHOP Google Calendar: ${googleCalendarId}`)
-    } else if (workshop.employees.length > 0) {
-      const employeeWithCalendar = workshop.employees.find(e => e.googleCalendarId && e.googleAccessToken)
-      if (employeeWithCalendar) {
-        googleCalendarId = employeeWithCalendar.googleCalendarId
-        googleAccessToken = employeeWithCalendar.googleAccessToken
-        googleRefreshToken = employeeWithCalendar.googleRefreshToken
-        console.log(`[CUSTOMER SLOTS API] ✅ Using EMPLOYEE Google Calendar: ${googleCalendarId}`)
+    } else {
+      // Find ALL employees with connected calendar (vacation is handled separately)
+      const empsWithCal = workshop.employees.filter(e => e.googleCalendarId && e.googleAccessToken && e.googleRefreshToken)
+      if (empsWithCal.length > 0) {
+        // Use first employee's credentials for freebusy query, but query all calendars
+        googleCalendarId = empsWithCal[0].googleCalendarId
+        googleAccessToken = empsWithCal[0].googleAccessToken
+        googleRefreshToken = empsWithCal[0].googleRefreshToken
+        console.log(`[CUSTOMER SLOTS API] ✅ Using EMPLOYEE Google Calendar: ${empsWithCal.map(e => e.name).join(', ')} (${empsWithCal.length} calendars)`)
       } else {
         console.log(`[CUSTOMER SLOTS API] ❌ No employee with calendar found`)
       }
-    } else {
-      console.log(`[CUSTOMER SLOTS API] ❌ No Google Calendar configured`)
     }
     
     if (googleCalendarId && googleAccessToken && googleRefreshToken) {
@@ -172,13 +182,31 @@ export async function GET(
         
         // Add Google Calendar busy times to busySlotsByDate
         gcalBusySlots.forEach((busy: any) => {
-          // Parse ISO datetime with timezone correctly using Date object
-          // busy.start is like "2026-02-19T08:00:00+01:00"
           const busyStartDate = new Date(busy.start)
           const busyEndDate = new Date(busy.end)
           
-          // Convert to Berlin timezone to get the correct local time
-          const dateStr = busyStartDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' }) // "2026-02-19"
+          // Check if this is an all-day event (spans 24h or more)
+          const durationMs = busyEndDate.getTime() - busyStartDate.getTime()
+          const isAllDay = durationMs >= 24 * 60 * 60 * 1000
+
+          if (isAllDay) {
+            // Block all dates covered by this all-day event
+            const cur = new Date(busyStartDate)
+            while (cur < busyEndDate) {
+              const dateStr = cur.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+              if (!busySlotsByDate[dateStr]) busySlotsByDate[dateStr] = []
+              // Block every 30-min slot from 00:00 to 23:30
+              for (let m = 0; m < 24 * 60; m += 30) {
+                const t = `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`
+                if (!busySlotsByDate[dateStr].includes(t)) busySlotsByDate[dateStr].push(t)
+              }
+              cur.setDate(cur.getDate() + 1)
+            }
+            return
+          }
+
+          // Regular (non-all-day) event
+          const dateStr = busyStartDate.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
           const startTime = busyStartDate.toLocaleTimeString('de-DE', { 
             timeZone: 'Europe/Berlin', 
             hour: '2-digit', 
@@ -247,6 +275,83 @@ export async function GET(
       const vacEnd = new Date(vac.endDate)
       while (cur <= vacEnd) {
         vacationDates.push(cur.toISOString().split('T')[0])
+        cur.setDate(cur.getDate() + 1)
+      }
+    }
+
+    // Also check employee vacations — if ALL employees with calendars are on vacation, block the date
+    const employeesWithCalendar = (workshop.employees || []).filter(e => e.googleCalendarId && e.googleAccessToken)
+    if (employeesWithCalendar.length > 0) {
+      // Check each date in range
+      const rangeStart = new Date(startDate)
+      const rangeEnd = new Date(endDate)
+      const cur = new Date(rangeStart)
+      while (cur <= rangeEnd) {
+        const dateStr = cur.toISOString().split('T')[0]
+        if (!vacationDates.includes(dateStr)) {
+          const allOnVacation = employeesWithCalendar.every(emp => {
+            return (emp.employeeVacations || []).some((v: any) => {
+              const vs = new Date(v.startDate).toISOString().split('T')[0]
+              const ve = new Date(v.endDate).toISOString().split('T')[0]
+              return dateStr >= vs && dateStr <= ve
+            })
+          })
+          if (allOnVacation) {
+            vacationDates.push(dateStr)
+          }
+        }
+        cur.setDate(cur.getDate() + 1)
+      }
+    }
+
+    // Add public holidays based on workshop ZIP code
+    const wsZip3 = (workshop as any).user?.zipCode
+    if (wsZip3) {
+      const rangeStart = new Date(startDate)
+      const rangeEnd = new Date(endDate)
+      const cur = new Date(rangeStart)
+      while (cur <= rangeEnd) {
+        const dateStr = cur.toISOString().split('T')[0]
+        if (!vacationDates.includes(dateStr) && isPublicHolidayByZip(dateStr, wsZip3)) {
+          vacationDates.push(dateStr)
+        }
+        cur.setDate(cur.getDate() + 1)
+      }
+    }
+
+    // Block days where no employee with calendar is available to work
+    const dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    {
+      const rangeStart = new Date(startDate)
+      const rangeEnd = new Date(endDate)
+      const cur = new Date(rangeStart)
+      while (cur <= rangeEnd) {
+        const dateStr = cur.toISOString().split('T')[0]
+        if (!vacationDates.includes(dateStr)) {
+          const dayName = dayNames[cur.getDay()]
+          const hasAvailableEmployee = employeesWithCalendar.some(emp => {
+            // Check if employee is on vacation this day
+            const onVacation = (emp.employeeVacations || []).some((v: any) => {
+              const vs = new Date(v.startDate).toISOString().split('T')[0]
+              const ve = new Date(v.endDate).toISOString().split('T')[0]
+              return dateStr >= vs && dateStr <= ve
+            })
+            if (onVacation) return false
+            // Check if employee works this day
+            if (emp.workingHours) {
+              try {
+                let hours = JSON.parse(emp.workingHours as string)
+                if (typeof hours === 'string') hours = JSON.parse(hours)
+                const dayHours = hours[dayName]
+                if (!dayHours || !dayHours.working) return false
+              } catch (e) { /* if parsing fails, assume they work */ }
+            }
+            return true
+          })
+          if (!hasAvailableEmployee) {
+            vacationDates.push(dateStr)
+          }
+        }
         cur.setDate(cur.getDate() + 1)
       }
     }

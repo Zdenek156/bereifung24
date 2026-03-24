@@ -115,8 +115,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: const Color(0xFFFEF2F2), // subtle red bg
+      backgroundColor: isDark ? B24Colors.darkBackground : const Color(0xFFFEF2F2),
       appBar: AppBar(
         backgroundColor: B24Colors.accentRed,
         foregroundColor: Colors.white,
@@ -139,17 +140,17 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
         centerTitle: true,
       ),
       body: switch (_phase) {
-        _ScreenPhase.locating => _buildLocatingView(),
-        _ScreenPhase.found => _buildLocatingView(),
-        _ScreenPhase.results => _buildResultsView(),
-        _ScreenPhase.error => _buildErrorView(),
+        _ScreenPhase.locating => _buildLocatingView(isDark),
+        _ScreenPhase.found => _buildLocatingView(isDark),
+        _ScreenPhase.results => _buildResultsView(isDark),
+        _ScreenPhase.error => _buildErrorView(isDark),
       },
     );
   }
 
   // ── Locating Animation ──
 
-  Widget _buildLocatingView() {
+  Widget _buildLocatingView(bool isDark) {
     final isFound = _phase == _ScreenPhase.found;
 
     return Center(
@@ -234,7 +235,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: isFound ? B24Colors.accentGreen : B24Colors.textPrimary,
+              color: isFound ? B24Colors.accentGreen : (isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary),
             ),
           ),
           if (isFound && _locationText.isNotEmpty) ...[
@@ -249,11 +250,11 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
           ],
           if (!isFound) ...[
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Wir suchen Werkstätten in deiner Nähe...',
               style: TextStyle(
                 fontSize: 13,
-                color: B24Colors.textSecondary,
+                color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
               ),
             ),
           ],
@@ -264,7 +265,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
 
   // ── Error View ──
 
-  Widget _buildErrorView() {
+  Widget _buildErrorView(bool isDark) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -276,10 +277,10 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             Text(
               _errorMessage ?? 'Ein Fehler ist aufgetreten.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: B24Colors.textPrimary,
+                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
             const SizedBox(height: 24),
@@ -305,14 +306,14 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
 
   // ── Results View ──
 
-  Widget _buildResultsView() {
+  Widget _buildResultsView(bool isDark) {
     return Column(
       children: [
         // Location info bar
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          color: B24Colors.accentRed.withValues(alpha: 0.08),
+          color: isDark ? B24Colors.accentRed.withValues(alpha: 0.15) : B24Colors.accentRed.withValues(alpha: 0.08),
           child: Row(
             children: [
               const Icon(Icons.my_location, size: 16, color: B24Colors.accentRed),
@@ -322,10 +323,10 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
                   _workshops.isNotEmpty
                       ? '${_workshops.length} Werkstätten in deiner Nähe gefunden'
                       : 'Keine Werkstätten in der Nähe gefunden',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: B24Colors.textPrimary,
+                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
                   ),
                 ),
               ),
@@ -359,22 +360,22 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isDark ? B24Colors.darkSurface : Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
+                color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, -2),
               ),
             ],
           ),
-          child: const Text(
+          child: Text(
             'Rufe die Werkstatt an und vereinbare eine Soforthilfe. '
             'Deinen nächsten Service kannst du danach direkt über B24 buchen.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
-              color: B24Colors.textSecondary,
+              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
               height: 1.4,
             ),
           ),
@@ -384,27 +385,28 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
   }
 
   Widget _buildEmptyState() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.search_off, size: 56, color: B24Colors.textTertiary),
+            Icon(Icons.search_off, size: 56, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'Keine Werkstätten gefunden',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: B24Colors.textPrimary,
+                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Leider gibt es keine Werkstätten in 25 km Umkreis.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: B24Colors.textSecondary),
+              style: TextStyle(fontSize: 13, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary),
             ),
             const SizedBox(height: 20),
             _buildEmergencyHint(),
@@ -415,27 +417,28 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
   }
 
   Widget _buildEmergencyHint() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF9C3), // warm yellow
+        color: isDark ? const Color(0xFF422006) : const Color(0xFFFEF9C3),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFFDE68A)),
+        border: Border.all(color: isDark ? const Color(0xFF854D0E) : const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Text('💡', style: TextStyle(fontSize: 16)),
-              SizedBox(width: 8),
+              const Text('💡', style: TextStyle(fontSize: 16)),
+              const SizedBox(width: 8),
               Text(
                 'Notfall-Nummern',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: B24Colors.textPrimary,
+                  color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
                 ),
               ),
             ],
@@ -473,19 +476,20 @@ class _EmergencyPhoneRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: () => _callNumber(number),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: B24Colors.textSecondary),
+          Icon(icon, size: 16, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: B24Colors.textPrimary,
+                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
           ),
@@ -519,17 +523,18 @@ class _WorkshopEmergencyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOpen = _isCurrentlyOpen(workshop);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? B24Colors.darkSurface : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isNearest
               ? B24Colors.accentGreen.withValues(alpha: 0.5)
-              : B24Colors.border,
+              : (isDark ? B24Colors.darkBorder : B24Colors.border),
           width: isNearest ? 2 : 1,
         ),
       ),
@@ -546,10 +551,10 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                   children: [
                     Text(
                       workshop.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: B24Colors.textPrimary,
+                        color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -557,9 +562,9 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                       children: [
                         Text(
                           workshop.city,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: B24Colors.textSecondary,
+                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
                           ),
                         ),
                         if (workshop.distance != null) ...[
@@ -614,28 +619,28 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                 const SizedBox(width: 3),
                 Text(
                   workshop.averageRating!.toStringAsFixed(1),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: B24Colors.textPrimary,
+                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
                   ),
                 ),
-                Text(
-                  ' (${workshop.reviewCount})',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: B24Colors.textSecondary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
-              Expanded(
-                child: Text(
-                  _getHoursText(workshop),
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: B24Colors.textSecondary,
-                  ),
+                        Text(
+                          ' (${workshop.reviewCount})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
+                      Expanded(
+                        child: Text(
+                          _getHoursText(workshop),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                          ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -679,19 +684,19 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                     ),
             )
           else
-            Container(
+              Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: B24Colors.background,
+                color: isDark ? B24Colors.darkBackground : B24Colors.background,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Text(
+              child: Text(
                 'Keine Telefonnummer hinterlegt',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
-                  color: B24Colors.textTertiary,
+                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
                 ),
               ),
             ),

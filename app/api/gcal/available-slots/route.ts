@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getBusySlots, generateAvailableSlots, refreshAccessToken } from '@/lib/google-calendar'
+import { isPublicHolidayByZip } from '@/lib/german-holidays'
 
 // Get available time slots for a workshop or employee on a specific date
 export async function GET(request: NextRequest) {
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
         googleAccessToken: true,
         googleRefreshToken: true,
         googleTokenExpiry: true,
+        user: { select: { zipCode: true } },
         employees: {
           include: {
             employeeVacations: {
@@ -62,6 +64,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 
         availableSlots: [],
         message: 'Werkstatt ist im Urlaub'
+      })
+    }
+
+    // Check if date is a public holiday based on workshop ZIP code
+    const workshopZip = (workshop as any).user?.zipCode
+    if (workshopZip && isPublicHolidayByZip(date, workshopZip)) {
+      return NextResponse.json({
+        availableSlots: [],
+        message: 'Feiertag'
       })
     }
     
@@ -133,16 +144,10 @@ export async function GET(request: NextRequest) {
       const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
       const dateObj = new Date(date)
       
-      // Filter employees who have calendar connected and are not on vacation
+      // Filter employees: must have calendar connected, not on vacation, working this day
       const availableEmployees = workshop.employees.filter(emp => {
         // Must have calendar connected
-        const hasCalendar = !!(emp.googleRefreshToken && emp.googleCalendarId)
-        console.log(`Employee ${emp.name} calendar check:`, {
-          hasRefreshToken: !!emp.googleRefreshToken,
-          hasCalendarId: !!emp.googleCalendarId,
-          hasCalendar
-        })
-        if (!hasCalendar) return false
+        if (!(emp.googleRefreshToken && emp.googleCalendarId)) return false
         
         // Must not be on vacation
         if (emp.employeeVacations && emp.employeeVacations.length > 0) return false
@@ -150,60 +155,28 @@ export async function GET(request: NextRequest) {
         // Must be working on this day
         if (emp.workingHours) {
           try {
-            const hours = JSON.parse(emp.workingHours)
+            let hours = JSON.parse(emp.workingHours)
+            if (typeof hours === 'string') hours = JSON.parse(hours)
             const dayHours = hours[dayOfWeek]
             if (!dayHours || !dayHours.working) return false
           } catch (e) {
-            return false
+            // If parsing fails, don't filter out
           }
         }
         
         return true
       })
-      
-      console.log('Available employees with calendar:', availableEmployees.length)
+
+      console.log('Available employees with calendar:', availableEmployees.length,
+        availableEmployees.map(e => e.name).join(', '))
       
       if (availableEmployees.length === 0) {
-        return NextResponse.json(
-          { 
-            error: 'Kalender nicht verbunden',
-            message: 'Bitte verbinden Sie einen Google Calendar in den Einstellungen (Werkstatt oder Mitarbeiter).',
-            availableSlots: []
-          },
-          { status: 400 }
-        )
+        return NextResponse.json({ availableSlots: [] })
       }
       
-      // Get DB bookings for this workshop on this date
-      const timeMin = new Date(date + 'T00:00:00')
-      const timeMax = new Date(date + 'T23:59:59')
-      
-      const dbBookings = await prisma.booking.findMany({
-        where: {
-          workshopId: workshopId,
-          appointmentDate: {
-            gte: timeMin,
-            lte: timeMax
-          },
-          status: {
-            in: ['CONFIRMED', 'COMPLETED']
-          }
-        },
-        select: {
-          appointmentDate: true,
-          estimatedDuration: true
-        }
-      })
-      
-      // Convert DB bookings to busy slots
-      const dbBusySlots = dbBookings.map(booking => ({
-        start: booking.appointmentDate.toISOString(),
-        end: new Date(booking.appointmentDate.getTime() + booking.estimatedDuration * 60000).toISOString()
-      }))
-      
-      // Collect all available slots from all employees
-      const allSlotsMap = new Map<string, boolean>() // time -> isAvailable
-      
+      // Collect all available slots from all employees (union)
+      const allSlotsMap = new Map<string, boolean>()
+
       for (const employee of availableEmployees) {
         try {
           let accessToken = employee.googleAccessToken
@@ -213,7 +186,6 @@ export async function GET(request: NextRequest) {
             const newTokens = await refreshAccessToken(employee.googleRefreshToken!)
             accessToken = newTokens.access_token || accessToken
             
-            // Update token in database
             const expiryDate = newTokens.expiry_date 
               ? new Date(newTokens.expiry_date)
               : new Date(Date.now() + 3600 * 1000)
@@ -228,24 +200,25 @@ export async function GET(request: NextRequest) {
           }
           
           // Get employee working hours
-          const hours = JSON.parse(employee.workingHours!)
+          let hours = JSON.parse(employee.workingHours!)
+          if (typeof hours === 'string') hours = JSON.parse(hours)
           const employeeWorkingHours = hours[dayOfWeek]
           
           if (!employeeWorkingHours || !employeeWorkingHours.working) continue
           
           // Get busy slots from Google Calendar
-          const timeMin = new Date(dateObj)
-          timeMin.setHours(0, 0, 0, 0)
+          const calTimeMin = new Date(dateObj)
+          calTimeMin.setHours(0, 0, 0, 0)
           
-          const timeMax = new Date(dateObj)
-          timeMax.setHours(23, 59, 59, 999)
+          const calTimeMax = new Date(dateObj)
+          calTimeMax.setHours(23, 59, 59, 999)
           
           const busySlots = await getBusySlots(
             accessToken!,
             employee.googleRefreshToken!,
             employee.googleCalendarId!,
-            timeMin.toISOString(),
-            timeMax.toISOString()
+            calTimeMin.toISOString(),
+            calTimeMax.toISOString()
           )
           
           // Filter and convert busy slots
@@ -256,21 +229,14 @@ export async function GET(request: NextRequest) {
               end: slot.end as string
             }))
           
-          // Combine calendar busy slots with DB bookings
-          const allEmployeeBusySlots = [...validBusySlots, ...dbBusySlots]
-          console.log(`👤 Employee ${employee.name} (${employee.id}):`)
-          console.log(`   📅 Calendar busy slots: ${validBusySlots.length}`)
-          validBusySlots.forEach(slot => console.log(`      - ${slot.start} to ${slot.end}`))
-          console.log(`   💾 DB busy slots: ${dbBusySlots.length}`)
-          dbBusySlots.forEach(slot => console.log(`      - ${slot.start} to ${slot.end}`))
-          console.log(`   ⏰ Working hours: ${JSON.stringify(employeeWorkingHours)}`)
-          console.log(`   📆 Date being checked: ${dateObj.toISOString()}`)
+          // Use only calendar busy slots (no DB bookings)
+          console.log(`👤 Employee ${employee.name}: ${validBusySlots.length} calendar busy slots`)
           
           // Generate available slots for this employee
           const employeeSlots = generateAvailableSlots(
             dateObj,
             employeeWorkingHours,
-            allEmployeeBusySlots,
+            validBusySlots,
             duration,
             30 // 30-minute intervals for slot offerings
           )

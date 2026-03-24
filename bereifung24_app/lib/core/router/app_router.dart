@@ -25,13 +25,22 @@ import '../../features/reviews/presentation/screens/review_screen.dart';
 import '../../features/emergency/presentation/screens/emergency_screen.dart';
 import '../../features/ai_advisor/presentation/screens/ai_advisor_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
+import '../../features/workshop/screens/workshop_dashboard_screen.dart';
+import '../../features/workshop/screens/workshop_calendar_screen.dart';
+import '../../features/workshop/screens/workshop_bookings_screen.dart';
+import '../../features/workshop/screens/workshop_reviews_screen.dart';
+import '../../features/workshop/screens/workshop_profile_screen.dart';
+import '../../features/workshop/widgets/workshop_scaffold.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
+final _workshopShellKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  // Only rebuild router when login status changes, not on every user data update
-  final isLoggedIn = ref.watch(authStateProvider.select((s) => s.isAuthenticated));
+  // Rebuild router when auth state changes
+  final authState = ref.watch(authStateProvider);
+  final isLoggedIn = authState.isAuthenticated;
+  final isWorkshop = authState.user?.role == 'WORKSHOP';
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -46,8 +55,28 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Not logged in and NOT on auth route → go to login
       if (!isLoggedIn && !isAuthRoute) return '/login';
 
-      // Logged in and ON auth route → go to home
-      if (isLoggedIn && isAuthRoute) return '/home';
+      // Logged in and ON auth route → redirect to correct home
+      if (isLoggedIn && isAuthRoute) {
+        return isWorkshop ? '/workshop' : '/home';
+      }
+
+      // Workshop user trying to access customer routes → redirect
+      if (isLoggedIn && isWorkshop) {
+        final loc = state.matchedLocation;
+        if (loc.startsWith('/home') ||
+            loc.startsWith('/search') ||
+            loc.startsWith('/bookings') ||
+            loc.startsWith('/vehicles')) {
+          return '/workshop';
+        }
+      }
+
+      // Customer user trying to access workshop routes → redirect
+      if (isLoggedIn &&
+          !isWorkshop &&
+          state.matchedLocation.startsWith('/workshop')) {
+        return '/home';
+      }
 
       return null; // no redirect
     },
@@ -94,7 +123,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                 };
               }
               return NoTransitionPage(
-                child: SearchScreen(serviceType: serviceType, tireDimensionOverride: tireDimOverride),
+                child: SearchScreen(
+                    serviceType: serviceType,
+                    tireDimensionOverride: tireDimOverride),
               );
             },
             routes: [
@@ -157,8 +188,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'notifications',
                 parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) =>
-                    const NotificationSettingsScreen(),
+                builder: (context, state) => const NotificationSettingsScreen(),
               ),
               GoRoute(
                 path: 'agb',
@@ -181,6 +211,44 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => const FeedbackScreen(),
               ),
             ],
+          ),
+        ],
+      ),
+
+      // ── Workshop app with bottom navigation ──
+      ShellRoute(
+        navigatorKey: _workshopShellKey,
+        builder: (context, state, child) => WorkshopScaffold(child: child),
+        routes: [
+          GoRoute(
+            path: '/workshop',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WorkshopDashboardScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/workshop/calendar',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WorkshopCalendarScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/workshop/bookings',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WorkshopBookingsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/workshop/reviews',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WorkshopReviewsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/workshop/profile',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WorkshopProfileScreen(),
+            ),
           ),
         ],
       ),
@@ -229,29 +297,49 @@ final routerProvider = Provider<GoRouter>((ref) {
             withBalancing: params['balancing'] == '1',
             withStorage: params['storage'] == '1',
             withWashing: params['washing'] == '1',
-            searchBasePrice: params['searchBasePrice'] != null ? double.tryParse(params['searchBasePrice']!) : null,
+            searchBasePrice: params['searchBasePrice'] != null
+                ? double.tryParse(params['searchBasePrice']!)
+                : null,
             selectedPackage: params['selectedPackage'],
             tireBrand: params['tireBrand'],
             tireModel: params['tireModel'],
             tireArticleId: params['tireArticleId'],
-            tireQuantity: params['tireQuantity'] != null ? int.tryParse(params['tireQuantity']!) : null,
-            tirePricePerUnit: params['tirePricePerUnit'] != null ? double.tryParse(params['tirePricePerUnit']!) : null,
-            tireTotalPrice: params['tireTotalPrice'] != null ? double.tryParse(params['tireTotalPrice']!) : null,
+            tireQuantity: params['tireQuantity'] != null
+                ? int.tryParse(params['tireQuantity']!)
+                : null,
+            tirePricePerUnit: params['tirePricePerUnit'] != null
+                ? double.tryParse(params['tirePricePerUnit']!)
+                : null,
+            tireTotalPrice: params['tireTotalPrice'] != null
+                ? double.tryParse(params['tireTotalPrice']!)
+                : null,
             tireDimensions: params['tireDimensions'],
             tireFrontBrand: params['tireFrontBrand'],
             tireFrontModel: params['tireFrontModel'],
             tireFrontDimensions: params['tireFrontDimensions'],
-            tireFrontQty: params['tireFrontQty'] != null ? int.tryParse(params['tireFrontQty']!) : null,
-            tireFrontPrice: params['tireFrontPrice'] != null ? double.tryParse(params['tireFrontPrice']!) : null,
-            tireFrontPricePerUnit: params['tireFrontPricePerUnit'] != null ? double.tryParse(params['tireFrontPricePerUnit']!) : null,
+            tireFrontQty: params['tireFrontQty'] != null
+                ? int.tryParse(params['tireFrontQty']!)
+                : null,
+            tireFrontPrice: params['tireFrontPrice'] != null
+                ? double.tryParse(params['tireFrontPrice']!)
+                : null,
+            tireFrontPricePerUnit: params['tireFrontPricePerUnit'] != null
+                ? double.tryParse(params['tireFrontPricePerUnit']!)
+                : null,
             tireFrontArticleId: params['tireFrontArticleId'],
             tireFrontEan: params['tireFrontEan'],
             tireRearBrand: params['tireRearBrand'],
             tireRearModel: params['tireRearModel'],
             tireRearDimensions: params['tireRearDimensions'],
-            tireRearQty: params['tireRearQty'] != null ? int.tryParse(params['tireRearQty']!) : null,
-            tireRearPrice: params['tireRearPrice'] != null ? double.tryParse(params['tireRearPrice']!) : null,
-            tireRearPricePerUnit: params['tireRearPricePerUnit'] != null ? double.tryParse(params['tireRearPricePerUnit']!) : null,
+            tireRearQty: params['tireRearQty'] != null
+                ? int.tryParse(params['tireRearQty']!)
+                : null,
+            tireRearPrice: params['tireRearPrice'] != null
+                ? double.tryParse(params['tireRearPrice']!)
+                : null,
+            tireRearPricePerUnit: params['tireRearPricePerUnit'] != null
+                ? double.tryParse(params['tireRearPricePerUnit']!)
+                : null,
             tireRearArticleId: params['tireRearArticleId'],
             tireRearEan: params['tireRearEan'],
           );

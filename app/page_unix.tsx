@@ -2539,7 +2539,7 @@ export default function NewHomePage({
                                           options: [
                                             { 
                                               packageType: 'with_tire_purchase', 
-                                              label: 'Mit Reifenkauf', 
+                                              label: 'Mit Reifen', 
                                               info: 'Neue Reifen bei der Werkstatt kaufen und montieren lassen.'
                                             },
                                             { 

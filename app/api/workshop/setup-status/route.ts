@@ -60,8 +60,8 @@ export async function GET() {
     // 5. Supplier connected
     const hasSupplier = w.suppliers.length > 0
 
-    // 6. Landing page (active)
-    const hasLandingPage = !!(w.landingPage?.isActive)
+    // 6. Landing page exists (created)
+    const hasLandingPage = !!w.landingPage
 
     const steps = [
       {

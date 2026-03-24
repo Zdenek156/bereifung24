@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { authenticateWorkshopRequest } from '@/lib/workshop-auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,31 +13,26 @@ const serviceTypeLabels: Record<string, string> = {
   CLIMATE_SERVICE: 'Klimaservice'
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   console.log('🔵 Dashboard Stats API aufgerufen')
   
   try {
-    console.log('🔍 Hole Session...')
-    const session = await getServerSession(authOptions)
-
-    console.log('📊 Dashboard Stats - Session:', session ? { id: session.user.id, email: session.user.email, role: session.user.role } : 'NO SESSION')
-
-    if (!session || session.user.role !== 'WORKSHOP') {
-      console.log('❌ Dashboard Stats - Unauthorized:', { hasSession: !!session, role: session?.user?.role })
+    const auth = await authenticateWorkshopRequest(request)
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Hole Workshop-Profil
+    const workshopId = auth.workshopId
+
+    // Workshop-Name laden
     const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id },
-      select: { id: true }
+      where: { id: workshopId },
+      select: { companyName: true }
     })
 
-    if (!workshop) {
-      return NextResponse.json({ error: 'Workshop not found' }, { status: 404 })
-    }
-
-    const workshopId = workshop.id
+    // Revenue period from query param
+    const { searchParams } = new URL(request.url)
+    const period = searchParams.get('period') || '7d'
 
     // Zeitbereiche definieren
     const now = new Date()
@@ -51,6 +45,21 @@ export async function GET() {
     
     const sevenDaysFromNow = new Date(now)
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7)
+
+    // Revenue period date range
+    let revenueStartDate: Date | undefined
+    if (period === '1d') {
+      revenueStartDate = todayStart
+    } else if (period === '7d') {
+      revenueStartDate = sevenDaysAgo
+    } else if (period === '30d') {
+      revenueStartDate = new Date(now)
+      revenueStartDate.setDate(revenueStartDate.getDate() - 30)
+    } else if (period === '365d') {
+      revenueStartDate = new Date(now)
+      revenueStartDate.setFullYear(revenueStartDate.getFullYear() - 1)
+    }
+    // period === 'all' → revenueStartDate stays undefined (no date filter)
 
     // Parallelisiere alle Datenbankabfragen für Performance
     const [
@@ -110,13 +119,11 @@ export async function GET() {
         take: 10
       }),
 
-      // Umsatz der letzten 7 Tage
+      // Umsatz für den gewählten Zeitraum
       prisma.directBooking.aggregate({
         where: {
           workshopId: workshopId,
-          createdAt: {
-            gte: sevenDaysAgo
-          },
+          ...(revenueStartDate ? { createdAt: { gte: revenueStartDate } } : {}),
           status: {
             in: ['CONFIRMED', 'COMPLETED']
           }
@@ -175,7 +182,7 @@ export async function GET() {
           }
         },
         orderBy: { createdAt: 'desc' },
-        take: 5
+        take: 15
       }),
 
       // Neueste Bewertungen
@@ -196,7 +203,7 @@ export async function GET() {
           }
         },
         orderBy: { createdAt: 'desc' },
-        take: 3
+        take: 10
       })
     ])
 
@@ -214,7 +221,7 @@ export async function GET() {
     const recentActivities = []
     
     // Neue Buchungen
-    for (const booking of recentBookings.slice(0, 3)) {
+    for (const booking of recentBookings) {
       const serviceName = serviceTypeLabels[booking.serviceType] || booking.serviceType
       const customerName = `${booking.customer.user.firstName} ${booking.customer.user.lastName}`
       recentActivities.push({
@@ -226,14 +233,14 @@ export async function GET() {
       })
     }
 
-    // Zahlungen (aus bezahlten Buchungen)
-    for (const booking of recentBookings.slice(0, 2)) {
-      if (booking.paymentStatus === 'PAID' && booking.paidAt) {
-        const amount = booking.workshopPayout ? Number(booking.workshopPayout).toFixed(2) : Number(booking.totalPrice).toFixed(2)
+    // Zahlungen (aus bezahlten Buchungen - Workshop-Auszahlung anzeigen)
+    for (const booking of recentBookings) {
+      if (booking.paymentStatus === 'PAID' && booking.paidAt && booking.workshopPayout) {
+        const amount = Number(booking.workshopPayout).toFixed(2)
         recentActivities.push({
           id: `payment-${booking.id}`,
           type: 'payment',
-          message: `Zahlung erhalten - ${amount} €`,
+          message: `Auszahlung erhalten - ${amount} €`,
           time: formatTimeAgo(booking.paidAt),
           date: booking.paidAt
         })
@@ -256,15 +263,19 @@ export async function GET() {
     recentActivities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
     const stats = {
+      workshopName: workshop?.companyName ?? '',
       todaysBookings: todaysBookingsCount,
-      todaysBookingsList: todaysBookings,
+      todaysBookings_list: todaysBookings,
       totalRevenue: last7DaysRevenue._sum.totalPrice ? Number(last7DaysRevenue._sum.totalPrice) : 0,
+      revenue7Days: last7DaysRevenue._sum.totalPrice ? Number(last7DaysRevenue._sum.totalPrice) : 0,
       workshopPayout: last7DaysRevenue._sum.workshopPayout ? Number(last7DaysRevenue._sum.workshopPayout) : 0,
       bookingsCount7Days: last7DaysRevenue._count.id,
+      revenue7DaysCount: last7DaysRevenue._count.id,
       upcomingBookings: upcomingBookingsCount,
       averageRating: reviewsData._avg.rating || 0,
       totalReviews: reviewsData._count.id,
-      recentActivities: recentActivities.slice(0, 6) // Max 6 Aktivitäten
+      revenueperiod: period,
+      recentActivities: recentActivities.slice(0, 20) // Max 20 Aktivitäten
     }
 
     return NextResponse.json(stats)

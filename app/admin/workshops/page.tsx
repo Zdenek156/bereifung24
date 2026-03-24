@@ -13,6 +13,7 @@ interface ProfileDetails {
   hasPricing: boolean
   hasSupplier: boolean
   hasLandingPage: boolean
+  hasLandingPageExists: boolean
 }
 
 interface Workshop {
@@ -110,6 +111,31 @@ export default function WorkshopManagementPage() {
     } catch (error) {
       console.error('Error updating workshop:', error)
       alert('Fehler beim Aktualisieren der Werkstatt')
+    }
+  }
+
+  const deleteLandingPage = async (workshopId: string, workshopName: string) => {
+    const confirmed = window.confirm(
+      `Landing Page der Werkstatt "${workshopName}" wirklich löschen?\n\nDie Werkstatt kann danach eine neue Landing Page erstellen.`
+    )
+    
+    if (!confirmed) return
+
+    try {
+      const response = await fetch(`/api/admin/workshops/${workshopId}/landing-page`, {
+        method: 'DELETE'
+      })
+      
+      if (response.ok) {
+        alert('Landing Page erfolgreich gelöscht')
+        fetchWorkshops()
+      } else {
+        const data = await response.json()
+        alert(data.error || 'Fehler beim Löschen der Landing Page')
+      }
+    } catch (error) {
+      console.error('Error deleting landing page:', error)
+      alert('Fehler beim Löschen der Landing Page')
     }
   }
 
@@ -429,6 +455,14 @@ export default function WorkshopManagementPage() {
                       >
                         CRM / Notizen
                       </button>
+                      {workshop.profileDetails?.hasLandingPageExists && (
+                        <button
+                          onClick={() => deleteLandingPage(workshop.id, workshop.companyName)}
+                          className="px-4 py-2 rounded-lg font-medium bg-amber-100 text-amber-800 hover:bg-amber-200 transition-colors text-sm"
+                        >
+                          Landing Page löschen
+                        </button>
+                      )}
                       <div className="flex gap-2">
                         <button
                           onClick={() => toggleVerification(workshop.id, workshop.isVerified, workshop.companyName)}

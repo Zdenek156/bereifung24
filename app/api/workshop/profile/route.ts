@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { geocodeAddress } from '@/lib/geocoding'
+import { authenticateWorkshopRequest } from '@/lib/workshop-auth'
 
 // GET /api/workshop/profile - Get workshop profile
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session || session.user.role !== 'WORKSHOP') {
+    const auth = await authenticateWorkshopRequest(request)
+    if (!auth) {
       return NextResponse.json(
         { error: 'Nicht autorisiert' },
         { status: 401 }
@@ -17,7 +17,7 @@ export async function GET() {
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.userId },
       include: {
         workshop: true,
       },

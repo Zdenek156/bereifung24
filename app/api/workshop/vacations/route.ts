@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { authenticateWorkshopRequest } from '@/lib/workshop-auth'
 
 // GET - Urlaubszeiten der Werkstatt abrufen
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user || session.user.role !== 'WORKSHOP') {
+    const auth = await authenticateWorkshopRequest(req)
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id },
+      where: { id: auth.workshopId },
       include: {
         workshopVacations: {
           orderBy: { startDate: 'asc' }
@@ -49,18 +47,9 @@ export async function GET(req: NextRequest) {
 // POST - Neue Urlaubszeit hinzufügen
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user || session.user.role !== 'WORKSHOP') {
+    const auth = await authenticateWorkshopRequest(req)
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id }
-    })
-
-    if (!workshop) {
-      return NextResponse.json({ error: 'Workshop nicht gefunden' }, { status: 404 })
     }
 
     const { startDate, endDate, reason } = await req.json()
@@ -78,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     const vacation = await prisma.workshopVacation.create({
       data: {
-        workshopId: workshop.id,
+        workshopId: auth.workshopId,
         startDate: start,
         endDate: end,
         reason: reason || null
@@ -95,9 +84,8 @@ export async function POST(req: NextRequest) {
 // DELETE - Urlaubszeit löschen
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user || session.user.role !== 'WORKSHOP') {
+    const auth = await authenticateWorkshopRequest(req)
+    if (!auth) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -108,19 +96,11 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Vacation ID erforderlich' }, { status: 400 })
     }
 
-    const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id }
-    })
-
-    if (!workshop) {
-      return NextResponse.json({ error: 'Workshop nicht gefunden' }, { status: 404 })
-    }
-
     // Sicherstellen, dass die Urlaubszeit zur Werkstatt gehört
     const vacation = await prisma.workshopVacation.findFirst({
       where: {
         id: vacationId,
-        workshopId: workshop.id
+        workshopId: auth.workshopId
       }
     })
 

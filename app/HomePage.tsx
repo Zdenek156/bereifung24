@@ -360,6 +360,7 @@ export default function NewHomePage({
   const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
   // Track if filters changed during loading — triggers re-search after loading completes
   const pendingSearchRef = useRef(false)
+  const isInitialSearchRef = useRef(true)
 
   // AI-selected tire (from KI Berater)
   const [aiSelectedTire, setAiSelectedTire] = useState<{
@@ -681,8 +682,8 @@ export default function NewHomePage({
             if (searchState.fixedWorkshopContext) {
               setFixedWorkshopContext(searchState.fixedWorkshopContext)
             }
-            // Restore scroll position
-            if (searchState.scrollPosition) {
+            // Restore scroll position (only on main homepage, not on landing pages)
+            if (searchState.scrollPosition && !hideHeroHeader) {
               setTimeout(() => window.scrollTo(0, searchState.scrollPosition), 100)
             }
             console.log('✅ [Back Navigation] Search restored successfully (Service:', searchState.selectedService, ', Packages:', searchState.selectedPackages, ')')
@@ -748,8 +749,8 @@ export default function NewHomePage({
               console.error('Error parsing packages:', e)
             }
           }
-          // Restore scroll position
-          if (savedScroll) {
+          // Restore scroll position (only on main homepage, not on landing pages)
+          if (savedScroll && !hideHeroHeader) {
             setTimeout(() => window.scrollTo(0, Number(savedScroll)), 100)
           }
           console.log('✅ [Hard Refresh] Search restored successfully, workshops:', parsedWorkshops.length)
@@ -769,8 +770,14 @@ export default function NewHomePage({
       lon: fixedWorkshopContext.longitude,
     }
 
-    setHasSearched(true)
     setCustomerLocation(location)
+    setHasSearched(true)
+
+    // On service card landing pages (no service selected yet), skip initial search
+    if (!selectedService) {
+      return
+    }
+
     setLoading(true)
     setError(null)
     setWorkshops([])
@@ -1421,10 +1428,14 @@ export default function NewHomePage({
         // Browser back/forward will simply re-trigger the search via useEffect
         console.log('✅ [searchWorkshops] Search completed successfully, workshops:', workshops.length)
         
-        // Auto-scroll to results after search completes
-        setTimeout(() => {
-          searchResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-        }, 100)
+        // Auto-scroll to results after search completes (skip on initial LP load)
+        if (isInitialSearchRef.current) {
+          isInitialSearchRef.current = false
+        } else {
+          setTimeout(() => {
+            searchResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }, 100)
+        }
       } else {
         setWorkshops([])
         setError(result.error || 'Keine Werkstätten gefunden')
@@ -2247,7 +2258,7 @@ export default function NewHomePage({
                   const Icon = service.icon
                   const isActive = selectedService === service.id
                   const pricing = serviceCardMap[service.id]
-                  const displayPrice = pricing?.basePrice4 ?? pricing?.basePrice
+                  const displayPrice = pricing?.basePrice
 
                   return (
                     <div
@@ -2277,7 +2288,7 @@ export default function NewHomePage({
                         <div>
                           <p className="text-xs text-gray-500">Preis</p>
                           <p className="text-2xl font-extrabold text-primary-600">
-                            {typeof displayPrice === 'number' ? `${displayPrice.toFixed(2).replace('.', ',')} €` : 'Preis auf Anfrage'}
+                            {typeof displayPrice === 'number' && displayPrice > 0 ? `ab ${displayPrice.toFixed(2).replace('.', ',')} €` : 'Preis auf Anfrage'}
                           </p>
                         </div>
                         {pricing?.durationMinutes && (
@@ -2743,7 +2754,7 @@ export default function NewHomePage({
                                           options: [
                                             { 
                                               packageType: 'with_tire_purchase', 
-                                              label: 'Mit Reifenkauf', 
+                                              label: 'Mit Reifen', 
                                               info: 'Neue Reifen bei der Werkstatt kaufen und montieren lassen.'
                                             },
                                             { 
@@ -3143,7 +3154,7 @@ export default function NewHomePage({
                 )}
 
                 {/* No Results */}
-                {!loading && !error && workshops.length === 0 && hasSearched && (
+                {!loading && !error && workshops.length === 0 && hasSearched && selectedService && (
                   <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
                     {isWorkshopFixed ? (
                       <>

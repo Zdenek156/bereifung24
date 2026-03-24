@@ -174,9 +174,15 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                 where: { isActive: true },
                 select: {
                   price: true,
+                  packageType: true,
+                  durationMinutes: true,
                 },
               },
             },
+          },
+          tireChangePricing: {
+            where: { isActive: true },
+            select: { pricePerTire: true, durationPerTire: true },
           },
         }
       }
@@ -437,16 +443,35 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
               hideHeroHeader
               allowedServiceTypes={allowedServiceTypes}
               serviceCards={workshopServiceList.map((service) => {
-                const packagePrices = service.servicePackages
-                  .map((pkg) => pkg.price)
-                  .filter((price) => typeof price === 'number' && price > 0)
-                const minPackagePrice = packagePrices.length > 0 ? Math.min(...packagePrices) : null
+                let cheapestPrice: number | null = null
+                let cheapestDuration: number | null = null
+
+                if (service.serviceType === 'TIRE_CHANGE') {
+                  // TIRE_CHANGE: cheapest pricePerTire × 2 from rim-size pricing
+                  const tireChangeTiers = (landingPage.workshop.tireChangePricing || [])
+                    .filter((p: { pricePerTire: number }) => typeof p.pricePerTire === 'number' && p.pricePerTire > 0)
+                  if (tireChangeTiers.length > 0) {
+                    const cheapest = tireChangeTiers.reduce((min: any, p: any) => p.pricePerTire < min.pricePerTire ? p : min, tireChangeTiers[0])
+                    cheapestPrice = cheapest.pricePerTire * 2
+                    cheapestDuration = (cheapest.durationPerTire || 15) * 2
+                  }
+                } else {
+                  // Other services: cheapest package price (exclude disposal/add-on types)
+                  const validPackages = service.servicePackages
+                    .filter((pkg: { packageType: string; price: number }) => !['disposal'].includes(pkg.packageType))
+                    .filter((pkg: { price: number }) => typeof pkg.price === 'number' && pkg.price > 0)
+                  if (validPackages.length > 0) {
+                    const cheapest = validPackages.reduce((min: any, pkg: any) => pkg.price < min.price ? pkg : min, validPackages[0])
+                    cheapestPrice = cheapest.price
+                    cheapestDuration = cheapest.durationMinutes
+                  }
+                }
 
                 return {
                   serviceType: service.serviceType,
-                  basePrice: minPackagePrice ?? service.basePrice,
+                  basePrice: cheapestPrice ?? service.basePrice,
                   basePrice4: service.basePrice4,
-                  durationMinutes: service.durationMinutes,
+                  durationMinutes: cheapestDuration ?? service.durationMinutes,
                   durationMinutes4: service.durationMinutes4,
                 }
               })}

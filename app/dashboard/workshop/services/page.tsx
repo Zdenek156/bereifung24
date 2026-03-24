@@ -163,8 +163,8 @@ export default function WorkshopServicesPage() {
       if (response.ok) {
         const data = await response.json()
         const pricingMap: { [rimSize: number]: TireChangePricingEntry } = {}
-        // Initialize all sizes 13-23
-        for (let s = 13; s <= 23; s++) {
+        // Initialize all sizes 13-24
+        for (let s = 13; s <= 24; s++) {
           pricingMap[s] = { pricePerTire: '', durationPerTire: '15', isActive: false }
         }
         // Override with saved values
@@ -186,7 +186,7 @@ export default function WorkshopServicesPage() {
 
   const initializeTireChangePricing = () => {
     const pricingMap: { [rimSize: number]: TireChangePricingEntry } = {}
-    for (let s = 13; s <= 23; s++) {
+    for (let s = 13; s <= 24; s++) {
       pricingMap[s] = { pricePerTire: '', durationPerTire: '15', isActive: false }
     }
     setTireChangePricing(pricingMap)
@@ -194,7 +194,7 @@ export default function WorkshopServicesPage() {
 
   const applyTemplateToAllSizes = () => {
     const newPricing = { ...tireChangePricing }
-    for (let s = 13; s <= 23; s++) {
+    for (let s = 13; s <= 24; s++) {
       newPricing[s] = {
         pricePerTire: tireChangePricingTemplate.pricePerTire,
         durationPerTire: tireChangePricingTemplate.durationPerTire,
@@ -1197,7 +1197,7 @@ export default function WorkshopServicesPage() {
                       <div className="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-3">
                         <p className="text-xs text-blue-800 dark:text-blue-300">
                           <span className="font-semibold">📊 Übersicht:</span>{' '}
-                          {activeSizes.length} von 11 Größen aktiv — 
+                          {activeSizes.length} von 12 Größen aktiv — 
                           Preis/Reifen: {minPrice === maxPrice 
                             ? `${minPrice.toFixed(2).replace('.', ',')} €` 
                             : `${minPrice.toFixed(2).replace('.', ',')} € – ${maxPrice.toFixed(2).replace('.', ',')} €`

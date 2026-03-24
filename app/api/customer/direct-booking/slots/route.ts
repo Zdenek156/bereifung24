@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { google } from 'googleapis'
+import { isPublicHolidayByZip } from '@/lib/german-holidays'
 
 /**
  * POST /api/customer/direct-booking/slots
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest) {
     const workshop = await prisma.workshop.findUnique({
       where: { id: workshopId },
       include: {
+        user: { select: { zipCode: true } },
         workshopVacations: {
           where: {
             startDate: { lte: new Date(date) },
@@ -53,7 +55,17 @@ export async function POST(request: NextRequest) {
               { googleCalendarId: { not: null } },
               { googleRefreshToken: { not: null } }
             ]
-          }
+          },
+          include: {
+            employeeVacations: {
+              where: {
+                startDate: { lte: new Date(date + 'T23:59:59') },
+                endDate: { gte: new Date(date + 'T00:00:00') }
+              }
+            }
+          },
+          // Need workingHours to check if employee works this day
+          // workingHours is included by default with include
         }
       }
     })
@@ -71,6 +83,38 @@ export async function POST(request: NextRequest) {
         success: true,
         slots: [],
         message: 'Werkstatt hat an diesem Tag Urlaub'
+      })
+    }
+
+    // Check if date is a public holiday
+    const wsZip = workshop.user?.zipCode
+    if (wsZip && isPublicHolidayByZip(date, wsZip)) {
+      return NextResponse.json({
+        success: true,
+        slots: [],
+        message: 'Feiertag'
+      })
+    }
+
+    // Check if any employee with calendar works this day and is not on vacation
+    const dayOfWeekCheck = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase()
+    const employeesAvailableToday = workshop.employees.filter((emp: any) => {
+      if (emp.employeeVacations && emp.employeeVacations.length > 0) return false
+      if (emp.workingHours) {
+        try {
+          let hours = JSON.parse(emp.workingHours)
+          if (typeof hours === 'string') hours = JSON.parse(hours)
+          const dayHours = hours[dayOfWeekCheck]
+          if (!dayHours || !dayHours.working) return false
+        } catch (e) { /* ignore */ }
+      }
+      return true
+    })
+    if (employeesAvailableToday.length === 0) {
+      return NextResponse.json({
+        success: true,
+        slots: [],
+        message: 'Kein Mitarbeiter verfügbar an diesem Tag'
       })
     }
 
@@ -241,7 +285,16 @@ export async function POST(request: NextRequest) {
         
         // Extract start times from events and mark slots as booked
         events.forEach(event => {
-          if (event.start?.dateTime) {
+          if (event.start?.date && !event.start?.dateTime) {
+            // All-day event: block the entire day (every 30 min from 00:00 to 23:30)
+            console.log('Workshop all-day event detected:', event.summary)
+            for (let m = 0; m < 24 * 60; m += 30) {
+              const slotTime = `${Math.floor(m / 60).toString().padStart(2, '0')}:${(m % 60).toString().padStart(2, '0')}`
+              if (!googleCalendarBookedSlots.includes(slotTime)) {
+                googleCalendarBookedSlots.push(slotTime)
+              }
+            }
+          } else if (event.start?.dateTime) {
             // Convert UTC to Europe/Berlin timezone
             const eventStart = new Date(event.start.dateTime)
             const eventEnd = new Date(event.end?.dateTime || eventStart)
@@ -284,6 +337,11 @@ export async function POST(request: NextRequest) {
     
     // Check employee-level Google Calendars
     for (const employee of workshop.employees) {
+      // Skip employees on vacation
+      if (employee.employeeVacations && employee.employeeVacations.length > 0) {
+        console.log(`Employee ${employee.name} is on vacation, skipping`)
+        continue
+      }
       if (employee.googleCalendarId && employee.googleRefreshToken) {
         try {
           const oauth2Client = new google.auth.OAuth2(
@@ -316,7 +374,16 @@ export async function POST(request: NextRequest) {
           
           // Extract start times from events and mark slots as booked
           events.forEach(event => {
-            if (event.start?.dateTime) {
+            if (event.start?.date && !event.start?.dateTime) {
+              // All-day event: block the entire day (every 30 min from 00:00 to 23:30)
+              console.log(`Employee ${employee.name} all-day event detected:`, event.summary)
+              for (let m = 0; m < 24 * 60; m += 30) {
+                const slotTime = `${Math.floor(m / 60).toString().padStart(2, '0')}:${(m % 60).toString().padStart(2, '0')}`
+                if (!googleCalendarBookedSlots.includes(slotTime)) {
+                  googleCalendarBookedSlots.push(slotTime)
+                }
+              }
+            } else if (event.start?.dateTime) {
               // Convert UTC to Europe/Berlin timezone
               const eventStart = new Date(event.start.dateTime)
               const eventEnd = new Date(event.end?.dateTime || eventStart)
@@ -335,9 +402,6 @@ export async function POST(request: NextRequest) {
               }
               
               // Block ALL time slots that would overlap with this event
-              // We need to check which of our service slots (generated based on service duration)
-              // would overlap with this calendar event
-              // For this, we generate all possible time slots and mark them as busy
               let currentMinutes = berlinStart.getHours() * 60 + berlinStart.getMinutes()
               const endMinutes = berlinEnd.getHours() * 60 + berlinEnd.getMinutes()
               

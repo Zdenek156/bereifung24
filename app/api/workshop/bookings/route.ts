@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { authenticateWorkshopRequest } from '@/lib/workshop-auth'
 
 /**
  * GET /api/workshop/bookings
@@ -9,31 +8,11 @@ import { prisma } from '@/lib/prisma'
  */
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
+    const auth = await authenticateWorkshopRequest(request)
+    if (!auth) {
       return NextResponse.json(
         { error: 'Nicht authentifiziert' },
         { status: 401 }
-      )
-    }
-
-    if (session.user.role !== 'WORKSHOP') {
-      return NextResponse.json(
-        { error: 'Keine Berechtigung' },
-        { status: 403 }
-      )
-    }
-
-    // Find workshop by user ID
-    const workshop = await prisma.workshop.findUnique({
-      where: { userId: session.user.id }
-    })
-
-    if (!workshop) {
-      return NextResponse.json(
-        { error: 'Werkstatt nicht gefunden' },
-        { status: 404 }
       )
     }
 
@@ -43,11 +22,19 @@ export async function GET(request: NextRequest) {
 
     // Build where clause
     const where: any = {
-      workshopId: workshop.id
+      workshopId: auth.workshopId
     }
 
     if (status && status !== 'all') {
-      where.status = status.toUpperCase()
+      if (status === 'upcoming') {
+        // Bevorstehend: date >= today AND status CONFIRMED or RESERVED
+        const todayStart = new Date()
+        todayStart.setHours(0, 0, 0, 0)
+        where.date = { gte: todayStart }
+        where.status = { in: ['CONFIRMED', 'RESERVED'] }
+      } else {
+        where.status = status.toUpperCase()
+      }
     }
 
     // Fetch bookings with related data

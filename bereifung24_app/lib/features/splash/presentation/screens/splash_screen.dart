@@ -158,25 +158,22 @@ class _SplashScreenState extends State<SplashScreen>
                 final centerX = size.width  * 0.5;
                 final centerY = size.height * 0.5;
 
-                // ── Einheitliche Höhe für beide Logo-Teile ──────────────────
-                // Logo-Breite max 88% der Screenbreite → Höhe daraus ableiten
-                const _ratioSum   = _reifenspurRatio + _b24Ratio; // 2.868
-                final gap         = size.width * 0.02;
-                final maxLogoW    = size.width * 0.88;
-                // Höhe so wählen dass totalW = maxLogoW, aber max 22% der Höhe
-                final logoHeightByWidth  = (maxLogoW - gap) / _ratioSum;
-                final logoHeightByHeight = size.height * 0.22;
-                final logoHeight  = logoHeightByWidth < logoHeightByHeight
-                    ? logoHeightByWidth
-                    : logoHeightByHeight;
+                // ── Naht genau in der Screenmitte, kein Gap ─────────────────
+                // B24 muss in die rechte Hälfte passen → Höhe daraus ableiten
+                // logoHeight × _b24Ratio ≤ centerX  →  logoHeight ≤ centerX / _b24Ratio
+                const _marginFactor = 0.96; // 4% Rand rechts
+                final logoHeightByB24     = (centerX * _marginFactor) / _b24Ratio;
+                final logoHeightByScreen  = size.height * 0.20;
+                final logoHeight = logoHeightByB24 < logoHeightByScreen
+                    ? logoHeightByB24
+                    : logoHeightByScreen;
 
                 final reifenspurW = logoHeight * _reifenspurRatio;
                 final b24W        = logoHeight * _b24Ratio;
-                final totalW      = reifenspurW + gap + b24W;
 
-                // Beide Teile zentriert nebeneinander
-                final reifenspurLeft = centerX - totalW / 2;
-                final b24Left        = reifenspurLeft + reifenspurW + gap;
+                // Naht (Join-Point) = Screenmitte, kein Gap
+                final reifenspurLeft = centerX - reifenspurW;
+                final b24Left        = centerX;
 
                 return Stack(
                   children: [

@@ -1,0 +1,92 @@
+workflows:
+  ios-release:
+    name: iOS Release
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    working_directory: bereifung24_app
+    integrations:
+      app_store_connect: Bereifung24_ASC_Key
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: de.bereifung24.bereifung24App
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      groups:
+        - bereifung24_env
+    scripts:
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+      - name: Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-name=1.0.0 \
+            --build-number=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1)) \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - bereifung24_app/build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - bereifung24_app/flutter_drive.log
+    publishing:
+      email:
+        recipients:
+          - zdenek156@gmail.com
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        expire_build_submitted_for_review: true
+
+  ios-debug:
+    name: iOS Debug (Ad Hoc)
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    working_directory: bereifung24_app
+    integrations:
+      app_store_connect: Bereifung24_ASC_Key
+    environment:
+      ios_signing:
+        distribution_type: ad_hoc
+        bundle_identifier: de.bereifung24.bereifung24App
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: develop
+          include: true
+    scripts:
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+      - name: Flutter packages
+        script: |
+          flutter packages pub get
+      - name: Build IPA (Ad Hoc)
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - bereifung24_app/build/ios/ipa/*.ipa
+    publishing:
+      email:
+        recipients:
+          - zdenek156@gmail.com
+        notify:
+          success: true
+          failure: true

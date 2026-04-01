@@ -16,11 +16,12 @@ workflows:
       - name: Flutter packages
         script: |
           flutter packages pub get
-      - name: Set up code signing
+      - name: Set up signing, Build IPA and Upload
         script: |
-          # Generate a fresh private key for certificate creation
+          set -e
+          
+          # ===== 1. CODE SIGNING =====
           openssl genrsa 2048 > /tmp/cert_private_key.pem 2>/dev/null
-          export CERTIFICATE_PRIVATE_KEY=$(cat /tmp/cert_private_key.pem)
           
           echo "=== Fetching/creating signing files ==="
           app-store-connect fetch-signing-files "de.bereifung24.bereifung24App" \
@@ -28,42 +29,102 @@ workflows:
             --create \
             --certificate-key=/tmp/cert_private_key.pem
           
-          echo "=== Setting up keychain ==="
           keychain initialize
           keychain add-certificates
-          
-          echo "=== Applying profiles to Xcode project ==="
           xcode-project use-profiles
           
           echo "=== Installed certificates ==="
           security find-identity -v -p codesigning
           
-          echo "=== Export options plist ==="
+          echo "=== Codemagic export_options.plist ==="
           cat /Users/builder/export_options.plist || echo "Not found"
           
-          # Fix certificate name if needed
+          # Fix the plist: iOS Distribution → Apple Distribution, array → dict
           if [ -f /Users/builder/export_options.plist ]; then
             sed -i '' 's/iOS Distribution/Apple Distribution/g' /Users/builder/export_options.plist
+            
+            # Check if provisioningProfiles is array (broken) instead of dict
+            if grep -q '<array/>' /Users/builder/export_options.plist; then
+              echo "=== Fixing broken provisioningProfiles (array → dict) ==="
+              # Get profile name from installed profiles
+              PROFILE_FILE=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
+              PROFILE_NAME=""
+              if [ -n "$PROFILE_FILE" ]; then
+                PROFILE_NAME=$(security cms -D -i "$PROFILE_FILE" 2>/dev/null | plutil -extract Name raw - 2>/dev/null || echo "")
+              fi
+              
+              CERT_NAME=$(security find-identity -v -p codesigning | grep "Apple Distribution\|iPhone Distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
+              
+              echo "=== Using cert: $CERT_NAME, profile: $PROFILE_NAME ==="
+              
+              # Create a proper export options plist from scratch
+              cat > /Users/builder/export_options.plist << PLISTEOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store</string>
+	<key>teamID</key>
+	<string>Q5GN6QWF45</string>
+	<key>uploadBitcode</key>
+	<false/>
+	<key>uploadSymbols</key>
+	<true/>
+	<key>signingStyle</key>
+	<string>manual</string>
+	<key>signingCertificate</key>
+	<string>${CERT_NAME:-Apple Distribution}</string>
+	<key>provisioningProfiles</key>
+	<dict>
+		<key>de.bereifung24.bereifung24App</key>
+		<string>${PROFILE_NAME}</string>
+	</dict>
+</dict>
+</plist>
+PLISTEOF
+            fi
+            
+            echo "=== Final export_options.plist ==="
+            cat /Users/builder/export_options.plist
           fi
-      - name: Build IPA
-        script: |
+          
+          # ===== 2. BUILD IPA =====
           BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1))
           echo "=== Build number: $BUILD_NUMBER ==="
           
           flutter build ipa --release \
             --build-name=1.0.1 \
             --build-number=$BUILD_NUMBER \
-            --export-options-plist=/Users/builder/export_options.plist
-      - name: Upload to TestFlight
-        script: |
+            --export-options-plist=/Users/builder/export_options.plist || true
+          
+          # Check if IPA was created
           IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
-          if [ -n "$IPA_PATH" ]; then
-            echo "=== Uploading $IPA_PATH to TestFlight ==="
-            app-store-connect publish --path "$IPA_PATH"
-          else
-            echo "ERROR: No IPA found!"
+          
+          # Fallback: manual export from xcarchive
+          if [ -z "$IPA_PATH" ]; then
+            echo "=== Flutter did not create IPA, exporting manually ==="
+            ARCHIVE_PATH=$(find build/ios/archive -name "*.xcarchive" -type d 2>/dev/null | head -1)
+            if [ -n "$ARCHIVE_PATH" ]; then
+              mkdir -p build/ios/ipa
+              xcodebuild -exportArchive \
+                -archivePath "$ARCHIVE_PATH" \
+                -exportOptionsPlist /Users/builder/export_options.plist \
+                -exportPath build/ios/ipa
+              IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
+            fi
+          fi
+          
+          if [ -z "$IPA_PATH" ]; then
+            echo "=== FATAL: No IPA created ==="
             exit 1
           fi
+          
+          echo "=== IPA created: $IPA_PATH ==="
+          
+          # ===== 3. UPLOAD =====
+          echo "=== Uploading to TestFlight ==="
+          app-store-connect publish --path "$IPA_PATH"
     artifacts:
       - bereifung24_app/build/ios/ipa/*.ipa
       - build/ios/ipa/*.ipa

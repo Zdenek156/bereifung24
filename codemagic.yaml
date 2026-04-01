@@ -21,13 +21,14 @@ workflows:
           set -e
 
           # ===== 1. CODE SIGNING =====
+          # Generate a fresh RSA private key and set as env var
           openssl genrsa 2048 > /tmp/cert_private_key.pem 2>/dev/null
+          export CERTIFICATE_PRIVATE_KEY=$(cat /tmp/cert_private_key.pem)
 
           echo "=== Fetching/creating signing files ==="
           app-store-connect fetch-signing-files "de.bereifung24.bereifung24App" \
             --type IOS_APP_STORE \
-            --create \
-            --certificate-key=/tmp/cert_private_key.pem
+            --create
 
           keychain initialize
           keychain add-certificates

@@ -7,9 +7,6 @@ workflows:
     integrations:
       app_store_connect: Bereifung24_ASC_Key
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: de.bereifung24.bereifung24App
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -19,14 +16,35 @@ workflows:
       - name: Flutter packages
         script: |
           flutter packages pub get
-      - name: Verify signing setup
+      - name: Set up code signing
         script: |
+          # Generate a fresh private key for certificate creation
+          openssl genrsa 2048 > /tmp/cert_private_key.pem 2>/dev/null
+          export CERTIFICATE_PRIVATE_KEY=$(cat /tmp/cert_private_key.pem)
+          
+          echo "=== Fetching/creating signing files ==="
+          app-store-connect fetch-signing-files "de.bereifung24.bereifung24App" \
+            --type IOS_APP_STORE \
+            --create \
+            --certificate-key=/tmp/cert_private_key.pem
+          
+          echo "=== Setting up keychain ==="
+          keychain initialize
+          keychain add-certificates
+          
+          echo "=== Applying profiles to Xcode project ==="
+          xcode-project use-profiles
+          
           echo "=== Installed certificates ==="
           security find-identity -v -p codesigning
-          echo "=== Provisioning profiles ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles"
-          echo "=== Codemagic export_options.plist ==="
+          
+          echo "=== Export options plist ==="
           cat /Users/builder/export_options.plist || echo "Not found"
+          
+          # Fix certificate name if needed
+          if [ -f /Users/builder/export_options.plist ]; then
+            sed -i '' 's/iOS Distribution/Apple Distribution/g' /Users/builder/export_options.plist
+          fi
       - name: Build IPA
         script: |
           BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1))

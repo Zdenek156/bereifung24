@@ -9,7 +9,6 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: default
       groups:
         - bereifung24_env
     scripts:
@@ -24,9 +23,6 @@ workflows:
       - name: Flutter packages
         script: |
           flutter packages pub get
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios && pod install
       - name: Build IPA
         script: |
           flutter build ipa --release \

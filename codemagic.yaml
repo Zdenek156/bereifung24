@@ -46,10 +46,25 @@ workflows:
             --build-name=1.0.1 \
             --build-number=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1)) \
             --export-options-plist=/Users/builder/export_options.plist
+      - name: Upload to TestFlight
+        script: |
+          echo "=== Looking for IPA ==="
+          find build/ios/ipa -name "*.ipa" -type f 2>/dev/null || echo "No IPA found in build/ios/ipa"
+          find /Users/builder/clone -name "*.ipa" -type f 2>/dev/null || echo "No IPA found anywhere"
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f | head -1)
+          if [ -n "$IPA_PATH" ]; then
+            echo "=== Uploading $IPA_PATH to TestFlight ==="
+            app-store-connect publish \
+              --path "$IPA_PATH" \
+              --testflight \
+              --beta-group "App Store Connect Users"
+          else
+            echo "ERROR: No IPA file found!"
+            exit 1
+          fi
     artifacts:
       - bereifung24_app/build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-      - bereifung24_app/flutter_drive.log
+      - build/ios/ipa/*.ipa
     publishing:
       email:
         recipients:

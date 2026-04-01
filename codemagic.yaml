@@ -7,21 +7,23 @@ workflows:
     integrations:
       app_store_connect: Bereifung24_ASC_Key
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: de.bereifung24.bereifung24App
       flutter: stable
       xcode: latest
       cocoapods: default
       groups:
         - bereifung24_env
     scripts:
+      - name: Set up code signing
+        script: |
+          app-store-connect fetch-signing-files "de.bereifung24.bereifung24App" \
+            --type IOS_APP_STORE \
+            --create
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
       - name: Install CocoaPods dependencies
         script: |
           cd ios && pod install
-      - name: Set up code signing
-        script: |
-          xcode-project use-profiles
       - name: Flutter packages
         script: |
           flutter packages pub get

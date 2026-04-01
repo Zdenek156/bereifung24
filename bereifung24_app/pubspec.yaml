@@ -32,8 +32,8 @@ dependencies:
   flutter_stripe: ^10.1.1
 
   # Push Notifications
-  firebase_core: ^2.27.0
-  firebase_messaging: ^14.7.15
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.6
   flutter_local_notifications: ^17.2.4
 
   # Location
@@ -60,8 +60,7 @@ dependencies:
   local_auth: ^2.1.8
 
   # Analytics & Crash Reporting
-  firebase_analytics: ^10.8.7
-  firebase_crashlytics: ^3.4.15
+  firebase_analytics: ^11.3.6
   sentry_flutter: ^7.18.0
 
   # Deep Linking

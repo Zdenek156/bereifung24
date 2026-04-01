@@ -28,6 +28,15 @@ workflows:
           keychain add-certificates
           echo "=== Applying profiles to Xcode project ==="
           xcode-project use-profiles
+          
+          echo "=== Fixing export_options.plist certificate name ==="
+          # Codemagic generates "iOS Distribution" but the cert is "Apple Distribution"
+          if [ -f /Users/builder/export_options.plist ]; then
+            sed -i '' 's/iOS Distribution/Apple Distribution/g' /Users/builder/export_options.plist
+            echo "=== Fixed export_options.plist ==="
+            cat /Users/builder/export_options.plist
+          fi
+          
           echo "=== Verifying pbxproj signing settings ==="
           grep -A2 "CODE_SIGN_STYLE\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj || true
       - name: Verify code signing
@@ -42,55 +51,22 @@ workflows:
           grep "PROVISIONING_PROFILE_SPECIFIER" ios/Runner.xcodeproj/project.pbxproj || echo "WARNING: No PROVISIONING_PROFILE_SPECIFIER found in pbxproj!"
       - name: Build IPA
         script: |
-          # Read installed provisioning profile name dynamically
-          PROFILE_FILE=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
-          if [ -n "$PROFILE_FILE" ]; then
-            PROFILE_NAME=$(security cms -D -i "$PROFILE_FILE" 2>/dev/null | plutil -extract Name raw - 2>/dev/null || \
-              security cms -D -i "$PROFILE_FILE" 2>/dev/null | grep -A1 '<key>Name</key>' | grep string | sed 's/.*<string>//' | sed 's/<\/string>//')
-            echo "=== Installed profile name: $PROFILE_NAME ==="
-          else
-            PROFILE_NAME="match AppStore de.bereifung24.bereifung24App"
-            echo "=== No profile file found, using default name: $PROFILE_NAME ==="
-          fi
-
-          # Read installed certificate name
-          CERT_NAME=$(security find-identity -v -p codesigning | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
-          echo "=== Certificate name: $CERT_NAME ==="
-
-          # Create correct ExportOptions.plist BEFORE building
-          cat > /tmp/ExportOptions.plist << 'PLISTEOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>Q5GN6QWF45</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>signingStyle</key>
-            <string>automatic</string>
-            <key>signingCertificate</key>
-            <string>Apple Distribution</string>
-          </dict>
-          </plist>
-          PLISTEOF
-
-          echo "=== ExportOptions.plist ==="
-          cat /tmp/ExportOptions.plist
-
+          # Show what certificate is actually installed
+          echo "=== Installed certificates ==="
+          security find-identity -v -p codesigning
+          
+          echo "=== Export options plist (after fix) ==="
+          cat /Users/builder/export_options.plist
+          
           # Build number
           BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1))
           echo "=== Build number: $BUILD_NUMBER ==="
 
-          # Build IPA using our correct plist
+          # Build IPA using Codemagic's (fixed) export_options.plist
           flutter build ipa --release \
             --build-name=1.0.1 \
             --build-number=$BUILD_NUMBER \
-            --export-options-plist=/tmp/ExportOptions.plist
+            --export-options-plist=/Users/builder/export_options.plist
 
           # Verify IPA was created
           IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
@@ -98,7 +74,6 @@ workflows:
             echo "=== IPA created: $IPA_PATH ==="
           else
             echo "=== ERROR: No IPA created! ==="
-            echo "=== Checking for xcarchive ==="
             find /Users/builder -name "*.xcarchive" -type d 2>/dev/null
             exit 1
           fi

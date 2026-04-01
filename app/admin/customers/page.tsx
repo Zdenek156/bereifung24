@@ -15,7 +15,7 @@ interface Customer {
   city: string | null
   zipCode: string | null
   distance: number | null
-  requestCount: number
+  bookingCount: number
   totalSpent: number
   createdAt: string
   isActive: boolean
@@ -134,9 +134,9 @@ export default function AdminCustomersPage() {
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
-            <div className="text-sm font-medium text-gray-600">Gesamt Anfragen</div>
+            <div className="text-sm font-medium text-gray-600">Gesamt Buchungen</div>
             <div className="text-3xl font-bold text-blue-600 mt-2">
-              {customers.reduce((sum, c) => sum + c.requestCount, 0)}
+              {customers.reduce((sum, c) => sum + c.bookingCount, 0)}
             </div>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
@@ -170,7 +170,7 @@ export default function AdminCustomersPage() {
               >
                 <option value="recent">Zuletzt registriert</option>
                 <option value="distance">Entfernung</option>
-                <option value="requests">Anzahl Anfragen</option>
+                <option value="requests">Anzahl Buchungen</option>
                 <option value="revenue">Umsatz</option>
               </select>
             </div>
@@ -228,7 +228,7 @@ export default function AdminCustomersPage() {
                       Entfernung
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Anfragen
+                      Buchungen
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Umsatz
@@ -268,7 +268,7 @@ export default function AdminCustomersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{customer.requestCount}</div>
+                        <div className="text-sm text-gray-900">{customer.bookingCount}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-gray-900">

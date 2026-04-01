@@ -15,7 +15,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const employeeId = session.user.id
+    const employeeId = session.user.b24EmployeeId || session.user.id
     const announcementId = params.id
 
     // Prüfen ob Ankündigung existiert
@@ -79,7 +79,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const employeeId = session.user.id
+    const employeeId = session.user.b24EmployeeId || session.user.id
     const announcementId = params.id
 
     // Ankündigung laden um authorId zu prüfen

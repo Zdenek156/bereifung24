@@ -25,6 +25,11 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
   // Package-based service data
   final double? searchBasePrice;
   final String? selectedPackage;
+  // Nur Montage surcharges
+  final double? disposalFeeApplied;
+  final double? runFlatSurchargeApplied;
+  // Estimated duration from search API (accounts for tire quantity)
+  final int? estimatedDuration;
   // Tire purchase data
   final String? tireBrand;
   final String? tireModel;
@@ -63,6 +68,9 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
     this.withWashing = false,
     this.searchBasePrice,
     this.selectedPackage,
+    this.disposalFeeApplied,
+    this.runFlatSurchargeApplied,
+    this.estimatedDuration,
     this.tireBrand,
     this.tireModel,
     this.tireArticleId,
@@ -89,7 +97,8 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<BookingSummaryScreen> createState() => _BookingSummaryScreenState();
+  ConsumerState<BookingSummaryScreen> createState() =>
+      _BookingSummaryScreenState();
 }
 
 class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
@@ -135,19 +144,33 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
   }
 
   double _calculateTotal(WorkshopPricing? pricing) {
-    // If tire purchase, use tire total + montage
+    // Wenn Reifen gekauft werden, wie gehabt
     if (widget.tireTotalPrice != null) {
       double total = widget.tireTotalPrice!;
-      total += widget.searchBasePrice ?? pricing?.basePrice ?? pricing?.tireChangePricePKW ?? 0;
+      total += widget.searchBasePrice ??
+          pricing?.basePrice ??
+          pricing?.tireChangePricePKW ??
+          0;
       return total;
     }
     double total = 0;
-    if (widget.searchBasePrice != null) {
-      total += widget.searchBasePrice!;
+    // Nur Montage: searchBasePrice enthält bereits den Zuschlag (in workshop_detail_screen kombiniert)
+    if (widget.serviceType == 'TIRE_CHANGE') {
+      total += widget.searchBasePrice ??
+          pricing?.basePrice ??
+          pricing?.tireChangePricePKW ??
+          0;
     } else if (widget.serviceType == 'WHEEL_CHANGE') {
-      total += pricing?.basePrice ?? pricing?.basePrice4 ?? pricing?.tireChangePricePKW ?? 0;
+      total += widget.searchBasePrice ??
+          pricing?.basePrice ??
+          pricing?.basePrice4 ??
+          pricing?.tireChangePricePKW ??
+          0;
     } else {
-      total += pricing?.basePrice ?? pricing?.tireChangePricePKW ?? 0;
+      total += widget.searchBasePrice ??
+          pricing?.basePrice ??
+          pricing?.tireChangePricePKW ??
+          0;
     }
     if (widget.withBalancing && pricing?.balancingPrice != null) {
       total += pricing!.balancingPrice! * 4;
@@ -157,6 +180,13 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     }
     if (widget.withWashing && pricing?.washingPrice != null) {
       total += pricing!.washingPrice!;
+    }
+    // Add disposal and runflat fees
+    if (widget.disposalFeeApplied != null) {
+      total += widget.disposalFeeApplied!;
+    }
+    if (widget.runFlatSurchargeApplied != null) {
+      total += widget.runFlatSurchargeApplied!;
     }
     return total;
   }
@@ -170,7 +200,10 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       final total = _calculateTotal(pricing);
       final basePrice = widget.searchBasePrice ??
           (widget.serviceType == 'WHEEL_CHANGE'
-              ? (pricing?.basePrice ?? pricing?.basePrice4 ?? pricing?.tireChangePricePKW ?? 0.0)
+              ? (pricing?.basePrice ??
+                  pricing?.basePrice4 ??
+                  pricing?.tireChangePricePKW ??
+                  0.0)
               : (pricing?.basePrice ?? pricing?.tireChangePricePKW ?? 0.0));
 
       // Process Stripe payment first
@@ -190,7 +223,9 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
         } catch (e) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Zahlung fehlgeschlagen: $e'), backgroundColor: Colors.red),
+              SnackBar(
+                  content: Text('Zahlung fehlgeschlagen: $e'),
+                  backgroundColor: Colors.red),
             );
             setState(() => _isSubmitting = false);
           }
@@ -202,7 +237,9 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       if (vehicle?.id == null || vehicle!.id!.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Bitte wähle ein Fahrzeug aus'), backgroundColor: Colors.red),
+            const SnackBar(
+                content: Text('Bitte wähle ein Fahrzeug aus'),
+                backgroundColor: Colors.red),
           );
           setState(() => _isSubmitting = false);
         }
@@ -211,7 +248,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       final bookingData = {
         'workshopId': widget.workshopId,
         'serviceType': widget.serviceType ?? 'WHEEL_CHANGE',
-        if (widget.selectedPackage != null) 'serviceSubtype': widget.selectedPackage,
+        if (widget.selectedPackage != null)
+          'serviceSubtype': widget.selectedPackage,
         'serviceDisplayName': _resolvedServiceName,
         'vehicleId': vehicle.id,
         'date': widget.date,
@@ -219,6 +257,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
         'hasBalancing': widget.withBalancing,
         'hasStorage': widget.withStorage,
         'hasWashing': widget.withWashing,
+        'hasDisposal':
+            widget.disposalFeeApplied != null && widget.disposalFeeApplied! > 0,
         'basePrice': basePrice,
         if (widget.withBalancing && pricing?.balancingPrice != null)
           'balancingPrice': pricing!.balancingPrice! * 4,
@@ -226,24 +266,34 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
           'storagePrice': pricing!.storagePrice!,
         if (widget.withWashing && pricing?.washingPrice != null)
           'washingPrice': pricing!.washingPrice!,
+        if (widget.disposalFeeApplied != null && widget.disposalFeeApplied! > 0)
+          'disposalFee': widget.disposalFeeApplied,
+        if (widget.runFlatSurchargeApplied != null &&
+            widget.runFlatSurchargeApplied! > 0)
+          'runFlatSurcharge': widget.runFlatSurchargeApplied,
         'totalPrice': total,
-        'durationMinutes': () {
-          int base = pricing?.durationMinutes4 ?? pricing?.durationMinutes ?? 60;
-          if (widget.withBalancing && pricing?.balancingMinutes != null) {
-            base += pricing!.balancingMinutes! * 4;
-          }
-          return base;
-        }(),
+        'durationMinutes': widget.estimatedDuration ??
+            (() {
+              int base =
+                  pricing?.durationMinutes4 ?? pricing?.durationMinutes ?? 60;
+              if (widget.withBalancing && pricing?.balancingMinutes != null) {
+                base += pricing!.balancingMinutes! * 4;
+              }
+              return base;
+            }()),
         'paymentMethod': 'STRIPE',
         'paymentId': paymentId ?? 'no_payment',
         // Tire purchase data
         if (widget.tireBrand != null) 'tireBrand': widget.tireBrand,
         if (widget.tireModel != null) 'tireModel': widget.tireModel,
         // Only send single tireArticleNumber for non-Mischbereifung
-        if (widget.tireArticleId != null && widget.tireFrontBrand == null) 'tireArticleNumber': widget.tireArticleId,
+        if (widget.tireArticleId != null && widget.tireFrontBrand == null)
+          'tireArticleNumber': widget.tireArticleId,
         if (widget.tireQuantity != null) 'tireQuantity': widget.tireQuantity,
-        if (widget.tirePricePerUnit != null) 'tirePricePerUnit': widget.tirePricePerUnit,
-        if (widget.tireTotalPrice != null) 'tireTotalPrice': widget.tireTotalPrice,
+        if (widget.tirePricePerUnit != null)
+          'tirePricePerUnit': widget.tirePricePerUnit,
+        if (widget.tireTotalPrice != null)
+          'tireTotalPrice': widget.tireTotalPrice,
         if (widget.tireDimensions != null) 'tireSize': widget.tireDimensions,
         // Mischbereifung: structured tireData for correct email rendering
         if (widget.tireFrontBrand != null && widget.tireRearBrand != null)
@@ -286,7 +336,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       if (mounted) {
         String message = 'Buchung fehlgeschlagen. Bitte versuche es erneut.';
         if (e is DioException && e.response?.statusCode == 409) {
-          message = e.response?.data?['error'] ?? 'Dieser Termin ist leider nicht mehr verfügbar. Bitte wähle einen anderen Zeitslot.';
+          message = e.response?.data?['error'] ??
+              'Dieser Termin ist leider nicht mehr verfügbar. Bitte wähle einen anderen Zeitslot.';
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -341,13 +392,16 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(workshop.name,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 16)),
                       const SizedBox(height: 4),
                       Text(workshop.fullAddress,
-                          style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 13)),
                       if (workshop.phone != null)
                         Text(workshop.phone!,
-                            style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 13)),
                     ],
                   ),
                 ),
@@ -363,31 +417,42 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     children: [
                       Text(
                         _resolvedServiceName,
-                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 15),
                       ),
                       // Tire purchase info — Mischbereifung VA/HA
-                      if (widget.tireFrontBrand != null && widget.tireRearBrand != null) ...[
+                      if (widget.tireFrontBrand != null &&
+                          widget.tireRearBrand != null) ...[
                         const SizedBox(height: 6),
                         // VA (Front) tire
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.05),
+                            color:
+                                const Color(0xFF0284C7).withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.15)),
+                            border: Border.all(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.15)),
                           ),
                           child: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF0284C7),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('VA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                                child: const Text('VA',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white)),
                               ),
                               const SizedBox(width: 6),
-                              const Icon(Icons.tire_repair, size: 18, color: Color(0xFF0284C7)),
+                              const Icon(Icons.tire_repair,
+                                  size: 18, color: Color(0xFF0284C7)),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -395,14 +460,22 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                   children: [
                                     Text(
                                       '${widget.tireFrontBrand} ${widget.tireFrontModel ?? ""}',
-                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13),
                                     ),
                                     Text(
                                       '${widget.tireFrontQty ?? 2}× à ${widget.tireFrontPrice != null ? (widget.tireFrontPrice! / (widget.tireFrontQty ?? 2)).toStringAsFixed(2) : "-"}€',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12),
                                     ),
-                                    if (widget.tireFrontDimensions != null && widget.tireFrontDimensions!.isNotEmpty)
-                                      Text(widget.tireFrontDimensions!, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                                    if (widget.tireFrontDimensions != null &&
+                                        widget.tireFrontDimensions!.isNotEmpty)
+                                      Text(widget.tireFrontDimensions!,
+                                          style: TextStyle(
+                                              color: Colors.grey[500],
+                                              fontSize: 11)),
                                   ],
                                 ),
                               ),
@@ -414,22 +487,31 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.05),
+                            color:
+                                const Color(0xFF0284C7).withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.15)),
+                            border: Border.all(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.15)),
                           ),
                           child: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 5, vertical: 2),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFF0284C7),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('HA', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                                child: const Text('HA',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white)),
                               ),
                               const SizedBox(width: 6),
-                              const Icon(Icons.tire_repair, size: 18, color: Color(0xFF0284C7)),
+                              const Icon(Icons.tire_repair,
+                                  size: 18, color: Color(0xFF0284C7)),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -437,14 +519,22 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                   children: [
                                     Text(
                                       '${widget.tireRearBrand} ${widget.tireRearModel ?? ""}',
-                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13),
                                     ),
                                     Text(
                                       '${widget.tireRearQty ?? 2}× à ${widget.tireRearPrice != null ? (widget.tireRearPrice! / (widget.tireRearQty ?? 2)).toStringAsFixed(2) : "-"}€',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12),
                                     ),
-                                    if (widget.tireRearDimensions != null && widget.tireRearDimensions!.isNotEmpty)
-                                      Text(widget.tireRearDimensions!, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                                    if (widget.tireRearDimensions != null &&
+                                        widget.tireRearDimensions!.isNotEmpty)
+                                      Text(widget.tireRearDimensions!,
+                                          style: TextStyle(
+                                              color: Colors.grey[500],
+                                              fontSize: 11)),
                                   ],
                                 ),
                               ),
@@ -456,13 +546,17 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7).withValues(alpha: 0.05),
+                            color:
+                                const Color(0xFF0284C7).withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF0284C7).withValues(alpha: 0.15)),
+                            border: Border.all(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.15)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.tire_repair, size: 18, color: Color(0xFF0284C7)),
+                              const Icon(Icons.tire_repair,
+                                  size: 18, color: Color(0xFF0284C7)),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
@@ -470,14 +564,22 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                   children: [
                                     Text(
                                       '${widget.tireBrand} ${widget.tireModel ?? ""}',
-                                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13),
                                     ),
                                     Text(
                                       '${widget.tireQuantity ?? 4}× à ${widget.tirePricePerUnit?.toStringAsFixed(2) ?? "-"}€',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      style: TextStyle(
+                                          color: Colors.grey[600],
+                                          fontSize: 12),
                                     ),
-                                    if (widget.tireDimensions != null && widget.tireDimensions!.isNotEmpty)
-                                      Text(widget.tireDimensions!, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                                    if (widget.tireDimensions != null &&
+                                        widget.tireDimensions!.isNotEmpty)
+                                      Text(widget.tireDimensions!,
+                                          style: TextStyle(
+                                              color: Colors.grey[500],
+                                              fontSize: 11)),
                                   ],
                                 ),
                               ),
@@ -485,18 +587,17 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           ),
                         ),
                       ],
-                      if (widget.withBalancing || widget.withStorage || widget.withWashing) ...[
+                      if (widget.withBalancing ||
+                          widget.withStorage ||
+                          widget.withWashing) ...[
                         const SizedBox(height: 6),
                         Wrap(
                           spacing: 6,
                           runSpacing: 4,
                           children: [
-                            if (widget.withBalancing)
-                              _OptionChip('Auswuchten'),
-                            if (widget.withStorage)
-                              _OptionChip('Einlagerung'),
-                            if (widget.withWashing)
-                              _OptionChip('Waschen'),
+                            if (widget.withBalancing) _OptionChip('Auswuchten'),
+                            if (widget.withStorage) _OptionChip('Einlagerung'),
+                            if (widget.withWashing) _OptionChip('Waschen'),
                           ],
                         ),
                       ],
@@ -515,10 +616,13 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(selectedVehicle.displayName,
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 15)),
                             if (selectedVehicle.tireSizeWithIndex.isNotEmpty)
-                              Text('Reifengröße: ${selectedVehicle.tireSizeWithIndex}',
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                              Text(
+                                  'Reifengröße: ${selectedVehicle.tireSizeWithIndex}',
+                                  style: TextStyle(
+                                      color: Colors.grey[600], fontSize: 13)),
                           ],
                         )
                       : const Text('Kein Fahrzeug ausgewählt',
@@ -535,7 +639,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(dateFormatted,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w600, fontSize: 15)),
                       Text('${widget.time} Uhr',
                           style: const TextStyle(fontSize: 15)),
                     ],
@@ -552,70 +657,107 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     child: Column(
                       children: [
                         // Mischbereifung front/rear tire lines
-                        if (widget.tireFrontBrand != null && widget.tireRearBrand != null) ...[
+                        if (widget.tireFrontBrand != null &&
+                            widget.tireRearBrand != null) ...[
                           _PriceLine(
                             'VA: ${widget.tireFrontQty ?? 2}× ${widget.tireFrontBrand} ${widget.tireFrontModel ?? ""}',
                             widget.tireFrontPrice ?? 0,
                           ),
-                          if (widget.tireFrontDimensions != null && widget.tireFrontDimensions!.isNotEmpty)
+                          if (widget.tireFrontDimensions != null &&
+                              widget.tireFrontDimensions!.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 4, left: 4),
+                              padding:
+                                  const EdgeInsets.only(bottom: 4, left: 4),
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(widget.tireFrontDimensions!,
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey[500])),
                               ),
                             ),
                           _PriceLine(
                             'HA: ${widget.tireRearQty ?? 2}× ${widget.tireRearBrand} ${widget.tireRearModel ?? ""}',
                             widget.tireRearPrice ?? 0,
                           ),
-                          if (widget.tireRearDimensions != null && widget.tireRearDimensions!.isNotEmpty)
+                          if (widget.tireRearDimensions != null &&
+                              widget.tireRearDimensions!.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 4, left: 4),
+                              padding:
+                                  const EdgeInsets.only(bottom: 4, left: 4),
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(widget.tireRearDimensions!,
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey[500])),
                               ),
                             ),
-                        ] else if (widget.tireTotalPrice != null && widget.tireBrand != null) ...[
+                        ] else if (widget.tireTotalPrice != null &&
+                            widget.tireBrand != null) ...[
                           // Single tire line
                           _PriceLine(
                             '${widget.tireQuantity ?? 4}× ${widget.tireBrand} ${widget.tireModel ?? ""}',
                             widget.tireTotalPrice!,
                           ),
-                          if (widget.tireDimensions != null && widget.tireDimensions!.isNotEmpty)
+                          if (widget.tireDimensions != null &&
+                              widget.tireDimensions!.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.only(bottom: 4, left: 4),
+                              padding:
+                                  const EdgeInsets.only(bottom: 4, left: 4),
                               child: Align(
                                 alignment: Alignment.centerLeft,
                                 child: Text(widget.tireDimensions!,
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[500])),
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey[500])),
                               ),
                             ),
                         ],
-                        _PriceLine(
-                          widget.tireTotalPrice != null
-                              ? 'Montage'
-                              : _resolvedServiceName,
-                          widget.searchBasePrice ??
-                              (widget.serviceType == 'WHEEL_CHANGE'
-                                  ? (pricing?.basePrice ?? pricing?.basePrice4 ?? pricing?.tireChangePricePKW ?? 0)
-                                  : (pricing?.basePrice ?? pricing?.tireChangePricePKW ?? 0)),
-                        ),
-                        if (widget.withBalancing && pricing?.balancingPrice != null)
-                          _PriceLine('Auswuchten (×4)', pricing!.balancingPrice! * 4),
+                        // Nur Montage: searchBasePrice enthält bereits den Zuschlag
+                        if (widget.serviceType == 'TIRE_CHANGE' &&
+                            widget.tireTotalPrice == null)
+                          _PriceLine(
+                            'Montage',
+                            widget.searchBasePrice ??
+                                (pricing?.basePrice ??
+                                    pricing?.tireChangePricePKW ??
+                                    0),
+                          )
+                        else
+                          _PriceLine(
+                            widget.tireTotalPrice != null
+                                ? 'Montage'
+                                : _resolvedServiceName,
+                            widget.searchBasePrice ??
+                                (widget.serviceType == 'WHEEL_CHANGE'
+                                    ? (pricing?.basePrice ??
+                                        pricing?.basePrice4 ??
+                                        pricing?.tireChangePricePKW ??
+                                        0)
+                                    : (pricing?.basePrice ??
+                                        pricing?.tireChangePricePKW ??
+                                        0)),
+                          ),
+                        if (widget.withBalancing &&
+                            pricing?.balancingPrice != null)
+                          _PriceLine(
+                              'Auswuchten (×4)', pricing!.balancingPrice! * 4),
                         if (widget.withStorage && pricing?.storagePrice != null)
                           _PriceLine('Einlagerung', pricing!.storagePrice!),
                         if (widget.withWashing && pricing?.washingPrice != null)
                           _PriceLine('Waschen', pricing!.washingPrice!),
+                        if (widget.disposalFeeApplied != null &&
+                            widget.disposalFeeApplied! > 0)
+                          _PriceLine('Entsorgung', widget.disposalFeeApplied!),
+                        if (widget.runFlatSurchargeApplied != null &&
+                            widget.runFlatSurchargeApplied! > 0)
+                          _PriceLine('RunFlat-Zuschlag',
+                              widget.runFlatSurchargeApplied!),
                         const Divider(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             const Text('Gesamtpreis',
-                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 17)),
                             Text(
                               '${total.toStringAsFixed(2)} €',
                               style: const TextStyle(
@@ -653,7 +795,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                             ],
                           ),
                           selected: _selectedPayment == 'card',
-                          onTap: () => setState(() => _selectedPayment = 'card'),
+                          onTap: () =>
+                              setState(() => _selectedPayment = 'card'),
                         ),
                         const Divider(height: 1),
                         _PaymentMethodTile(
@@ -661,7 +804,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           subtitle: 'Schnell & sicher via Stripe',
                           iconWidget: _PaymentLogo('paypal'),
                           selected: _selectedPayment == 'paypal',
-                          onTap: () => setState(() => _selectedPayment = 'paypal'),
+                          onTap: () =>
+                              setState(() => _selectedPayment = 'paypal'),
                         ),
                         const Divider(height: 1),
                         _PaymentMethodTile(
@@ -669,7 +813,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           subtitle: 'Jetzt kaufen, später bezahlen',
                           iconWidget: _KlarnaLogo(),
                           selected: _selectedPayment == 'klarna',
-                          onTap: () => setState(() => _selectedPayment = 'klarna'),
+                          onTap: () =>
+                              setState(() => _selectedPayment = 'klarna'),
                         ),
                         const Divider(height: 1),
                         _PaymentMethodTile(
@@ -677,7 +822,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           subtitle: 'Schnell bezahlen',
                           iconWidget: _PaymentLogo('google-pay'),
                           selected: _selectedPayment == 'google_pay',
-                          onTap: () => setState(() => _selectedPayment = 'google_pay'),
+                          onTap: () =>
+                              setState(() => _selectedPayment = 'google_pay'),
                         ),
                       ],
                     ),
@@ -690,7 +836,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       const SizedBox(width: 4),
                       Text(
                         'Verschlüsselte & sichere Zahlung über Stripe',
-                        style: TextStyle(fontSize: 11, color: Colors.green[700]),
+                        style:
+                            TextStyle(fontSize: 11, color: Colors.green[700]),
                       ),
                     ],
                   ),
@@ -707,7 +854,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     text: TextSpan(
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       children: [
-                        const TextSpan(text: 'Mit der Buchung stimmst du unseren '),
+                        const TextSpan(
+                            text: 'Mit der Buchung stimmst du unseren '),
                         TextSpan(
                           text: 'AGBs',
                           style: const TextStyle(
@@ -725,7 +873,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                             decoration: TextDecoration.underline,
                           ),
                           recognizer: TapGestureRecognizer()
-                            ..onTap = () => context.push('/profile/datenschutz'),
+                            ..onTap =
+                                () => context.push('/profile/datenschutz'),
                         ),
                         const TextSpan(text: ' zu.'),
                       ],
@@ -738,9 +887,10 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed: _isSubmitting || (total > 0 && _selectedPayment == null)
-                        ? null
-                        : () => _submitBooking(workshop, selectedVehicle),
+                    onPressed:
+                        _isSubmitting || (total > 0 && _selectedPayment == null)
+                            ? null
+                            : () => _submitBooking(workshop, selectedVehicle),
                     icon: _isSubmitting
                         ? const SizedBox(
                             width: 18,
@@ -760,7 +910,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       style: const TextStyle(fontSize: 16),
                     ),
                     style: FilledButton.styleFrom(
-                      backgroundColor: _isSubmitting || (total > 0 && _selectedPayment == null)
+                      backgroundColor: _isSubmitting ||
+                              (total > 0 && _selectedPayment == null)
                           ? Colors.grey[400]
                           : const Color(0xFF0284C7),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -787,7 +938,8 @@ class _SummaryCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget child;
-  const _SummaryCard({required this.icon, required this.title, required this.child});
+  const _SummaryCard(
+      {required this.icon, required this.title, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -798,7 +950,8 @@ class _SummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.grey.shade200),
+        border: Border.all(
+            color: isDark ? const Color(0xFF334155) : Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -869,7 +1022,8 @@ class _PriceLine extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text('${amount.toStringAsFixed(2)} €',
-              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+              style:
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         ],
       ),
     );
@@ -901,7 +1055,8 @@ class _PaymentMethodTile extends StatelessWidget {
             ? BoxDecoration(
                 color: const Color(0xFF0284C7).withOpacity(0.06),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF0284C7).withOpacity(0.3)),
+                border:
+                    Border.all(color: const Color(0xFF0284C7).withOpacity(0.3)),
               )
             : null,
         child: Row(
@@ -923,11 +1078,14 @@ class _PaymentMethodTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: TextStyle(
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    fontSize: 14,
-                  )),
-                  Text(subtitle, style: TextStyle(fontSize: 11, color: Colors.grey[500])),
+                  Text(label,
+                      style: TextStyle(
+                        fontWeight:
+                            selected ? FontWeight.w700 : FontWeight.w500,
+                        fontSize: 14,
+                      )),
+                  Text(subtitle,
+                      style: TextStyle(fontSize: 11, color: Colors.grey[500])),
                 ],
               ),
             ),
@@ -948,16 +1106,22 @@ class _PaymentLogo extends StatelessWidget {
       width: 42,
       height: 28,
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? const Color(0xFF1E293B)
+            : Colors.white,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF334155) : Colors.grey.shade300),
+        border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF334155)
+                : Colors.grey.shade300),
       ),
       padding: const EdgeInsets.all(3),
       child: Image.asset(
         'assets/images/payment/$name.png',
         fit: BoxFit.contain,
         errorBuilder: (_, __, ___) => Center(
-          child: Text(name, style: const TextStyle(fontSize: 7, fontWeight: FontWeight.w700)),
+          child: Text(name,
+              style: const TextStyle(fontSize: 7, fontWeight: FontWeight.w700)),
         ),
       ),
     );
@@ -994,7 +1158,8 @@ class _KlarnaLogo extends StatelessWidget {
 class _BookingConfirmation extends StatelessWidget {
   final VoidCallback onGoToBookings;
   final VoidCallback onGoHome;
-  const _BookingConfirmation({required this.onGoToBookings, required this.onGoHome});
+  const _BookingConfirmation(
+      {required this.onGoToBookings, required this.onGoHome});
 
   @override
   Widget build(BuildContext context) {
@@ -1005,7 +1170,8 @@ class _BookingConfirmation extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.check_circle, size: 80, color: Color(0xFF0284C7)),
+              const Icon(Icons.check_circle,
+                  size: 80, color: Color(0xFF0284C7)),
               const SizedBox(height: 24),
               const Text(
                 'Buchung erfolgreich!',

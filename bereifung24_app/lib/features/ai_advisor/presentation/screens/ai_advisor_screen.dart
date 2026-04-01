@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../data/models/models.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
+import '../../../search/presentation/screens/search_screen.dart';
+import '../../../auth/providers/auth_provider.dart';
 
 // ══════════════════════════════════════
 // 🤖 KI Reifen-Berater
@@ -17,6 +20,7 @@ class _ChatMessage {
   final String time;
   final List<_QuickChip>? chips;
   final List<_RecommendedTire>? recommendedTires;
+  final List<Vehicle>? vehicleChoices;
 
   _ChatMessage({
     required this.role,
@@ -24,6 +28,7 @@ class _ChatMessage {
     required this.time,
     this.chips,
     this.recommendedTires,
+    this.vehicleChoices,
   });
 }
 
@@ -40,6 +45,7 @@ class _RecommendedTire {
   final String labelFuelEfficiency;
   final String labelWetGrip;
   final int labelNoise;
+  final String articleId;
 
   _RecommendedTire({
     required this.brand,
@@ -54,6 +60,7 @@ class _RecommendedTire {
     required this.labelFuelEfficiency,
     required this.labelWetGrip,
     required this.labelNoise,
+    required this.articleId,
   });
 
   factory _RecommendedTire.fromJson(Map<String, dynamic> json) {
@@ -70,6 +77,7 @@ class _RecommendedTire {
       labelFuelEfficiency: json['labelFuelEfficiency']?.toString() ?? '-',
       labelWetGrip: json['labelWetGrip']?.toString() ?? '-',
       labelNoise: (json['labelNoise'] as num?)?.toInt() ?? 0,
+      articleId: json['articleId']?.toString() ?? '',
     );
   }
 }
@@ -96,12 +104,12 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   bool _isTyping = false;
   String? _vehicleId;
   _RecommendedTire? _selectedTire;
+  String? _pendingMessage; // stored when vehicle selection is needed first
 
   @override
   void initState() {
     super.initState();
     _initChat();
-    _loadVehicle();
   }
 
   @override
@@ -113,19 +121,39 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   }
 
   void _loadVehicle() {
-    final vehiclesAsync = ref.read(vehiclesProvider);
-    vehiclesAsync.whenData((vehicles) {
-      if (vehicles.isNotEmpty && mounted) {
-        setState(() => _vehicleId = vehicles.first.id);
-      }
+    // No longer auto-selects — vehicle is chosen by user in chat
+  }
+
+  void _onVehicleSelected(Vehicle vehicle) {
+    setState(() {
+      _vehicleId = vehicle.id;
+      _messages.add(_ChatMessage(
+        role: 'user',
+        text: '${vehicle.displayName}',
+        time: _timeStr(),
+      ));
+      _messages.add(_ChatMessage(
+        role: 'ai',
+        text: '${vehicle.make} ${vehicle.model} ausgewählt! 🚗\nReifengröße: **${vehicle.tireSizeWithIndex.isNotEmpty ? vehicle.tireSizeWithIndex : 'nicht hinterlegt'}**',
+        time: _timeStr(),
+      ));
     });
+    // Sync to selectedVehicleProvider for workshop detail
+    ref.read(selectedVehicleProvider.notifier).state = vehicle;
+    _scrollToBottom();
+    // If there was a pending message, send it now
+    if (_pendingMessage != null) {
+      final msg = _pendingMessage!;
+      _pendingMessage = null;
+      _sendMessage(msg);
+    }
   }
 
   void _initChat() {
     setState(() {
       _messages.add(_ChatMessage(
         role: 'ai',
-        text: 'Hallo! 👋 Ich bin dein **B24 Reifen-Berater**. Wie kann ich dir helfen?',
+        text: 'Hallo! 👋 Ich bin **Rollo**, dein KI-Reifen-Berater. Wie kann ich dir helfen?',
         time: _timeStr(),
         chips: [
           _QuickChip('recommend', '🎯 Reifen-Empfehlung'),
@@ -145,6 +173,52 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   Future<void> _sendMessage(String text) async {
     if (text.trim().isEmpty) return;
     _controller.clear();
+
+    // Check if vehicle selection is needed for tire-related queries
+    if (_vehicleId == null) {
+      final lc = text.trim().toLowerCase();
+      final needsVehicle = lc.contains('reifen') || lc.contains('empfehlung') ||
+          lc.contains('tire') || lc.contains('werkstatt') || lc.contains('montage') ||
+          lc.contains('sommer') || lc.contains('winter') || lc.contains('ganzjahr');
+      if (needsVehicle) {
+        final vehiclesAsync = ref.read(vehiclesProvider);
+        List<Vehicle> vehicleList = [];
+        vehiclesAsync.whenData((vehicles) {
+          vehicleList = vehicles;
+        });
+        if (vehicleList.isEmpty) {
+          setState(() {
+            _messages.add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+            _messages.add(_ChatMessage(
+              role: 'ai',
+              text: 'Du hast noch kein Fahrzeug angelegt. Bitte füge zuerst ein Fahrzeug unter **Fahrzeuge** hinzu, damit ich dir Reifen empfehlen kann.',
+              time: _timeStr(),
+            ));
+          });
+          _scrollToBottom();
+          return;
+        } else if (vehicleList.length == 1) {
+          // Auto-select single vehicle silently
+          final v = vehicleList.first;
+          _vehicleId = v.id;
+          ref.read(selectedVehicleProvider.notifier).state = v;
+        } else {
+          // Multiple vehicles — ask user to pick, store message for later
+          _pendingMessage = text.trim();
+          setState(() {
+            _messages.add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+            _messages.add(_ChatMessage(
+              role: 'ai',
+              text: 'Für welches Fahrzeug brauchst du Hilfe?',
+              time: _timeStr(),
+              vehicleChoices: vehicleList,
+            ));
+          });
+          _scrollToBottom();
+          return;
+        }
+      }
+    }
 
     setState(() {
       _messages.add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
@@ -240,16 +314,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('🤖', style: TextStyle(fontSize: 20)),
-            SizedBox(width: 8),
-            Text(
-              'KI-Berater',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-            ),
-          ],
+        title: const Text(
+          'Rollo AI',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
         ),
         centerTitle: true,
         actions: [
@@ -288,13 +355,58 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     );
   }
 
+  // ── Avatar Helpers ──
+
+  Widget _aiAvatar() {
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: B24Colors.primaryBlue.withValues(alpha: 0.2), width: 1.5),
+        image: const DecorationImage(
+          image: AssetImage('assets/images/services/ki_berater.jpg'),
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
+  }
+
+  Widget _userAvatar() {
+    final user = ref.watch(authStateProvider).user;
+    final profileUrl = user?.profileImage;
+    return Container(
+      width: 56,
+      height: 56,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: B24Colors.primaryBlue.withValues(alpha: 0.2), width: 1.5),
+        image: profileUrl != null && profileUrl.isNotEmpty
+            ? DecorationImage(
+                image: NetworkImage(profileUrl.replaceAll('=s96-c', '=s200-c')),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      child: profileUrl == null || profileUrl.isEmpty
+          ? Container(
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: B24Colors.primaryPale,
+              ),
+              child: const Icon(Icons.person, size: 30, color: B24Colors.primaryBlue),
+            )
+          : null,
+    );
+  }
+
   // ── Message Bubble ──
 
   Widget _buildMessageBubble(_ChatMessage msg, bool isDark) {
     final isUser = msg.role == 'user';
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Column(
         crossAxisAlignment:
             isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -302,38 +414,29 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           Row(
             mainAxisAlignment:
                 isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (!isUser) ...[
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: B24Colors.primaryPale,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text('🤖', style: TextStyle(fontSize: 16)),
-                ),
-                const SizedBox(width: 8),
-              ],
+              if (!isUser) ...[_aiAvatar(), const SizedBox(width: 8)],
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: isUser
                         ? B24Colors.primaryBlue
                         : (isDark ? B24Colors.darkSurface : Colors.white),
                     borderRadius: BorderRadius.only(
-                      topLeft: const Radius.circular(16),
-                      topRight: const Radius.circular(16),
-                      bottomLeft: Radius.circular(isUser ? 16 : 4),
-                      bottomRight: Radius.circular(isUser ? 4 : 16),
+                      topLeft: const Radius.circular(20),
+                      topRight: const Radius.circular(20),
+                      bottomLeft: Radius.circular(isUser ? 20 : 4),
+                      bottomRight: Radius.circular(isUser ? 4 : 20),
                     ),
-                    border: isUser
-                        ? null
-                        : Border.all(
-                            color: isDark ? B24Colors.darkBorder : B24Colors.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: _RichTextContent(
                     text: msg.text,
@@ -342,15 +445,15 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                   ),
                 ),
               ),
-              if (isUser) const SizedBox(width: 8),
+              if (isUser) ...[const SizedBox(width: 8), _userAvatar()],
             ],
           ),
           // Time
           Padding(
             padding: EdgeInsets.only(
               top: 4,
-              left: isUser ? 0 : 40,
-              right: isUser ? 8 : 0,
+              left: isUser ? 0 : 64,
+              right: isUser ? 64 : 0,
             ),
             child: Text(
               msg.time,
@@ -393,6 +496,64 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               }).toList(),
             ),
           ],
+          // Vehicle choices
+          if (msg.vehicleChoices != null && msg.vehicleChoices!.isNotEmpty && _vehicleId == null) ...[
+            const SizedBox(height: 10),
+            ...msg.vehicleChoices!.map((v) {
+              final icon = v.vehicleType == 'MOTORCYCLE'
+                  ? Icons.two_wheeler
+                  : v.vehicleType == 'TRAILER'
+                      ? Icons.rv_hookup
+                      : Icons.directions_car;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6, left: 40),
+                child: GestureDetector(
+                  onTap: () => _onVehicleSelected(v),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDark ? B24Colors.darkSurface : Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: B24Colors.primaryBlue.withValues(alpha: 0.3),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(icon, color: B24Colors.primaryBlue, size: 24),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${v.make} ${v.model}',
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                              ),
+                              if (v.tireSizeWithIndex.isNotEmpty)
+                                Text(
+                                  v.tireSizeWithIndex,
+                                  style: TextStyle(fontSize: 12, color: isDark ? B24Colors.darkTextSecondary : Colors.grey[600]),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: B24Colors.primaryBlue, size: 20),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          ],
           // Recommended tire cards
           if (msg.recommendedTires != null && msg.recommendedTires!.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -404,13 +565,31 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     final t = _selectedTire!;
+                    // Sync vehicle provider so workshop detail shows the correct vehicle
+                    if (_vehicleId != null) {
+                      final vehiclesAsync = ref.read(vehiclesProvider);
+                      vehiclesAsync.whenData((vehicles) {
+                        final v = vehicles.where((v) => v.id == _vehicleId).firstOrNull;
+                        if (v != null) {
+                          ref.read(selectedVehicleProvider.notifier).state = v;
+                        }
+                      });
+                    }
+                    // Convert season text to code: Sommer→s, Winter→w, Ganzjahr→g
+                    final seasonCode = t.season.toLowerCase().startsWith('s') ? 's'
+                        : t.season.toLowerCase().startsWith('w') ? 'w'
+                        : t.season.toLowerCase().startsWith('g') ? 'g'
+                        : t.season;
                     context.go('/search?service=TIRE_CHANGE'
                         '&width=${Uri.encodeComponent(t.width)}'
                         '&height=${Uri.encodeComponent(t.height)}'
                         '&diameter=${Uri.encodeComponent(t.diameter)}'
-                        '&season=${Uri.encodeComponent(t.season)}'
+                        '&season=${Uri.encodeComponent(seasonCode)}'
                         '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
-                        '&speedIndex=${Uri.encodeComponent(t.speedIndex)}');
+                        '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
+                        '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
+                        '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
+                        '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}');
                   },
                   icon: const Icon(Icons.search, size: 18),
                   label: const Text('Werkstatt mit diesem Reifen finden'),
@@ -520,17 +699,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: B24Colors.primaryPale,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            alignment: Alignment.center,
-            child: const Text('🤖', style: TextStyle(fontSize: 16)),
-          ),
+          _aiAvatar(),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -539,16 +710,18 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                   ? B24Colors.darkSurface
                   : Colors.white,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
                 bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(16),
+                bottomRight: Radius.circular(20),
               ),
-              border: Border.all(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? B24Colors.darkBorder
-                    : B24Colors.border,
-              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.06),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: const _TypingDots(),
           ),

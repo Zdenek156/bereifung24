@@ -1,0 +1,374 @@
+==============================================================================
+   BEREIFUNG24 - SOCIAL MEDIA MARKETING MODUL
+   Anleitung für Mitarbeiter
+==============================================================================
+
+Zugang: bereifung24.de/admin/social-media
+Voraussetzung: Admin-Account mit Social-Media-Berechtigung
+
+
+==============================================================================
+1. ÜBERSICHT (Dashboard-Tab)
+==============================================================================
+
+Das Dashboard zeigt dir auf einen Blick:
+
+  - BEITRÄGE GESAMT:    Alle erstellten Posts (Entwürfe + Geplante + Veröffentlichte)
+  - VERKNÜPFTE ACCOUNTS: Aktive Social-Media-Accounts
+  - VORLAGEN:            Gespeicherte Text-Templates
+  - AUTOMATISIERUNGEN:   Aktive Regeln für automatische Posts
+
+  - ENGAGEMENT-ÜBERSICHT:
+    - Likes, Shares, Kommentare, Klicks, Reichweite, Impressionen
+    - Daten werden von den verknüpften Plattformen abgerufen
+
+  - LETZTE BEITRÄGE:
+    Tabelle mit den neuesten Posts inkl. Typ, Plattform, Status und Datum.
+
+  Beim ersten Besuch (ohne Accounts) erscheint ein Schnellstart-Guide.
+
+
+==============================================================================
+2. ACCOUNTS (Accounts-Tab)
+==============================================================================
+
+Hier verknüpfst du deine Social-Media-Konten.
+
+UNTERSTÜTZTE PLATTFORMEN:
+  - Facebook  (über Meta Graph API)
+  - Instagram (über Meta Graph API, Business-Account nötig)
+  - Threads   (über Meta Threads API)
+
+ACCOUNT HINZUFÜGEN:
+  1. Klicke auf "Account verbinden"
+  2. Wähle die Plattform (Facebook, Instagram oder Threads)
+  3. Gib den Account-Namen ein (z.B. "Bereifung24 Facebook")
+  4. Gib die Page-ID ein:
+     - Facebook: Die Facebook-Seiten-ID (z.B. 143218978878429)
+     - Instagram: Die Instagram Business User-ID
+     - Threads: Die Threads User-ID
+  5. Trage den Access Token ein
+  6. Speichern
+
+ACCESS TOKENS ERHALTEN:
+
+  Alle Plattformen nutzen die Meta Graph API:
+
+  1. Gehe zu developers.facebook.com
+  2. Wähle die App "Bereifung24 App" (App-ID: 1611247256762915)
+  3. Öffne den Graph API Explorer (Extras → Graph API Explorer)
+  4. Wähle die App "Bereifung24 App" aus
+  5. Berechtigungen auswählen:
+     - pages_show_list
+     - pages_manage_posts
+     - pages_read_engagement
+     - pages_read_user_content
+     - instagram_basic
+     - instagram_content_publish
+     - instagram_manage_comments
+     - instagram_manage_insights
+     - business_management
+  6. Klicke "Generate Access Token" und autorisiere
+  7. Kopiere den Token in die Account-Einstellungen
+
+  LONG-LIVED TOKEN (empfohlen):
+    Kurzlebige Tokens laufen nach ~1 Stunde ab.
+    → Account bearbeiten → "Long-Lived Token generieren" klicken
+    → Der Token wird automatisch in einen dauerhaften Page Token
+       umgewandelt, der NICHT abläuft.
+
+  WICHTIG: Facebook, Instagram und Threads verwenden denselben
+  Meta Page Token. Du brauchst nur EINEN Token zu generieren.
+
+ACCOUNT VERWALTEN:
+  - Aktivieren/Deaktivieren: Inaktive Accounts werden beim Posting übersprungen
+  - Löschen: Account und alle Verknüpfungen werden entfernt
+  - Token-Ablauf: Wenn der Token abgelaufen ist, wird dies rot angezeigt
+  - Long-Lived Token: Klicke "Long-Lived Token" im Account-Editor
+    um einen dauerhaften Token zu generieren
+
+
+==============================================================================
+3. BEITRÄGE (Beiträge-Tab)
+==============================================================================
+
+Hier erstellst und verwaltest du alle Social-Media-Posts.
+
+BEITRAG ERSTELLEN:
+  1. Klicke auf "Neuer Beitrag" (oben rechts oder im Posts-Tab)
+  2. Fülle das Formular aus:
+
+     BEITRAGSTYP:
+       - 🏪 Neuer Partner        → Willkommens-Post für neue Werkstatt
+       - 💡 Reifen-Tipp          → Saisonaler Reifen-/Fahrtipp
+       - 📰 Blog-Promo           → Bewerbung eines Blog-Artikels
+       - ⭐ Bewertungs-Highlight → Hervorhebung einer Top-Werkstatt
+       - 📊 Statistiken          → Plattform-Wachstumszahlen
+       - 🎉 Angebot/Aktion       → Sonderangebote und Coupons
+       - 🔧 Service              → Service-Informationen
+       - 🎬 Reel/Short           → Kurzvideo-Inhalte
+       - ✏️ Eigener Beitrag       → Frei formulierter Post
+
+     TITEL (optional):
+       Überschrift für den Beitrag
+
+     INHALT:
+       Der eigentliche Post-Text. Kann manuell geschrieben
+       oder per KI generiert werden (siehe unten).
+
+     HASHTAGS:
+       Relevante Hashtags (z.B. #Bereifung24 #Reifen #Werkstatt)
+
+     PLATTFORMEN:
+       Wähle einen oder mehrere verknüpfte Accounts aus
+
+     ZEITPLANUNG (optional):
+       Datum und Uhrzeit für die geplante Veröffentlichung.
+       Ohne Zeitplanung wird der Post als "Entwurf" gespeichert.
+
+KI-TEXTGENERIERUNG:
+  1. Wähle zuerst den Beitragstyp aus
+  2. Klicke auf den "KI Text generieren ✨" Button
+  3. Die KI (Gemini) erstellt automatisch einen passenden Text
+     inkl. Hashtags basierend auf dem gewählten Typ
+  4. Du kannst den generierten Text danach noch bearbeiten
+
+POST-STATUS:
+  - Entwurf:              Noch nicht geplant, kann bearbeitet werden
+  - Geplant:              Veröffentlichung zu bestimmtem Zeitpunkt geplant
+  - Wird veröffentlicht:  Gerade im Posting-Vorgang
+  - Veröffentlicht:       Erfolgreich gepostet
+  - Fehlgeschlagen:       Veröffentlichung fehlgeschlagen
+
+BEITRAG BEARBEITEN:
+  → Klicke auf das Stift-Symbol in der Tabelle
+
+BEITRAG LÖSCHEN:
+  → Klicke auf das Papierkorb-Symbol (mit Bestätigung)
+
+
+==============================================================================
+4. VORLAGEN (Vorlagen-Tab)
+==============================================================================
+
+Vorlagen sind wiederverwendbare Text-Bausteine für häufige Post-Typen.
+
+VORLAGE ERSTELLEN:
+  1. Klicke auf "Neue Vorlage"
+  2. Fülle aus:
+     - Name: z.B. "Neue Partner-Werkstatt Willkommen"
+     - Beschreibung: Kurze Erklärung wofür die Vorlage ist
+     - Beitragstyp: z.B. "Neuer Partner"
+     - Text-Template: Der Post-Text mit Variablen
+     - Plattformen: Für welche Plattformen geeignet
+
+VERFÜGBARE VARIABLEN:
+  Verwende folgende Platzhalter in deinen Vorlagen:
+
+    {{workshopName}}  → Name der Werkstatt
+    {{city}}          → Stadt der Werkstatt
+    {{services}}      → Angebotene Services
+    {{rating}}        → Bewertungssterne
+    {{blogTitle}}     → Blog-Artikel-Titel
+    {{blogExcerpt}}   → Blog-Zusammenfassung
+
+  Beispiel-Template:
+  ─────────────────────────────────────────────────
+  🎉 Willkommen bei Bereifung24, {{workshopName}}!
+
+  Wir freuen uns, eine neue Partnerwerkstatt in
+  {{city}} begrüßen zu dürfen!
+
+  Services: {{services}}
+
+  Jetzt Termin buchen auf bereifung24.de! 🚗🔧
+
+  #Bereifung24 #Reifen #{{city}} #Werkstatt
+  ─────────────────────────────────────────────────
+
+VORLAGE BEARBEITEN:
+  → Stift-Symbol neben der Vorlage
+
+VORLAGE LÖSCHEN:
+  → Papierkorb-Symbol (Achtung: Verknüpfte Automatisierungen werden unterbrochen)
+
+
+==============================================================================
+5. AUTOMATISIERUNGEN (Automatisierungen-Tab)
+==============================================================================
+
+Automatisierungen erstellen Posts automatisch bei bestimmten Ereignissen.
+
+AUTOMATISIERUNG ERSTELLEN:
+  1. Klicke auf "Neue Automatisierung"
+  2. Konfiguriere:
+
+     NAME: z.B. "Neue Werkstatt → Willkommens-Post"
+     BESCHREIBUNG: Was die Automatisierung macht
+
+     TRIGGER (Auslöser):
+       - 🏪 Werkstatt verifiziert    → Wenn eine Werkstatt freigeschaltet wird
+       - 📰 Blog-Artikel veröffentlicht → Wenn ein neuer Blog online geht
+       - ⭐ Neue Bewertung erhalten    → Bei eingehender Bewertung
+       - 📅 Wöchentlich               → Jede Woche automatisch
+       - 📅 Monatlich                 → Jeden Monat automatisch
+       - ✋ Manuell                    → Nur bei manueller Auslösung
+
+     VORLAGE: Wähle eine zuvor erstellte Vorlage
+     PLATTFORMEN: Auf welchen Accounts gepostet werden soll
+
+     AUTO-PUBLISH:
+       - EIN (Sofort):        Post wird sofort veröffentlicht
+       - AUS (Freigabe nötig): Post wird als Entwurf erstellt
+                                und muss manuell freigegeben werden
+
+AUTOMATISIERUNG VERWALTEN:
+  - Aktiv/Inaktiv umschalten: Klicke auf den Status-Badge
+  - Letzte Ausführung: Zeigt an, wann zuletzt ein Post erstellt wurde
+  - Bearbeiten: Stift-Symbol
+  - Löschen: Papierkorb-Symbol
+
+
+==============================================================================
+6. EMPFOHLENE EINRICHTUNG (Schritt für Schritt)
+==============================================================================
+
+SCHRITT 1: Accounts verbinden
+  → Accounts-Tab → Mindestens Facebook und/oder Instagram verbinden
+
+SCHRITT 2: Vorlagen erstellen
+  → Vorlagen-Tab → Mindestens diese Vorlagen anlegen:
+    a) "Partner-Willkommen" (Typ: Neuer Partner)
+    b) "Reifen-Saisontipp"  (Typ: Reifen-Tipp)
+    c) "Blog-Promotion"     (Typ: Blog-Promo)
+
+SCHRITT 3: Automatisierungen einrichten
+  → Automatisierungen-Tab → Empfohlene Regeln:
+    a) Werkstatt verifiziert → Partner-Willkommen Vorlage
+       (Auto-Publish: AUS → erst prüfen, dann veröffentlichen)
+    b) Blog veröffentlicht → Blog-Promotion Vorlage
+    c) Wöchentlich → Reifen-Saisontipp
+
+SCHRITT 4: Ersten manuellen Post erstellen
+  → "Neuer Beitrag" → KI-Text generieren lassen → Anpassen → Posten
+
+
+==============================================================================
+7. TIPPS & BEST PRACTICES
+==============================================================================
+
+  ✅ Verwende Auto-Publish nur mit Bedacht
+     → Besser: Entwurf erstellen lassen, manuell prüfen, dann freigeben
+
+  ✅ Erstelle Vorlagen für häufige Inhalte
+     → Spart Zeit und sorgt für einheitliche Kommunikation
+
+  ✅ Nutze die KI-Textgenerierung als Startpunkt
+     → Der generierte Text ist gut, aber persönliche Anpassungen
+        machen den Post authentischer
+
+  ✅ Plane Posts im Voraus
+     → Nutze die Zeitplanung für regelmäßige Posts
+        (z.B. Dienstags und Donnerstags um 10 Uhr)
+
+  ✅ Beobachte die Engagement-Zahlen
+     → Dashboard zeigt Likes, Shares, Kommentare
+     → Passe deine Strategie basierend auf den Zahlen an
+
+  ✅ Hashtags nicht vergessen
+     → Immer #Bereifung24 verwenden
+     → Ergänze stadt- und themenspezifische Hashtags
+
+  ✅ Token-Ablauf überwachen
+     → Kurzlebige Tokens laufen nach ~1 Stunde ab!
+     → Nutze die "Long-Lived Token"-Funktion für dauerhafte Tokens
+     → Long-Lived Page Tokens laufen NICHT ab
+
+
+==============================================================================
+8. FEHLERBEHEBUNG
+==============================================================================
+
+  PROBLEM: "Gemini API key not configured"
+  LÖSUNG:  Admin → API-Einstellungen → GEMINI_API_KEY eintragen
+
+  PROBLEM: Post-Status "Fehlgeschlagen"
+  LÖSUNG:  1. Access Token des Accounts prüfen (abgelaufen?)
+           2. Page-ID korrekt eingetragen?
+           3. Berechtigungen der App prüfen
+           4. Long-Lived Token generieren (falls noch nicht geschehen)
+
+  PROBLEM: Instagram-Post fehlgeschlagen (#10 Permission)
+  LÖSUNG:  1. Instagram muss als Business-Account mit der
+              Facebook-Seite verknüpft sein
+           2. Token muss NACH der Verknüpfung generiert werden
+           3. Berechtigungen prüfen: instagram_content_publish
+              muss in der Meta App aktiviert sein
+           4. Instagram-Bilder müssen eine öffentliche URL haben
+              (lokale Dateien werden nicht unterstützt)
+
+  PROBLEM: Threads-Post fehlgeschlagen
+  LÖSUNG:  1. Threads-Account muss mit dem Meta-Konto verbunden sein
+           2. Threads API muss in der Meta App aktiviert sein
+           3. Token-Berechtigungen prüfen
+
+  PROBLEM: KI-Text wird nicht generiert
+  LÖSUNG:  Gemini API-Key in den API-Einstellungen prüfen
+
+  PROBLEM: Automatisierung wird nicht ausgelöst
+  LÖSUNG:  1. Ist die Automatisierung aktiv?
+           2. Ist eine gültige Vorlage verknüpft?
+           3. Sind aktive Accounts für die Plattformen vorhanden?
+
+
+==============================================================================
+9. INSTAGRAM-VORAUSSETZUNGEN
+==============================================================================
+
+  Damit Instagram-Posts funktionieren, müssen folgende
+  Voraussetzungen erfüllt sein:
+
+  1. BUSINESS-ACCOUNT:
+     → Instagram-Profil muss ein "Business"- oder "Creator"-Konto sein
+     → Umstellen unter: Instagram → Einstellungen → Konto → Zu
+        professionellem Konto wechseln
+
+  2. MIT FACEBOOK-SEITE VERKNÜPFT:
+     → Instagram-Business-Profil muss mit der Facebook-Seite
+        "Bereifung24" verknüpft sein
+     → Facebook-Seite → Einstellungen → Verknüpfte Konten → Instagram
+
+  3. TOKEN NACH VERKNÜPFUNG GENERIEREN:
+     → Der Access Token muss NACH der Verknüpfung erstellt werden
+     → Alter Token kennt die neue Verknüpfung nicht!
+
+  4. NUR BILDER MIT ÖFFENTLICHER URL:
+     → Instagram unterstützt nur Bild-Posts über öffentlich
+        erreichbare URLs (kein direkter Datei-Upload)
+     → Reine Text-Posts sind bei Instagram nicht möglich
+
+
+==============================================================================
+10. THREADS-VORAUSSETZUNGEN
+==============================================================================
+
+  Threads nutzt die Meta Threads API:
+
+  1. THREADS-PROFIL:
+     → Threads-Account muss existieren und mit dem
+        Meta-Konto verknüpft sein
+
+  2. API-ZUGANG:
+     → In der Meta App muss "Auf Threads API zugreifen"
+        aktiviert sein (unter Anwendungsfälle)
+
+  3. POSTING:
+     → Threads unterstützt Text-Posts (max. 500 Zeichen)
+     → Bilder werden als URL angehängt
+     → Threads-Container werden erstellt und dann veröffentlicht
+        (ähnlich wie bei Instagram)
+
+
+==============================================================================
+   Stand: März 2026 | Bereifung24 GmbH
+==============================================================================

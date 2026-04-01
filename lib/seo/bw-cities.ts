@@ -418,6 +418,306 @@ export const BW_CITIES: CityData[] = [
       'Stark von PKW abhängige Region (wenig ÖPNV)',
       'Wichtiger Standort für Carl Zeiss und Voith'
     ]
+  },
+  {
+    slug: 'bietigheim-bissingen',
+    name: 'Bietigheim-Bissingen',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 43500,
+    postalCodes: ['74321', '74322'],
+    description: 'Große Kreisstadt im Landkreis Ludwigsburg an der Enz',
+    workshopCount: 'über 50',
+    carOwners: 'ca. 25.000',
+    metaTitle: 'Werkstatt registrieren Bietigheim-Bissingen | Bereifung24 - Jetzt starten',
+    metaDescription: 'KFZ-Werkstatt in Bietigheim-Bissingen? Registriere dich kostenlos auf Bereifung24. Online-Buchungssystem, eigene Werkstatt-Website, automatische Reifenbestellung. 25.000 Autofahrer warten.',
+    h1: 'Werkstatt registrieren in Bietigheim-Bissingen',
+    introText: 'Bietigheim-Bissingen im Landkreis Ludwigsburg liegt strategisch zwischen Stuttgart und Heilbronn an der A81. Mit dem Dürr-Konzern als größtem Arbeitgeber und einer starken Pendlerinfrastruktur bietet die Große Kreisstadt über 25.000 Autofahrern Bedarf an professionellem Reifenservice.',
+    localFacts: [
+      'Über 25.000 zugelassene Fahrzeuge in Bietigheim-Bissingen',
+      'Hauptsitz des Dürr-Konzerns (Automobilzulieferer)',
+      'Starker Pendlerverkehr entlang der A81 (Stuttgart–Heilbronn)',
+      'Historische Altstadt mit Fachwerkhäusern an der Enz'
+    ]
+  },
+  {
+    slug: 'freiberg-am-neckar',
+    name: 'Freiberg am Neckar',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 16000,
+    postalCodes: ['71691'],
+    description: 'Stadt am Neckar im Landkreis Ludwigsburg',
+    workshopCount: 'über 15',
+    carOwners: 'ca. 9.000',
+    metaTitle: 'Werkstatt registrieren Freiberg am Neckar | Bereifung24',
+    metaDescription: 'KFZ-Werkstatt in Freiberg am Neckar? Werde Partner bei Bereifung24. Online-Buchungen, eigene Werkstatt-Website. Direkt bei Ludwigsburg und Bietigheim-Bissingen.',
+    h1: 'Werkstatt registrieren in Freiberg am Neckar',
+    introText: 'Freiberg am Neckar liegt ideal zwischen Ludwigsburg und Bietigheim-Bissingen. Mit über 9.000 Autofahrern und starkem Pendlerverkehr in die umliegenden Städte bietet Freiberg gutes Potenzial für digitalen Reifenservice.',
+    localFacts: [
+      'Über 9.000 zugelassene Fahrzeuge in Freiberg am Neckar',
+      'Direkte Nachbarstadt von Bietigheim-Bissingen',
+      'Starker Pendlerverkehr nach Stuttgart und Ludwigsburg',
+      'Wachsende Wohngemeinde mit hoher Fahrzeugdichte'
+    ]
+  },
+  {
+    slug: 'marbach-am-neckar',
+    name: 'Marbach am Neckar',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 16200,
+    postalCodes: ['71672'],
+    description: 'Schillerstadt am Neckar',
+    workshopCount: 'über 15',
+    carOwners: 'ca. 9.000',
+    metaTitle: 'Werkstatt registrieren Marbach am Neckar | Bereifung24',
+    metaDescription: 'KFZ-Werkstatt in Marbach am Neckar? Registriere dich kostenlos auf Bereifung24. Die Schillerstadt braucht digitalen Reifenservice. Keine Grundgebühr.',
+    h1: 'Werkstatt registrieren in Marbach am Neckar',
+    introText: 'Marbach am Neckar, die Schillerstadt, liegt nur wenige Kilometer von Bietigheim-Bissingen entfernt. Mit einem wachsenden Einzugsgebiet im Bottwartal und über 9.000 Autofahrern lohnt sich digitaler Reifenservice.',
+    localFacts: [
+      'Über 9.000 zugelassene Fahrzeuge in Marbach',
+      'Schillerstadt mit starkem Tourismus-Verkehr',
+      'Einzugsgebiet im gesamten Bottwartal',
+      'Gute Anbindung an B27 Richtung Stuttgart'
+    ]
+  },
+  {
+    slug: 'sachsenheim',
+    name: 'Sachsenheim',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 18500,
+    postalCodes: ['74343'],
+    description: 'Stadt westlich von Bietigheim-Bissingen',
+    workshopCount: 'über 20',
+    carOwners: 'ca. 11.000',
+    metaTitle: 'Werkstatt registrieren Sachsenheim | Bereifung24 - Kostenlos',
+    metaDescription: 'KFZ-Werkstatt in Sachsenheim? Werde Partner bei Bereifung24. Online-Buchungssystem, eigene Werkstatt-Website. Im Herzen des Landkreises Ludwigsburg.',
+    h1: 'Werkstatt registrieren in Sachsenheim',
+    introText: 'Sachsenheim liegt westlich von Bietigheim-Bissingen und bedient ein ländliches Einzugsgebiet bis Vaihingen an der Enz. Über 11.000 Autofahrer sind auf den PKW angewiesen – perfektes Potenzial für digitalen Reifenservice.',
+    localFacts: [
+      'Über 11.000 zugelassene Fahrzeuge in Sachsenheim',
+      'Ländliches Einzugsgebiet mit hoher PKW-Abhängigkeit',
+      'Direkte Nachbarstadt von Bietigheim-Bissingen',
+      'Motorsport-Tradition durch Sachsenring-Nähe'
+    ]
+  },
+  {
+    slug: 'kornwestheim',
+    name: 'Kornwestheim',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 34000,
+    postalCodes: ['70806'],
+    description: 'Salamander-Stadt zwischen Stuttgart und Ludwigsburg',
+    workshopCount: 'über 35',
+    carOwners: 'ca. 20.000',
+    metaTitle: 'Werkstatt registrieren Kornwestheim | Bereifung24 - Jetzt starten',
+    metaDescription: 'KFZ-Werkstatt in Kornwestheim? Registriere dich kostenlos auf Bereifung24. Online-Buchungssystem, eigene Werkstatt-Website. 20.000 Autofahrer in Kornwestheim.',
+    h1: 'Werkstatt registrieren in Kornwestheim',
+    introText: 'Kornwestheim liegt direkt zwischen Stuttgart und Ludwigsburg und profitiert von enormem Pendlerverkehr. Mit über 20.000 Autofahrern und dem Salamander-Areal als wachsendem Wirtschaftsstandort bietet Kornwestheim ideale Bedingungen für Reifenservice.',
+    localFacts: [
+      'Über 20.000 zugelassene Fahrzeuge in Kornwestheim',
+      'Direkt zwischen Stuttgart und Ludwigsburg gelegen',
+      'Starker Pendlerverkehr in beide Richtungen',
+      'Wachsender Wirtschaftsstandort mit Salamander-Areal'
+    ]
+  },
+  {
+    slug: 'remseck-am-neckar',
+    name: 'Remseck am Neckar',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 27000,
+    postalCodes: ['71686'],
+    description: 'Wachsende Stadt an der Remsmündung',
+    workshopCount: 'über 25',
+    carOwners: 'ca. 16.000',
+    metaTitle: 'Werkstatt registrieren Remseck am Neckar | Bereifung24',
+    metaDescription: 'KFZ-Werkstatt in Remseck am Neckar? Werde Partner bei Bereifung24. Online-Buchungen, eigene Werkstatt-Website. Wachsende Stadt im Landkreis Ludwigsburg.',
+    h1: 'Werkstatt registrieren in Remseck am Neckar',
+    introText: 'Remseck am Neckar ist eine der am schnellsten wachsenden Städte im Landkreis Ludwigsburg. Mit über 16.000 Autofahrern und der Lage zwischen Stuttgart und Ludwigsburg bietet Remseck starkes Kundenpotenzial für Werkstätten.',
+    localFacts: [
+      'Über 16.000 zugelassene Fahrzeuge in Remseck',
+      'Schnell wachsende Stadt mit steigender Fahrzeugdichte',
+      'Zwischen Stuttgart und Ludwigsburg gelegen',
+      'Starker Pendlerverkehr über B27 und Neckarbrücken'
+    ]
+  },
+  {
+    slug: 'vaihingen-an-der-enz',
+    name: 'Vaihingen an der Enz',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 29000,
+    postalCodes: ['71665'],
+    description: 'Große Kreisstadt an der Enz',
+    workshopCount: 'über 30',
+    carOwners: 'ca. 17.000',
+    metaTitle: 'Werkstatt registrieren Vaihingen an der Enz | Bereifung24',
+    metaDescription: 'KFZ-Werkstatt in Vaihingen an der Enz? Registriere dich kostenlos auf Bereifung24. Große Kreisstadt mit 17.000 Autofahrern. Online-Buchungssystem inklusive.',
+    h1: 'Werkstatt registrieren in Vaihingen an der Enz',
+    introText: 'Vaihingen an der Enz ist eine Große Kreisstadt westlich von Bietigheim-Bissingen. Mit über 17.000 Autofahrern und einem großen ländlichen Einzugsgebiet im Enztal bietet Vaihingen stabiles Potenzial für digitalen Reifenservice.',
+    localFacts: [
+      'Über 17.000 zugelassene Fahrzeuge in Vaihingen',
+      'Große Kreisstadt mit breitem Einzugsgebiet im Enztal',
+      'Gute Anbindung an A81 und B10',
+      'Ländliche Region mit hoher PKW-Abhängigkeit'
+    ]
+  },
+  {
+    slug: 'fellbach',
+    name: 'Fellbach',
+    region: 'Region Stuttgart / Rems-Murr-Kreis',
+    population: 46000,
+    postalCodes: ['70734', '70736'],
+    description: 'Große Kreisstadt direkt an Stuttgart angrenzend',
+    workshopCount: 'über 50',
+    carOwners: 'ca. 27.000',
+    metaTitle: 'Werkstatt registrieren Fellbach | Bereifung24 - Mehr Kunden',
+    metaDescription: 'KFZ-Werkstatt in Fellbach? Werde Partner bei Bereifung24. Direkt an Stuttgart gelegen, 27.000 Autofahrer. Online-Buchungen und eigene Werkstatt-Website.',
+    h1: 'Werkstatt registrieren in Fellbach',
+    introText: 'Fellbach grenzt direkt an Stuttgart und ist eine der wohlhabendsten Städte der Region. Mit über 27.000 Autofahrern und einer hohen Premium-Fahrzeugdichte bietet Fellbach exzellentes Potenzial für Werkstätten.',
+    localFacts: [
+      'Über 27.000 zugelassene Fahrzeuge in Fellbach',
+      'Direkt an Stuttgart angrenzend',
+      'Hohe Kaufkraft und Premium-Fahrzeugdichte',
+      'Starker Pendlerverkehr über B14 nach Stuttgart'
+    ]
+  },
+  {
+    slug: 'leonberg',
+    name: 'Leonberg',
+    region: 'Region Stuttgart / Landkreis Böblingen',
+    population: 49000,
+    postalCodes: ['71229'],
+    description: 'Große Kreisstadt mit Bosch-Standort',
+    workshopCount: 'über 55',
+    carOwners: 'ca. 29.000',
+    metaTitle: 'Werkstatt registrieren Leonberg | Bereifung24 - Jetzt starten',
+    metaDescription: 'KFZ-Werkstatt in Leonberg? Registriere dich kostenlos auf Bereifung24. Bosch-Standort mit 29.000 Autofahrern. Online-Buchungssystem und eigene Website.',
+    h1: 'Werkstatt registrieren in Leonberg',
+    introText: 'Leonberg im Landkreis Böblingen ist Sitz der Bosch-Geschäftsführung und Autobahnknotenpunkt an A8 und A81. Mit über 29.000 Autofahrern und einer hohen Firmenwagen-Dichte bietet Leonberg starkes Potenzial für Reifenservice.',
+    localFacts: [
+      'Über 29.000 zugelassene Fahrzeuge in Leonberg',
+      'Bosch-Hauptsitz und Automobilzulieferer-Standort',
+      'Autobahnkreuz Leonberg (A8/A81) – enormer Verkehr',
+      'Hoher Anteil an Firmen- und Dienstwagen'
+    ]
+  },
+  {
+    slug: 'backnang',
+    name: 'Backnang',
+    region: 'Rems-Murr-Kreis',
+    population: 37000,
+    postalCodes: ['71522'],
+    description: 'Kreisstadt im Rems-Murr-Kreis',
+    workshopCount: 'über 40',
+    carOwners: 'ca. 22.000',
+    metaTitle: 'Werkstatt registrieren Backnang | Bereifung24 - Online Kunden',
+    metaDescription: 'KFZ-Werkstatt in Backnang? Werde Partner bei Bereifung24. Rems-Murr-Kreis mit starkem Pendlerverkehr. Online-Buchungen und eigene Werkstatt-Website.',
+    h1: 'Werkstatt registrieren in Backnang',
+    introText: 'Backnang im Rems-Murr-Kreis ist Zentrum eines großen ländlichen Einzugsgebiets. Mit über 22.000 Autofahrern und starkem Pendlerverkehr Richtung Stuttgart bietet Backnang ideale Bedingungen für digitalen Reifenservice.',
+    localFacts: [
+      'Über 22.000 zugelassene Fahrzeuge in Backnang',
+      'Zentrum des oberen Murrtals mit großem Einzugsgebiet',
+      'Starker Pendlerverkehr nach Stuttgart über B14',
+      'Ländliche Region mit hoher PKW-Abhängigkeit'
+    ]
+  },
+  {
+    slug: 'winnenden',
+    name: 'Winnenden',
+    region: 'Rems-Murr-Kreis',
+    population: 29000,
+    postalCodes: ['71364'],
+    description: 'Stadt im Rems-Murr-Kreis',
+    workshopCount: 'über 30',
+    carOwners: 'ca. 17.000',
+    metaTitle: 'Werkstatt registrieren Winnenden | Bereifung24 - Kostenlos',
+    metaDescription: 'KFZ-Werkstatt in Winnenden? Registriere dich kostenlos auf Bereifung24. Online-Buchungssystem, eigene Werkstatt-Website. Rems-Murr-Kreis digital.',
+    h1: 'Werkstatt registrieren in Winnenden',
+    introText: 'Winnenden im Rems-Murr-Kreis mit Unternehmen wie Kärcher in der Nähe hat eine starke wirtschaftliche Basis. Über 17.000 Autofahrer und das wachsende Umland bieten gutes Potenzial für Werkstätten.',
+    localFacts: [
+      'Über 17.000 zugelassene Fahrzeuge in Winnenden',
+      'Kärcher-Hauptsitz in der Nachbargemeinde Winnenden',
+      'Wachsende Stadt im Stuttgarter Speckgürtel',
+      'Gute Anbindung über B14 und S-Bahn'
+    ]
+  },
+  {
+    slug: 'muehlacker',
+    name: 'Mühlacker',
+    region: 'Enzkreis',
+    population: 26000,
+    postalCodes: ['75417'],
+    description: 'Senderstadt im Enzkreis',
+    workshopCount: 'über 25',
+    carOwners: 'ca. 15.000',
+    metaTitle: 'Werkstatt registrieren Mühlacker | Bereifung24 - Enzkreis',
+    metaDescription: 'KFZ-Werkstatt in Mühlacker? Werde Partner bei Bereifung24. Online-Buchungen, eigene Werkstatt-Website. Enzkreis mit starkem Pendlerverkehr.',
+    h1: 'Werkstatt registrieren in Mühlacker',
+    introText: 'Mühlacker als größte Stadt im Enzkreis liegt an der Bahnstrecke Stuttgart–Karlsruhe. Mit über 15.000 Autofahrern und einem breiten Einzugsgebiet Richtung Pforzheim bietet Mühlacker gutes Werkstatt-Potenzial.',
+    localFacts: [
+      'Über 15.000 zugelassene Fahrzeuge in Mühlacker',
+      'Größte Stadt im Enzkreis',
+      'Gute Anbindung zwischen Stuttgart und Karlsruhe',
+      'Ländliches Einzugsgebiet mit hoher PKW-Dichte'
+    ]
+  },
+  {
+    slug: 'ditzingen',
+    name: 'Ditzingen',
+    region: 'Region Stuttgart / Landkreis Ludwigsburg',
+    population: 25000,
+    postalCodes: ['71254'],
+    description: 'Trumpf-Standort bei Stuttgart',
+    workshopCount: 'über 25',
+    carOwners: 'ca. 15.000',
+    metaTitle: 'Werkstatt registrieren Ditzingen | Bereifung24 - Jetzt digital',
+    metaDescription: 'KFZ-Werkstatt in Ditzingen? Registriere dich kostenlos auf Bereifung24. Trumpf-Standort mit 15.000 Autofahrern. Online-Buchungssystem inklusive.',
+    h1: 'Werkstatt registrieren in Ditzingen',
+    introText: 'Ditzingen im Landkreis Ludwigsburg ist Hauptsitz des Technologiekonzerns Trumpf und liegt direkt an der A81. Mit über 15.000 Autofahrern und einer hohen Firmenwagen-Quote bietet Ditzingen attraktives Werkstatt-Potenzial.',
+    localFacts: [
+      'Über 15.000 zugelassene Fahrzeuge in Ditzingen',
+      'Trumpf-Hauptsitz – High-Tech-Standort',
+      'Direkt an der A81 gelegen',
+      'Hoher Anteil an Premium- und Firmenwagen'
+    ]
+  },
+  {
+    slug: 'kirchheim-unter-teck',
+    name: 'Kirchheim unter Teck',
+    region: 'Region Stuttgart / Landkreis Esslingen',
+    population: 41000,
+    postalCodes: ['73230'],
+    description: 'Große Kreisstadt am Fuß der Schwäbischen Alb',
+    workshopCount: 'über 45',
+    carOwners: 'ca. 24.000',
+    metaTitle: 'Werkstatt registrieren Kirchheim unter Teck | Bereifung24',
+    metaDescription: 'KFZ-Werkstatt in Kirchheim unter Teck? Werde Partner bei Bereifung24. Große Kreisstadt mit 24.000 Autofahrern. Kostenlos und ohne Vertrag.',
+    h1: 'Werkstatt registrieren in Kirchheim unter Teck',
+    introText: 'Kirchheim unter Teck liegt am Fuß der Schwäbischen Alb und ist Zentrum des südlichen Landkreises Esslingen. Mit über 24.000 Autofahrern und starkem Winterreifen-Bedarf durch die Alb-Nähe bietet Kirchheim ideale Bedingungen für Werkstätten.',
+    localFacts: [
+      'Über 24.000 zugelassene Fahrzeuge in Kirchheim unter Teck',
+      'Große Kreisstadt am Fuß der Schwäbischen Alb',
+      'Winterreifen-Hotspot durch Alb-Anbindung',
+      'Starker Pendlerverkehr nach Stuttgart und Esslingen'
+    ]
+  },
+  {
+    slug: 'nuertingen',
+    name: 'Nürtingen',
+    region: 'Region Stuttgart / Landkreis Esslingen',
+    population: 41000,
+    postalCodes: ['72622'],
+    description: 'Große Kreisstadt am Neckar',
+    workshopCount: 'über 45',
+    carOwners: 'ca. 24.000',
+    metaTitle: 'Werkstatt registrieren Nürtingen | Bereifung24 - Neckartal',
+    metaDescription: 'KFZ-Werkstatt in Nürtingen? Registriere dich kostenlos auf Bereifung24. Große Kreisstadt mit 24.000 Autofahrern. Online-Buchungen und eigene Website.',
+    h1: 'Werkstatt registrieren in Nürtingen',
+    introText: 'Nürtingen am Neckar ist die größte Stadt im südlichen Landkreis Esslingen. Mit über 24.000 Autofahrern und einem breiten Einzugsgebiet bis zur Schwäbischen Alb bietet Nürtingen starkes Werkstatt-Potenzial.',
+    localFacts: [
+      'Über 24.000 zugelassene Fahrzeuge in Nürtingen',
+      'Größte Stadt im südlichen Landkreis Esslingen',
+      'Starker Pendlerverkehr nach Stuttgart über B27/B313',
+      'Hochschulstadt mit wachsender Bevölkerung'
+    ]
   }
 ]
 

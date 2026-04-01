@@ -2418,8 +2418,8 @@ export default function NewHomePage({
                                 </div>
                               )}
 
-                              {/* Anzahl Reifen Dropdown (nur bei Reifenwechsel mit Reifenkauf) */}
-                              {selectedService === 'TIRE_CHANGE' && includeTires && !hasMixedTires && (
+                              {/* Anzahl Reifen Dropdown (bei Reifenwechsel und Nur Montage) */}
+                              {selectedService === 'TIRE_CHANGE' && !hasMixedTires && (
                                 <div className="mt-3">
                                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                                     Anzahl Reifen

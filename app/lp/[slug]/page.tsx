@@ -272,7 +272,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
   // Hero background based on template
   const heroBackground: React.CSSProperties = landingPage.heroImage
     ? {
-        backgroundImage: `linear-gradient(rgba(0,0,0,${template === 'classic' ? '0.6' : template === 'professional' ? '0.65' : '0.55'}), rgba(0,0,0,0.45)), url(https://www.bereifung24.de${landingPage.heroImage})`,
+        backgroundImage: `linear-gradient(rgba(0,0,0,${template === 'classic' ? '0.6' : template === 'professional' ? '0.65' : '0.55'}), rgba(0,0,0,0.45)), url(https://bereifung24.de${landingPage.heroImage})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }

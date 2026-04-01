@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import { getAuthUser } from '@/lib/getAuthUser'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -43,18 +44,26 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
+    const session = { user: authUser }
 
-    const customer = await prisma.customer.findUnique({
+    let customer = await prisma.customer.findUnique({
       where: { userId: session.user.id }
     })
 
     if (!customer) {
-      return NextResponse.json({ error: 'Kunde nicht gefunden' }, { status: 404 })
+      customer = await prisma.customer.create({
+        data: {
+          userId: session.user.id,
+          firstName: authUser.firstName || '',
+          lastName: authUser.lastName || '',
+          email: authUser.email,
+        }
+      })
     }
 
     // Check if vehicle belongs to this customer
@@ -154,14 +163,14 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const authUser = await getAuthUser(req)
     
-    if (!session?.user?.id) {
+    if (!authUser?.id) {
       return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
     }
 
     const customer = await prisma.customer.findUnique({
-      where: { userId: session.user.id }
+      where: { userId: authUser.id }
     })
 
     if (!customer) {

@@ -7,13 +7,13 @@ export const metadata: Metadata = {
   description: `Registriere deine KFZ-Werkstatt kostenlos auf Bereifung24. Eigene Werkstatt-Website, Online-Buchungssystem, automatische Reifenbestellung. Jetzt in ganz Deutschland starten. ${TOTAL_CITIES} Städte in 16 Bundesländern.`,
   keywords: 'werkstatt registrieren deutschland, kfz werkstatt partner werden, reifenservice plattform, werkstatt plattform beitreten, werkstatt digitalisieren, kostenlose werkstatt website',
   alternates: {
-    canonical: 'https://www.bereifung24.de/werkstatt-werden'
+    canonical: 'https://bereifung24.de/werkstatt-werden'
   },
   openGraph: {
     title: 'Werkstatt-Partner werden in ganz Deutschland | Bereifung24',
     description: 'Deutschlands erste digitale Reifenservice-Plattform. Jetzt als Werkstatt kostenlos registrieren und eigene Website erhalten.',
     type: 'website',
-    url: 'https://www.bereifung24.de/werkstatt-werden',
+    url: 'https://bereifung24.de/werkstatt-werden',
     siteName: 'Bereifung24',
     locale: 'de_DE',
   },
@@ -28,11 +28,11 @@ export default function WerkstattWerdenPage() {
     '@type': 'CollectionPage',
     name: 'Werkstatt-Partner werden in ganz Deutschland',
     description: `Übersicht aller ${TOTAL_CITIES} Städte in 16 Bundesländern, in denen Werkstätten Partner bei Bereifung24 werden können.`,
-    url: 'https://www.bereifung24.de/werkstatt-werden',
+    url: 'https://bereifung24.de/werkstatt-werden',
     publisher: {
       '@type': 'Organization',
       name: 'Bereifung24',
-      url: 'https://www.bereifung24.de'
+      url: 'https://bereifung24.de'
     }
   }
 

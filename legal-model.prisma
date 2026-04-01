@@ -1,0 +1,13 @@
+
+// Legal Texts (AGB, Datenschutz, Impressum)
+model LegalText {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  title     String
+  content   String   @db.Text
+  version   Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("legal_texts")
+}

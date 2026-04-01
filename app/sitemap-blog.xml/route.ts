@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
-  const baseUrl = 'https://www.bereifung24.de'
+  const baseUrl = 'https://bereifung24.de'
 
   try {
     // Get all published blog posts

@@ -157,6 +157,34 @@ export async function POST(request: NextRequest) {
       } catch (emailError) {
         console.error('[SOCIAL LOGIN] Welcome email failed:', emailError)
       }
+
+      // Admin-Benachrichtigungen senden (Social-Registrierung)
+      try {
+        const { sendEmail: sendAdminEmail, adminCustomerRegistrationEmailTemplate } = await import('@/lib/email')
+        // @ts-ignore
+        const adminSettings = await prisma.adminNotificationSetting.findMany({
+          where: { notifyCustomerRegistration: true }
+        }).catch(() => [])
+
+        if (adminSettings && adminSettings.length > 0) {
+          const registrationDate = new Date().toLocaleDateString('de-DE', {
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+          })
+          for (const admin of adminSettings) {
+            await sendAdminEmail({
+              to: admin.email,
+              subject: `Neue Kunden-Registrierung (${provider === 'google' ? 'Google' : 'Apple'}) - Bereifung24`,
+              html: adminCustomerRegistrationEmailTemplate({
+                customerName: `${user.firstName} ${user.lastName}`,
+                email: user.email,
+                registrationDate
+              })
+            }).catch(err => console.error(`[SOCIAL LOGIN] Admin notification failed for ${admin.email}:`, err))
+          }
+        }
+      } catch (adminErr) {
+        console.error('[SOCIAL LOGIN] Admin notification failed:', adminErr)
+      }
     }
 
     // Issue tokens

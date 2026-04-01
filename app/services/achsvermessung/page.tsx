@@ -3,7 +3,8 @@ import { Check, ArrowLeft, Search, AlertCircle } from 'lucide-react'
 
 export const metadata = {
   title: 'Achsvermessung + Einstellung - Bereifung24',
-  description: 'Professionelle Achsvermessung und Fahrwerkseinstellung. Spur, Sturz und Nachlauf präzise einstellen lassen.'
+  description: 'Professionelle Achsvermessung und Fahrwerkseinstellung. Spur, Sturz und Nachlauf präzise einstellen lassen.',
+  alternates: { canonical: 'https://bereifung24.de/services/achsvermessung' }
 }
 
 const faqData = [
@@ -19,9 +20,9 @@ export default function AchsvermessungPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
-        { '@type': 'ListItem', position: 3, name: 'Achsvermessung', item: 'https://www.bereifung24.de/services/achsvermessung' },
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Achsvermessung', item: 'https://bereifung24.de/services/achsvermessung' },
       ],
     },
     {

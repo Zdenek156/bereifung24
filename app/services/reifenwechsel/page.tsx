@@ -3,7 +3,8 @@ import { Check, ArrowLeft, Search } from 'lucide-react'
 
 export const metadata = {
   title: 'Reifenwechsel - Bereifung24',
-  description: 'Professioneller Reifenwechsel - Reifen montieren und demontieren. Neue Reifen aufziehen oder alte Reifen wechseln.'
+  description: 'Professioneller Reifenwechsel - Reifen montieren und demontieren. Neue Reifen aufziehen oder alte Reifen wechseln.',
+  alternates: { canonical: 'https://bereifung24.de/services/reifenwechsel' }
 }
 
 const faqData = [
@@ -20,9 +21,9 @@ export default function ReifenwechselPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
-        { '@type': 'ListItem', position: 3, name: 'Reifenwechsel', item: 'https://www.bereifung24.de/services/reifenwechsel' },
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Reifenwechsel', item: 'https://bereifung24.de/services/reifenwechsel' },
       ],
     },
     {

@@ -360,6 +360,9 @@ export async function POST(request: NextRequest) {
               const storageFullPrice = Number(storagePackage.price)
               storageSurchargeValue = storageFullPrice - basicPrice
               totalPrice += storageSurchargeValue
+              if (storagePackage.durationMinutes > totalDuration) {
+                totalDuration = storagePackage.durationMinutes
+              }
             }
             
             // Add washing surcharge if selected
@@ -368,6 +371,9 @@ export async function POST(request: NextRequest) {
               const washingFullPrice = Number(washingPackage.price)
               washingSurchargeValue = washingFullPrice - basicPrice
               totalPrice += washingSurchargeValue
+              if (washingPackage.durationMinutes > totalDuration) {
+                totalDuration = washingPackage.durationMinutes
+              }
             }
             
             wheelChangeBreakdown = { basePrice: Number(basicPackage.price), balancingSurcharge: balancingSurchargeValue, storageSurcharge: storageSurchargeValue, washingSurcharge: washingSurchargeValue }
@@ -401,8 +407,11 @@ export async function POST(request: NextRequest) {
             // Workshop has rim-size pricing but no rim size provided (no vehicle selected)
             // Don't show a misleading price â€” set to 0 so frontend shows "Bitte Fahrzeug wÃ¤hlen"
             tireCount = requestedTireCount || 4
-            basePrice = 0
-            baseDuration = 0
+            const cheapest = workshop.tireChangePricing
+              .slice()
+              .sort((a: any, b: any) => Number(a.pricePerTire) - Number(b.pricePerTire))[0]
+            basePrice = Number(cheapest.pricePerTire) * tireCount
+            baseDuration = cheapest.durationPerTire * tireCount
             relevantPackages = []
           } else {
             // Fallback: use old ServicePackage logic for workshops not yet migrated
@@ -935,7 +944,7 @@ export async function POST(request: NextRequest) {
         }
       } else if (tireDimensions) {
         // Standard single tire size search
-        const { width, height, diameter, loadIndex, speedIndex } = tireDimensions
+        const { width, height, diameter, loadIndex, speedIndex, articleId: requestedArticleId, tireBrand: requestedBrand, tireModel: requestedModel } = tireDimensions
         
         console.log(`ðŸ”’ [TIRE SAFETY CHECK] Received dimensions:`, {
           width, height, diameter,
@@ -1025,7 +1034,66 @@ export async function POST(request: NextRequest) {
               })
 
               if (recsResult.available && recsResult.recommendations.length > 0) {
-                const defaultRec = recsResult.recommendations[0] // cheapest
+                // If AI recommended a specific tire, find it by articleId or brand+model
+                let defaultRec = recsResult.recommendations[0] // cheapest fallback
+                if (requestedArticleId || requestedBrand) {
+                  let matched = false
+                  // Strategy 1: Match by articleId
+                  if (requestedArticleId) {
+                    const matchedRec = recsResult.recommendations.find(r => r.tire.articleNumber === requestedArticleId)
+                    if (matchedRec) {
+                      defaultRec = matchedRec
+                      matched = true
+                      console.log(`✅ [AI Tire Match] articleId match in recommendations: ${requestedArticleId}`)
+                    } else {
+                      const matchedTire = allTiresResult.find(t => t.articleNumber === requestedArticleId)
+                      if (matchedTire) {
+                        defaultRec = {
+                          ...defaultRec,
+                          tire: matchedTire,
+                          pricePerTire: parseFloat(matchedTire.sellingPrice.toFixed(2)),
+                          totalPrice: parseFloat((matchedTire.sellingPrice * requestedTireCount).toFixed(2)),
+                          label: 'KI-Empfehlung',
+                        }
+                        matched = true
+                        console.log(`✅ [AI Tire Match] articleId match in allTires: ${requestedArticleId}`)
+                      }
+                    }
+                  }
+                  // Strategy 2: Fallback to brand+model matching
+                  if (!matched && requestedBrand) {
+                    const brandLC = requestedBrand.toLowerCase()
+                    const modelLC = (requestedModel || '').toLowerCase()
+                    const matchedRec = recsResult.recommendations.find(r => 
+                      r.tire.brand.toLowerCase() === brandLC && 
+                      (modelLC === '' || r.tire.model?.toLowerCase() === modelLC)
+                    )
+                    if (matchedRec) {
+                      defaultRec = matchedRec
+                      matched = true
+                      console.log(`✅ [AI Tire Match] brand+model match in recommendations: ${requestedBrand} ${requestedModel}`)
+                    } else {
+                      const matchedTire = allTiresResult.find(t => 
+                        t.brand.toLowerCase() === brandLC && 
+                        (modelLC === '' || t.model?.toLowerCase() === modelLC)
+                      )
+                      if (matchedTire) {
+                        defaultRec = {
+                          ...defaultRec,
+                          tire: matchedTire,
+                          pricePerTire: parseFloat(matchedTire.sellingPrice.toFixed(2)),
+                          totalPrice: parseFloat((matchedTire.sellingPrice * requestedTireCount).toFixed(2)),
+                          label: 'KI-Empfehlung',
+                        }
+                        matched = true
+                        console.log(`✅ [AI Tire Match] brand+model match in allTires: ${requestedBrand} ${requestedModel}`)
+                      }
+                    }
+                  }
+                  if (!matched) {
+                    console.log(`⚠️ [AI Tire Match] No match found for articleId=${requestedArticleId}, brand=${requestedBrand}, model=${requestedModel}. Falling back to cheapest.`)
+                  }
+                }
                 
                 // Calculate disposal fee (added to montage, not to tires)
                 const disposalFeeTotal = includeDisposal ? disposalFee * requestedTireCount : 0

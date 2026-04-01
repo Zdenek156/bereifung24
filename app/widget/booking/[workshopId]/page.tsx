@@ -130,8 +130,8 @@ export default async function WidgetBookingPage({
   // Use landing page URL if available, otherwise workshop profile
   const hasLandingPage = workshop.landingPage?.isActive && workshop.landingPage?.slug
   const primaryUrl = hasLandingPage
-    ? `https://www.bereifung24.de/lp/${workshop.landingPage!.slug}`
-    : `https://www.bereifung24.de/workshop/${workshop.id}`
+    ? `https://bereifung24.de/lp/${workshop.landingPage!.slug}`
+    : `https://bereifung24.de/workshop/${workshop.id}`
   const bookingUrl = primaryUrl
 
   return (
@@ -235,7 +235,7 @@ export default async function WidgetBookingPage({
         </a>
 
         <div className="footer">
-          <a href="https://www.bereifung24.de" target="_blank" rel="noopener noreferrer">
+          <a href="https://bereifung24.de" target="_blank" rel="noopener noreferrer">
             Powered by Bereifung24
           </a>
         </div>

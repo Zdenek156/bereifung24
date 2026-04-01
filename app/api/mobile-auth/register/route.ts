@@ -109,6 +109,36 @@ export async function POST(request: NextRequest) {
       console.error('[MOBILE REGISTER] Welcome email failed:', emailError)
     }
 
+    // Admin-Benachrichtigungen senden (Mobile-Registrierung)
+    try {
+      const { sendEmail: sendAdminEmail, adminCustomerRegistrationEmailTemplate } = await import('@/lib/email')
+      // @ts-ignore
+      const adminSettings = await prisma.adminNotificationSetting.findMany({
+        where: { notifyCustomerRegistration: true }
+      }).catch(() => [])
+
+      if (adminSettings && adminSettings.length > 0) {
+        const registrationDate = new Date().toLocaleDateString('de-DE', {
+          day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        })
+        for (const admin of adminSettings) {
+          await sendAdminEmail({
+            to: admin.email,
+            subject: 'Neue Kunden-Registrierung (App) - Bereifung24',
+            html: adminCustomerRegistrationEmailTemplate({
+              customerName: `${user.firstName} ${user.lastName}`,
+              email: user.email,
+              phone: user.phone || undefined,
+              city: user.city || undefined,
+              registrationDate
+            })
+          }).catch(err => console.error(`[MOBILE REGISTER] Admin notification failed for ${admin.email}:`, err))
+        }
+      }
+    } catch (adminErr) {
+      console.error('[MOBILE REGISTER] Admin notification failed:', adminErr)
+    }
+
     return NextResponse.json(tokens, { status: 201 })
 
   } catch (error) {

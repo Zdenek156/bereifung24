@@ -32,37 +32,24 @@ export async function GET(request: Request) {
             createdAt: true,
           }
         },
-        tireRequests: {
+        bookings: {
+          where: { status: { in: ['CONFIRMED', 'COMPLETED'] } },
           include: {
-            booking: {
-              include: {
-                offer: {
-                  select: {
-                    price: true
-                  }
-                }
-              },
-              where: {
-                status: {
-                  in: ['CONFIRMED', 'COMPLETED']
-                }
-              }
-            }
+            offer: { select: { price: true } }
           }
+        },
+        directBookings: {
+          where: { status: { in: ['CONFIRMED', 'COMPLETED'] } },
+          select: { totalPrice: true }
         }
       }
     })
 
     // Calculate data for each customer
     const customerData = customers.map(customer => {
-      const requestCount = customer.tireRequests.length
-      const totalSpent = customer.tireRequests.reduce((sum, req) => {
-        const booking = req.booking
-        if (booking && booking.offer) {
-          return sum + booking.offer.price
-        }
-        return sum
-      }, 0)
+      const bookingCount = (customer.bookings?.length || 0) + (customer.directBookings?.length || 0)
+      const totalSpent = (customer.bookings?.reduce((sum: number, b: any) => sum + (b.offer?.price || 0), 0) || 0)
+        + (customer.directBookings?.reduce((sum: number, db: any) => sum + Number(db.totalPrice || 0), 0) || 0)
 
       // Calculate distance from base point (Bereifung24 Standort: Markgröningen)
       const baseLatitude = 48.9074
@@ -90,7 +77,7 @@ export async function GET(request: Request) {
         zipCode: customer.user.zipCode || '',
         city: customer.user.city || '',
         distance: distance,
-        requestCount,
+        bookingCount,
         totalSpent,
         isActive: customer.user.isActive,
         createdAt: customer.user.createdAt,
@@ -126,7 +113,7 @@ export async function GET(request: Request) {
 }
 
 function generateCSV(data: any[]): string {
-  const headers = ['ID', 'E-Mail', 'Vorname', 'Nachname', 'Telefon', 'Straße', 'PLZ', 'Stadt', 'Entfernung (km)', 'Anfragen', 'Umsatz (EUR)', 'Status', 'Registriert']
+  const headers = ['ID', 'E-Mail', 'Vorname', 'Nachname', 'Telefon', 'Straße', 'PLZ', 'Stadt', 'Entfernung (km)', 'Buchungen', 'Umsatz (EUR)', 'Status', 'Registriert']
   const rows = data.map(customer => [
     customer.id,
     customer.email,
@@ -137,7 +124,7 @@ function generateCSV(data: any[]): string {
     customer.zipCode,
     customer.city,
     customer.distance || '',
-    customer.requestCount,
+    customer.bookingCount,
     customer.totalSpent.toFixed(2),
     customer.isActive ? 'Aktiv' : 'Inaktiv',
     new Date(customer.createdAt).toLocaleDateString('de-DE')
@@ -163,7 +150,7 @@ function generateTXT(data: any[]): string {
     txt += `   Telefon:     ${customer.phone || 'Nicht angegeben'}\n`
     txt += `   Adresse:     ${customer.street ? customer.street + ', ' : ''}${customer.zipCode} ${customer.city}\n`
     txt += `   Entfernung:  ${customer.distance ? customer.distance + ' km' : 'Nicht berechnet'}\n`
-    txt += `   Anfragen:    ${customer.requestCount}\n`
+    txt += `   Buchungen:   ${customer.bookingCount}\n`
     txt += `   Umsatz:      ${customer.totalSpent.toFixed(2)} EUR\n`
     txt += `   Status:      ${customer.isActive ? 'Aktiv' : 'Inaktiv'}\n`
     txt += `   Registriert: ${new Date(customer.createdAt).toLocaleDateString('de-DE')}\n`

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { ALL_CITIES } from '@/lib/seo/german-cities'
 
 export async function GET() {
-  const baseUrl = 'https://www.bereifung24.de'
+  const baseUrl = 'https://bereifung24.de'
   const now = new Date().toISOString()
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

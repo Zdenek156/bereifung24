@@ -395,9 +395,23 @@ export async function getNotificationStats() {
   }
 }
 
-export async function getRecentNotifications(limit = 50) {
-  return prisma.pushNotificationLog.findMany({
-    orderBy: { createdAt: 'desc' },
-    take: limit,
-  })
+export async function getRecentNotifications(limit = 50, page = 1, search?: string) {
+  const skip = (page - 1) * limit
+  const where: any = {}
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { body: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+  const [notifications, total] = await Promise.all([
+    prisma.pushNotificationLog.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip,
+    }),
+    prisma.pushNotificationLog.count({ where }),
+  ])
+  return { notifications, total, page, limit, totalPages: Math.ceil(total / limit) }
 }

@@ -47,6 +47,9 @@ export const metadata: Metadata = {
     description: 'Werkstätten vergleichen und direkt online buchen. Transparent, schnell und sicher.',
     images: ['https://bereifung24.de/og-image.jpg']
   },
+  alternates: {
+    canonical: 'https://bereifung24.de'
+  },
   other: {
     'google': 'notranslate'
   }

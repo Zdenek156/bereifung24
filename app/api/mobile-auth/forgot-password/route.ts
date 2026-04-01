@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Send reset email
-    const baseUrl = process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://bereifung24.de'
     const resetLink = `${baseUrl}/reset-password?token=${resetToken}`
 
     await sendEmail({

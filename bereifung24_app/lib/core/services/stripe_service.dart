@@ -77,7 +77,8 @@ class StripeService {
       final paymentIntentId = data['paymentIntentId'] as String?;
       if (clientSecret == null) throw Exception('No client secret');
 
-      // Build payment method order based on user selection
+      // Build payment method order based on user selection (selected first)
+      final allMethods = ['card', 'paypal', 'klarna', 'googlePay'];
       List<String>? methodOrder;
       if (paymentMethod != null) {
         const methodMap = {
@@ -88,7 +89,7 @@ class StripeService {
         };
         final selected = methodMap[paymentMethod];
         if (selected != null) {
-          methodOrder = [selected];
+          methodOrder = [selected, ...allMethods.where((m) => m != selected)];
         }
       }
 

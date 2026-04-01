@@ -49,6 +49,9 @@ export async function GET(
             balancingPrice: true,
             storagePrice: true,
             washingPrice: true,
+            mountingOnlySurcharge: true,
+            disposalFee: true,
+            runFlatSurcharge: true,
             allowsDirectBooking: true,
             servicePackages: {
               select: {

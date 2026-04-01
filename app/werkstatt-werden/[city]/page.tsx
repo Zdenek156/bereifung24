@@ -25,17 +25,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: city.metaDescription,
     keywords: `werkstatt registrieren ${city.name}, kfz werkstatt ${city.name}, reifenservice ${city.name}, werkstatt kunden gewinnen ${city.name}, online terminbuchung werkstatt ${city.name}, werkstatt plattform ${city.name}`,
     alternates: {
-      canonical: `https://www.bereifung24.de/werkstatt-werden/${city.slug}`
+      canonical: `https://bereifung24.de/werkstatt-werden/${city.slug}`
     },
     openGraph: {
       title: city.metaTitle,
       description: city.metaDescription,
       type: 'website',
-      url: `https://www.bereifung24.de/werkstatt-werden/${city.slug}`,
+      url: `https://bereifung24.de/werkstatt-werden/${city.slug}`,
       siteName: 'Bereifung24',
       locale: 'de_DE',
       images: [{
-        url: 'https://www.bereifung24.de/og-image.jpg',
+        url: 'https://bereifung24.de/og-image.jpg',
         width: 1200,
         height: 630,
         alt: `Bereifung24 Werkstatt-Partner in ${city.name}`
@@ -63,14 +63,14 @@ export default function Page({ params }: PageProps) {
     '@type': 'WebPage',
     name: city.h1,
     description: city.metaDescription,
-    url: `https://www.bereifung24.de/werkstatt-werden/${city.slug}`,
+    url: `https://bereifung24.de/werkstatt-werden/${city.slug}`,
     publisher: {
       '@type': 'Organization',
       name: 'Bereifung24',
-      url: 'https://www.bereifung24.de',
+      url: 'https://bereifung24.de',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://www.bereifung24.de/og-image.jpg'
+        url: 'https://bereifung24.de/og-image.jpg'
       }
     },
     mainEntity: {
@@ -99,9 +99,9 @@ export default function Page({ params }: PageProps) {
     breadcrumb: {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Für Werkstätten', item: 'https://www.bereifung24.de/werkstatt' },
-        { '@type': 'ListItem', position: 3, name: city.name, item: `https://www.bereifung24.de/werkstatt-werden/${city.slug}` }
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Für Werkstätten', item: 'https://bereifung24.de/werkstatt' },
+        { '@type': 'ListItem', position: 3, name: city.name, item: `https://bereifung24.de/werkstatt-werden/${city.slug}` }
       ]
     }
   }

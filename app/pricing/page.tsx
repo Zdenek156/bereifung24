@@ -1,4 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Preise & Konditionen - Bereifung24',
+  description: 'Transparente Preise und Konditionen für Werkstätten auf Bereifung24. Keine versteckten Kosten.',
+  alternates: { canonical: 'https://bereifung24.de/pricing' }
+}
 
 export default function PricingPage() {
   const checkIcon = (

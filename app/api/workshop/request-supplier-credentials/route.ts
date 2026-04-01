@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     </div>
     <div class="footer">
       <p>Diese E-Mail wurde automatisch über die Bereifung24 Plattform versendet.</p>
-      <p><a href="mailto:info@bereifung24.de">info@bereifung24.de</a> | <a href="https://www.bereifung24.de">www.bereifung24.de</a></p>
+      <p><a href="mailto:info@bereifung24.de">info@bereifung24.de</a> | <a href="https://bereifung24.de">www.bereifung24.de</a></p>
     </div>
   </div>
 </body>

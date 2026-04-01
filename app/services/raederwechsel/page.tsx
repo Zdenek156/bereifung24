@@ -3,7 +3,8 @@ import { Check, ArrowLeft, Search } from 'lucide-react'
 
 export const metadata = {
   title: 'Räderwechsel - Bereifung24',
-  description: 'Professioneller Räderwechsel von Sommer- auf Winterreifen. Schnell, günstig und unkompliziert bei geprüften Werkstätten buchen.'
+  description: 'Professioneller Räderwechsel von Sommer- auf Winterreifen. Schnell, günstig und unkompliziert bei geprüften Werkstätten buchen.',
+  alternates: { canonical: 'https://bereifung24.de/services/raederwechsel' }
 }
 
 const faqData = [
@@ -19,9 +20,9 @@ export default function RaederwechselPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
-        { '@type': 'ListItem', position: 3, name: 'Räderwechsel', item: 'https://www.bereifung24.de/services/raederwechsel' },
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Räderwechsel', item: 'https://bereifung24.de/services/raederwechsel' },
       ],
     },
     {

@@ -387,7 +387,7 @@ export default function AnnouncementsPage() {
                           </span>
                         )}
                         {/* Edit/Delete Buttons - nur für Ersteller sichtbar */}
-                        {session?.user?.id === announcement.author.id && (
+                        {(session?.user?.b24EmployeeId === announcement.author.id || session?.user?.id === announcement.author.id) && (
                           <div className="flex items-center gap-2">
                             <button
                               onClick={(e) => {

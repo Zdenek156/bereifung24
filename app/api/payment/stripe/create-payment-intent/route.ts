@@ -81,6 +81,8 @@ export async function POST(request: NextRequest) {
     const amountInCents = Math.round(amount * 100)
 
     // Create PaymentIntent
+    // Uses automatic_payment_methods — available methods are controlled by Stripe Dashboard
+    // PayPal will appear automatically once approved in Dashboard
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amountInCents,
       currency,

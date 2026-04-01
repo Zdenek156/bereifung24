@@ -66,12 +66,44 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   ];
 
   static const _carBrands = [
-    'Abarth', 'Alfa Romeo', 'Audi', 'BMW', 'Chevrolet', 'Citroën', 'Cupra',
-    'Dacia', 'DS', 'Fiat', 'Ford', 'Honda', 'Hyundai', 'Jaguar', 'Jeep',
-    'Kia', 'Land Rover', 'Lexus', 'Mazda', 'Mercedes-Benz', 'MG', 'Mini',
-    'Mitsubishi', 'Nissan', 'Opel', 'Peugeot', 'Porsche', 'Renault', 'Seat',
-    'Škoda', 'Smart', 'Subaru', 'Suzuki', 'Tesla', 'Toyota', 'Volkswagen',
-    'Volvo', 'Sonstige',
+    'Abarth',
+    'Alfa Romeo',
+    'Audi',
+    'BMW',
+    'Chevrolet',
+    'Citroën',
+    'Cupra',
+    'Dacia',
+    'DS',
+    'Fiat',
+    'Ford',
+    'Honda',
+    'Hyundai',
+    'Jaguar',
+    'Jeep',
+    'Kia',
+    'Land Rover',
+    'Lexus',
+    'Mazda',
+    'Mercedes-Benz',
+    'MG',
+    'Mini',
+    'Mitsubishi',
+    'Nissan',
+    'Opel',
+    'Peugeot',
+    'Porsche',
+    'Renault',
+    'Seat',
+    'Škoda',
+    'Smart',
+    'Subaru',
+    'Suzuki',
+    'Tesla',
+    'Toyota',
+    'Volkswagen',
+    'Volvo',
+    'Sonstige',
   ];
 
   static const _brandAliases = <String, String>{
@@ -281,7 +313,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(_isEditing ? 'Fahrzeug aktualisiert' : 'Fahrzeug hinzugefügt'),
+              content: Text(_isEditing
+                  ? 'Fahrzeug aktualisiert'
+                  : 'Fahrzeug hinzugefügt'),
               backgroundColor: Colors.green),
         );
         Navigator.pop(context);
@@ -302,7 +336,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditing ? 'Fahrzeug bearbeiten' : 'Fahrzeug hinzufügen')),
+      appBar: AppBar(
+          title:
+              Text(_isEditing ? 'Fahrzeug bearbeiten' : 'Fahrzeug hinzufügen')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -320,7 +356,21 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: GestureDetector(
-                        onTap: () => setState(() => _vehicleType = t.$1),
+                        onTap: () => setState(() {
+                          if (_vehicleType != t.$1) {
+                            _vehicleType = t.$1;
+                            // Reset tire selections to prevent wrong sizes across vehicle types
+                            _summer.frontSpec = null;
+                            _summer.rearSpec = null;
+                            _summer.hasDifferentSizes = false;
+                            _winter.frontSpec = null;
+                            _winter.rearSpec = null;
+                            _winter.hasDifferentSizes = false;
+                            _allSeason.frontSpec = null;
+                            _allSeason.rearSpec = null;
+                            _allSeason.hasDifferentSizes = false;
+                          }
+                        }),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -391,18 +441,22 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 Builder(builder: (context) {
                   // Include scanned brand in dropdown if not already in list
                   final brands = List<String>.from(_carBrands);
-                  if (_makeCtrl.text.isNotEmpty && !brands.contains(_makeCtrl.text)) {
+                  if (_makeCtrl.text.isNotEmpty &&
+                      !brands.contains(_makeCtrl.text)) {
                     brands.insert(0, _makeCtrl.text);
                   }
                   return DropdownButtonFormField<String>(
-                    value: brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
+                    value:
+                        brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
                     isExpanded: true,
-                    decoration: const InputDecoration(hintText: 'Hersteller wählen'),
+                    decoration:
+                        const InputDecoration(hintText: 'Hersteller wählen'),
                     items: brands
                         .map((b) => DropdownMenuItem(value: b, child: Text(b)))
                         .toList(),
                     onChanged: (v) => setState(() => _makeCtrl.text = v ?? ''),
-                    validator: (v) => (v == null || v.isEmpty) ? 'Pflichtfeld' : null,
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Pflichtfeld' : null,
                   );
                 }),
               ] else ...[
@@ -490,8 +544,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       items: List.generate(
                           12,
                           (i) => DropdownMenuItem(
-                              value: i + 1,
-                              child: Text(_monthName(i + 1)))),
+                              value: i + 1, child: Text(_monthName(i + 1)))),
                       onChanged: (v) => setState(() => _inspectionMonth = v),
                     ),
                   ),
@@ -505,8 +558,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                           4,
                           (i) => DropdownMenuItem(
                               value: DateTime.now().year + i,
-                              child:
-                                  Text('${DateTime.now().year + i}'))),
+                              child: Text('${DateTime.now().year + i}'))),
                       onChanged: (v) => setState(() => _inspectionYear = v),
                     ),
                   ),
@@ -535,7 +587,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     DropdownMenuItem(value: 7, child: Text('7 Tage vorher')),
                     DropdownMenuItem(value: 30, child: Text('30 Tage vorher')),
                   ],
-                  onChanged: (v) => setState(() => _inspectionReminderDays = v ?? 30),
+                  onChanged: (v) =>
+                      setState(() => _inspectionReminderDays = v ?? 30),
                 ),
               ],
 
@@ -548,7 +601,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 DropdownButtonFormField<String>(
                   value: _fuelType,
                   isExpanded: true,
-                  decoration: const InputDecoration(hintText: 'Kraftstoff wählen'),
+                  decoration:
+                      const InputDecoration(hintText: 'Kraftstoff wählen'),
                   items: _fuelTypes
                       .map((f) =>
                           DropdownMenuItem(value: f.$1, child: Text(f.$2)))
@@ -660,7 +714,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Icon(Icons.document_scanner, color: Colors.white, size: 24),
+              child: const Icon(Icons.document_scanner,
+                  color: Colors.white, size: 24),
             ),
             const SizedBox(width: 14),
             const Expanded(
@@ -686,7 +741,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+            const Icon(Icons.arrow_forward_ios,
+                color: Colors.white70, size: 16),
           ],
         ),
       ),
@@ -751,7 +807,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       }
     }
     String? rearSizeStr;
-    if (_scanResult?.hasMixedTires == true && _scanResult?.rearTireSize != null) {
+    if (_scanResult?.hasMixedTires == true &&
+        _scanResult?.rearTireSize != null) {
       final rs = _scanResult!.rearTireSize!;
       rearSizeStr = '${rs.width}/${rs.aspectRatio} R${rs.diameter}';
       if (rs.loadIndex != null || rs.speedRating != null) {
@@ -793,11 +850,17 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
           ),
           const SizedBox(height: 8),
           if (rearSizeStr != null) ...[
-            Text('VA: $tireSizeStr', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            Text('VA: $tireSizeStr',
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
             const SizedBox(height: 2),
-            Text('HA: $rearSizeStr', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+            Text('HA: $rearSizeStr',
+                style:
+                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
           ] else ...[
-            Text(tireSizeStr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+            Text(tireSizeStr,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
           ],
           const SizedBox(height: 4),
           Text(
@@ -811,11 +874,13 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             child: FilledButton.icon(
               onPressed: _applyScannedTireSizes,
               icon: const Icon(Icons.check, size: 18),
-              label: const Text('Übernehmen', style: TextStyle(fontWeight: FontWeight.w700)),
+              label: const Text('Übernehmen',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF0284C7),
                 padding: const EdgeInsets.symmetric(vertical: 10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
               ),
             ),
           ),
@@ -825,8 +890,18 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   }
 
   String _monthName(int m) => const [
-        'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-        'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+        'Januar',
+        'Februar',
+        'März',
+        'April',
+        'Mai',
+        'Juni',
+        'Juli',
+        'August',
+        'September',
+        'Oktober',
+        'November',
+        'Dezember',
       ][m - 1];
 }
 
@@ -863,13 +938,17 @@ class _TireSelection {
       'diameter': frontSpec!['diameter'],
       'hasDifferentSizes': hasDifferentSizes,
     };
-    if (frontSpec!['loadIndex'] != null) spec['loadIndex'] = frontSpec!['loadIndex'];
-    if (frontSpec!['speedRating'] != null) spec['speedRating'] = frontSpec!['speedRating'];
+    if (frontSpec!['loadIndex'] != null)
+      spec['loadIndex'] = frontSpec!['loadIndex'];
+    if (frontSpec!['speedRating'] != null)
+      spec['speedRating'] = frontSpec!['speedRating'];
 
     if (hasDifferentSizes && rearSpec != null) {
       if (rearSpec!['width'] != null) spec['rearWidth'] = rearSpec!['width'];
-      if (rearSpec!['aspectRatio'] != null) spec['rearAspectRatio'] = rearSpec!['aspectRatio'];
-      if (rearSpec!['diameter'] != null) spec['rearDiameter'] = rearSpec!['diameter'];
+      if (rearSpec!['aspectRatio'] != null)
+        spec['rearAspectRatio'] = rearSpec!['aspectRatio'];
+      if (rearSpec!['diameter'] != null)
+        spec['rearDiameter'] = rearSpec!['diameter'];
     }
     return spec;
   }

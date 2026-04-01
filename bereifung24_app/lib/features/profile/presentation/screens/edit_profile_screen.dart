@@ -20,6 +20,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late final TextEditingController _zipCodeCtrl;
   late final TextEditingController _cityCtrl;
   bool _isSaving = false;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -35,16 +36,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   }
 
   Future<void> _loadProfileFromDB() async {
-    await ref.read(authStateProvider.notifier).fetchProfile();
-    if (!mounted) return;
-    final user = ref.read(authStateProvider).user;
-    if (user != null) {
+    try {
+      final response = await ApiClient().getProfile();
+      if (!mounted) return;
+      final data = response.data;
+      final user = User.fromJson(data is Map<String, dynamic> ? data : {});
       _firstNameCtrl.text = user.firstName ?? '';
       _lastNameCtrl.text = user.lastName ?? '';
       _phoneCtrl.text = user.phone ?? '';
       _streetCtrl.text = user.street ?? '';
       _zipCodeCtrl.text = user.zipCode ?? '';
       _cityCtrl.text = user.city ?? '';
+    } catch (_) {
+      // Keep initial values from auth state
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -104,7 +110,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Profil bearbeiten')),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,

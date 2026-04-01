@@ -56,6 +56,7 @@ export default function WorkshopDetailPage() {
   const [busySlots, setBusySlots] = useState<Record<string, string[]>>({})
   const [vacationDates, setVacationDates] = useState<string[]>([])
   const [openingHours, setOpeningHours] = useState<any>(null)
+  const [calendarError, setCalendarError] = useState(false)
   const [serviceType, setServiceType] = useState<string>('WHEEL_CHANGE')
   
   const [vehicles, setVehicles] = useState<any[]>([])
@@ -68,6 +69,7 @@ export default function WorkshopDetailPage() {
   const [additionalServices, setAdditionalServices] = useState<any[]>([])
   const [basePrice, setBasePrice] = useState(0)
   const [baseDuration, setBaseDuration] = useState(60)
+  const [mountingSurchargeAmount, setMountingSurchargeAmount] = useState(0)
   
   const [tireBookingData, setTireBookingData] = useState<any>(null)
   const [availableServices, setAvailableServices] = useState<any[]>([])
@@ -98,6 +100,7 @@ export default function WorkshopDetailPage() {
         setAvailableSlots(data.availableSlots || [])
         setBusySlots(data.busySlots || {})
         setVacationDates(data.vacationDates || [])
+        setCalendarError(data.calendarError || false)
         if (data.openingHours) {
           try {
             setOpeningHours(JSON.parse(data.openingHours))
@@ -491,27 +494,37 @@ export default function WorkshopDetailPage() {
                   workshopData.totalPrice = Number(pricingForSize.pricePerTire) * tireCount
                   workshopData.estimatedDuration = pricingForSize.durationPerTire * tireCount
                   
-                  // Add mounting-only surcharge for "Nur Montage" (tire installation without tire purchase)
+                  // Track mounting-only surcharge for "Nur Montage" (shown as separate line)
                   if (!hasTires && serviceData?.mountingOnlySurcharge) {
                     const mountingSurcharge = Number(serviceData.mountingOnlySurcharge) * tireCount
-                    workshopData.totalPrice += mountingSurcharge
-                    console.log(`📏 [WORKSHOP] Added mounting-only surcharge: ${serviceData.mountingOnlySurcharge}€/tire × ${tireCount} = ${mountingSurcharge}€`)
+                    setMountingSurchargeAmount(mountingSurcharge)
+                    console.log(`📏 [WORKSHOP] Mounting-only surcharge: ${serviceData.mountingOnlySurcharge}€/tire × ${tireCount} = ${mountingSurcharge}€`)
                   }
                   
                   console.log(`📏 [WORKSHOP] TIRE_CHANGE rim-size pricing: ${rimSize}" → ${pricingForSize.pricePerTire}€/tire × ${tireCount} = ${workshopData.totalPrice}€`)
                 } else if (serviceData) {
                   workshopData.totalPrice = serviceData.basePrice || 0
                   workshopData.estimatedDuration = serviceData.durationMinutes || 60
+                  // Track mounting-only surcharge for "Nur Montage" (shown as separate line)
+                  if (!hasTires && serviceData.mountingOnlySurcharge) {
+                    const mountingSurcharge = Number(serviceData.mountingOnlySurcharge) * tireCount
+                    setMountingSurchargeAmount(mountingSurcharge)
+                    console.log(`📏 [WORKSHOP] Mounting-only surcharge (fallback): ${serviceData.mountingOnlySurcharge}€/tire × ${tireCount} = ${mountingSurcharge}€`)
+                  }
                 }
               } else if (serviceData && serviceData.servicePackages && serviceData.servicePackages.length > 0) {
                 let selectedPackage = null
                 
                 const savedTireData = sessionStorage.getItem('tireBookingData')
                 let isMotoMixed = false
+                let pkgHasTires = true
+                let pkgTireCount = 4
                 if (savedTireData) {
                   try {
                     const tireData = JSON.parse(savedTireData)
                     isMotoMixed = tireData.isMixedTires || false
+                    pkgHasTires = tireData.hasTires !== false
+                    pkgTireCount = tireData.tireCount || 4
                     if (tireData.selectedPackages && tireData.selectedPackages.length > 0) {
                       const packageType = tireData.selectedPackages[0]
                       selectedPackage = serviceData.servicePackages.find((p: any) => p.packageType === packageType)
@@ -580,6 +593,12 @@ export default function WorkshopDetailPage() {
                   const packageToUse = selectedPackage || serviceData.servicePackages[0]
                   workshopData.totalPrice = packageToUse.price || 0
                   workshopData.estimatedDuration = packageToUse.durationMinutes || 60
+                }
+                // Track mounting-only surcharge for "Nur Montage" (shown as separate line)
+                if (service === 'TIRE_CHANGE' && !pkgHasTires && serviceData.mountingOnlySurcharge) {
+                  const mountingSurcharge = Number(serviceData.mountingOnlySurcharge) * pkgTireCount
+                  setMountingSurchargeAmount(mountingSurcharge)
+                  console.log(`📏 [WORKSHOP] Mounting-only surcharge (packages): ${serviceData.mountingOnlySurcharge}€/tire × ${pkgTireCount} = ${mountingSurcharge}€`)
                 }
               } else if (serviceData) {
                 workshopData.totalPrice = serviceData.basePrice || 0
@@ -704,20 +723,22 @@ export default function WorkshopDetailPage() {
                   const updated = { ...(prev || {}), }
                   if (packageType === 'with_disposal') {
                     updated.hasDisposal = true
-                    // Find disposal price from workshop services
+                    // Find disposal price from workshop services (multiply by tire count)
+                    const tCount = updated.tireCount || 4
                     for (const service of availableServices) {
                       if (service.serviceType === currentServiceType && service.disposalFee) {
-                        updated.disposalPrice = Number(service.disposalFee) || 0
+                        updated.disposalPrice = (Number(service.disposalFee) || 0) * tCount
                         break
                       }
                     }
                   }
                   if (packageType === 'runflat') {
                     updated.hasRunflat = true
-                    // Find runflat price from workshop services
+                    // Find runflat price from workshop services (multiply by tire count)
+                    const rtCount = updated.tireCount || 4
                     for (const service of availableServices) {
                       if (service.serviceType === currentServiceType && service.runflatSurcharge) {
-                        updated.runflatPrice = Number(service.runflatSurcharge) || 0
+                        updated.runflatPrice = (Number(service.runflatSurcharge) || 0) * rtCount
                         break
                       }
                     }
@@ -952,18 +973,20 @@ export default function WorkshopDetailPage() {
                       const updated = { ...(prev || {}), }
                       if (packageType === 'with_disposal') {
                         updated.hasDisposal = true
+                        const tCount = updated.tireCount || 4
                         for (const service of availableServices) {
                           if (service.serviceType === currentServiceType && service.disposalFee) {
-                            updated.disposalPrice = Number(service.disposalFee) || 0
+                            updated.disposalPrice = (Number(service.disposalFee) || 0) * tCount
                             break
                           }
                         }
                       }
                       if (packageType === 'runflat') {
                         updated.hasRunflat = true
+                        const rtCount = updated.tireCount || 4
                         for (const service of availableServices) {
                           if (service.serviceType === currentServiceType && service.runflatSurcharge) {
-                            updated.runflatPrice = Number(service.runflatSurcharge) || 0
+                            updated.runflatPrice = (Number(service.runflatSurcharge) || 0) * rtCount
                             break
                           }
                         }
@@ -1131,6 +1154,9 @@ export default function WorkshopDetailPage() {
   const calculateTotalPrice = () => {
     let total = basePrice
     
+    // Add mounting-only surcharge (tracked separately for display)
+    total += mountingSurchargeAmount
+    
     // Add tire prices
     if (tireBookingData?.isMixedTires) {
       // Mixed tires: sum front and rear
@@ -1258,7 +1284,7 @@ export default function WorkshopDetailPage() {
         time: selectedSlot.time,
       },
       pricing: {
-        servicePrice: basePrice,
+        servicePrice: basePrice + mountingSurchargeAmount,
         tirePrice: tireBookingData?.isMixedTires
           ? (tireBookingData?.selectedFrontTire?.totalPrice || (tireBookingData?.selectedFrontTire?.pricePerTire * tireBookingData?.selectedFrontTire?.quantity) || 0) +
             (tireBookingData?.selectedRearTire?.totalPrice || (tireBookingData?.selectedRearTire?.pricePerTire * tireBookingData?.selectedRearTire?.quantity) || 0)
@@ -1956,8 +1982,15 @@ export default function WorkshopDetailPage() {
                 </div>
               </div>
 
+              {/* Calendar Error Warning */}
+              {calendarError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                  <p className="text-sm text-red-800 font-medium">⚠️ Google Kalender konnte nicht abgefragt werden. Bitte kontaktieren Sie die Werkstatt telefonisch für eine Terminvereinbarung.</p>
+                </div>
+              )}
+
               {/* Time Slots */}
-              {selectedDate && (
+              {selectedDate && !calendarError && (
                 <div id="time-slots-section" className="border-t pt-4">
                   <h4 className="text-sm font-bold mb-3">
                     Zeiten am {selectedDate.toLocaleDateString('de-DE', { day: 'numeric', month: 'long' })}
@@ -2004,11 +2037,11 @@ export default function WorkshopDetailPage() {
 
                 {/* Service Summary */}
                 <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
-                  {/* Service Price */}
+                  {/* Service Price (includes mounting-only surcharge if applicable) */}
                   {isTireService ? (
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">{serviceType === 'MOTORCYCLE_TIRE' ? 'Montage' : 'Service'}</span>
-                      <span className="font-medium text-gray-900">{formatEUR(basePrice)}</span>
+                      <span className="text-gray-600">Montage</span>
+                      <span className="font-medium text-gray-900">{formatEUR(basePrice + mountingSurchargeAmount)}</span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-between text-sm">

@@ -1,4 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Datenschutzerklärung - Bereifung24',
+  description: 'Datenschutzerklärung der Bereifung24 GmbH. Informationen zur Verarbeitung personenbezogener Daten.',
+  alternates: { canonical: 'https://bereifung24.de/datenschutz' }
+}
 
 export default function DatenschutzPage() {
   return (

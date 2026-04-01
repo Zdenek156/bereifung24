@@ -42,6 +42,14 @@ export default function PushNotificationsPage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Pagination + Search
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalItems, setTotalItems] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const pageSize = 20
+
   // Send form
   const [sendMode, setSendMode] = useState<'broadcast' | 'user'>('broadcast')
   const [sendTitle, setSendTitle] = useState('')
@@ -56,24 +64,37 @@ export default function PushNotificationsPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/push-notifications?limit=100')
+      const params = new URLSearchParams({
+        limit: String(pageSize),
+        page: String(currentPage),
+      })
+      if (searchQuery) params.set('search', searchQuery)
+      const res = await fetch(`/api/admin/push-notifications?${params}`)
       if (res.ok) {
         const data = await res.json()
         setNotifications(data.notifications)
         setStats(data.stats)
+        setTotalPages(data.totalPages || 1)
+        setTotalItems(data.total || 0)
       }
     } catch (error) {
       console.error('Failed to load push data:', error)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [currentPage, searchQuery])
 
   useEffect(() => {
     if (status === 'authenticated') {
       loadData()
     }
   }, [status, loadData])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    setCurrentPage(1)
+    setSearchQuery(searchInput)
+  }
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -268,8 +289,29 @@ export default function PushNotificationsPage() {
 
       {/* Notification Log */}
       <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="text-lg font-semibold">Letzte Benachrichtigungen</h2>
+        <div className="p-4 border-b flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Benachrichtigungen ({totalItems})</h2>
+          <form onSubmit={handleSearch} className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Suche nach Titel oder Nachricht..."
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              className="px-3 py-1.5 border rounded-lg text-sm w-64"
+            />
+            <button type="submit" className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm">
+              Suchen
+            </button>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchInput(''); setSearchQuery(''); setCurrentPage(1) }}
+                className="px-3 py-1.5 text-gray-500 hover:text-red-600 text-sm"
+              >
+                ✕
+              </button>
+            )}
+          </form>
         </div>
 
         <div className="overflow-x-auto">
@@ -340,6 +382,54 @@ export default function PushNotificationsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t flex items-center justify-between">
+            <p className="text-sm text-gray-500">
+              Seite {currentPage} von {totalPages} ({totalItems} Einträge)
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ← Zurück
+              </button>
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                let pageNum: number
+                if (totalPages <= 5) {
+                  pageNum = i + 1
+                } else if (currentPage <= 3) {
+                  pageNum = i + 1
+                } else if (currentPage >= totalPages - 2) {
+                  pageNum = totalPages - 4 + i
+                } else {
+                  pageNum = currentPage - 2 + i
+                }
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`px-3 py-1.5 text-sm border rounded-lg ${
+                      currentPage === pageNum ? 'bg-blue-600 text-white border-blue-600' : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              })}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Weiter →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

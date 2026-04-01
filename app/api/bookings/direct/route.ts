@@ -467,45 +467,69 @@ export async function POST(req: NextRequest) {
         attendees: [{ email: customer.user.email }]
       }
 
-      // Try workshop calendar first
+      // Try workshop calendar first, then fallback to employee calendar
+      let calAccessToken: string | null = null
+      let calRefreshToken: string | null = null
+      let calCalendarId: string | null = null
+      let calSource = ''
+
       if (workshop.googleAccessToken && workshop.googleRefreshToken && workshop.googleCalendarId) {
+        calAccessToken = workshop.googleAccessToken
+        calRefreshToken = workshop.googleRefreshToken
+        calCalendarId = workshop.googleCalendarId
+        calSource = 'workshop'
+        console.log('[CALENDAR] Using WORKSHOP Google Calendar')
+      } else {
+        // Fallback: find first employee with connected Google Calendar
+        const empWithCal = await prisma.employee.findFirst({
+          where: {
+            workshopId,
+            googleCalendarId: { not: null },
+            googleAccessToken: { not: null },
+            googleRefreshToken: { not: null },
+          },
+          select: { id: true, name: true, googleCalendarId: true, googleAccessToken: true, googleRefreshToken: true }
+        })
+        if (empWithCal) {
+          calAccessToken = empWithCal.googleAccessToken
+          calRefreshToken = empWithCal.googleRefreshToken
+          calCalendarId = empWithCal.googleCalendarId
+          calSource = `employee:${empWithCal.name}`
+          console.log(`[CALENDAR] Using EMPLOYEE Google Calendar: ${empWithCal.name}`)
+        }
+      }
+
+      if (calAccessToken && calRefreshToken && calCalendarId) {
         try {
-          let accessToken = workshop.googleAccessToken
+          let accessToken = calAccessToken
 
-          // Refresh token if expired
-          if (!accessToken || (workshop.googleTokenExpiry && new Date() > workshop.googleTokenExpiry)) {
-            console.log('[CALENDAR] Refreshing workshop token...')
-            const newTokens = await refreshAccessToken(workshop.googleRefreshToken)
-            accessToken = newTokens.access_token || accessToken
-
-            await prisma.workshop.update({
-              where: { id: workshopId },
-              data: {
-                googleAccessToken: accessToken,
-                googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
-              }
-            })
+          // Refresh token
+          try {
+            const newTokens = await refreshAccessToken(calRefreshToken)
+            if (newTokens.access_token) {
+              accessToken = newTokens.access_token
+            }
+          } catch (refreshErr) {
+            console.warn('[CALENDAR] Token refresh failed, trying with existing token:', refreshErr instanceof Error ? refreshErr.message : refreshErr)
           }
 
           const calendarEvent = await createCalendarEvent(
             accessToken,
-            workshop.googleRefreshToken,
-            workshop.googleCalendarId,
+            calRefreshToken,
+            calCalendarId,
             eventDetails
           )
 
           calendarEventId = calendarEvent.id || null
           
           if (calendarEventId) {
-            // Store calendar event ID in DirectBooking (we don't have a field for it yet, so skip for now)
-            // TODO: Add googleEventId field to DirectBooking model
-            console.log('[CALENDAR] Event created in workshop calendar:', calendarEventId)
+            console.log(`[CALENDAR] Event created in ${calSource} calendar:`, calendarEventId)
           }
         } catch (error) {
-          console.error('[CALENDAR] Failed to create workshop calendar event:', error)
+          console.error(`[CALENDAR] Failed to create ${calSource} calendar event:`, error)
         }
       } else {
-        console.log('[CALENDAR] Workshop calendar not connected')
+        console.log('[CALENDAR] No Google Calendar connected (workshop or employee)')
       }
     }
 

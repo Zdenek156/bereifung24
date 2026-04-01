@@ -246,12 +246,17 @@ export default function AdminApiSettings() {
             <li>• <strong>STRIPE_PUBLISHABLE_KEY</strong> - Stripe Publishable Key (pk_test_xxx oder pk_live_xxx)</li>
             <li>• <strong>STRIPE_WEBHOOK_SECRET</strong> - Stripe Webhook Signing Secret (whsec_xxx) für Webhook-Verifizierung</li>
             <li>• <strong>GEMINI_API_KEY</strong> - Google Gemini API Key für KI-Reifen-Berater (ca. 0,50€/Monat bei 1000 Beratungen)</li>
+            <li>• <strong>META_APP_ID</strong> - Meta/Facebook App ID für Social Media Integration</li>
+            <li>• <strong>META_APP_SECRET</strong> - Meta/Facebook App Secret für Long-Lived Token Konvertierung</li>
           </ul>
           <p className="text-xs text-blue-600 mt-3">
             💡 <strong>API Ninjas Key:</strong> Kostenlos registrieren auf <a href="https://api-ninjas.com/register" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">api-ninjas.com/register</a>
           </p>
           <p className="text-xs text-blue-600 mt-1">
-            🤖 <strong>Gemini API Key:</strong> Erstellen auf <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">Google AI Studio</a> (Gemini 2.0 Flash-Lite)
+            🤖 <strong>Gemini API Key:</strong> Erstellen auf <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">Google AI Studio</a> (Gemini 2.5 Flash)
+          </p>
+          <p className="text-xs text-blue-600 mt-1">
+            📱 <strong>Meta App Secret:</strong> Findest du unter <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">developers.facebook.com</a> → App auswählen → Einstellungen → Allgemeines → App-Geheimnis → &quot;Anzeigen&quot;
           </p>
         </div>
 

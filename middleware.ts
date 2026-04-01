@@ -11,8 +11,10 @@ const STATIC_ROUTES = [
   '/werkstatt', '/werkstatt-werden', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder', '/logos',
   '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/sitemap-werkstatt.xml', '/sitemap-reifen.xml', '/app-download', '/demo',
-  '/smart-tire-advisor', '/invoices', '/workshop', '/services', '/freelancer', '/reifen',
-  '/api/mobile-auth'
+  '/smart-tire-advisor', '/invoices', '/workshop', '/services', '/freelancer', '/reifen', '/konto-loeschen',
+  '/api/mobile-auth',
+  '/reifenwechsel', '/winterreifen', '/sommerreifen', '/reifenmontage', '/raederwechsel',
+  '/reifen-einlagern', '/reifenservice', '/achsvermessung', '/ganzjahresreifen', '/reifen-kaufen'
 ]
 
 // Map admin routes to application keys for permission checking
@@ -51,6 +53,8 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/gutscheine': 'gutscheine',
   '/admin/push-notifications': 'push-benachrichtigungen',
   '/admin/feedback': 'feedback',
+  '/admin/social-media': 'social-media',
+  '/admin/legal-texts': 'legal-texts',
 }
 
 // API routes to application mapping
@@ -79,6 +83,8 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/coupons': 'gutscheine',
   '/api/admin/push-notifications': 'push-benachrichtigungen',
   '/api/admin/feedback': 'feedback',
+  '/api/admin/social-media': 'social-media',
+  '/api/admin/legal-texts': 'legal-texts',
 }
 
 /**

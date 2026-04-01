@@ -200,12 +200,20 @@ export async function POST(req: NextRequest) {
     }
     const session = { user: authUser }
 
-    const customer = await prisma.customer.findUnique({
+    let customer = await prisma.customer.findUnique({
       where: { userId: authUser.id }
     })
 
     if (!customer) {
-      return NextResponse.json({ error: 'Kunde nicht gefunden' }, { status: 404 })
+      // Auto-create customer record for users without one (e.g. ADMIN, WORKSHOP)
+      customer = await prisma.customer.create({
+        data: {
+          userId: authUser.id,
+          firstName: authUser.firstName || '',
+          lastName: authUser.lastName || '',
+          email: authUser.email,
+        }
+      })
     }
 
     const body = await req.json()

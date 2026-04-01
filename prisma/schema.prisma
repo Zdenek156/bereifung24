@@ -6471,3 +6471,171 @@ model AppFeedback {
   @@index([createdAt])
   @@map("app_feedback")
 }
+
+// ============================================
+// SOCIAL MEDIA MARKETING
+// ============================================
+
+model SocialMediaAccount {
+  id           String               @id @default(cuid())
+  platform     SocialMediaPlatform
+  accountName  String               @map("account_name")
+  pageId       String?              @map("page_id")     // Facebook Page ID, LinkedIn Company ID, etc.
+  accessToken  String?              @map("access_token") @db.Text
+  refreshToken String?              @map("refresh_token") @db.Text
+  tokenExpiresAt DateTime?          @map("token_expires_at")
+  isActive     Boolean              @default(true) @map("is_active")
+
+  posts        SocialMediaPostPlatform[]
+
+  createdAt    DateTime             @default(now()) @map("created_at")
+  updatedAt    DateTime             @updatedAt @map("updated_at")
+
+  @@unique([platform, pageId])
+  @@index([platform])
+  @@index([isActive])
+  @@map("social_media_accounts")
+}
+
+model SocialMediaPost {
+  id            String                    @id @default(cuid())
+  title         String?
+  content       String                    @db.Text
+  hashtags      String?                   @db.Text
+  imageUrl      String?                   @map("image_url") @db.Text
+  videoUrl      String?                   @map("video_url") @db.Text
+  postType      SocialMediaPostType       @map("post_type")
+  status        SocialMediaPostStatus     @default(DRAFT)
+
+  scheduledAt   DateTime?                 @map("scheduled_at")
+  publishedAt   DateTime?                 @map("published_at")
+
+  templateId    String?                   @map("template_id")
+  template      SocialMediaTemplate?      @relation(fields: [templateId], references: [id])
+
+  automationId  String?                   @map("automation_id")
+  automation    SocialMediaAutomation?    @relation(fields: [automationId], references: [id])
+
+  platforms     SocialMediaPostPlatform[]
+
+  createdById   String?                   @map("created_by_id")
+  createdAt     DateTime                  @default(now()) @map("created_at")
+  updatedAt     DateTime                  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([postType])
+  @@index([scheduledAt])
+  @@index([publishedAt])
+  @@index([createdById])
+  @@map("social_media_posts")
+}
+
+model SocialMediaPostPlatform {
+  id              String               @id @default(cuid())
+  postId          String               @map("post_id")
+  post            SocialMediaPost      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  accountId       String               @map("account_id")
+  account         SocialMediaAccount   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  platformPostId  String?              @map("platform_post_id") // External ID from the platform
+  status          SocialMediaPostStatus @default(DRAFT)
+  publishedAt     DateTime?            @map("published_at")
+  errorMessage    String?              @map("error_message") @db.Text
+
+  // Engagement metrics
+  likes           Int                  @default(0)
+  shares          Int                  @default(0)
+  comments        Int                  @default(0)
+  clicks          Int                  @default(0)
+  reach           Int                  @default(0)
+  impressions     Int                  @default(0)
+
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  @@unique([postId, accountId])
+  @@index([postId])
+  @@index([accountId])
+  @@index([status])
+  @@map("social_media_post_platforms")
+}
+
+model SocialMediaTemplate {
+  id            String                @id @default(cuid())
+  name          String
+  description   String?               @db.Text
+  postType      SocialMediaPostType   @map("post_type")
+  textTemplate  String                @map("text_template") @db.Text  // Handlebars: "Willkommen {{workshopName}} aus {{city}}!"
+  htmlTemplate  String?               @map("html_template") @db.Text  // HTML for image generation
+  platforms     Json?                 // Array of SocialMediaPlatform values
+  isActive      Boolean               @default(true) @map("is_active")
+
+  posts         SocialMediaPost[]
+  automations   SocialMediaAutomation[]
+
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
+
+  @@index([postType])
+  @@index([isActive])
+  @@map("social_media_templates")
+}
+
+model SocialMediaAutomation {
+  id              String                       @id @default(cuid())
+  name            String
+  description     String?                      @db.Text
+  trigger         SocialMediaTrigger
+  templateId      String                       @map("template_id")
+  template        SocialMediaTemplate          @relation(fields: [templateId], references: [id])
+  platforms       Json?                        // Array of SocialMediaPlatform values
+  isActive        Boolean                      @default(true) @map("is_active")
+  autoPublish     Boolean                      @default(false) @map("auto_publish")
+  lastTriggeredAt DateTime?                    @map("last_triggered_at")
+
+  posts           SocialMediaPost[]
+
+  createdAt       DateTime                     @default(now()) @map("created_at")
+  updatedAt       DateTime                     @updatedAt @map("updated_at")
+
+  @@index([trigger])
+  @@index([isActive])
+  @@map("social_media_automations")
+}
+
+enum SocialMediaPlatform {
+  FACEBOOK
+  INSTAGRAM
+  LINKEDIN
+  YOUTUBE
+  TIKTOK
+  THREADS
+}
+
+enum SocialMediaPostType {
+  PARTNER_INTRO
+  TIRE_TIP
+  BLOG_PROMO
+  REVIEW_HIGHLIGHT
+  STATS
+  OFFER
+  SERVICE
+  REEL
+  CUSTOM
+}
+
+enum SocialMediaPostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+enum SocialMediaTrigger {
+  WORKSHOP_VERIFIED
+  BLOG_PUBLISHED
+  REVIEW_RECEIVED
+  WEEKLY_SCHEDULE
+  MONTHLY_SCHEDULE
+  MANUAL
+}

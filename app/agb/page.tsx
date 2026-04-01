@@ -1,4 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'AGB - Allgemeine Geschäftsbedingungen - Bereifung24',
+  description: 'Allgemeine Geschäftsbedingungen der Bereifung24 GmbH für die Nutzung der Online-Plattform.',
+  alternates: { canonical: 'https://bereifung24.de/agb' }
+}
 
 export default function AGBPage() {
   return (

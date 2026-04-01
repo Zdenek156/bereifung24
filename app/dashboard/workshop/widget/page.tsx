@@ -104,11 +104,11 @@ export default function WidgetPage() {
     if (!workshopId) return ''
 
     if (config.variant === 'booking') {
-      return `<!-- Bereifung24 Buchungsformular -->\n<iframe\n  src="https://www.bereifung24.de/widget/booking/${workshopId}?theme=${config.theme}&color=${encodeURIComponent(config.color)}"\n  style="width: 100%; max-width: 450px; height: 520px; border: 1px solid ${config.theme === 'dark' ? '#333' : '#e5e7eb'}; border-radius: 14px;"\n  frameborder="0"\n  allow="payment"\n  loading="lazy"\n  title="Online-Termin buchen">\n</iframe>`
+      return `<!-- Bereifung24 Buchungsformular -->\n<iframe\n  src="https://bereifung24.de/widget/booking/${workshopId}?theme=${config.theme}&color=${encodeURIComponent(config.color)}"\n  style="width: 100%; max-width: 450px; height: 520px; border: 1px solid ${config.theme === 'dark' ? '#333' : '#e5e7eb'}; border-radius: 14px;"\n  frameborder="0"\n  allow="payment"\n  loading="lazy"\n  title="Online-Termin buchen">\n</iframe>`
     }
 
     const attrs = [
-      `src="https://www.bereifung24.de/widget.js"`,
+      `src="https://bereifung24.de/widget.js"`,
       `data-workshop="${workshopId}"`,
       `data-variant="${config.variant}"`,
       `data-theme="${config.theme}"`,

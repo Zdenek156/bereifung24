@@ -729,7 +729,7 @@ export default function WorkshopServicesPage() {
                 </select>
                 {selectedServiceType && serviceTypeUrls[selectedServiceType] && (
                   <a
-                    href={`https://www.bereifung24.de${serviceTypeUrls[selectedServiceType]}`}
+                    href={`https://bereifung24.de${serviceTypeUrls[selectedServiceType]}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium transition-colors"
@@ -1422,7 +1422,7 @@ export default function WorkshopServicesPage() {
                             </span>
                             {serviceTypeUrls[service.serviceType] && (
                               <a
-                                href={`https://www.bereifung24.de${serviceTypeUrls[service.serviceType]}`}
+                                href={`https://bereifung24.de${serviceTypeUrls[service.serviceType]}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 transition-colors"

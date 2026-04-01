@@ -40,11 +40,30 @@ String _roleName(String role) => switch (role) {
   _ => role,
 };
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _profileRefreshed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Einmalig Profil vom Backend laden (für Adresse nach Web-Änderung)
+    Future.microtask(() {
+      if (!_profileRefreshed) {
+        _profileRefreshed = true;
+        ref.read(authStateProvider.notifier).fetchProfile();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -53,6 +72,7 @@ class HomeScreen extends ConsumerWidget {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
+            ref.read(authStateProvider.notifier).fetchProfile();
             ref.invalidate(bookingsProvider);
             ref.invalidate(vehiclesProvider);
           },
@@ -182,6 +202,90 @@ class HomeScreen extends ConsumerWidget {
                   const SizedBox(height: 16),
                 ],
 
+                // ── Adresse unvollständig (Google-Login) ──
+                if (user != null &&
+                    (user.street == null || user.street!.isEmpty ||
+                     user.zipCode == null || user.zipCode!.isEmpty ||
+                     user.city == null || user.city!.isEmpty)) ...[
+                  Builder(builder: (context) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? B24Colors.primaryBlue.withValues(alpha: 0.15)
+                            : B24Colors.primaryPale,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: isDark
+                              ? B24Colors.primaryBlue.withValues(alpha: 0.4)
+                              : B24Colors.primaryBlue.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.location_off,
+                                  color: B24Colors.primaryBlue, size: 22),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Adresse fehlt',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark
+                                        ? B24Colors.darkTextPrimary
+                                        : B24Colors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 32),
+                            child: Text(
+                              'Bitte hinterlege deine Adresse, um Werkstätten in deiner Nähe zu finden und Termine buchen zu können.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDark
+                                    ? B24Colors.darkTextSecondary
+                                    : B24Colors.textSecondary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 32),
+                            child: SizedBox(
+                              height: 34,
+                              child: FilledButton.icon(
+                                onPressed: () => context.push('/profile/edit'),
+                                icon: const Icon(Icons.edit, size: 16),
+                                label: const Text('Profil vervollständigen',
+                                    style: TextStyle(fontSize: 13)),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: B24Colors.primaryBlue,
+                                  foregroundColor: Colors.white,
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 16),
+                ],
+
                 // ── Nächster Termin (above the fold!) ──
                 _FadeSlideIn(delay: 1, child: _NextAppointmentCard()),
 
@@ -291,7 +395,7 @@ class _AIAdvisorCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'KI-Berater',
+              'Rollo AI',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
@@ -302,7 +406,7 @@ class _AIAdvisorCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text(
-                'Dein Reifen-Experte',
+                'Dein KI-Berater!',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -397,10 +501,11 @@ class _NextAppointmentCard extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bookingsAsync = ref.watch(bookingsProvider);
 
-    return bookingsAsync.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (bookings) {
+    // Prefer cached data to avoid layout jump on tab switch
+    final bookings = bookingsAsync.valueOrNull;
+    if (bookings == null) return const SizedBox.shrink();
+
+    {
         final now = DateTime.now();
         final upcoming = bookings
             .where((b) {
@@ -500,8 +605,7 @@ class _NextAppointmentCard extends ConsumerWidget {
             ),
           ),
         );
-      },
-    );
+    }
   }
 }
 
@@ -544,23 +648,33 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
   Widget build(BuildContext context) {
     final vehiclesAsync = ref.watch(vehiclesProvider);
 
-    return vehiclesAsync.when(
-      loading: () => _buildEmpty(context),
-      error: (_, __) => _buildEmpty(context),
-      data: (vehicles) {
-        if (vehicles.isEmpty) return _buildEmpty(context);
-        final idx = ref.watch(_homeVehicleIndexProvider).clamp(0, vehicles.length - 1);
-        final v = vehicles[idx];
+    // Prefer cached data to avoid skeleton flash on tab switch
+    final vehicles = vehiclesAsync.valueOrNull;
 
-        // Always keep search provider in sync with home selection
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(selectedVehicleProvider.notifier).state = v;
-        });
+    if (vehicles == null) {
+      // True first load — no cached data yet
+      return _buildLoading(context);
+    }
 
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (vehicles.isEmpty) {
+      // Show skeleton until auth resolves, not the "add vehicle" prompt
+      final authState = ref.watch(authStateProvider);
+      if (!authState.isAuthenticated) return _buildLoading(context);
+      return _buildEmpty(context);
+    }
 
-        return Container(
-          decoration: BoxDecoration(
+    final idx = ref.watch(_homeVehicleIndexProvider).clamp(0, vehicles.length - 1);
+    final v = vehicles[idx];
+
+    // Always keep search provider in sync with home selection
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(selectedVehicleProvider.notifier).state = v;
+    });
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
             color: isDark ? B24Colors.darkSurface : Colors.white,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [_cardShadow(isDark: isDark)],
@@ -625,7 +739,11 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                   bottomRight: Radius.circular(16),
                 ),
                 child: Image.asset(
-                  'assets/images/services/fahrzeug.jpg',
+                  v.vehicleType == 'MOTORCYCLE'
+                      ? 'assets/images/services/fahrzeug_motorrad.jpg'
+                      : v.vehicleType == 'TRAILER'
+                          ? 'assets/images/services/fahrzeug_anhaenger.jpg'
+                          : 'assets/images/services/fahrzeug_car.jpg',
                   width: 100,
                   height: 100,
                   fit: BoxFit.cover,
@@ -634,8 +752,6 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
             ],
           ),
         );
-      },
-    );
   }
 
   void _showVehiclePicker(BuildContext context, List<Vehicle> vehicles, int currentIdx) {
@@ -703,7 +819,7 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                           child: Row(
                             children: [
                               Text(
-                                veh.vehicleType == 'MOTORCYCLE' ? '🏍️' : '🚗',
+                                veh.vehicleType == 'MOTORCYCLE' ? '🏍️' : veh.vehicleType == 'TRAILER' ? '🚛' : '🚗',
                                 style: const TextStyle(fontSize: 20),
                               ),
                               const SizedBox(width: 12),
@@ -744,6 +860,61 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildLoading(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        color: isDark ? B24Colors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [_cardShadow(isDark: isDark)],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 140,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[200],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 100,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
+            child: Container(
+              width: 100,
+              height: 100,
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1014,6 +1185,7 @@ class _SeasonTipCard extends StatelessWidget {
 // ══════════════════════════════════════
 
 class _FadeSlideIn extends StatefulWidget {
+  static bool _hasPlayedOnce = false;
   final int delay; // stagger index (0, 1, 2, ...)
   final Widget child;
   const _FadeSlideIn({required this.delay, required this.child});
@@ -1031,19 +1203,30 @@ class _FadeSlideInState extends State<_FadeSlideIn>
   @override
   void initState() {
     super.initState();
+    final isRevisit = _FadeSlideIn._hasPlayedOnce;
+
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: Duration(milliseconds: isRevisit ? 200 : 500),
     );
     _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
     _offset = Tween<Offset>(
-      begin: const Offset(0, 0.15),
+      begin: isRevisit ? Offset.zero : const Offset(0, 0.15),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
 
-    Future.delayed(Duration(milliseconds: 80 * widget.delay), () {
-      if (mounted) _ctrl.forward();
-    });
+    if (_FadeSlideIn._hasPlayedOnce) {
+      // Subsequent visit: quick uniform fade, no stagger, no slide
+      _ctrl.forward();
+    } else {
+      // First visit: stagger slide + fade
+      Future.delayed(Duration(milliseconds: 80 * widget.delay), () {
+        if (mounted) _ctrl.forward();
+      });
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        _FadeSlideIn._hasPlayedOnce = true;
+      });
+    }
   }
 
   @override

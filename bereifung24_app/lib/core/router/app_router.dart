@@ -5,6 +5,7 @@ import '../services/analytics_service.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/screens/welcome_screen.dart';
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
@@ -37,23 +38,37 @@ final _shellNavigatorKey = GlobalKey<NavigatorState>();
 final _workshopShellKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
-  // Rebuild router when auth state changes
-  final authState = ref.watch(authStateProvider);
-  final isLoggedIn = authState.isAuthenticated;
-  final isWorkshop = authState.user?.role == 'WORKSHOP';
+  // Use refreshListenable so auth changes trigger redirect re-evaluation
+  // without recreating the entire GoRouter (which resets navigation).
+  final notifier = _AuthRouterNotifier();
+  ref.listen<AuthState>(authStateProvider, (previous, next) {
+    final wasAuth = previous?.isAuthenticated ?? false;
+    final isAuth = next.isAuthenticated;
+    final wasWorkshop = previous?.user?.role == 'WORKSHOP';
+    final isWorkshop = next.user?.role == 'WORKSHOP';
+    if (wasAuth != isAuth || wasWorkshop != isWorkshop) {
+      notifier.notify();
+    }
+  });
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
     debugLogDiagnostics: true,
     observers: [AnalyticsService().observer],
+    refreshListenable: notifier,
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
+      final isLoggedIn = authState.isAuthenticated;
+      final isWorkshop = authState.user?.role == 'WORKSHOP';
+
       final isAuthRoute = state.matchedLocation.startsWith('/login') ||
           state.matchedLocation.startsWith('/register') ||
-          state.matchedLocation.startsWith('/forgot-password');
+          state.matchedLocation.startsWith('/forgot-password') ||
+          state.matchedLocation.startsWith('/welcome');
 
-      // Not logged in and NOT on auth route → go to login
-      if (!isLoggedIn && !isAuthRoute) return '/login';
+      // Not logged in and NOT on auth route → go to welcome
+      if (!isLoggedIn && !isAuthRoute) return '/welcome';
 
       // Logged in and ON auth route → redirect to correct home
       if (isLoggedIn && isAuthRoute) {
@@ -82,6 +97,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       // ── Auth routes (no bottom nav) ──
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WelcomeScreen(),
+      ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
@@ -120,6 +139,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                   'season': qp['season'] ?? 's',
                   'loadIndex': qp['loadIndex'] ?? '',
                   'speedIndex': qp['speedIndex'] ?? '',
+                  if (qp['articleId'] != null && qp['articleId']!.isNotEmpty)
+                    'articleId': qp['articleId']!,
+                  if (qp['tireBrand'] != null && qp['tireBrand']!.isNotEmpty)
+                    'tireBrand': qp['tireBrand']!,
+                  if (qp['tireModel'] != null && qp['tireModel']!.isNotEmpty)
+                    'tireModel': qp['tireModel']!,
                 };
               }
               return NoTransitionPage(
@@ -135,6 +160,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 builder: (context, state) => WorkshopDetailScreen(
                   workshopId: state.pathParameters['id']!,
                   serviceType: state.uri.queryParameters['service'],
+                  preferredTireBrand: state.uri.queryParameters['tireBrand'],
+                  preferredTireModel: state.uri.queryParameters['tireModel'],
                 ),
               ),
             ],
@@ -342,9 +369,22 @@ final routerProvider = Provider<GoRouter>((ref) {
                 : null,
             tireRearArticleId: params['tireRearArticleId'],
             tireRearEan: params['tireRearEan'],
+            disposalFeeApplied: params['disposalFeeApplied'] != null
+                ? double.tryParse(params['disposalFeeApplied']!)
+                : null,
+            runFlatSurchargeApplied: params['runFlatSurchargeApplied'] != null
+                ? double.tryParse(params['runFlatSurchargeApplied']!)
+                : null,
+            estimatedDuration: params['estimatedDuration'] != null
+                ? int.tryParse(params['estimatedDuration']!)
+                : null,
           );
         },
       ),
     ],
   );
 });
+
+class _AuthRouterNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
+}

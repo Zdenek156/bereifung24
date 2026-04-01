@@ -3,7 +3,8 @@ import { Check, ArrowLeft, Search } from 'lucide-react'
 
 export const metadata = {
   title: 'Reifenreparatur - Bereifung24',
-  description: 'Professionelle Reifenreparatur - Schnell und günstig Reifen flicken bei Nagel oder Fremdkörper. Ventilschaden beheben.'
+  description: 'Professionelle Reifenreparatur - Schnell und günstig Reifen flicken bei Nagel oder Fremdkörper. Ventilschaden beheben.',
+  alternates: { canonical: 'https://bereifung24.de/services/reifenreparatur' }
 }
 
 const faqData = [
@@ -19,9 +20,9 @@ export default function ReifenreparaturPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
-        { '@type': 'ListItem', position: 3, name: 'Reifenreparatur', item: 'https://www.bereifung24.de/services/reifenreparatur' },
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Reifenreparatur', item: 'https://bereifung24.de/services/reifenreparatur' },
       ],
     },
     {

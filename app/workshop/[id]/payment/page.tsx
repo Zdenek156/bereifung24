@@ -616,6 +616,7 @@ export default function PaymentPage() {
               <div className="mb-6 pb-6 border-b border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-500 uppercase mb-3">Service</h3>
                 <div className="bg-primary-50 rounded-lg p-4">
+                  {/* Hauptservice */}
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-bold text-lg text-primary-900">
                       {bookingData.service.type === 'MOTORCYCLE_TIRE'
@@ -629,8 +630,24 @@ export default function PaymentPage() {
                       {formatPrice(bookingData.pricing.servicePrice)}
                     </p>
                   </div>
-                  
-                  {/* Additional Services */}
+
+                  {/* Entsorgung */}
+                  {bookingData.tireBooking?.hasDisposal && (bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0) > 0 && (
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-primary-800">+ Reifenentsorgung</span>
+                      <span className="font-medium text-primary-900">{formatPrice(bookingData.pricing.disposalPrice || bookingData.tireBooking?.disposalPrice || 0)}</span>
+                    </div>
+                  )}
+
+                  {/* Runflat-Zuschlag */}
+                  {bookingData.tireBooking?.hasRunflat && (bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0) > 0 && (
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-primary-800">+ Runflat-Zuschlag</span>
+                      <span className="font-medium text-primary-900">{formatPrice(bookingData.pricing.runflatPrice || bookingData.tireBooking?.runflatPrice || 0)}</span>
+                    </div>
+                  )}
+
+                  {/* Zusatzleistungen */}
                   {bookingData.additionalServices && bookingData.additionalServices.length > 0 && (
                     <div className="mt-3 pt-3 border-t border-primary-200">
                       <p className="text-sm font-medium text-primary-800 mb-2">Zusatzleistungen:</p>
@@ -1082,36 +1099,31 @@ export default function PaymentPage() {
                   </button>
                   )}
 
-                  {/* PayPal */}
-                  <button
-                    onClick={() => setSelectedPaymentMethod('paypal')}
-                    disabled={processing}
-                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selectedPaymentMethod === 'paypal'
-                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
-                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-2 flex-1">
-                        <div className="h-7 flex items-center">
-                          <Image
-                            src="/payment-logos/de-pp-logo-200px.png"
-                            alt="PayPal"
-                            width={120}
-                            height={31}
-                            style={{ width: 'auto', height: '100%', maxHeight: '1.75rem' }}
-                          />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs text-gray-500">Schnell & sicher via Stripe</p>
+                  {/* PayPal — temporarily disabled until Stripe approval */}
+                  <div className="relative">
+                    <button
+                      onClick={() => {}}
+                      disabled={true}
+                      className="w-full p-4 rounded-xl border-2 transition-all border-gray-200 opacity-50 cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-2 flex-1">
+                          <div className="h-7 flex items-center">
+                            <Image
+                              src="/payment-logos/de-pp-logo-200px.png"
+                              alt="PayPal"
+                              width={120}
+                              height={31}
+                              style={{ width: 'auto', height: '100%', maxHeight: '1.75rem' }}
+                            />
+                          </div>
+                          <div className="text-left">
+                            <p className="text-xs text-amber-600 font-medium">⏳ Demnächst verfügbar</p>
+                          </div>
                         </div>
                       </div>
-                      {selectedPaymentMethod === 'paypal' && (
-                        <Check className="w-5 h-5 text-primary-600" />
-                      )}
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 </div>
               </div>
 

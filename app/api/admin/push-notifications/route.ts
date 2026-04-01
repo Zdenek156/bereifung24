@@ -20,14 +20,16 @@ export async function GET(request: NextRequest) {
     }
 
     const url = new URL(request.url)
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 200)
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 200)
+    const page = Math.max(parseInt(url.searchParams.get('page') || '1'), 1)
+    const search = url.searchParams.get('search') || undefined
 
-    const [notifications, stats] = await Promise.all([
-      getRecentNotifications(limit),
+    const [notifResult, stats] = await Promise.all([
+      getRecentNotifications(limit, page, search),
       getNotificationStats(),
     ])
 
-    return NextResponse.json({ notifications, stats })
+    return NextResponse.json({ ...notifResult, stats })
   } catch (error) {
     console.error('[PUSH API] GET error:', error)
     return NextResponse.json({ error: 'Fehler beim Laden' }, { status: 500 })

@@ -255,7 +255,10 @@ export async function GET(request: NextRequest) {
       // Convert map to sorted array
       const availableSlots = Array.from(allSlotsMap.keys()).sort()
       
-      return NextResponse.json({ availableSlots })
+      // If no slots could be generated from any employee, indicate calendar error
+      const calendarError = availableSlots.length === 0 && availableEmployees.length > 0
+      
+      return NextResponse.json({ availableSlots, calendarError })
     }
     
     // This should only be reached if workshop calendar mode is selected but not connected

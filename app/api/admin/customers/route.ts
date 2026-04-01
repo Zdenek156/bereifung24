@@ -26,14 +26,15 @@ export async function GET(request: NextRequest) {
       include: {
         customer: {
           include: {
-            tireRequests: {
+            bookings: {
+              where: { status: { in: ['CONFIRMED', 'COMPLETED'] } },
               include: {
-                offers: {
-                  where: {
-                    status: 'ACCEPTED'
-                  }
-                }
+                offer: { select: { price: true } }
               }
+            },
+            directBookings: {
+              where: { status: { in: ['CONFIRMED', 'COMPLETED'] } },
+              select: { totalPrice: true }
             }
           }
         }
@@ -42,11 +43,9 @@ export async function GET(request: NextRequest) {
 
     // Daten aufbereiten
     const customersData = customers.map(user => {
-      const requestCount = user.customer?.tireRequests.length || 0
-      const totalSpent = user.customer?.tireRequests.reduce((sum, request) => {
-        const acceptedOffer = request.offers.find(o => o.status === 'ACCEPTED')
-        return sum + (acceptedOffer?.price || 0)
-      }, 0) || 0
+      const bookingCount = (user.customer?.bookings.length || 0) + (user.customer?.directBookings.length || 0)
+      const bookingRevenue = (user.customer?.bookings.reduce((sum, b) => sum + (b.offer?.price || 0), 0) || 0)
+        + (user.customer?.directBookings.reduce((sum, db) => sum + Number(db.totalPrice || 0), 0) || 0)
 
       // Entfernung berechnen (Haversine-Formel)
       let distance: number | null = null
@@ -72,8 +71,8 @@ export async function GET(request: NextRequest) {
         city: user.city,
         zipCode: user.zipCode,
         distance,
-        requestCount,
-        totalSpent,
+        bookingCount,
+        totalSpent: bookingRevenue,
         createdAt: user.createdAt,
         isActive: user.isActive
       }
@@ -95,7 +94,7 @@ export async function GET(request: NextRequest) {
         })
         break
       case 'requests':
-        sortedCustomers.sort((a, b) => b.requestCount - a.requestCount)
+        sortedCustomers.sort((a, b) => b.bookingCount - a.bookingCount)
         break
       case 'revenue':
         sortedCustomers.sort((a, b) => b.totalSpent - a.totalSpent)

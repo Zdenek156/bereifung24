@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Bereifung24 Mockup – 820×312</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; }
+
+  .mockup {
+    width: 820px;
+    height: 312px;
+    background: linear-gradient(135deg, #0284C7 0%, #2BAAE2 50%, #065986 100%);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 8px 32px rgba(2, 132, 199, 0.3);
+  }
+
+  /* Decorative tire pattern */
+  .mockup::before {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 320px;
+    height: 320px;
+    border: 40px solid rgba(255,255,255,0.06);
+    border-radius: 50%;
+  }
+  .mockup::after {
+    content: '';
+    position: absolute;
+    right: -10px;
+    bottom: -60px;
+    width: 220px;
+    height: 220px;
+    border: 30px solid rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+
+  .content {
+    padding: 40px 50px;
+    position: relative;
+    z-index: 2;
+    max-width: 560px;
+  }
+
+  .badge {
+    display: inline-block;
+    background: rgba(16, 185, 129, 0.9);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    color: #fff;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: 16px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  h1 span {
+    color: #bae6fd;
+  }
+
+  .subtitle {
+    color: rgba(255,255,255,0.85);
+    font-size: 16px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    color: #0284C7;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 12px 28px;
+    border-radius: 8px;
+    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.2s;
+  }
+  .cta:hover { transform: translateY(-2px); }
+  .cta svg { width: 18px; height: 18px; }
+
+  .logo-area {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-circle img {
+    width: 140px;
+    height: auto;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+  }
+
+  .brand-name {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .brand-name span {
+    color: #bae6fd;
+  }
+
+  /* Tire tread pattern decoration */
+  .tread {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0px, rgba(255,255,255,0.3) 20px, transparent 20px, transparent 30px);
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup">
+  <div class="content">
+    <div class="badge">✓ Festpreis-Garantie</div>
+    <h1>Reifenservice zum Festpreis<br>Online buchen auf <span>bereifung24.de</span></h1>
+  </div>
+
+  <div class="logo-area">
+    <div class="logo-circle">
+      <img src="../logos/B24_Logo_weiss_transparent.png" alt="Bereifung24 Logo">
+    </div>
+    <div class="brand-name">bereifung<span>24</span>.de</div>
+  </div>
+
+  <div class="tread"></div>
+</div>
+
+</body>
+</html>

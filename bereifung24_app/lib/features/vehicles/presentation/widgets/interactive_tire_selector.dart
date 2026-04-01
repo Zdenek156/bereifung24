@@ -1,7 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import '../screens/tire_scanner_screen.dart';
-import '../../utils/tire_size_parser.dart';
 
 /// Interactive tire size selector with visual tire graphic and 5-step flow.
 /// Matches the web app at bereifung24.de.
@@ -29,6 +27,7 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   int? _diameter;
   int? _loadIndex;
   String? _speedRating;
+  bool _selfTriggered = false;
 
   @override
   void initState() {
@@ -39,7 +38,40 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   @override
   void didUpdateWidget(InteractiveTireSelector oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Re-apply spec when parent updates it (e.g. after scanner)
+
+    // Reset when vehicle type changes
+    if (widget.vehicleType != oldWidget.vehicleType) {
+      setState(() {
+        _step = 1;
+        _width = null;
+        _aspectRatio = null;
+        _diameter = null;
+        _loadIndex = null;
+        _speedRating = null;
+      });
+      return;
+    }
+
+    // Ignore parent rebuild caused by our own _notify()
+    if (_selfTriggered) {
+      _selfTriggered = false;
+      return;
+    }
+
+    // Reset when parent clears the spec
+    if (widget.initialSpec == null && oldWidget.initialSpec != null) {
+      setState(() {
+        _step = 1;
+        _width = null;
+        _aspectRatio = null;
+        _diameter = null;
+        _loadIndex = null;
+        _speedRating = null;
+      });
+      return;
+    }
+
+    // Re-apply spec when parent updates it externally (e.g. scanner)
     if (widget.initialSpec != oldWidget.initialSpec &&
         widget.initialSpec != null &&
         widget.initialSpec!['width'] != null) {
@@ -58,7 +90,14 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
         _diameter = spec['diameter'] as int;
         _loadIndex = spec['loadIndex'] as int?;
         _speedRating = spec['speedRating'] as String?;
-        _step = 6;
+        // Determine correct step based on filled fields
+        if (_speedRating != null) {
+          _step = 6;
+        } else if (_loadIndex != null) {
+          _step = 5;
+        } else {
+          _step = 4;
+        }
       });
     }
   }
@@ -66,42 +105,191 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   // ── Data arrays ──
 
   static const _carWidths = [
-    125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255,
-    265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395,
-    405, 415, 425
+    125,
+    135,
+    145,
+    155,
+    165,
+    175,
+    185,
+    195,
+    205,
+    215,
+    225,
+    235,
+    245,
+    255,
+    265,
+    275,
+    285,
+    295,
+    305,
+    315,
+    325,
+    335,
+    345,
+    355,
+    365,
+    375,
+    385,
+    395,
+    405,
+    415,
+    425
   ];
   static const _carAspects = [
-    20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90
+    20,
+    25,
+    30,
+    35,
+    40,
+    45,
+    50,
+    55,
+    60,
+    65,
+    70,
+    75,
+    80,
+    85,
+    90
   ];
   static const _carDiameters = [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
 
   static const _motoWidths = [
-    70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210,
+    70,
+    80,
+    90,
+    100,
+    110,
+    120,
+    130,
+    140,
+    150,
+    160,
+    170,
+    180,
+    190,
+    200,
+    210,
     220
   ];
   static const _motoAspects = [45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100];
   static const _motoDiameters = [
-    8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23
+    8,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    23
   ];
 
   static const _speedRatings = <String, int>{
-    'J': 100, 'K': 110, 'L': 120, 'M': 130, 'N': 140, 'P': 150, 'Q': 160,
-    'R': 170, 'S': 180, 'T': 190, 'U': 200, 'H': 210, 'V': 240, 'W': 270,
-    'Y': 300, 'ZR': 240,
+    'J': 100,
+    'K': 110,
+    'L': 120,
+    'M': 130,
+    'N': 140,
+    'P': 150,
+    'Q': 160,
+    'R': 170,
+    'S': 180,
+    'T': 190,
+    'U': 200,
+    'H': 210,
+    'V': 240,
+    'W': 270,
+    'Y': 300,
+    'ZR': 240,
   };
 
   static const _loadIndexKg = <int, int>{
-    42: 150, 43: 155, 44: 160, 45: 165, 46: 170, 47: 175, 48: 180, 49: 185,
-    50: 190, 51: 195, 52: 200, 53: 206, 54: 212, 55: 218, 56: 224, 57: 230,
-    58: 236, 59: 243, 60: 250, 61: 257, 62: 265, 63: 272, 64: 280, 65: 290,
-    66: 300, 67: 307, 68: 315, 69: 325, 70: 335, 71: 345, 72: 355, 73: 365,
-    74: 375, 75: 387, 76: 400, 77: 412, 78: 425, 79: 437, 80: 450, 81: 462,
-    82: 475, 83: 487, 84: 500, 85: 515, 86: 530, 87: 545, 88: 560, 89: 580,
-    90: 600, 91: 615, 92: 630, 93: 650, 94: 670, 95: 690, 96: 710, 97: 730,
-    98: 750, 99: 775, 100: 800, 101: 825, 102: 850, 103: 875, 104: 900,
-    105: 925, 106: 950, 107: 975, 108: 1000, 109: 1030, 110: 1060,
-    111: 1090, 112: 1120, 113: 1150, 114: 1180, 115: 1215, 116: 1250,
-    117: 1285, 118: 1320, 119: 1360, 120: 1400,
+    42: 150,
+    43: 155,
+    44: 160,
+    45: 165,
+    46: 170,
+    47: 175,
+    48: 180,
+    49: 185,
+    50: 190,
+    51: 195,
+    52: 200,
+    53: 206,
+    54: 212,
+    55: 218,
+    56: 224,
+    57: 230,
+    58: 236,
+    59: 243,
+    60: 250,
+    61: 257,
+    62: 265,
+    63: 272,
+    64: 280,
+    65: 290,
+    66: 300,
+    67: 307,
+    68: 315,
+    69: 325,
+    70: 335,
+    71: 345,
+    72: 355,
+    73: 365,
+    74: 375,
+    75: 387,
+    76: 400,
+    77: 412,
+    78: 425,
+    79: 437,
+    80: 450,
+    81: 462,
+    82: 475,
+    83: 487,
+    84: 500,
+    85: 515,
+    86: 530,
+    87: 545,
+    88: 560,
+    89: 580,
+    90: 600,
+    91: 615,
+    92: 630,
+    93: 650,
+    94: 670,
+    95: 690,
+    96: 710,
+    97: 730,
+    98: 750,
+    99: 775,
+    100: 800,
+    101: 825,
+    102: 850,
+    103: 875,
+    104: 900,
+    105: 925,
+    106: 950,
+    107: 975,
+    108: 1000,
+    109: 1030,
+    110: 1060,
+    111: 1090,
+    112: 1120,
+    113: 1150,
+    114: 1180,
+    115: 1215,
+    116: 1250,
+    117: 1285,
+    118: 1320,
+    119: 1360,
+    120: 1400,
   };
 
   // ── Derived getters ──
@@ -119,11 +307,16 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   void _select(dynamic value) {
     setState(() {
       switch (_step) {
-        case 1: _width = value as int;
-        case 2: _aspectRatio = value as int;
-        case 3: _diameter = value as int;
-        case 4: _loadIndex = value as int;
-        case 5: _speedRating = value as String;
+        case 1:
+          _width = value as int;
+        case 2:
+          _aspectRatio = value as int;
+        case 3:
+          _diameter = value as int;
+        case 4:
+          _loadIndex = value as int;
+        case 5:
+          _speedRating = value as String;
       }
       _step++;
     });
@@ -135,11 +328,16 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
     setState(() {
       _step--;
       switch (_step) {
-        case 1: _width = null;
-        case 2: _aspectRatio = null;
-        case 3: _diameter = null;
-        case 4: _loadIndex = null;
-        case 5: _speedRating = null;
+        case 1:
+          _width = null;
+        case 2:
+          _aspectRatio = null;
+        case 3:
+          _diameter = null;
+        case 4:
+          _loadIndex = null;
+        case 5:
+          _speedRating = null;
       }
     });
     _notify();
@@ -164,6 +362,7 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   }
 
   void _notify() {
+    _selfTriggered = true;
     if (_width == null || _aspectRatio == null || _diameter == null) {
       widget.onChanged(null);
       return;
@@ -177,37 +376,12 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
     });
   }
 
-  void _applyScanResult(TireSize size) {
-    setState(() {
-      _width = size.width;
-      _aspectRatio = size.aspectRatio;
-      _diameter = size.diameter;
-      _loadIndex = size.loadIndex;
-      _speedRating = size.speedRating;
-      _step = 6; // jump to complete
-    });
-    _notify();
-  }
-
-  Future<void> _openScanner() async {
-    final result = await Navigator.of(context).push<TireSize>(
-      MaterialPageRoute(builder: (_) => const TireScannerScreen()),
-    );
-    if (result != null && mounted) {
-      _applyScanResult(result);
-    }
-  }
-
   // ── Build ──
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Scanner button (hidden when already completed via scan)
-        if (_step <= 5)
-          _buildScannerButton(),
-
         // Tire graphic - real tire image with overlaid specs
         SizedBox(
           width: 280,
@@ -258,7 +432,11 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
 
   Widget _buildStepIndicator() {
     const colors = [
-      Colors.blue, Colors.green, Colors.amber, Colors.purple, Colors.pink
+      Colors.blue,
+      Colors.green,
+      Colors.amber,
+      Colors.purple,
+      Colors.pink
     ];
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -335,7 +513,11 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
       'Geschwindigkeitsindex wählen:',
     ];
     const colors = [
-      Colors.blue, Colors.green, Colors.amber, Colors.purple, Colors.pink
+      Colors.blue,
+      Colors.green,
+      Colors.amber,
+      Colors.purple,
+      Colors.pink
     ];
 
     return Align(
@@ -366,23 +548,29 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   Widget _buildGrid() {
     late List<dynamic> items;
     switch (_step) {
-      case 1: items = _widths;
-      case 2: items = _aspects;
-      case 3: items = _diameters;
-      case 4: items = _loadIndices;
-      case 5: items = _speedRatings.keys.toList();
-      default: items = [];
+      case 1:
+        items = _widths;
+      case 2:
+        items = _aspects;
+      case 3:
+        items = _diameters;
+      case 4:
+        items = _loadIndices;
+      case 5:
+        items = _speedRatings.keys.toList();
+      default:
+        items = [];
     }
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxHeight: 280),
       child: GridView.builder(
         shrinkWrap: true,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _step >= 4 ? 3 : 4,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4,
           mainAxisSpacing: 8,
           crossAxisSpacing: 8,
-          childAspectRatio: _step >= 4 ? 1.4 : 2.0,
+          childAspectRatio: 2.0,
         ),
         itemCount: items.length,
         itemBuilder: (context, index) {
@@ -392,10 +580,8 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
 
           if (_step == 4 && item is int) {
             label = '$item';
-            subtitle = '${_loadIndexKg[item] ?? "?"} kg';
           } else if (_step == 5 && item is String) {
             label = item;
-            subtitle = '${_speedRatings[item]} km/h';
           } else {
             label = '$item';
           }
@@ -454,74 +640,9 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
               icon: const Icon(Icons.refresh, size: 18),
               label: const Text('Andere Größe'),
             ),
-            const SizedBox(width: 8),
-            TextButton.icon(
-              onPressed: _openScanner,
-              icon: const Icon(Icons.camera_alt, size: 18),
-              label: const Text('Neu scannen'),
-            ),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildScannerButton() {
-    const accentColor = Color(0xFF0284C7);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: _openScanner,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: accentColor.withOpacity(0.35),
-              width: 1.5,
-              strokeAlign: BorderSide.strokeAlignInside,
-            ),
-            color: accentColor.withOpacity(0.06),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: accentColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.camera_alt,
-                    size: 18, color: Colors.white),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Reifengröße scannen',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: accentColor,
-                      ),
-                    ),
-                    Text(
-                      'Kamera auf die Reifenflanke halten',
-                      style: TextStyle(fontSize: 10, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.arrow_forward_ios,
-                  size: 14, color: accentColor),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
@@ -562,10 +683,7 @@ class _GridButton extends StatelessWidget {
                   Text(subtitle!,
                       style: TextStyle(
                           fontSize: 10,
-                          color: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.color)),
+                          color: Theme.of(context).textTheme.bodySmall?.color)),
               ],
             ),
           ),

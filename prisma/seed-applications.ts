@@ -320,7 +320,19 @@ const defaultApplications = [
     color: 'red',
     category: 'GENERAL',
     sortOrder: 68
-  }
+  },
+
+  // MARKETING
+  {
+    key: 'social-media',
+    name: 'Social Media Marketing',
+    description: 'Posts erstellen, planen und automatisiert auf Facebook, Instagram, LinkedIn & YouTube veröffentlichen',
+    icon: 'Share2',
+    adminRoute: '/admin/social-media',
+    color: 'pink',
+    category: 'SALES',
+    sortOrder: 70
+  },
 ]
 
 async function main() {

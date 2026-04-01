@@ -6,12 +6,12 @@ export const metadata: Metadata = {
   title: 'Reifen nach Größe kaufen | Alle Reifengrößen mit Montage | Bereifung24',
   description: 'Finde Reifen in deiner Größe – von 155/65 R14 bis 285/45 R19. Über 50 Reifengrößen mit Bestpreisgarantie und professioneller Montage in deiner Nähe. Jetzt passende Reifen finden!',
   keywords: 'reifen kaufen, reifengröße, reifen online bestellen, reifen mit montage, sommerreifen, winterreifen, ganzjahresreifen, reifenwechsel',
-  alternates: { canonical: 'https://www.bereifung24.de/reifen' },
+  alternates: { canonical: 'https://bereifung24.de/reifen' },
   openGraph: {
     title: 'Reifen nach Größe kaufen | Bereifung24',
     description: 'Über 50 Reifengrößen mit Bestpreisgarantie und professioneller Montage.',
     type: 'website',
-    url: 'https://www.bereifung24.de/reifen',
+    url: 'https://bereifung24.de/reifen',
     siteName: 'Bereifung24',
     locale: 'de_DE',
   },
@@ -24,11 +24,11 @@ export default function ReifenPage() {
     '@type': 'CollectionPage',
     name: 'Reifen nach Größe kaufen',
     description: 'Alle verfügbaren Reifengrößen bei Bereifung24 mit Montage-Service.',
-    url: 'https://www.bereifung24.de/reifen',
+    url: 'https://bereifung24.de/reifen',
     publisher: {
       '@type': 'Organization',
       name: 'Bereifung24',
-      url: 'https://www.bereifung24.de',
+      url: 'https://bereifung24.de',
     },
     mainEntity: {
       '@type': 'ItemList',
@@ -36,7 +36,7 @@ export default function ReifenPage() {
       itemListElement: TIRE_SIZES.slice(0, 20).map((size, i) => ({
         '@type': 'ListItem',
         position: i + 1,
-        url: `https://www.bereifung24.de/reifen/${size.slug}`,
+        url: `https://bereifung24.de/reifen/${size.slug}`,
         name: `${size.displayName} Reifen`,
       })),
     },

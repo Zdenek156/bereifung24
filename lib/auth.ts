@@ -246,6 +246,34 @@ export const authOptions: NextAuthOptions = {
             console.error('Welcome email failed:', emailError)
           }
 
+          // Admin-Benachrichtigungen senden (Google-Registrierung)
+          try {
+            const { sendEmail: sendAdminEmail, adminCustomerRegistrationEmailTemplate } = await import('@/lib/email')
+            // @ts-ignore
+            const adminSettings = await prisma.adminNotificationSetting.findMany({
+              where: { notifyCustomerRegistration: true }
+            }).catch(() => [])
+
+            if (adminSettings && adminSettings.length > 0) {
+              const registrationDate = new Date().toLocaleDateString('de-DE', {
+                day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+              })
+              for (const admin of adminSettings) {
+                await sendAdminEmail({
+                  to: admin.email,
+                  subject: 'Neue Kunden-Registrierung (Google) - Bereifung24',
+                  html: adminCustomerRegistrationEmailTemplate({
+                    customerName: `${newUser.firstName} ${newUser.lastName}`,
+                    email: newUser.email,
+                    registrationDate
+                  })
+                }).catch(err => console.error(`Admin notification failed for ${admin.email}:`, err))
+              }
+            }
+          } catch (adminErr) {
+            console.error('Admin notification failed (Google):', adminErr)
+          }
+
           return true
         } catch (error) {
           console.error('Error creating Google user:', error)

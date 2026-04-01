@@ -25,17 +25,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: tire.metaDescription,
     keywords: `${tire.displayName} reifen, ${tire.displayName} reifen kaufen, ${tire.displayName} sommerreifen, ${tire.displayName} winterreifen, ${tire.displayName} ganzjahresreifen, ${tire.displayName} reifen mit montage, ${tire.commonVehicles.slice(0, 3).join(' reifen, ')} reifen`,
     alternates: {
-      canonical: `https://www.bereifung24.de/reifen/${tire.slug}`,
+      canonical: `https://bereifung24.de/reifen/${tire.slug}`,
     },
     openGraph: {
       title: tire.metaTitle,
       description: tire.metaDescription,
       type: 'website',
-      url: `https://www.bereifung24.de/reifen/${tire.slug}`,
+      url: `https://bereifung24.de/reifen/${tire.slug}`,
       siteName: 'Bereifung24',
       locale: 'de_DE',
       images: [{
-        url: 'https://www.bereifung24.de/og-image.jpg',
+        url: 'https://bereifung24.de/og-image.jpg',
         width: 1200,
         height: 630,
         alt: `${tire.displayName} Reifen bei Bereifung24`,
@@ -62,14 +62,14 @@ export default function Page({ params }: PageProps) {
     '@type': 'WebPage',
     name: tire.h1,
     description: tire.metaDescription,
-    url: `https://www.bereifung24.de/reifen/${tire.slug}`,
+    url: `https://bereifung24.de/reifen/${tire.slug}`,
     publisher: {
       '@type': 'Organization',
       name: 'Bereifung24',
-      url: 'https://www.bereifung24.de',
+      url: 'https://bereifung24.de',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://www.bereifung24.de/og-image.jpg',
+        url: 'https://bereifung24.de/og-image.jpg',
       },
     },
     mainEntity: {
@@ -91,9 +91,9 @@ export default function Page({ params }: PageProps) {
     breadcrumb: {
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Reifen', item: 'https://www.bereifung24.de/reifen' },
-        { '@type': 'ListItem', position: 3, name: tire.displayName, item: `https://www.bereifung24.de/reifen/${tire.slug}` },
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Reifen', item: 'https://bereifung24.de/reifen' },
+        { '@type': 'ListItem', position: 3, name: tire.displayName, item: `https://bereifung24.de/reifen/${tire.slug}` },
       ],
     },
   }

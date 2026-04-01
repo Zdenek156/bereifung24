@@ -7,7 +7,7 @@ export async function GET() {
   if (error) return error
   if (!freelancer) return NextResponse.json({ error: 'Kein Freelancer-Profil' }, { status: 404 })
 
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://bereifung24.de'
   const affiliateLink = `${baseUrl}/register/workshop?ref=${freelancer.affiliateCode}`
   
   // Generate QR code URL using a free API

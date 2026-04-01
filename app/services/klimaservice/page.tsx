@@ -3,7 +3,8 @@ import { Check, ArrowLeft, Search, AlertTriangle, Snowflake } from 'lucide-react
 
 export const metadata = {
   title: 'Klimaservice - Klimaanlage warten & befüllen - Bereifung24',
-  description: 'Professioneller Klimaservice: Inspektion, Desinfektion, Befüllung und Wartung deiner Auto-Klimaanlage. R134a und R1234yf.'
+  description: 'Professioneller Klimaservice: Inspektion, Desinfektion, Befüllung und Wartung deiner Auto-Klimaanlage. R134a und R1234yf.',
+  alternates: { canonical: 'https://bereifung24.de/services/klimaservice' }
 }
 
 const faqData = [
@@ -19,9 +20,9 @@ export default function KlimaservicePage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
-        { '@type': 'ListItem', position: 3, name: 'Klimaservice', item: 'https://www.bereifung24.de/services/klimaservice' },
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Klimaservice', item: 'https://bereifung24.de/services/klimaservice' },
       ],
     },
     {

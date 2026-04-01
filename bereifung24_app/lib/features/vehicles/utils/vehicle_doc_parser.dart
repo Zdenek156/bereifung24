@@ -301,6 +301,8 @@ bool _isExcludedModelWord(String text) {
   ).hasMatch(t)) return true;
   // Exclude text that looks like field 5 (body description with dots)
   if (t.contains('.') && t.length > 8 && RegExp(r'\d').hasMatch(t)) return true;
+  // Exclude VIN-shaped strings (17 alphanumeric chars)
+  if (_vinRegex.hasMatch(t)) return true;
   return false;
 }
 

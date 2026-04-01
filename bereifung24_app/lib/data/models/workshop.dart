@@ -36,6 +36,7 @@ class Workshop {
   final String? tireModel;
   final double? disposalFeeApplied;
   final double? runFlatSurchargeApplied;
+  final double? mountingOnlySurchargeApplied;
   final List<Map<String, dynamic>> tireRecommendationsRaw;
   final double? searchTotalPrice; // totalPrice from tire-search API
   final double? searchBasePrice; // basePrice from tire-search API
@@ -80,6 +81,7 @@ class Workshop {
     this.tireModel,
     this.disposalFeeApplied,
     this.runFlatSurchargeApplied,
+    this.mountingOnlySurchargeApplied,
     this.tireRecommendationsRaw = const [],
     this.searchTotalPrice,
     this.searchBasePrice,
@@ -113,14 +115,26 @@ class Workshop {
   static List<WorkshopOpeningHour> _parseOpeningHours(dynamic raw) {
     if (raw == null) return [];
     if (raw is List) {
-      return raw.map((e) => WorkshopOpeningHour.fromJson(e as Map<String, dynamic>)).toList();
+      return raw
+          .map((e) => WorkshopOpeningHour.fromJson(e as Map<String, dynamic>))
+          .toList();
     }
     if (raw is String) {
       try {
         final decoded = const JsonDecoder().convert(raw);
         if (decoded is Map) {
-          const dayMap = {'monday': 1, 'tuesday': 2, 'wednesday': 3, 'thursday': 4, 'friday': 5, 'saturday': 6, 'sunday': 7};
-          return decoded.entries.where((e) => dayMap.containsKey(e.key)).map((entry) {
+          const dayMap = {
+            'monday': 1,
+            'tuesday': 2,
+            'wednesday': 3,
+            'thursday': 4,
+            'friday': 5,
+            'saturday': 6,
+            'sunday': 7
+          };
+          return decoded.entries
+              .where((e) => dayMap.containsKey(e.key))
+              .map((entry) {
             final val = entry.value as Map<String, dynamic>;
             return WorkshopOpeningHour(
               dayOfWeek: dayMap[entry.key] ?? 1,
@@ -137,7 +151,8 @@ class Workshop {
 
   /// Merge tireRecommendations, tireFrontRecommendations, tireRearRecommendations
   /// into a single flat list for the tire selection carousel
-  static List<Map<String, dynamic>> _mergeTireRecommendations(Map<String, dynamic> json) {
+  static List<Map<String, dynamic>> _mergeTireRecommendations(
+      Map<String, dynamic> json) {
     // Standard single-dimension recommendations (already flat)
     final standard = json['tireRecommendations'] as List?;
     if (standard != null && standard.isNotEmpty) {
@@ -213,19 +228,28 @@ class Workshop {
         profileImage: _toFullUrl(json['profileImage'] ?? json['logoUrl']),
         cardImageUrl: _toFullUrl(json['cardImageUrl']),
         heroImage: _toFullUrl(json['heroImage']),
-        description: json['description'] ?? json['companySettings']?['description'],
-        averageRating: (json['averageRating'] as num?)?.toDouble()
-            ?? (json['rating'] as num?)?.toDouble(),
+        description:
+            json['description'] ?? json['companySettings']?['description'],
+        averageRating: (json['averageRating'] as num?)?.toDouble() ??
+            (json['rating'] as num?)?.toDouble(),
         reviewCount: json['reviewCount'] ?? json['_count']?['reviews'] ?? 0,
         distance: (json['distance'] as num?)?.toDouble(),
         services: ((json['services'] ?? json['availableServices']) as List?)
-            ?.map((e) => e is String ? e : (e is Map ? (e['serviceType']?.toString() ?? '') : e.toString()))
-            .where((s) => s.isNotEmpty)
-            .toList() ?? [],
-        serviceDetails: ((json['services'] ?? json['availableServices']) as List?)
-            ?.where((e) => e is Map)
-            .map((e) => WorkshopServiceDetail.fromJson(Map<String, dynamic>.from(e as Map)))
-            .toList() ?? [],
+                ?.map((e) => e is String
+                    ? e
+                    : (e is Map
+                        ? (e['serviceType']?.toString() ?? '')
+                        : e.toString()))
+                .where((s) => s.isNotEmpty)
+                .toList() ??
+            [],
+        serviceDetails:
+            ((json['services'] ?? json['availableServices']) as List?)
+                    ?.where((e) => e is Map)
+                    .map((e) => WorkshopServiceDetail.fromJson(
+                        Map<String, dynamic>.from(e as Map)))
+                    .toList() ??
+                [],
         pricing: json['pricing'] != null
             ? WorkshopPricing.fromJson(json['pricing'])
             : null,
@@ -237,15 +261,24 @@ class Workshop {
         tireBrand: json['tireBrand']?.toString(),
         tireModel: json['tireModel']?.toString(),
         disposalFeeApplied: (json['disposalFeeApplied'] as num?)?.toDouble(),
-        runFlatSurchargeApplied: (json['runFlatSurchargeApplied'] as num?)?.toDouble(),
+        runFlatSurchargeApplied:
+            (json['runFlatSurchargeApplied'] as num?)?.toDouble(),
+        mountingOnlySurchargeApplied:
+            (json['mountingOnlySurchargeApplied'] as num?)?.toDouble(),
         tireRecommendationsRaw: _mergeTireRecommendations(json),
         searchTotalPrice: (json['totalPrice'] as num?)?.toDouble(),
         searchBasePrice: (json['basePrice'] as num?)?.toDouble(),
         estimatedDuration: (json['estimatedDuration'] as num?)?.toInt(),
         isMixedTires: json['isMixedTires'] ?? false,
-        tireFront: json['tireFront'] != null ? Map<String, dynamic>.from(json['tireFront'] as Map) : null,
-        tireRear: json['tireRear'] != null ? Map<String, dynamic>.from(json['tireRear'] as Map) : null,
-        wheelChangeBreakdown: json['wheelChangeBreakdown'] != null ? Map<String, dynamic>.from(json['wheelChangeBreakdown'] as Map) : null,
+        tireFront: json['tireFront'] != null
+            ? Map<String, dynamic>.from(json['tireFront'] as Map)
+            : null,
+        tireRear: json['tireRear'] != null
+            ? Map<String, dynamic>.from(json['tireRear'] as Map)
+            : null,
+        wheelChangeBreakdown: json['wheelChangeBreakdown'] != null
+            ? Map<String, dynamic>.from(json['wheelChangeBreakdown'] as Map)
+            : null,
       );
 }
 
@@ -304,10 +337,8 @@ class WorkshopPricing {
     });
 
     return WorkshopPricing(
-      tireChangePricePKW:
-          (json['tireChangePricePKW'] as num?)?.toDouble(),
-      tireChangePriceSUV:
-          (json['tireChangePriceSUV'] as num?)?.toDouble(),
+      tireChangePricePKW: (json['tireChangePricePKW'] as num?)?.toDouble(),
+      tireChangePriceSUV: (json['tireChangePriceSUV'] as num?)?.toDouble(),
       tireChangePriceMotorcycle:
           (json['tireChangePriceMotorcycle'] as num?)?.toDouble(),
       basePrice: (json['basePrice'] as num?)?.toDouble(),
@@ -385,8 +416,10 @@ class WorkshopServiceDetail {
 
   factory WorkshopServiceDetail.fromJson(Map<String, dynamic> json) {
     final packages = (json['servicePackages'] as List?)
-        ?.map((e) => ServicePackageDetail.fromJson(e as Map<String, dynamic>))
-        .toList() ?? [];
+            ?.map(
+                (e) => ServicePackageDetail.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
     return WorkshopServiceDetail(
       serviceType: json['serviceType'] ?? '',
       basePrice: (json['basePrice'] as num?)?.toDouble(),

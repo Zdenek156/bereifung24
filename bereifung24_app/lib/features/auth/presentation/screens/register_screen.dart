@@ -2,7 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../profile/presentation/screens/legal_screen.dart';
 import '../../providers/auth_provider.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -325,33 +326,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         padding: const EdgeInsets.only(top: 12),
                         child: Text.rich(
                           TextSpan(
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white70
+                                  : null,
+                            ),
                             children: [
                               const TextSpan(text: 'Ich akzeptiere die '),
                               TextSpan(
                                 text: 'AGB',
                                 style: TextStyle(
-                                  color: Theme.of(context).primaryColor,
+                                  color: B24Colors.primaryLight,
                                   decoration: TextDecoration.underline,
                                 ),
                                 recognizer: TapGestureRecognizer()
-                                  ..onTap = () => launchUrl(
-                                        Uri.parse('https://bereifung24.de/agb'),
-                                        mode: LaunchMode.externalApplication,
+                                  ..onTap = () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const AGBScreen(),
+                                        ),
                                       ),
                               ),
                               const TextSpan(text: ' und '),
                               TextSpan(
                                 text: 'Datenschutzerklärung',
                                 style: TextStyle(
-                                  color: Theme.of(context).primaryColor,
+                                  color: B24Colors.primaryLight,
                                   decoration: TextDecoration.underline,
                                 ),
                                 recognizer: TapGestureRecognizer()
-                                  ..onTap = () => launchUrl(
-                                        Uri.parse(
-                                            'https://bereifung24.de/datenschutz'),
-                                        mode: LaunchMode.externalApplication,
+                                  ..onTap = () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const DatenschutzScreen(),
+                                        ),
                                       ),
                               ),
                             ],

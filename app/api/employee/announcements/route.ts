@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       orderBy: [
         { isPinned: 'desc' }, // Gepinnte zuerst
         { priority: 'desc' }, // Dann nach Priorität
-        { publishedAt: 'desc' } // Neueste zuerst
+        { publishedAt: 'asc' } // Nächste zuerst (aufsteigend)
       ]
     })
 
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const employeeId = session.user.id
+    const employeeId = session.user.b24EmployeeId || session.user.id
 
     // Alle Mitarbeiter dürfen Ankündigungen erstellen (Schwarzes Brett)
 

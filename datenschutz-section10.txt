@@ -1,0 +1,29 @@
+            <section>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Mobile App und Geräteberechtigungen</h2>
+              <p className="mb-3">
+                Die Bereifung24 Mobile App (verfügbar für Android und iOS) erhebt und verarbeitet Daten gemäß dieser Datenschutzerklärung. Zusätzlich nutzt die App folgende Geräteberechtigungen:
+              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mt-4 mb-2">10.1 Kamera (android.permission.CAMERA)</h3>
+              <p className="mb-3">
+                Die App fordert Zugriff auf die Kamera Ihres Geräts an. Die Kameraberechtigung wird ausschließlich verwendet für:
+              </p>
+              <ul className="list-disc pl-6 space-y-2 mb-3">
+                <li>Scannen von Reifen-DOT-Nummern zur automatischen Erfassung von Reifeninformationen</li>
+                <li>Fotografieren von Reifen und Fahrzeugen im Rahmen von Serviceanfragen</li>
+              </ul>
+              <p className="mb-3">
+                Aufgenommene Bilder werden ausschließlich für den jeweiligen Servicezweck verwendet und auf unseren Servern in Deutschland gespeichert. Die Kameraberechtigung kann jederzeit in den Geräteeinstellungen widerrufen werden. Ohne Kamerazugriff können die genannten Funktionen nicht genutzt werden, die übrige App-Nutzung bleibt davon unberührt.
+              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mt-4 mb-2">10.2 Internetzugriff</h3>
+              <p className="mb-3">
+                Die App benötigt eine Internetverbindung, um mit unseren Servern zu kommunizieren (Benutzeranmeldung, Terminbuchungen, Reifensuche, Push-Benachrichtigungen).
+              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mt-4 mb-2">10.3 Push-Benachrichtigungen</h3>
+              <p className="mb-3">
+                Mit Ihrer Zustimmung senden wir Push-Benachrichtigungen über Terminbestätigungen, Angebote und wichtige Serviceinformationen. Push-Benachrichtigungen können jederzeit in den Geräteeinstellungen deaktiviert werden.
+              </p>
+              <h3 className="text-xl font-semibold text-gray-900 mt-4 mb-2">10.4 Lokale Datenspeicherung</h3>
+              <p className="mb-3">
+                Die App speichert Anmeldedaten (Authentifizierungstoken) und Benutzereinstellungen (z.B. Theme, gewähltes Fahrzeug) lokal auf Ihrem Gerät. Diese Daten können durch Abmeldung oder Deinstallation der App gelöscht werden.
+              </p>
+            </section>

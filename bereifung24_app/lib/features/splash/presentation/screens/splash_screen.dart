@@ -177,9 +177,10 @@ class _SplashScreenState extends State<SplashScreen>
                 final reifenspurH    = logoHeight * 1.70; // 30% oben + 40% unten
                 final reifenspurWNew = reifenspurH * _reifenspurRatio;
 
-                // Naht (Join-Point) = Screenmitte, kein Gap
-                final reifenspurLeft = centerX - reifenspurWNew;
-                final b24Left        = centerX;
+                // Naht (Join-Point) = leicht links von der Mitte
+                final nudge = size.width * 0.05;
+                final reifenspurLeft = centerX - reifenspurWNew - nudge;
+                final b24Left        = centerX - nudge;
 
                 return Stack(
                   children: [

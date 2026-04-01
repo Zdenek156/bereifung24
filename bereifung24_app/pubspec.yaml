@@ -3,7 +3,7 @@ description: Bereifung24 – Reifenservice buchen
 
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -89,6 +89,14 @@ dev_dependencies:
   riverpod_generator: ^2.4.0
   build_runner: ^2.4.8
   json_serializable: ^6.7.1
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_icon.png"
+  adaptive_icon_background: "#01395A"
+  adaptive_icon_foreground: "assets/images/app_icon.png"
 
 flutter:
   uses-material-design: true
@@ -97,5 +105,6 @@ flutter:
     - assets/images/
     - assets/images/payment/
     - assets/images/services/
+    - assets/images/welcome/
     - assets/fonts/
     - assets/splash/

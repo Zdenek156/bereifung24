@@ -130,13 +130,13 @@ export async function GET(
     // Use landing page URL if available, otherwise fall back to workshop profile
     const hasLandingPage = workshop.landingPage?.isActive && workshop.landingPage?.slug
     const primaryUrl = hasLandingPage
-      ? `https://www.bereifung24.de/lp/${workshop.landingPage!.slug}`
-      : `https://www.bereifung24.de/workshop/${workshop.id}`
+      ? `https://bereifung24.de/lp/${workshop.landingPage!.slug}`
+      : `https://bereifung24.de/workshop/${workshop.id}`
 
     const data = {
       id: workshop.id,
       name: workshop.companyName,
-      logo: workshop.logoUrl ? `https://www.bereifung24.de${workshop.logoUrl}` : null,
+      logo: workshop.logoUrl ? `https://bereifung24.de${workshop.logoUrl}` : null,
       verified: workshop.isVerified,
       city: workshop.user?.city || '',
       zipCode: workshop.user?.zipCode || '',

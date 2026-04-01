@@ -1,4 +1,11 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Impressum - Bereifung24',
+  description: 'Impressum der Bereifung24 GmbH. Angaben gemäß § 5 TMG.',
+  alternates: { canonical: 'https://bereifung24.de/impressum' }
+}
 
 export default function ImpressumPage() {
   return (

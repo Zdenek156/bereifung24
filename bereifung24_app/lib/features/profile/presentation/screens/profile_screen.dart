@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -73,11 +74,12 @@ class ProfileScreen extends ConsumerWidget {
                     title: 'Benachrichtigungen',
                     onTap: () => context.push('/profile/notifications'),
                   ),
-                  _SettingsTile(
-                    icon: Icons.lock_outline,
-                    title: 'Passwort ändern',
-                    onTap: () => _showChangePasswordDialog(context),
-                  ),
+                  if (user?.googleId == null || user!.googleId!.isEmpty)
+                    _SettingsTile(
+                      icon: Icons.lock_outline,
+                      title: 'Passwort ändern',
+                      onTap: () => _showChangePasswordDialog(context),
+                    ),
                 ],
               ),
 
@@ -182,9 +184,15 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               Divider(color: Colors.grey.shade300),
               const SizedBox(height: 12),
-              Text(
-                'Bereifung24 · Version 1.0.0',
-                style: TextStyle(color: Colors.grey[400], fontSize: 12),
+              FutureBuilder<PackageInfo>(
+                future: PackageInfo.fromPlatform(),
+                builder: (context, snapshot) {
+                  final version = snapshot.data?.version ?? '...';
+                  return Text(
+                    'Bereifung24 \u00b7 Version $version',
+                    style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                  );
+                },
               ),
               const SizedBox(height: 16),
             ],

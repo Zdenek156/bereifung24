@@ -1,0 +1,102 @@
+Bereifung24 – Code-Metriken (Stand: lokales Git, git ls-files)
+================================================================
+
+Hinweis: Nur eingecheckte (getrackte) Dateien. Nicht committete Änderungen
+sind nicht vollständig enthalten. Nach Push entspricht der Stand GitHub.
+
+ÜBERBLICK
+---------
+Getrackte Dateien gesamt:                    1 946
+
+TypeScript/JavaScript (.ts/.tsx/.js/.jsx):  1 235 Dateien, 254 544 Zeilen
+Dart (Flutter):                             66 Dateien, 25 441 Zeilen
+SQL:                                        157 Dateien, 7 097 Zeilen
+
+Next.js App Router – API (app/api):
+  route.ts-Dateien (Endpunkt-Handler):      476
+  Zeilen unter app/api (*.ts):              69 708
+
+
+API-ENDPUNKTE (Next.js route.ts)
+--------------------------------
+Anzahl getrackter app/api/**/route.ts:      476
+(Auf dem Dateisystem können durch untracked Dateien ~489 sein.)
+
+Verteilung nach erstem Pfadsegment unter app/api/:
+
+  admin              203
+  workshop            62
+  employee            23
+  customer            22
+  freelancer          17
+  debug               14
+  sales               12
+  influencer          11
+  auth                10
+  tire-requests       10
+  email                9
+  mitarbeiter          9
+  cron                 9
+  mobile-auth          7
+  user                 5
+  vehicles             5
+  gcal                 4
+  bookings             4
+  public               4
+  test                 3
+  offers               2
+  payment              2
+  weather-alert        2
+  webhooks             2
+  payments             2
+  coupons              2
+  ai                   2
+  affiliate            2
+  eprel                2
+  workshops            2
+  chat                 1
+  blog                 1
+  logout               1
+  widget               1
+  analytics            1
+  config               1
+  reviews              1
+  geocode              1
+  news                 1
+  dashboard            1
+  tire-ratings         1
+  tire-history         1
+  smart-tire-advisor   1
+
+Hinweis: Jede route.ts kann mehrere HTTP-Methoden (GET, POST, …) exportieren.
+Die 476 sind Dateien/Route-Handler, nicht einzelne HTTP-Methoden.
+
+
+MODULE / BEREICHE (TS/JS – grober Schnitt)
+------------------------------------------
+Präfix          Dateien    Zeilen
+app/               758    194 193
+lib/                67     19 857
+components/         48      9 961
+scripts/            27      2 581
+prisma/             11      4 166
+hooks/               1         31
+types/               1         39
+(übrige TS/JS in Root, Tests, … – Rest zur Gesamtsumme 254 544)
+
+Flutter bereifung24_app/lib:
+  62 getrackte .dart-Dateien, 25 130 Zeilen
+Dart gesamt im Repo: 66 Dateien, 25 441 Zeilen
+
+
+GETRACKTE DATEIEN NACH ENDUNG (Auszug Top)
+------------------------------------------
+.ts      568
+.js      336
+.tsx     331
+.sql     157
+.dart     66
+(weitere: png, md, sh, json, xml, …)
+
+
+Erzeugt für: Bereifung24 Workspace

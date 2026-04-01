@@ -10,10 +10,12 @@ Disallow: /api/admin/
 Disallow: /employee/
 Disallow: /api/auth/
 
-Sitemap: https://www.bereifung24.de/sitemap.xml
-Sitemap: https://www.bereifung24.de/sitemap-blog.xml
-Sitemap: https://www.bereifung24.de/sitemap-werkstatt.xml
-Sitemap: https://www.bereifung24.de/sitemap-reifen.xml
+Sitemap: https://bereifung24.de/sitemap.xml
+Sitemap: https://bereifung24.de/sitemap-pages.xml
+Sitemap: https://bereifung24.de/sitemap-blog.xml
+Sitemap: https://bereifung24.de/sitemap-werkstatt.xml
+Sitemap: https://bereifung24.de/sitemap-reifen.xml
+Sitemap: https://bereifung24.de/sitemap-services.xml
 `
 
   return new NextResponse(robotsTxt, {

@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "609460599361-d69hjp1d6d7i8ev33u2s569dd15fipee.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "de.bereifung24.bereifung24_app",
+            "certificate_hash": "afbbed2c09abe22a07b16088cadb3c0ea5dcec1c"
+          }
+        },
+        {
           "client_id": "609460599361-tnf8m8cma9ghhpilfrdj9cv7puq9hnl4.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

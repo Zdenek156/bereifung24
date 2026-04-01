@@ -83,6 +83,9 @@ export async function POST(request: NextRequest) {
         tireData,
         serviceSubtype,
         serviceDisplayName,
+        disposalFee,
+        runFlatSurcharge,
+        hasDisposal,
       } = body
       
       if (!workshopId || !serviceType || !vehicleId || !date || !time || totalPrice === undefined || basePrice === undefined) {
@@ -184,6 +187,9 @@ export async function POST(request: NextRequest) {
           ...(tireTotalPrice ? { totalTirePurchasePrice: new Decimal(tireTotalPrice) } : {}),
           ...(tireSize ? { tireSize } : {}),
           ...(tireData ? { tireData } : {}),
+          hasDisposal: hasDisposal || false,
+          disposalFee: disposalFee ? new Decimal(disposalFee) : null,
+          runFlatSurcharge: runFlatSurcharge ? new Decimal(runFlatSurcharge) : null,
         },
         include: {
           workshop: { include: { user: true } },
@@ -208,24 +214,52 @@ export async function POST(request: NextRequest) {
 
       // Create Google Calendar event
       try {
+        // Determine calendar credentials: workshop first, then fallback to employee
+        let calAccessToken: string | null = null
+        let calRefreshToken: string | null = null
+        let calCalendarId: string | null = null
+        let calSource = ''
+
         if (booking.workshop.googleAccessToken && booking.workshop.googleRefreshToken && booking.workshop.googleCalendarId) {
-          console.log('[BOOK API] Creating Google Calendar event via OAuth...')
+          calAccessToken = booking.workshop.googleAccessToken
+          calRefreshToken = booking.workshop.googleRefreshToken
+          calCalendarId = booking.workshop.googleCalendarId
+          calSource = 'workshop'
+          console.log('[BOOK API] Using WORKSHOP Google Calendar')
+        } else {
+          // Fallback: find first employee with connected Google Calendar
+          const empWithCal = await prisma.employee.findFirst({
+            where: {
+              workshopId,
+              googleCalendarId: { not: null },
+              googleAccessToken: { not: null },
+              googleRefreshToken: { not: null },
+            },
+            select: { id: true, name: true, googleCalendarId: true, googleAccessToken: true, googleRefreshToken: true }
+          })
+          if (empWithCal) {
+            calAccessToken = empWithCal.googleAccessToken
+            calRefreshToken = empWithCal.googleRefreshToken
+            calCalendarId = empWithCal.googleCalendarId
+            calSource = `employee:${empWithCal.name}`
+            console.log(`[BOOK API] Using EMPLOYEE Google Calendar: ${empWithCal.name}`)
+          }
+        }
+
+        if (calAccessToken && calRefreshToken && calCalendarId) {
+          console.log(`[BOOK API] Creating Google Calendar event via OAuth (${calSource})...`)
           
-          let accessToken = booking.workshop.googleAccessToken
+          let accessToken = calAccessToken
 
           // Refresh token if expired
-          if (!accessToken || (booking.workshop.googleTokenExpiry && new Date() > booking.workshop.googleTokenExpiry)) {
-            console.log('[BOOK API] Refreshing workshop Google token...')
-            const newTokens = await refreshAccessToken(booking.workshop.googleRefreshToken)
-            accessToken = newTokens.access_token || accessToken
-
-            await prisma.workshop.update({
-              where: { id: workshopId },
-              data: {
-                googleAccessToken: accessToken,
-                googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
-              }
-            })
+          try {
+            console.log('[BOOK API] Refreshing Google token...')
+            const newTokens = await refreshAccessToken(calRefreshToken)
+            if (newTokens.access_token) {
+              accessToken = newTokens.access_token
+            }
+          } catch (refreshErr) {
+            console.warn('[BOOK API] Token refresh failed, trying with existing token:', refreshErr instanceof Error ? refreshErr.message : refreshErr)
           }
           
           const bookingDate = new Date(booking.date)
@@ -253,6 +287,7 @@ export async function POST(request: NextRequest) {
           if (booking.hasBalancing) calDescription.push('✅ Auswuchtung')
           if (booking.hasStorage) calDescription.push('✅ Einlagerung')
           if (booking.hasWashing) calDescription.push('✅ Räder waschen')
+          if (booking.hasDisposal) calDescription.push('✅ Entsorgung')
           // Add tire info to calendar
           if (tireData?.isMixedTires) {
             calDescription.push('', '🛞 Reifen (Mischbereifung):')
@@ -268,7 +303,18 @@ export async function POST(request: NextRequest) {
             calDescription.push('', `🛞 Reifen: ${tireQuantity || 4}× ${tireBrand} ${tireModel || ''}`)
             if (tireSize) calDescription.push(`   Größe: ${tireSize}`)
           }
-          calDescription.push('', `Gesamtpreis: ${Number(booking.totalPrice).toFixed(2)} €`)
+          calDescription.push('')
+          // Für Nur Montage: Kombinierte Montage-Zeile
+          if (booking.serviceType === 'TIRE_CHANGE' && !tireTotalPrice && booking.basePrice) {
+            calDescription.push(`Montage: ${Number(booking.basePrice).toFixed(2)} €`)
+          }
+          if (booking.disposalFee && Number(booking.disposalFee) > 0) {
+            calDescription.push(`Entsorgung: ${Number(booking.disposalFee).toFixed(2)} €`)
+          }
+          if (booking.runFlatSurcharge && Number(booking.runFlatSurcharge) > 0) {
+            calDescription.push(`RunFlat-Zuschlag: ${Number(booking.runFlatSurcharge).toFixed(2)} €`)
+          }
+          calDescription.push(`Gesamtpreis: ${Number(booking.totalPrice).toFixed(2)} €`)
           
           const calSummaryTire = tireData?.isMixedTires
             ? ` - ${tireData.front?.brand || ''} / ${tireData.rear?.brand || ''}`
@@ -276,8 +322,8 @@ export async function POST(request: NextRequest) {
           
           await createCalendarEvent(
             accessToken,
-            booking.workshop.googleRefreshToken,
-            booking.workshop.googleCalendarId,
+            calRefreshToken,
+            calCalendarId,
             {
               summary: `${serviceDisplayName || serviceLabels[booking.serviceType] || booking.serviceType} - ${vehicleMake} ${booking.vehicle.model}${calSummaryTire}`,
               description: calDescription.join('\n'),
@@ -287,9 +333,9 @@ export async function POST(request: NextRequest) {
             }
           )
           
-          console.log('[BOOK API] ✅ Google Calendar event created')
+          console.log(`[BOOK API] ✅ Google Calendar event created (${calSource})`)
         } else {
-          console.log('[BOOK API] ⏭️ Workshop has no Google Calendar connected')
+          console.log('[BOOK API] ⏭️ No Google Calendar connected (workshop or employee)')
         }
       } catch (calendarError) {
         console.error('[BOOK API] Error creating calendar event:', calendarError)
@@ -356,6 +402,9 @@ export async function POST(request: NextRequest) {
           hasBalancing: booking.hasBalancing || undefined,
           hasStorage: booking.hasStorage || undefined,
           hasWashing: booking.hasWashing || undefined,
+          hasDisposal: booking.hasDisposal || undefined,
+          disposalFee: booking.disposalFee ? Number(booking.disposalFee) : undefined,
+          runFlatSurcharge: booking.runFlatSurcharge ? Number(booking.runFlatSurcharge) : undefined,
           tireBrand: tireBrand || undefined,
           tireModel: tireModel || undefined,
           tireSize: tireSize || undefined,
@@ -428,6 +477,9 @@ export async function POST(request: NextRequest) {
             hasBalancing: booking.hasBalancing || undefined,
             hasStorage: booking.hasStorage || undefined,
             hasWashing: booking.hasWashing || undefined,
+            hasDisposal: booking.hasDisposal || undefined,
+            disposalFee: booking.disposalFee ? Number(booking.disposalFee) : undefined,
+            runFlatSurcharge: booking.runFlatSurcharge ? Number(booking.runFlatSurcharge) : undefined,
             tireBrand: tireBrand || undefined,
             tireModel: tireModel || undefined,
             tireSize: tireSize || undefined,

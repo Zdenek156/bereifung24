@@ -1428,14 +1428,16 @@ export default function NewHomePage({
         // Browser back/forward will simply re-trigger the search via useEffect
         console.log('✅ [searchWorkshops] Search completed successfully, workshops:', workshops.length)
         
-        // Auto-scroll to results after search completes (skip on initial LP load)
-        if (isInitialSearchRef.current) {
-          isInitialSearchRef.current = false
-        } else {
-          setTimeout(() => {
-            searchResultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          }, 100)
+        // Auto-scroll to results after search completes
+        // Use retry to handle case where section hasn't rendered yet
+        const scrollToResults = (retries = 5) => {
+          if (searchResultsRef.current) {
+            searchResultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          } else if (retries > 0) {
+            setTimeout(() => scrollToResults(retries - 1), 200)
+          }
         }
+        setTimeout(() => scrollToResults(), 100)
       } else {
         setWorkshops([])
         setError(result.error || 'Keine Werkstätten gefunden')
@@ -1755,8 +1757,9 @@ export default function NewHomePage({
     }
     
     // Save tire and service data to sessionStorage for workshop page
-    // Save if has tires OR has disposal/runflat flags (needed for pricing on workshop page)
-    if (tireBookingData.hasTires || tireBookingData.hasDisposal || tireBookingData.hasRunflat) {
+    // Save if has tires OR has disposal/runflat flags OR is TIRE_CHANGE "Nur Montage" (needed for pricing on workshop page)
+    const isTireRelatedService = selectedService === 'TIRE_CHANGE' || selectedService === 'MOTORCYCLE_TIRE'
+    if (tireBookingData.hasTires || tireBookingData.hasDisposal || tireBookingData.hasRunflat || isTireRelatedService) {
       sessionStorage.setItem('tireBookingData', JSON.stringify(tireBookingData))
     } else {
       // Clear stale tire data for non-tire services (WHEEL_CHANGE, etc.)
@@ -2633,8 +2636,8 @@ export default function NewHomePage({
                                 </div>
                               )}
 
-                              {/* Anzahl Reifen Dropdown (nur bei Reifenwechsel mit Reifenkauf) */}
-                              {selectedService === 'TIRE_CHANGE' && includeTires && !hasMixedTires && (
+                              {/* Anzahl Reifen Dropdown (bei Reifenwechsel und Nur Montage) */}
+                              {selectedService === 'TIRE_CHANGE' && !hasMixedTires && (
                                 <div className="mt-3">
                                   <label className="block text-xs font-semibold text-gray-600 mb-1.5">
                                     Anzahl Reifen

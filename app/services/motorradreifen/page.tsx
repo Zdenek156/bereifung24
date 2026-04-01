@@ -3,7 +3,8 @@ import { Check, ArrowLeft, Search, AlertTriangle } from 'lucide-react'
 
 export const metadata = {
   title: 'Motorradreifen wechseln - Bereifung24',
-  description: 'Professioneller Motorradreifen-Service. Vorderrad, Hinterrad oder beide Räder wechseln lassen bei Spezialisten.'
+  description: 'Professioneller Motorradreifen-Service. Vorderrad, Hinterrad oder beide Räder wechseln lassen bei Spezialisten.',
+  alternates: { canonical: 'https://bereifung24.de/services/motorradreifen' }
 }
 
 const faqData = [
@@ -19,9 +20,9 @@ export default function MotorradreifenPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://www.bereifung24.de' },
-        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://www.bereifung24.de/services' },
-        { '@type': 'ListItem', position: 3, name: 'Motorradreifen', item: 'https://www.bereifung24.de/services/motorradreifen' },
+        { '@type': 'ListItem', position: 1, name: 'Startseite', item: 'https://bereifung24.de' },
+        { '@type': 'ListItem', position: 2, name: 'Services', item: 'https://bereifung24.de/services' },
+        { '@type': 'ListItem', position: 3, name: 'Motorradreifen', item: 'https://bereifung24.de/services/motorradreifen' },
       ],
     },
     {

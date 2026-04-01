@@ -148,7 +148,7 @@ export async function POST(request: Request) {
   })
 
   // Send welcome email with password setup link
-  const baseUrl = process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'
+  const baseUrl = process.env.NEXTAUTH_URL || 'https://bereifung24.de'
   const setupLink = `${baseUrl}/reset-password?token=${resetToken}`
 
   const fallbackTemplate = {

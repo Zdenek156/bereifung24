@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getBusySlots } from '@/lib/google-calendar'
+import { getBusySlots, refreshAccessToken } from '@/lib/google-calendar'
 import { isPublicHolidayByZip } from '@/lib/german-holidays'
 
 /**
@@ -168,10 +168,24 @@ export async function GET(
       }
     }
     
+    let calendarError = false
+    
     if (googleCalendarId && googleAccessToken && googleRefreshToken) {
       try {
+        // Try to refresh token before querying
+        let activeAccessToken = googleAccessToken
+        try {
+          const newTokens = await refreshAccessToken(googleRefreshToken)
+          if (newTokens.access_token) {
+            activeAccessToken = newTokens.access_token
+            console.log(`[CUSTOMER SLOTS API] ✅ Token refreshed successfully`)
+          }
+        } catch (refreshErr) {
+          console.warn(`[CUSTOMER SLOTS API] ⚠️ Token refresh failed, trying with existing token:`, refreshErr instanceof Error ? refreshErr.message : refreshErr)
+        }
+        
         const gcalBusySlots = await getBusySlots(
-          googleAccessToken,
+          activeAccessToken,
           googleRefreshToken,
           googleCalendarId,
           start.toISOString(),
@@ -263,9 +277,12 @@ export async function GET(
           }
         })
       } catch (error) {
-        console.error('[CUSTOMER SLOTS API] Error fetching Google Calendar:', error)
-        // Continue without Google Calendar slots
+        console.error('[CUSTOMER SLOTS API] ❌ Error fetching Google Calendar:', error)
+        calendarError = true
       }
+    } else {
+      console.warn(`[CUSTOMER SLOTS API] ⚠️ No Google Calendar configured for this workshop`)
+      calendarError = true
     }
 
     // Build vacation dates list (individual YYYY-MM-DD strings)
@@ -363,6 +380,7 @@ export async function GET(
       busySlots: busySlotsByDate,
       openingHours: workshop.openingHours, // Send opening hours to client
       vacationDates,
+      calendarError,
     })
   } catch (error) {
     console.error('Error fetching slots:', error)

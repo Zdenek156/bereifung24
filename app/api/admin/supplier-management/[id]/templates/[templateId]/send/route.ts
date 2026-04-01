@@ -146,7 +146,7 @@ export async function POST(
     </div>
     <div class="footer">
       <p>Diese E-Mail wurde über die Bereifung24 Lieferantenverwaltung versendet.</p>
-      <p>Bei Fragen: <a href="mailto:info@bereifung24.de">info@bereifung24.de</a> | <a href="https://www.bereifung24.de">www.bereifung24.de</a></p>
+      <p>Bei Fragen: <a href="mailto:info@bereifung24.de">info@bereifung24.de</a> | <a href="https://bereifung24.de">www.bereifung24.de</a></p>
     </div>
   </div>
 </body>

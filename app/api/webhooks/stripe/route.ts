@@ -240,6 +240,54 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.log('✅ DirectBooking updated:', existingBooking.id)
       resolvedBookingId = existingBooking.id
     } else {
+      // 🛡️ Double booking prevention: check if slot is already taken
+      const conflictingBooking = await prisma.directBooking.findFirst({
+        where: {
+          workshopId,
+          date: new Date(date),
+          time,
+          status: { in: ['CONFIRMED', 'COMPLETED', 'PENDING'] },
+        }
+      })
+
+      if (conflictingBooking) {
+        console.error(`🚨 [STRIPE WEBHOOK] DOUBLE BOOKING PREVENTED: Workshop ${workshopId} at ${date} ${time} — already booked by ${conflictingBooking.id}`)
+        // Initiate refund for the duplicate payment
+        try {
+          const paymentIntentId = session.payment_intent as string
+          if (paymentIntentId) {
+            const stripe = (await import('stripe')).default
+            const stripeClient = new stripe(process.env.STRIPE_SECRET_KEY!)
+            await stripeClient.refunds.create({ payment_intent: paymentIntentId })
+            console.log(`💸 [STRIPE WEBHOOK] Refund initiated for duplicate booking payment: ${paymentIntentId}`)
+          }
+        } catch (refundError) {
+          console.error('❌ [STRIPE WEBHOOK] Refund failed for duplicate booking:', refundError)
+        }
+
+        // Send notification email to customer about the conflict
+        try {
+          const { sendTemplateEmail } = await import('@/lib/email')
+          const customerUser = await prisma.user.findFirst({ where: { customer: { id: customerId } } })
+          if (customerUser?.email) {
+            await sendTemplateEmail(
+              'booking-conflict',
+              customerUser.email,
+              { date, time },
+              undefined,
+              {
+                subject: 'Terminkonflikt - Erstattung wird veranlasst',
+                html: `<p>Leider wurde Ihr gewünschter Termin am ${date} um ${time} Uhr bereits von einem anderen Kunden gebucht.</p><p>Ihre Zahlung wird automatisch erstattet. Bitte buchen Sie einen neuen Termin.</p><p>Wir entschuldigen uns für die Unannehmlichkeiten.</p>`
+              }
+            )
+          }
+        } catch (emailError) {
+          console.error('❌ [STRIPE WEBHOOK] Conflict email failed:', emailError)
+        }
+
+        return NextResponse.json({ received: true, status: 'conflict_prevented' })
+      }
+
       // Calculate commission breakdown (6.9% platform commission)
       const PLATFORM_COMMISSION_RATE = 0.069
       const totalPriceNum = totalPrice
@@ -529,21 +577,50 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     // Create Google Calendar event for workshop
     try {
+      const { createCalendarEvent, refreshAccessToken } = await import('@/lib/google-calendar')
+      const { createBerlinDate } = await import('@/lib/timezone-utils')
+
+      // Determine calendar credentials: workshop first, then fallback to employee
+      let calAccessToken: string | null = null
+      let calRefreshToken: string | null = null
+      let calCalendarId: string | null = null
+      let calSource = ''
+
       if (completeBooking.workshop.googleAccessToken && completeBooking.workshop.googleRefreshToken && completeBooking.workshop.googleCalendarId) {
-        const { createCalendarEvent, refreshAccessToken } = await import('@/lib/google-calendar')
-        const { createBerlinDate } = await import('@/lib/timezone-utils')
-        
-        let accessToken = completeBooking.workshop.googleAccessToken
-        if (!accessToken || (completeBooking.workshop.googleTokenExpiry && new Date() > completeBooking.workshop.googleTokenExpiry)) {
-          const newTokens = await refreshAccessToken(completeBooking.workshop.googleRefreshToken)
-          accessToken = newTokens.access_token || accessToken
-          await prisma.workshop.update({
-            where: { id: completeBooking.workshopId },
-            data: {
-              googleAccessToken: accessToken,
-              googleTokenExpiry: new Date(newTokens.expiry_date || Date.now() + 3600 * 1000)
-            }
-          })
+        calAccessToken = completeBooking.workshop.googleAccessToken
+        calRefreshToken = completeBooking.workshop.googleRefreshToken
+        calCalendarId = completeBooking.workshop.googleCalendarId
+        calSource = 'workshop'
+        console.log('[STRIPE WEBHOOK] Using WORKSHOP Google Calendar')
+      } else {
+        // Fallback: find first employee with connected Google Calendar
+        const empWithCal = await prisma.employee.findFirst({
+          where: {
+            workshopId: completeBooking.workshopId,
+            googleCalendarId: { not: null },
+            googleAccessToken: { not: null },
+            googleRefreshToken: { not: null },
+          },
+          select: { id: true, name: true, googleCalendarId: true, googleAccessToken: true, googleRefreshToken: true }
+        })
+        if (empWithCal) {
+          calAccessToken = empWithCal.googleAccessToken
+          calRefreshToken = empWithCal.googleRefreshToken
+          calCalendarId = empWithCal.googleCalendarId
+          calSource = `employee:${empWithCal.name}`
+          console.log(`[STRIPE WEBHOOK] Using EMPLOYEE Google Calendar: ${empWithCal.name}`)
+        }
+      }
+
+      if (calAccessToken && calRefreshToken && calCalendarId) {
+        let accessToken = calAccessToken
+        try {
+          const newTokens = await refreshAccessToken(calRefreshToken)
+          if (newTokens.access_token) {
+            accessToken = newTokens.access_token
+          }
+        } catch (refreshErr) {
+          console.warn('[STRIPE WEBHOOK] Token refresh failed, trying with existing token:', refreshErr instanceof Error ? refreshErr.message : refreshErr)
         }
         
         const calBookingDate = completeBooking.date
@@ -566,6 +643,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         if (completeBooking.hasBalancing) calDesc.push('✅ Auswuchtung')
         if (completeBooking.hasStorage) calDesc.push('✅ Einlagerung')
         if (completeBooking.hasWashing) calDesc.push('✅ Räder waschen')
+        if (completeBooking.hasDisposal) calDesc.push('✅ Entsorgung')
         // Tire info
         const td = completeBooking.tireData as any
         if (td?.isMixedTires) {
@@ -576,7 +654,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           calDesc.push('', `🛞 Reifen: ${completeBooking.tireQuantity || 4}× ${completeBooking.tireBrand} ${completeBooking.tireModel || ''}`)
           if (completeBooking.tireSize) calDesc.push(`   Größe: ${completeBooking.tireSize} ${completeBooking.tireLoadIndex || ''}${completeBooking.tireSpeedIndex || ''}`.trim())
         }
-        calDesc.push('', `Gesamtpreis: ${Number(completeBooking.totalPrice).toFixed(2)} €`)
+        calDesc.push('')
+        // Für Nur Montage: Kombinierte Montage-Zeile
+        if (completeBooking.serviceType === 'TIRE_CHANGE' && !completeBooking.totalTirePurchasePrice && completeBooking.basePrice) {
+          calDesc.push(`Montage: ${Number(completeBooking.basePrice).toFixed(2)} €`)
+        }
+        if (completeBooking.disposalFee && Number(completeBooking.disposalFee) > 0) {
+          calDesc.push(`Entsorgung: ${Number(completeBooking.disposalFee).toFixed(2)} €`)
+        }
+        if (completeBooking.runFlatSurcharge && Number(completeBooking.runFlatSurcharge) > 0) {
+          calDesc.push(`RunFlat-Zuschlag: ${Number(completeBooking.runFlatSurcharge).toFixed(2)} €`)
+        }
+        calDesc.push(`Gesamtpreis: ${Number(completeBooking.totalPrice).toFixed(2)} €`)
         
         const calSummaryTire = td?.isMixedTires
           ? ` - ${td.front?.brand || ''} / ${td.rear?.brand || ''}`
@@ -584,8 +673,8 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         
         await createCalendarEvent(
           accessToken,
-          completeBooking.workshop.googleRefreshToken,
-          completeBooking.workshop.googleCalendarId,
+          calRefreshToken,
+          calCalendarId,
           {
             summary: `${serviceName} - ${vehicleStr}${calSummaryTire}`,
             description: calDesc.join('\n'),
@@ -594,7 +683,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             attendees: [{ email: completeBooking.customer.user.email }]
           }
         )
-        console.log('✅ Google Calendar event created from Stripe webhook')
+        console.log(`✅ Google Calendar event created from Stripe webhook (${calSource})`)
+      } else {
+        console.log('[STRIPE WEBHOOK] ⏭️ No Google Calendar connected (workshop or employee)')
       }
     } catch (calError) {
       console.error('❌ Error creating calendar event from Stripe webhook:', calError)

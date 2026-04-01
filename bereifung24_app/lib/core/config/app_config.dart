@@ -1,6 +1,6 @@
 class AppConfig {
   static const String appName = 'Bereifung24';
-  static const String baseUrl = 'https://www.bereifung24.de';
+  static const String baseUrl = 'https://bereifung24.de';
   static const String apiBaseUrl = '$baseUrl/api';
 
   // Stripe
@@ -8,7 +8,7 @@ class AppConfig {
 
   // Deep Link scheme
   static const String deepLinkScheme = 'bereifung24';
-  static const String deepLinkHost = 'www.bereifung24.de';
+  static const String deepLinkHost = 'bereifung24.de';
 
   // Sentry
   static const String sentryDsn = ''; // TODO: Set Sentry DSN

@@ -26,21 +26,32 @@ export async function POST(request: NextRequest) {
   const sanitizedMessage = message.trim().slice(0, 200)
 
   try {
-    // ── Load ALL vehicles for customer ──
+    // ── Load vehicles for customer (prefer specific vehicleId if given) ──
     const customerId = user.customerId
     let vehicles: any[] = []
 
     if (customerId) {
-      vehicles = await prisma.vehicle.findMany({
-        where: { customerId },
-        orderBy: { updatedAt: 'desc' },
-      })
+      if (vehicleId) {
+        // Load the specific vehicle the user is asking about
+        const specific = await prisma.vehicle.findFirst({
+          where: { id: vehicleId, customerId },
+        })
+        if (specific) vehicles = [specific]
+      }
+      // Fallback: load all vehicles if no specific one found
+      if (vehicles.length === 0) {
+        vehicles = await prisma.vehicle.findMany({
+          where: { customerId },
+          orderBy: { updatedAt: 'desc' },
+        })
+      }
     }
 
-    // ── Build tire sizes from ALL vehicles ──
+    // ── Build tire sizes from ALL vehicles (including rear for mixed tires) ──
     const tireSizes: Set<string> = new Set()
     const vehicleContexts: AdvisorContext['vehicles'] = vehicles.map(v => {
       let tireSize = ''
+      let rearTireSize = ''
       const specs = v.summerTires || v.winterTires || v.allSeasonTires
       if (specs) {
         try {
@@ -48,6 +59,11 @@ export async function POST(request: NextRequest) {
           if (parsed.width && parsed.aspectRatio && parsed.diameter) {
             tireSize = `${parsed.width}/${parsed.aspectRatio} R${parsed.diameter}`
             tireSizes.add(tireSize)
+          }
+          // Mixed tires (Mischbereifung): extract rear axle dimensions
+          if (parsed.hasDifferentSizes && parsed.rearWidth && parsed.rearAspectRatio && parsed.rearDiameter) {
+            rearTireSize = `${parsed.rearWidth}/${parsed.rearAspectRatio} R${parsed.rearDiameter}`
+            tireSizes.add(rearTireSize)
           }
         } catch { /* ignore parse errors */ }
       }
@@ -57,6 +73,7 @@ export async function POST(request: NextRequest) {
         year: v.year?.toString(),
         plate: v.licensePlate || undefined,
         tireSize: tireSize || undefined,
+        rearTireSize: rearTireSize || undefined,
         fuelType: v.fuelType || undefined,
       }
     })

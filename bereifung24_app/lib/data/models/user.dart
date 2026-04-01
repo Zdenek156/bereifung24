@@ -8,6 +8,7 @@ class User {
   final String? zipCode;
   final String? city;
   final String? profileImage;
+  final String? googleId;
   final String role;
   final String? workshopId;
   final String? workshopName;
@@ -27,6 +28,7 @@ class User {
     this.zipCode,
     this.city,
     this.profileImage,
+    this.googleId,
     this.role = 'CUSTOMER',
     this.workshopId,
     this.workshopName,
@@ -50,6 +52,7 @@ class User {
         zipCode: json['zipCode'],
         city: json['city'],
         profileImage: json['profileImage'],
+        googleId: json['googleId'],
         role: json['role'] ?? 'CUSTOMER',
         workshopId: json['workshopId'],
         workshopName: json['workshopName'],
@@ -72,6 +75,7 @@ class User {
         'zipCode': zipCode,
         'city': city,
         'profileImage': profileImage,
+        'googleId': googleId,
         'role': role,
         'workshopId': workshopId,
         'workshopName': workshopName,
@@ -89,6 +93,7 @@ class User {
     String? zipCode,
     String? city,
     String? profileImage,
+    String? googleId,
     String? workshopId,
     String? workshopName,
     bool? notifyBookingConfirmation,
@@ -106,6 +111,7 @@ class User {
         zipCode: zipCode ?? this.zipCode,
         city: city ?? this.city,
         profileImage: profileImage ?? this.profileImage,
+        googleId: googleId ?? this.googleId,
         role: role,
         workshopId: workshopId ?? this.workshopId,
         workshopName: workshopName ?? this.workshopName,

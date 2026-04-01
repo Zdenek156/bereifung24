@@ -42,43 +42,74 @@ workflows:
           grep "PROVISIONING_PROFILE_SPECIFIER" ios/Runner.xcodeproj/project.pbxproj || echo "WARNING: No PROVISIONING_PROFILE_SPECIFIER found in pbxproj!"
       - name: Build IPA
         script: |
+          # Build the archive
           flutter build ipa --release \
             --build-name=1.0.1 \
             --build-number=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1)) \
-            --export-options-plist=/Users/builder/export_options.plist
-          echo "=== Flutter build output ==="
-          echo "=== Searching for IPA/xcarchive files ==="
-          find /Users/builder -name "*.ipa" -type f 2>/dev/null
-          find /Users/builder -name "*.xcarchive" -type d 2>/dev/null
-          echo "=== Current directory ==="
-          pwd
-          echo "=== Listing build/ios/ ==="
-          ls -laR build/ios/ 2>/dev/null || echo "build/ios/ not found"
+            --export-options-plist=/Users/builder/export_options.plist || true
+          
+          # Check if IPA was created
+          IPA_CHECK=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
+          if [ -n "$IPA_CHECK" ]; then
+            echo "=== IPA created by flutter build: $IPA_CHECK ==="
+          else
+            echo "=== Flutter build did not create IPA, exporting from archive ==="
+            ARCHIVE_PATH=$(find /Users/builder -name "*.xcarchive" -type d 2>/dev/null | head -1)
+            
+            # Get the provisioning profile name
+            PROFILE_NAME=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
+            if [ -n "$PROFILE_NAME" ]; then
+              PROFILE_UUID=$(security cms -D -i "$PROFILE_NAME" 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>//' | sed 's/<\/string>//')
+              PROFILE_DISPLAY=$(security cms -D -i "$PROFILE_NAME" 2>/dev/null | grep -A1 Name | grep string | head -1 | sed 's/.*<string>//' | sed 's/<\/string>//')
+              echo "=== Profile UUID: $PROFILE_UUID, Name: $PROFILE_DISPLAY ==="
+            fi
+            
+            # Create proper export options plist
+            cat > /tmp/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>Q5GN6QWF45</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>de.bereifung24.bereifung24App</key>
+              <string>${PROFILE_DISPLAY:-match AppStore de.bereifung24.bereifung24App}</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+            
+            echo "=== Export options plist ==="
+            cat /tmp/ExportOptions.plist
+            
+            mkdir -p build/ios/ipa
+            xcodebuild -exportArchive \
+              -archivePath "$ARCHIVE_PATH" \
+              -exportOptionsPlist /tmp/ExportOptions.plist \
+              -exportPath build/ios/ipa
+          fi
       - name: Upload to TestFlight
         script: |
-          echo "=== Looking for IPA ==="
-          IPA_PATH=$(find /Users/builder -name "*.ipa" -type f 2>/dev/null | head -1)
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
+          if [ -z "$IPA_PATH" ]; then
+            IPA_PATH=$(find /Users/builder -name "*.ipa" -type f 2>/dev/null | head -1)
+          fi
           if [ -n "$IPA_PATH" ]; then
-            echo "=== Found IPA: $IPA_PATH ==="
-            app-store-connect publish \
-              --path "$IPA_PATH"
+            echo "=== Uploading $IPA_PATH to TestFlight ==="
+            app-store-connect publish --path "$IPA_PATH"
           else
-            echo "=== No IPA found, looking for xcarchive ==="
-            ARCHIVE_PATH=$(find /Users/builder -name "*.xcarchive" -type d 2>/dev/null | head -1)
-            if [ -n "$ARCHIVE_PATH" ]; then
-              echo "=== Found archive: $ARCHIVE_PATH ==="
-              echo "=== Exporting IPA from archive ==="
-              xcodebuild -exportArchive \
-                -archivePath "$ARCHIVE_PATH" \
-                -exportOptionsPlist /Users/builder/export_options.plist \
-                -exportPath build/ios/ipa
-              IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f | head -1)
-              app-store-connect publish \
-                --path "$IPA_PATH"
-            else
-              echo "ERROR: No IPA or xcarchive found!"
-              exit 1
-            fi
+            echo "ERROR: No IPA found!"
+            exit 1
           fi
     artifacts:
       - bereifung24_app/build/ios/ipa/*.ipa

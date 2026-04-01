@@ -37,31 +37,11 @@ workflows:
           echo "=== Installed certificates ==="
           security find-identity -v -p codesigning
 
-          # ===== 2. FIX EXPORT OPTIONS =====
-          # Get cert and profile names
-          CERT_NAME=$(security find-identity -v -p codesigning | grep "Apple Distribution\|iPhone Distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
-          PROFILE_FILE=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
-          PROFILE_NAME=""
-          if [ -n "$PROFILE_FILE" ]; then
-            PROFILE_NAME=$(security cms -D -i "$PROFILE_FILE" 2>/dev/null | plutil -extract Name raw - 2>/dev/null || echo "")
-          fi
-          echo "=== Cert: $CERT_NAME, Profile: $PROFILE_NAME ==="
-
-          # Create export options plist using plutil (avoids YAML/XML conflicts)
-          plutil -create xml1 /Users/builder/export_options.plist
-          plutil -insert method -string "app-store" /Users/builder/export_options.plist
-          plutil -insert teamID -string "Q5GN6QWF45" /Users/builder/export_options.plist
-          plutil -insert uploadBitcode -bool false /Users/builder/export_options.plist
-          plutil -insert uploadSymbols -bool true /Users/builder/export_options.plist
-          plutil -insert signingStyle -string "manual" /Users/builder/export_options.plist
-          plutil -insert signingCertificate -string "${CERT_NAME:-Apple Distribution}" /Users/builder/export_options.plist
-          plutil -insert provisioningProfiles -dictionary /Users/builder/export_options.plist
-          plutil -insert provisioningProfiles.de\\.bereifung24\\.bereifung24App -string "${PROFILE_NAME}" /Users/builder/export_options.plist
-
-          echo "=== Final export_options.plist ==="
+          # Use Codemagic's generated export_options.plist directly (do NOT overwrite it)
+          echo "=== Codemagic export_options.plist ==="
           cat /Users/builder/export_options.plist
 
-          # ===== 3. BUILD IPA =====
+          # ===== 2. BUILD IPA =====
           BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1))
           echo "=== Build number: $BUILD_NUMBER ==="
 

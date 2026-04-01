@@ -21,12 +21,12 @@ workflows:
           keychain initialize
           keychain add-certificates
           xcode-project use-profiles
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios && pod install
       - name: Flutter packages
         script: |
           flutter packages pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
       - name: Build IPA
         script: |
           flutter build ipa --release \

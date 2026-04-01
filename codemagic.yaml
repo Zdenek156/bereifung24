@@ -7,6 +7,9 @@ workflows:
     integrations:
       app_store_connect: Bereifung24_ASC_Key
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: de.bereifung24.bereifung24App
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -16,118 +19,26 @@ workflows:
       - name: Flutter packages
         script: |
           flutter packages pub get
-      - name: Set up signing and Build IPA
+      - name: Verify signing setup
         script: |
-          set -e
-          
-          # ===== 1. CODE SIGNING =====
-          echo "=== Step 1: Fetching signing files ==="
-          app-store-connect fetch-signing-files "de.bereifung24.bereifung24App" \
-            --type IOS_APP_STORE \
-            --create
-          
-          echo "=== Step 2: Initializing keychain ==="
-          keychain initialize
-          
-          echo "=== Step 3: Adding certificates ==="
-          keychain add-certificates
-          
-          echo "=== Step 4: Verify certificates are in keychain ==="
+          echo "=== Installed certificates ==="
           security find-identity -v -p codesigning
-          CERT_COUNT=$(security find-identity -v -p codesigning | grep -c "valid identities found" || true)
-          CERT_NAME=$(security find-identity -v -p codesigning | grep "Apple Distribution\|iPhone Distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
-          echo "=== Certificate: $CERT_NAME ==="
-          
-          echo "=== Step 5: Applying profiles to Xcode project ==="
-          xcode-project use-profiles
-          
-          echo "=== Step 6: Check installed provisioning profiles ==="
-          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
-          
-          # Get provisioning profile name
-          PROFILE_FILE=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
-          PROFILE_NAME=""
-          if [ -n "$PROFILE_FILE" ]; then
-            PROFILE_NAME=$(security cms -D -i "$PROFILE_FILE" 2>/dev/null | plutil -extract Name raw - 2>/dev/null || \
-              security cms -D -i "$PROFILE_FILE" 2>/dev/null | grep -A1 '<key>Name</key>' | grep '<string>' | head -1 | sed 's/.*<string>//' | sed 's/<\/string>//')
-            echo "=== Profile name: $PROFILE_NAME ==="
-          else
-            echo "=== WARNING: No provisioning profile files found ==="
-          fi
-          
-          # ===== 2. CREATE EXPORT OPTIONS =====
-          echo "=== Step 7: Creating ExportOptions.plist ==="
-          # Use the actual cert name found, fallback to "Apple Distribution"
-          SIGNING_CERT="${CERT_NAME:-Apple Distribution}"
-          
-          cat > /tmp/ExportOptions.plist << PLISTEOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>Q5GN6QWF45</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>signingCertificate</key>
-            <string>${SIGNING_CERT}</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>de.bereifung24.bereifung24App</key>
-              <string>${PROFILE_NAME}</string>
-            </dict>
-          </dict>
-          </plist>
-          PLISTEOF
-          
-          echo "=== ExportOptions.plist content ==="
-          cat /tmp/ExportOptions.plist
-          
-          # ===== 3. BUILD IPA =====
-          echo "=== Step 8: Getting build number ==="
+          echo "=== Provisioning profiles ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles"
+          echo "=== Codemagic export_options.plist ==="
+          cat /Users/builder/export_options.plist || echo "Not found"
+      - name: Build IPA
+        script: |
           BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1))
           echo "=== Build number: $BUILD_NUMBER ==="
           
-          echo "=== Step 9: Building IPA ==="
           flutter build ipa --release \
             --build-name=1.0.1 \
             --build-number=$BUILD_NUMBER \
-            --export-options-plist=/tmp/ExportOptions.plist
-          
-          # ===== 4. VERIFY =====
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
-          if [ -n "$IPA_PATH" ]; then
-            echo "=== SUCCESS: IPA created at $IPA_PATH ==="
-          else
-            echo "=== IPA not found, trying manual export from archive ==="
-            ARCHIVE_PATH=$(find build/ios/archive -name "*.xcarchive" -type d 2>/dev/null | head -1)
-            if [ -n "$ARCHIVE_PATH" ]; then
-              mkdir -p build/ios/ipa
-              xcodebuild -exportArchive \
-                -archivePath "$ARCHIVE_PATH" \
-                -exportOptionsPlist /tmp/ExportOptions.plist \
-                -exportPath build/ios/ipa
-              IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
-            fi
-            if [ -n "$IPA_PATH" ]; then
-              echo "=== SUCCESS: IPA exported via xcodebuild: $IPA_PATH ==="
-            else
-              echo "=== FATAL: No IPA created ==="
-              exit 1
-            fi
-          fi
+            --export-options-plist=/Users/builder/export_options.plist
       - name: Upload to TestFlight
         script: |
           IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
-          if [ -z "$IPA_PATH" ]; then
-            IPA_PATH=$(find /Users/builder -name "*.ipa" -type f 2>/dev/null | head -1)
-          fi
           if [ -n "$IPA_PATH" ]; then
             echo "=== Uploading $IPA_PATH to TestFlight ==="
             app-store-connect publish --path "$IPA_PATH"

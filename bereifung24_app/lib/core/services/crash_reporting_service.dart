@@ -42,14 +42,14 @@ class CrashReportingService {
 
   /// Set user context for crash reports
   void setUser(String userId, String email) {
-    Sentry.configureScope((scope) {
+    Sentry.currentHub.configureScope((scope) {
       scope.setUser(SentryUser(id: userId, email: email));
     });
   }
 
   /// Clear user on logout
   void clearUser() {
-    Sentry.configureScope((scope) {
+    Sentry.currentHub.configureScope((scope) {
       scope.setUser(null);
     });
   }

@@ -61,7 +61,7 @@ dependencies:
 
   # Analytics & Crash Reporting
   firebase_analytics: ^11.3.6
-  sentry_flutter: ^7.18.0
+  sentry_flutter: ^9.16.0
 
   # Deep Linking
   app_links: ^6.0.1

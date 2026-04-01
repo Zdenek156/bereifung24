@@ -9,20 +9,36 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
+      cocoapods: default
       groups:
         - bereifung24_env
     scripts:
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
       - name: Flutter packages
         script: |
           flutter packages pub get
       - name: Set up code signing
         script: |
+          echo "=== Fetching signing files ==="
           app-store-connect fetch-signing-files "de.bereifung24.bereifung24App" \
             --type IOS_APP_STORE \
             --create
+          echo "=== Initializing keychain ==="
           keychain initialize
+          echo "=== Adding certificates ==="
           keychain add-certificates
+          echo "=== Applying profiles to Xcode project ==="
           xcode-project use-profiles
+      - name: Verify code signing
+        script: |
+          echo "=== Installed certificates ==="
+          security find-identity -v -p codesigning
+          echo "=== Installed provisioning profiles ==="
+          ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
+          echo "=== Export options plist ==="
+          cat /Users/builder/export_options.plist || echo "Export options plist not found"
       - name: Build IPA
         script: |
           flutter build ipa --release \

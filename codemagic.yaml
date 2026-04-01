@@ -46,21 +46,39 @@ workflows:
             --build-name=1.0.1 \
             --build-number=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1)) \
             --export-options-plist=/Users/builder/export_options.plist
+          echo "=== Flutter build output ==="
+          echo "=== Searching for IPA/xcarchive files ==="
+          find /Users/builder -name "*.ipa" -type f 2>/dev/null
+          find /Users/builder -name "*.xcarchive" -type d 2>/dev/null
+          echo "=== Current directory ==="
+          pwd
+          echo "=== Listing build/ios/ ==="
+          ls -laR build/ios/ 2>/dev/null || echo "build/ios/ not found"
       - name: Upload to TestFlight
         script: |
           echo "=== Looking for IPA ==="
-          find build/ios/ipa -name "*.ipa" -type f 2>/dev/null || echo "No IPA found in build/ios/ipa"
-          find /Users/builder/clone -name "*.ipa" -type f 2>/dev/null || echo "No IPA found anywhere"
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f | head -1)
+          IPA_PATH=$(find /Users/builder -name "*.ipa" -type f 2>/dev/null | head -1)
           if [ -n "$IPA_PATH" ]; then
-            echo "=== Uploading $IPA_PATH to TestFlight ==="
+            echo "=== Found IPA: $IPA_PATH ==="
             app-store-connect publish \
-              --path "$IPA_PATH" \
-              --testflight \
-              --beta-group "App Store Connect Users"
+              --path "$IPA_PATH"
           else
-            echo "ERROR: No IPA file found!"
-            exit 1
+            echo "=== No IPA found, looking for xcarchive ==="
+            ARCHIVE_PATH=$(find /Users/builder -name "*.xcarchive" -type d 2>/dev/null | head -1)
+            if [ -n "$ARCHIVE_PATH" ]; then
+              echo "=== Found archive: $ARCHIVE_PATH ==="
+              echo "=== Exporting IPA from archive ==="
+              xcodebuild -exportArchive \
+                -archivePath "$ARCHIVE_PATH" \
+                -exportOptionsPlist /Users/builder/export_options.plist \
+                -exportPath build/ios/ipa
+              IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f | head -1)
+              app-store-connect publish \
+                --path "$IPA_PATH"
+            else
+              echo "ERROR: No IPA or xcarchive found!"
+              exit 1
+            fi
           fi
     artifacts:
       - bereifung24_app/build/ios/ipa/*.ipa

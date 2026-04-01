@@ -13,12 +13,12 @@ workflows:
       groups:
         - bereifung24_env
     scripts:
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios && pod install
       - name: Flutter packages
         script: |
           flutter packages pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
       - name: Set up code signing
         script: |
           echo "=== Fetching signing files ==="

@@ -28,6 +28,8 @@ workflows:
           keychain add-certificates
           echo "=== Applying profiles to Xcode project ==="
           xcode-project use-profiles
+          echo "=== Verifying pbxproj signing settings ==="
+          grep -A2 "CODE_SIGN_STYLE\|PROVISIONING_PROFILE\|DEVELOPMENT_TEAM" ios/Runner.xcodeproj/project.pbxproj || true
       - name: Verify code signing
         script: |
           echo "=== Installed certificates ==="
@@ -36,6 +38,8 @@ workflows:
           ls -la ~/Library/MobileDevice/Provisioning\ Profiles/ || echo "No profiles found"
           echo "=== Export options plist ==="
           cat /Users/builder/export_options.plist || echo "Export options plist not found"
+          echo "=== Checking pbxproj for PROVISIONING_PROFILE_SPECIFIER ==="
+          grep "PROVISIONING_PROFILE_SPECIFIER" ios/Runner.xcodeproj/project.pbxproj || echo "WARNING: No PROVISIONING_PROFILE_SPECIFIER found in pbxproj!"
       - name: Build IPA
         script: |
           flutter build ipa --release \

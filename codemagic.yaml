@@ -42,30 +42,23 @@ workflows:
           grep "PROVISIONING_PROFILE_SPECIFIER" ios/Runner.xcodeproj/project.pbxproj || echo "WARNING: No PROVISIONING_PROFILE_SPECIFIER found in pbxproj!"
       - name: Build IPA
         script: |
-          # Build the archive
-          flutter build ipa --release \
-            --build-name=1.0.1 \
-            --build-number=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1)) \
-            --export-options-plist=/Users/builder/export_options.plist || true
-          
-          # Check if IPA was created
-          IPA_CHECK=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
-          if [ -n "$IPA_CHECK" ]; then
-            echo "=== IPA created by flutter build: $IPA_CHECK ==="
+          # Read installed provisioning profile name dynamically
+          PROFILE_FILE=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
+          if [ -n "$PROFILE_FILE" ]; then
+            PROFILE_NAME=$(security cms -D -i "$PROFILE_FILE" 2>/dev/null | plutil -extract Name raw - 2>/dev/null || \
+              security cms -D -i "$PROFILE_FILE" 2>/dev/null | grep -A1 '<key>Name</key>' | grep string | sed 's/.*<string>//' | sed 's/<\/string>//')
+            echo "=== Installed profile name: $PROFILE_NAME ==="
           else
-            echo "=== Flutter build did not create IPA, exporting from archive ==="
-            ARCHIVE_PATH=$(find /Users/builder -name "*.xcarchive" -type d 2>/dev/null | head -1)
-            
-            # Get the provisioning profile name
-            PROFILE_NAME=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
-            if [ -n "$PROFILE_NAME" ]; then
-              PROFILE_UUID=$(security cms -D -i "$PROFILE_NAME" 2>/dev/null | grep -A1 UUID | grep string | sed 's/.*<string>//' | sed 's/<\/string>//')
-              PROFILE_DISPLAY=$(security cms -D -i "$PROFILE_NAME" 2>/dev/null | grep -A1 Name | grep string | head -1 | sed 's/.*<string>//' | sed 's/<\/string>//')
-              echo "=== Profile UUID: $PROFILE_UUID, Name: $PROFILE_DISPLAY ==="
-            fi
-            
-            # Create proper export options plist
-            cat > /tmp/ExportOptions.plist << EOF
+            PROFILE_NAME="match AppStore de.bereifung24.bereifung24App"
+            echo "=== No profile file found, using default name: $PROFILE_NAME ==="
+          fi
+
+          # Read installed certificate name
+          CERT_NAME=$(security find-identity -v -p codesigning | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
+          echo "=== Certificate name: $CERT_NAME ==="
+
+          # Create correct ExportOptions.plist BEFORE building
+          cat > /tmp/ExportOptions.plist << 'PLISTEOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -79,24 +72,35 @@ workflows:
             <key>uploadSymbols</key>
             <true/>
             <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>de.bereifung24.bereifung24App</key>
-              <string>${PROFILE_DISPLAY:-match AppStore de.bereifung24.bereifung24App}</string>
-            </dict>
+            <string>automatic</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
           </dict>
           </plist>
-          EOF
-            
-            echo "=== Export options plist ==="
-            cat /tmp/ExportOptions.plist
-            
-            mkdir -p build/ios/ipa
-            xcodebuild -exportArchive \
-              -archivePath "$ARCHIVE_PATH" \
-              -exportOptionsPlist /tmp/ExportOptions.plist \
-              -exportPath build/ios/ipa
+          PLISTEOF
+
+          echo "=== ExportOptions.plist ==="
+          cat /tmp/ExportOptions.plist
+
+          # Build number
+          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1))
+          echo "=== Build number: $BUILD_NUMBER ==="
+
+          # Build IPA using our correct plist
+          flutter build ipa --release \
+            --build-name=1.0.1 \
+            --build-number=$BUILD_NUMBER \
+            --export-options-plist=/tmp/ExportOptions.plist
+
+          # Verify IPA was created
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" -type f 2>/dev/null | head -1)
+          if [ -n "$IPA_PATH" ]; then
+            echo "=== IPA created: $IPA_PATH ==="
+          else
+            echo "=== ERROR: No IPA created! ==="
+            echo "=== Checking for xcarchive ==="
+            find /Users/builder -name "*.xcarchive" -type d 2>/dev/null
+            exit 1
           fi
       - name: Upload to TestFlight
         script: |

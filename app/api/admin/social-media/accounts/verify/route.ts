@@ -4,6 +4,7 @@ import {
   verifyFacebookToken,
   verifyInstagramToken,
   verifyThreadsToken,
+  verifyLinkedinToken,
 } from '@/lib/social-media/publishingService'
 
 // POST /api/admin/social-media/accounts/verify
@@ -32,6 +33,9 @@ export async function POST(req: NextRequest) {
         break
       case 'THREADS':
         result = await verifyThreadsToken(pageId, accessToken)
+        break
+      case 'LINKEDIN':
+        result = await verifyLinkedinToken(pageId, accessToken)
         break
       default:
         return NextResponse.json(

@@ -153,9 +153,13 @@ export default function AdminApiSettings() {
             <p className="mt-4 text-gray-600">Lade Einstellungen...</p>
           </div>
         ) : (
+          <>
+          {/* Regular API Settings */}
           <div className="bg-white rounded-lg shadow-lg">
             <div className="p-6 space-y-6">
-              {settings.map((setting) => (
+              {settings
+                .filter((s) => !['INSTAGRAM_APP_SECRET','META_APP_ID','META_APP_SECRET','THREADS_APP_ID','THREADS_APP_SECRET','LINKEDIN_CLIENT_ID','LINKEDIN_CLIENT_SECRET','TIKTOK_CLIENT_KEY','TIKTOK_CLIENT_SECRET','YOUTUBE_CLIENT_ID','YOUTUBE_CLIENT_SECRET'].includes(s.key))
+                .map((setting) => (
                 <div key={setting.id} className="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0">
                   <label className="block">
                     <div className="flex items-center justify-between mb-2">
@@ -203,8 +207,72 @@ export default function AdminApiSettings() {
                 </div>
               ))}
             </div>
+          </div>
 
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 rounded-b-lg flex justify-end space-x-3">
+          {/* Social Media API Secrets - Pink Section */}
+          {settings.some((s) => ['INSTAGRAM_APP_SECRET','META_APP_ID','META_APP_SECRET','THREADS_APP_ID','THREADS_APP_SECRET','LINKEDIN_CLIENT_ID','LINKEDIN_CLIENT_SECRET','TIKTOK_CLIENT_KEY','TIKTOK_CLIENT_SECRET','YOUTUBE_CLIENT_ID','YOUTUBE_CLIENT_SECRET'].includes(s.key)) && (
+          <div className="mt-6 bg-pink-50 rounded-lg shadow-lg border border-pink-200">
+            <div className="px-6 py-4 border-b border-pink-200 flex items-center">
+              <span className="text-lg mr-2">📱</span>
+              <h2 className="text-lg font-semibold text-pink-900">Social Media API Secrets</h2>
+            </div>
+            <div className="p-6 space-y-6">
+              {settings
+                .filter((s) => ['INSTAGRAM_APP_SECRET','META_APP_ID','META_APP_SECRET','THREADS_APP_ID','THREADS_APP_SECRET','LINKEDIN_CLIENT_ID','LINKEDIN_CLIENT_SECRET','TIKTOK_CLIENT_KEY','TIKTOK_CLIENT_SECRET','YOUTUBE_CLIENT_ID','YOUTUBE_CLIENT_SECRET'].includes(s.key))
+                .map((setting) => (
+                <div key={setting.id} className="border-b border-pink-200 pb-6 last:border-b-0 last:pb-0">
+                  <label className="block">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-pink-900">
+                        {setting.key}
+                      </span>
+                      {setting.value && (
+                        <span className="text-xs text-green-600 flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Konfiguriert
+                        </span>
+                      )}
+                    </div>
+                    {setting.description && (
+                      <p className="text-xs text-pink-600 mb-2">{setting.description}</p>
+                    )}
+                    <div className="relative">
+                      <input
+                        type={visibleKeys[setting.key] ? "text" : "password"}
+                        value={editedValues[setting.key] || ''}
+                        onChange={(e) => handleValueChange(setting.key, e.target.value)}
+                        placeholder={`${setting.key} eingeben...`}
+                        className="w-full px-4 py-2 pr-12 border border-pink-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent font-mono text-sm bg-white"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => toggleVisibility(setting.key)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-pink-400 hover:text-pink-600 focus:outline-none"
+                      >
+                        {visibleKeys[setting.key] ? (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+          )}
+
+          {/* Save Buttons */}
+          <div className="mt-6 bg-white rounded-lg shadow-lg">
+            <div className="bg-gray-50 px-6 py-4 rounded-lg flex justify-end space-x-3">
               <button
                 onClick={() => loadSettings()}
                 disabled={saving}
@@ -231,6 +299,7 @@ export default function AdminApiSettings() {
               </button>
             </div>
           </div>
+          </>
         )}
 
         {/* Info Box */}
@@ -248,6 +317,11 @@ export default function AdminApiSettings() {
             <li>• <strong>GEMINI_API_KEY</strong> - Google Gemini API Key für KI-Reifen-Berater (ca. 0,50€/Monat bei 1000 Beratungen)</li>
             <li>• <strong>META_APP_ID</strong> - Meta/Facebook App ID für Social Media Integration</li>
             <li>• <strong>META_APP_SECRET</strong> - Meta/Facebook App Secret für Long-Lived Token Konvertierung</li>
+            <li>• <strong>INSTAGRAM_APP_SECRET</strong> - Instagram App-Geheimnis (Instagram Business Login API)</li>
+            <li>• <strong>THREADS_APP_ID</strong> / <strong>THREADS_APP_SECRET</strong> - Threads API Credentials</li>
+            <li>• <strong>LINKEDIN_CLIENT_ID</strong> / <strong>LINKEDIN_CLIENT_SECRET</strong> - LinkedIn OAuth Credentials</li>
+            <li>• <strong>TIKTOK_CLIENT_KEY</strong> / <strong>TIKTOK_CLIENT_SECRET</strong> - TikTok API Credentials</li>
+            <li>• <strong>YOUTUBE_CLIENT_ID</strong> / <strong>YOUTUBE_CLIENT_SECRET</strong> - YouTube API Credentials</li>
           </ul>
           <p className="text-xs text-blue-600 mt-3">
             💡 <strong>API Ninjas Key:</strong> Kostenlos registrieren auf <a href="https://api-ninjas.com/register" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">api-ninjas.com/register</a>
@@ -258,6 +332,24 @@ export default function AdminApiSettings() {
           <p className="text-xs text-blue-600 mt-1">
             📱 <strong>Meta App Secret:</strong> Findest du unter <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">developers.facebook.com</a> → App auswählen → Einstellungen → Allgemeines → App-Geheimnis → &quot;Anzeigen&quot;
           </p>
+        </div>
+
+        {/* Social Media Info Box */}
+        <div className="mt-4 bg-pink-50 border border-pink-200 rounded-lg p-4">
+          <h3 className="text-sm font-medium text-pink-900 mb-2 flex items-center">
+            📱 Social Media API Secrets
+          </h3>
+          <ul className="text-xs text-pink-700 space-y-1.5">
+            <li>• <strong>THREADS_APP_ID</strong> / <strong>THREADS_APP_SECRET</strong> - <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline hover:text-pink-900">Meta Developer</a> → App → Threads API → Einstellungen</li>
+            <li>• <strong>LINKEDIN_CLIENT_ID</strong> / <strong>LINKEDIN_CLIENT_SECRET</strong> - <a href="https://www.linkedin.com/developers/apps" target="_blank" rel="noopener noreferrer" className="underline hover:text-pink-900">LinkedIn Developer</a> → App → Auth Tab</li>
+            <li>• <strong>TIKTOK_CLIENT_KEY</strong> / <strong>TIKTOK_CLIENT_SECRET</strong> - <a href="https://developers.tiktok.com/" target="_blank" rel="noopener noreferrer" className="underline hover:text-pink-900">TikTok for Developers</a> → Manage Apps</li>
+            <li>• <strong>YOUTUBE_CLIENT_ID</strong> / <strong>YOUTUBE_CLIENT_SECRET</strong> - <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer" className="underline hover:text-pink-900">Google Cloud Console</a> → APIs & Services → YouTube Data API v3</li>
+          </ul>
+          <div className="mt-3 pt-3 border-t border-pink-200">
+            <p className="text-xs text-pink-600">
+              💡 <strong>Hinweis:</strong> Die Secrets werden für Token-Refresh und API-Zugriff benötigt. Die Access Tokens selbst werden unter <strong>Social Media → Accounts</strong> gespeichert.
+            </p>
+          </div>
         </div>
 
         {/* PayPal Info Box */}

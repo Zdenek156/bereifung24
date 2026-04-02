@@ -23,11 +23,116 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Kein Token angegeben' }, { status: 400 })
     }
 
-    if (platform !== 'FACEBOOK' && platform !== 'INSTAGRAM' && platform !== 'THREADS') {
-      return NextResponse.json({ error: 'Long-Lived Token wird nur für Facebook/Instagram/Threads unterstützt' }, { status: 400 })
+    if (platform !== 'FACEBOOK' && platform !== 'INSTAGRAM' && platform !== 'THREADS' && platform !== 'LINKEDIN') {
+      return NextResponse.json({ error: 'Long-Lived Token wird nur für Facebook, Instagram, Threads und LinkedIn unterstützt' }, { status: 400 })
     }
 
-    // Get Meta App credentials from adminApiSetting
+    // Detect if this is an Instagram Business Login API token (starts with "IGAAg")
+    const isInstagramToken = tokenToExchange.startsWith('IGAAg')
+
+    if (isInstagramToken) {
+      // ============================================
+      // INSTAGRAM / THREADS - Token Refresh
+      // Tokens from Meta Dashboard are ALREADY long-lived.
+      // Use ig_refresh_token to extend validity by another 60 days.
+      // Falls back to ig_exchange_token for short-lived tokens.
+      // ============================================
+
+      // Step 1: Try refresh first (for already long-lived tokens)
+      const refreshUrl = `https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${tokenToExchange}`
+      const refreshRes = await fetch(refreshUrl)
+      const refreshData = await refreshRes.json()
+
+      if (refreshData.access_token) {
+        // Refresh succeeded - token was already long-lived
+        const refreshedToken = refreshData.access_token
+        const expiresIn = refreshData.expires_in // ~5184000 = 60 days
+
+        const expiresAt = expiresIn
+          ? new Date(Date.now() + expiresIn * 1000)
+          : null
+
+        if (accountId) {
+          await prisma.socialMediaAccount.update({
+            where: { id: accountId },
+            data: {
+              accessToken: refreshedToken,
+              tokenExpiresAt: expiresAt,
+            },
+          })
+        }
+
+        return NextResponse.json({
+          longLivedToken: refreshedToken,
+          expiresAt: expiresAt
+            ? expiresAt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            : 'Unbekannt',
+          expiresIn: expiresIn ? `${Math.round(expiresIn / 86400)} Tage` : 'Unbekannt',
+          type: 'instagram_long_lived_token',
+          info: 'Token wurde um weitere 60 Tage verlängert.',
+          saved: !!accountId,
+        })
+      }
+
+      // Step 2: Fallback to exchange (for short-lived tokens)
+      const igAppSecretSetting = await prisma.adminApiSetting.findFirst({
+        where: { key: 'INSTAGRAM_APP_SECRET' }
+      })
+      const metaAppSecretSetting = !igAppSecretSetting?.value
+        ? await prisma.adminApiSetting.findFirst({ where: { key: 'META_APP_SECRET' } })
+        : null
+
+      const igSecret = igAppSecretSetting?.value || metaAppSecretSetting?.value
+
+      if (!igSecret) {
+        return NextResponse.json({
+          error: 'Token-Refresh fehlgeschlagen und kein INSTAGRAM_APP_SECRET für Token-Exchange hinterlegt.'
+        }, { status: 400 })
+      }
+
+      const exchangeUrl = `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${igSecret}&access_token=${tokenToExchange}`
+      const exchangeRes = await fetch(exchangeUrl)
+      const exchangeData = await exchangeRes.json()
+
+      if (exchangeData.error) {
+        return NextResponse.json({
+          error: `Instagram Token-Austausch fehlgeschlagen: ${exchangeData.error.message}`
+        }, { status: 400 })
+      }
+
+      const longLivedIgToken = exchangeData.access_token
+      const igExpiresIn = exchangeData.expires_in
+
+      const igExpiresAt = igExpiresIn
+        ? new Date(Date.now() + igExpiresIn * 1000)
+        : null
+
+      if (accountId) {
+        await prisma.socialMediaAccount.update({
+          where: { id: accountId },
+          data: {
+            accessToken: longLivedIgToken,
+            tokenExpiresAt: igExpiresAt,
+          },
+        })
+      }
+
+      return NextResponse.json({
+        longLivedToken: longLivedIgToken,
+        expiresAt: igExpiresAt
+          ? igExpiresAt.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+          : 'Unbekannt',
+        expiresIn: igExpiresIn ? `${Math.round(igExpiresIn / 86400)} Tage` : 'Unbekannt',
+        type: 'instagram_long_lived_token',
+        info: 'Instagram Long-Lived Token (ca. 60 Tage gültig).',
+        saved: !!accountId,
+      })
+    }
+
+    // ============================================
+    // FACEBOOK / Legacy - Long-Lived Token
+    // Uses graph.facebook.com with fb_exchange_token
+    // ============================================
     const [appIdSetting, appSecretSetting] = await Promise.all([
       prisma.adminApiSetting.findFirst({ where: { key: 'META_APP_ID' } }),
       prisma.adminApiSetting.findFirst({ where: { key: 'META_APP_SECRET' } }),

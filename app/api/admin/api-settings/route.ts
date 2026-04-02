@@ -94,6 +94,15 @@ function getDescriptionForKey(key: string): string {
     'STRIPE_SECRET_KEY': 'Stripe Secret Key (aus Stripe Dashboard > Developers > API keys - Format: sk_test_xxx oder sk_live_xxx)',
     'STRIPE_PUBLISHABLE_KEY': 'Stripe Publishable Key (aus Stripe Dashboard > Developers > API keys - Format: pk_test_xxx oder pk_live_xxx)',
     'GOOGLE_SEARCH_CONSOLE_KEY': 'Google Search Console Service Account JSON Key (kompletter JSON-Inhalt des heruntergeladenen Schlüssels)',
+    'INSTAGRAM_APP_SECRET': 'Instagram App-Geheimnis für Token-Exchange (Instagram Business Login API)',
+    'THREADS_APP_ID': 'Threads App-ID (von Meta Developer Dashboard → Threads API → Einstellungen)',
+    'THREADS_APP_SECRET': 'Threads App-Geheimnis (von Meta Developer Dashboard → Threads API → Einstellungen)',
+    'LINKEDIN_CLIENT_ID': 'LinkedIn OAuth Client ID (von LinkedIn Developer Portal → App → Auth)',
+    'LINKEDIN_CLIENT_SECRET': 'LinkedIn OAuth Client Secret (von LinkedIn Developer Portal → App → Auth)',
+    'TIKTOK_CLIENT_KEY': 'TikTok App Client Key (von TikTok for Developers → App → Keys)',
+    'TIKTOK_CLIENT_SECRET': 'TikTok App Client Secret (von TikTok for Developers → App → Keys)',
+    'YOUTUBE_CLIENT_ID': 'YouTube/Google OAuth Client ID für YouTube Data API v3',
+    'YOUTUBE_CLIENT_SECRET': 'YouTube/Google OAuth Client Secret für YouTube Data API v3',
   }
   return descriptions[key] || ''
 }

@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/presentation/screens/legal_screen.dart';
 import '../../providers/auth_provider.dart';
@@ -58,9 +62,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           password: _passwordCtrl.text,
           firstName: _firstNameCtrl.text.trim(),
           lastName: _lastNameCtrl.text.trim(),
-          phone: _phoneCtrl.text.trim().isNotEmpty
-              ? _phoneCtrl.text.trim()
-              : null,
+          phone:
+              _phoneCtrl.text.trim().isNotEmpty ? _phoneCtrl.text.trim() : null,
           street: _streetCtrl.text.trim(),
           zipCode: _zipCodeCtrl.text.trim(),
           city: _cityCtrl.text.trim(),
@@ -68,6 +71,97 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (success && mounted) {
       context.go('/home');
+    }
+  }
+
+  Future<void> _googleSignIn() async {
+    try {
+      final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+      try { await googleSignIn.disconnect(); } catch (_) {}
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) return;
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Google-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+          );
+        }
+        return;
+      }
+
+      final success = await ref.read(authStateProvider.notifier).socialLogin(
+        'google',
+        idToken,
+        firstName: googleUser.displayName?.split(' ').first,
+        lastName: googleUser.displayName?.split(' ').skip(1).join(' '),
+      );
+
+      if (mounted) {
+        if (success) {
+          context.go('/home');
+        } else {
+          final error = ref.read(authStateProvider).error;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error ?? 'Google-Registrierung fehlgeschlagen')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Google Sign-In error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google-Registrierung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _appleSignIn() async {
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Apple-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+          );
+        }
+        return;
+      }
+
+      final success = await ref.read(authStateProvider.notifier).socialLogin(
+        'apple',
+        idToken,
+        firstName: credential.givenName,
+        lastName: credential.familyName,
+      );
+
+      if (mounted) {
+        if (success) {
+          context.go('/home');
+        } else {
+          final error = ref.read(authStateProvider).error;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(error ?? 'Apple-Registrierung fehlgeschlagen')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Apple Sign-In error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Apple-Registrierung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+        );
+      }
     }
   }
 
@@ -133,8 +227,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         controller: _firstNameCtrl,
                         textCapitalization: TextCapitalization.words,
                         decoration: const InputDecoration(labelText: 'Vorname'),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Pflichtfeld'
+                            : null,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -144,8 +239,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         textCapitalization: TextCapitalization.words,
                         decoration:
                             const InputDecoration(labelText: 'Nachname'),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Pflichtfeld'
+                            : null,
                       ),
                     ),
                   ],
@@ -191,7 +287,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     const SizedBox(width: 8),
                     Tooltip(
-                      message: 'Ihre Adresse wird benötigt, um Werkstätten in Ihrer Nähe zu finden und die Entfernung zu berechnen.',
+                      message:
+                          'Ihre Adresse wird benötigt, um Werkstätten in Ihrer Nähe zu finden und die Entfernung zu berechnen.',
                       triggerMode: TooltipTriggerMode.tap,
                       child: Container(
                         width: 20,
@@ -201,11 +298,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           shape: BoxShape.circle,
                         ),
                         child: Center(
-                          child: Text('i', style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade700,
-                          )),
+                          child: Text('i',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue.shade700,
+                              )),
                         ),
                       ),
                     ),
@@ -242,7 +340,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           labelText: 'PLZ *',
                         ),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                          if (v == null || v.trim().isEmpty)
+                            return 'Pflichtfeld';
                           if (v.trim().length != 5) return '5 Ziffern';
                           return null;
                         },
@@ -256,8 +355,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         decoration: const InputDecoration(
                           labelText: 'Stadt *',
                         ),
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                        validator: (v) => v == null || v.trim().isEmpty
+                            ? 'Pflichtfeld'
+                            : null,
                       ),
                     ),
                   ],
@@ -326,11 +426,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         padding: const EdgeInsets.only(top: 12),
                         child: Text.rich(
                           TextSpan(
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.white70
-                                  : null,
-                            ),
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white70
+                                          : null,
+                                    ),
                             children: [
                               const TextSpan(text: 'Ich akzeptiere die '),
                               TextSpan(
@@ -358,7 +460,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   ..onTap = () => Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => const DatenschutzScreen(),
+                                          builder: (_) =>
+                                              const DatenschutzScreen(),
                                         ),
                                       ),
                               ),
@@ -390,6 +493,81 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       : const Text('Registrieren',
                           style: TextStyle(fontSize: 16)),
                 ),
+
+                const SizedBox(height: 24),
+
+                // Divider
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('oder',
+                          style: TextStyle(color: Colors.grey[600])),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Social login buttons (platform-specific)
+                if (Platform.isAndroid)
+                  OutlinedButton(
+                    onPressed: authState.isLoading ? null : () => _googleSignIn(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset('assets/images/google_logo.svg', height: 20, width: 20),
+                        const SizedBox(width: 12),
+                        const Text('Mit Google registrieren'),
+                      ],
+                    ),
+                  ),
+
+                if (Platform.isIOS) ...[
+                  OutlinedButton(
+                    onPressed: authState.isLoading ? null : () => _appleSignIn(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset('assets/images/apple_logo.svg', height: 20, width: 20),
+                        const SizedBox(width: 12),
+                        const Text('Mit Apple registrieren'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: authState.isLoading ? null : () => _googleSignIn(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset('assets/images/google_logo.svg', height: 20, width: 20),
+                        const SizedBox(width: 12),
+                        const Text('Mit Google registrieren'),
+                      ],
+                    ),
+                  ),
+                ],
 
                 const SizedBox(height: 24),
 

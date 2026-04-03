@@ -42,8 +42,13 @@ workflows:
           cat /Users/builder/export_options.plist
 
           # ===== 2. BUILD IPA =====
-          BUILD_NUMBER=$(($(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" || echo 0) + 1))
-          echo "=== Build number: $BUILD_NUMBER ==="
+          LATEST_BUILD=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
+          BUILD_NUMBER=$((LATEST_BUILD + 1))
+          # Ensure we never reuse a build number (minimum 3 to skip already-uploaded builds)
+          if [ "$BUILD_NUMBER" -lt 3 ]; then
+            BUILD_NUMBER=3
+          fi
+          echo "=== Latest TestFlight build: $LATEST_BUILD, New build number: $BUILD_NUMBER ==="
 
           flutter build ipa --release \
             --build-name=1.0.1 \

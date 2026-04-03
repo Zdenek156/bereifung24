@@ -45,8 +45,8 @@ workflows:
           LATEST_BUILD=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
           BUILD_NUMBER=$((LATEST_BUILD + 1))
           # Skip all previously burned build numbers from failed uploads
-          if [ "$BUILD_NUMBER" -lt 10 ]; then
-            BUILD_NUMBER=10
+          if [ "$BUILD_NUMBER" -lt 11 ]; then
+            BUILD_NUMBER=11
           fi
           echo "=== Latest TestFlight build: $LATEST_BUILD, New build number: $BUILD_NUMBER ==="
 
@@ -79,9 +79,7 @@ workflows:
 
           echo "=== IPA created: $IPA_PATH ==="
 
-          # ===== 4. UPLOAD =====
-          echo "=== Uploading to TestFlight ==="
-          app-store-connect publish --path "$IPA_PATH"
+          # Upload is handled by Codemagic's publishing section below
     artifacts:
       - bereifung24_app/build/ios/ipa/*.ipa
       - build/ios/ipa/*.ipa

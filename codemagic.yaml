@@ -44,9 +44,9 @@ workflows:
           # ===== 2. BUILD IPA =====
           LATEST_BUILD=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APP_ID" 2>/dev/null || echo 0)
           BUILD_NUMBER=$((LATEST_BUILD + 1))
-          # Ensure we never reuse a build number (minimum 3 to skip already-uploaded builds)
-          if [ "$BUILD_NUMBER" -lt 3 ]; then
-            BUILD_NUMBER=3
+          # Skip all previously burned build numbers from failed uploads
+          if [ "$BUILD_NUMBER" -lt 10 ]; then
+            BUILD_NUMBER=10
           fi
           echo "=== Latest TestFlight build: $LATEST_BUILD, New build number: $BUILD_NUMBER ==="
 

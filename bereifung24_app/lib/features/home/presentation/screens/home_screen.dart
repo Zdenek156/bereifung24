@@ -1054,7 +1054,7 @@ class _ServicesGrid extends StatelessWidget {
       crossAxisCount: 3,
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
-      childAspectRatio: 0.7,
+      childAspectRatio: 0.75,
       children: _services.map((s) => _ServiceTile(service: s)).toList(),
     );
   }
@@ -1378,7 +1378,7 @@ class _CO2BilanzCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ihre CO\u2082-Bilanz durch Online-Buchung',
+                      'Deine CO\u2082-Einsparung durch Online-Buchungen',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,

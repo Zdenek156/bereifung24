@@ -1048,15 +1048,19 @@ class _ServicesGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      childAspectRatio: 0.8,
-      children: _services.map((s) => _ServiceTile(service: s)).toList(),
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final itemWidth = (constraints.maxWidth - 16) / 3; // 2 gaps × 8px
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: _services
+            .map((s) => SizedBox(
+                  width: itemWidth,
+                  child: _ServiceTile(service: s),
+                ))
+            .toList(),
+      );
+    });
   }
 }
 

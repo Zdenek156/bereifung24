@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { getAuthUser } from '@/lib/getAuthUser';
 
 /**
  * CO₂-Einsparungen durch Online-Buchungen
@@ -114,13 +113,13 @@ function getVehicleEmissions(vehicle: {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const authUser = await getAuthUser(request);
 
-    if (!session || session.user.role !== 'CUSTOMER') {
+    if (!authUser || authUser.role !== 'CUSTOMER') {
       return NextResponse.json({ error: 'Nicht autorisiert' }, { status: 401 });
     }
 
-    const customerId = session.user.customerId;
+    const customerId = authUser.customerId;
     if (!customerId) {
       return NextResponse.json({ error: 'Kunden-ID nicht gefunden' }, { status: 400 });
     }

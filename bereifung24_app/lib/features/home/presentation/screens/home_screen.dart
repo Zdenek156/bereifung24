@@ -1054,7 +1054,7 @@ class _ServicesGrid extends StatelessWidget {
       crossAxisCount: 3,
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
-      childAspectRatio: 0.75,
+      childAspectRatio: 0.8,
       children: _services.map((s) => _ServiceTile(service: s)).toList(),
     );
   }

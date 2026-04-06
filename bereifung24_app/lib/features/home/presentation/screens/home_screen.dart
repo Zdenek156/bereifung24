@@ -115,16 +115,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ],
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () => context.go('/profile'),
-                        child: Image.asset(
+                      Image.asset(
                           isDark
                               ? 'assets/images/b24_logo_dark.png'
                               : 'assets/images/b24_logo_light.png',
                           width: 42,
                           height: 42,
                         ),
-                      ),
                     ],
                   ),
                 ),

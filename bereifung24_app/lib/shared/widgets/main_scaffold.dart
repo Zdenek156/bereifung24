@@ -6,11 +6,11 @@ class MainScaffold extends StatelessWidget {
   const MainScaffold({super.key, required this.child});
 
   static const _tabs = [
-    _TabItem(label: 'Home', path: '/home', emoji: '🏠', activeEmoji: '🏡'),
-    _TabItem(label: 'Suche', path: '/search', emoji: '🔍', activeEmoji: '🔎'),
-    _TabItem(label: 'Buchungen', path: '/bookings', emoji: '📅', activeEmoji: '📆'),
-    _TabItem(label: 'Fahrzeuge', path: '/vehicles', emoji: '🚗', activeEmoji: '🚘'),
-    _TabItem(label: 'Profil', path: '/profile', emoji: '👤', activeEmoji: '👤'),
+    _TabItem(label: 'Home', path: '/home', icon: Icons.home_outlined, activeIcon: Icons.home),
+    _TabItem(label: 'Suche', path: '/search', icon: Icons.search, activeIcon: Icons.search),
+    _TabItem(label: 'Buchungen', path: '/bookings', icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today),
+    _TabItem(label: 'Fahrzeuge', path: '/vehicles', icon: Icons.directions_car_outlined, activeIcon: Icons.directions_car),
+    _TabItem(label: 'Profil', path: '/profile', icon: Icons.person_outline, activeIcon: Icons.person),
   ];
 
   int _currentIndex(BuildContext context) {
@@ -95,9 +95,14 @@ class MainScaffold extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          isActive ? tab.activeEmoji : tab.emoji,
-                          style: const TextStyle(fontSize: 24),
+                        Icon(
+                          isActive ? tab.activeIcon : tab.icon,
+                          size: 24,
+                          color: isActive
+                              ? const Color(0xFF0284C7)
+                              : isDark
+                                  ? const Color(0xFF94A3B8)
+                                  : const Color(0xFF64748B),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -128,13 +133,13 @@ class MainScaffold extends StatelessWidget {
 class _TabItem {
   final String label;
   final String path;
-  final String emoji;
-  final String activeEmoji;
+  final IconData icon;
+  final IconData activeIcon;
 
   const _TabItem({
     required this.label,
     required this.path,
-    required this.emoji,
-    required this.activeEmoji,
+    required this.icon,
+    required this.activeIcon,
   });
 }

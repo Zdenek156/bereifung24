@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -817,14 +818,24 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               setState(() => _selectedPayment = 'klarna'),
                         ),
                         const Divider(height: 1),
-                        _PaymentMethodTile(
-                          label: 'Google Pay',
-                          subtitle: 'Schnell bezahlen',
-                          iconWidget: _PaymentLogo('google-pay'),
-                          selected: _selectedPayment == 'google_pay',
-                          onTap: () =>
-                              setState(() => _selectedPayment = 'google_pay'),
-                        ),
+                        if (Platform.isIOS)
+                          _PaymentMethodTile(
+                            label: 'Apple Pay',
+                            subtitle: 'Schnell bezahlen',
+                            iconWidget: const _ApplePayLogo(),
+                            selected: _selectedPayment == 'apple_pay',
+                            onTap: () =>
+                                setState(() => _selectedPayment = 'apple_pay'),
+                          )
+                        else
+                          _PaymentMethodTile(
+                            label: 'Google Pay',
+                            subtitle: 'Schnell bezahlen',
+                            iconWidget: _PaymentLogo('google-pay'),
+                            selected: _selectedPayment == 'google_pay',
+                            onTap: () =>
+                                setState(() => _selectedPayment = 'google_pay'),
+                          ),
                       ],
                     ),
                   ),
@@ -1122,6 +1133,37 @@ class _PaymentLogo extends StatelessWidget {
         errorBuilder: (_, __, ___) => Center(
           child: Text(name,
               style: const TextStyle(fontSize: 7, fontWeight: FontWeight.w700)),
+        ),
+      ),
+    );
+  }
+}
+
+class _ApplePayLogo extends StatelessWidget {
+  const _ApplePayLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      width: 42,
+      height: 28,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(
+            color: isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Center(
+        child: Text(
+          '\uF8FF Pay',
+          style: TextStyle(
+            fontFamily: '.SF Pro Text',
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.white : Colors.black,
+          ),
         ),
       ),
     );

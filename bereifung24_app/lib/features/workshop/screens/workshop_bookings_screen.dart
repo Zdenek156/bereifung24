@@ -30,6 +30,7 @@ class _WorkshopBookingsScreenState
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

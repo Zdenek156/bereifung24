@@ -26,6 +26,7 @@ class _WorkshopCalendarScreenState
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: bookingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(

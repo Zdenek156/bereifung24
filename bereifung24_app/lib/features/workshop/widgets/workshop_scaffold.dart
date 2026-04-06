@@ -6,28 +6,11 @@ class WorkshopScaffold extends StatelessWidget {
   const WorkshopScaffold({super.key, required this.child});
 
   static const _tabs = [
-    _TabItem(
-        label: 'Dashboard', path: '/workshop', emoji: '📊', activeEmoji: '📊'),
-    _TabItem(
-        label: 'Kalender',
-        path: '/workshop/calendar',
-        emoji: '📅',
-        activeEmoji: '📆'),
-    _TabItem(
-        label: 'Buchungen',
-        path: '/workshop/bookings',
-        emoji: '📋',
-        activeEmoji: '📋'),
-    _TabItem(
-        label: 'Bewertungen',
-        path: '/workshop/reviews',
-        emoji: '⭐',
-        activeEmoji: '🌟'),
-    _TabItem(
-        label: 'Profil',
-        path: '/workshop/profile',
-        emoji: '👤',
-        activeEmoji: '👤'),
+    _TabItem(label: 'Dashboard', path: '/workshop', icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard),
+    _TabItem(label: 'Kalender', path: '/workshop/calendar', icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today),
+    _TabItem(label: 'Buchungen', path: '/workshop/bookings', icon: Icons.assignment_outlined, activeIcon: Icons.assignment),
+    _TabItem(label: 'Bewertungen', path: '/workshop/reviews', icon: Icons.star_outline, activeIcon: Icons.star),
+    _TabItem(label: 'Profil', path: '/workshop/profile', icon: Icons.person_outline, activeIcon: Icons.person),
   ];
 
   int _currentIndex(BuildContext context) {
@@ -44,25 +27,35 @@ class WorkshopScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      extendBody: true,
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, -2),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Container(
+            height: 64,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.06),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.4)
+                      : Colors.black.withValues(alpha: 0.10),
+                  blurRadius: 20,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(_tabs.length, (i) {
                 final tab = _tabs[i];
                 final isActive = i == index;
@@ -74,26 +67,40 @@ class WorkshopScaffold extends StatelessWidget {
                     context.go(tab.path);
                   },
                   child: SizedBox(
-                    width: 64,
+                    width: 56,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          isActive ? tab.activeEmoji : tab.emoji,
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          tab.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight:
-                                isActive ? FontWeight.w700 : FontWeight.w500,
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? (isDark
+                                    ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                                    : const Color(0xFF0284C7).withValues(alpha: 0.10))
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            isActive ? tab.activeIcon : tab.icon,
+                            size: 24,
                             color: isActive
                                 ? const Color(0xFF0284C7)
                                 : isDark
                                     ? const Color(0xFF94A3B8)
                                     : const Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: isActive ? 20 : 0,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: isActive ? const Color(0xFF0284C7) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                       ],
@@ -112,13 +119,13 @@ class WorkshopScaffold extends StatelessWidget {
 class _TabItem {
   final String label;
   final String path;
-  final String emoji;
-  final String activeEmoji;
+  final IconData icon;
+  final IconData activeIcon;
 
   const _TabItem({
     required this.label,
     required this.path,
-    required this.emoji,
-    required this.activeEmoji,
+    required this.icon,
+    required this.activeIcon,
   });
 }

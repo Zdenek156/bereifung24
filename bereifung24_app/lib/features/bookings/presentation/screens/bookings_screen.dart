@@ -168,6 +168,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

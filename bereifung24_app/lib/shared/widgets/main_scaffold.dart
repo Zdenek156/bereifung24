@@ -27,6 +27,7 @@ class MainScaffold extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      extendBody: true,
       body: child,
       floatingActionButton: index != 0
           ? Container(
@@ -62,59 +63,77 @@ class MainScaffold extends StatelessWidget {
               ),
             )
           : null,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.08),
-              blurRadius: 12,
-              offset: const Offset(0, -2),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          child: Container(
+            height: 64,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(32),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.06),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.4)
+                      : Colors.black.withValues(alpha: 0.10),
+                  blurRadius: 20,
+                  spreadRadius: 0,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(_tabs.length, (i) {
                 final tab = _tabs[i];
                 final isActive = i == index;
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    // Close any open bottom sheets / dialogs before navigating
                     Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
                     context.go(tab.path);
                   },
                   child: SizedBox(
-                    width: 64,
+                    width: 56,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          isActive ? tab.activeIcon : tab.icon,
-                          size: 24,
-                          color: isActive
-                              ? const Color(0xFF0284C7)
-                              : isDark
-                                  ? const Color(0xFF94A3B8)
-                                  : const Color(0xFF64748B),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          tab.label,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isActive
+                                ? (isDark
+                                    ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                                    : const Color(0xFF0284C7).withValues(alpha: 0.10))
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            isActive ? tab.activeIcon : tab.icon,
+                            size: 24,
                             color: isActive
                                 ? const Color(0xFF0284C7)
                                 : isDark
                                     ? const Color(0xFF94A3B8)
                                     : const Color(0xFF64748B),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: isActive ? 20 : 0,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: isActive ? const Color(0xFF0284C7) : Colors.transparent,
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
                       ],

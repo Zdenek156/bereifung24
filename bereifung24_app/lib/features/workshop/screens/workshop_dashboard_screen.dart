@@ -31,6 +31,7 @@ class _WorkshopDashboardScreenState
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(workshopStatsPeriodProvider(period));

@@ -228,6 +228,8 @@ class ApiClient {
 
   Future<Response> getDashboardStats() => _dio.get('/dashboard/stats');
 
+  Future<Response> getCO2Stats() => _dio.get('/customer/co2-stats');
+
   // ── KI-Berater ──
 
   Future<Response> sendAIChat({

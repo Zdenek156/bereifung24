@@ -3,12 +3,29 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../bookings/presentation/screens/bookings_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
+
+// ══════════════════════════════════════
+// CO2 Stats Provider
+// ══════════════════════════════════════
+
+final co2StatsProvider = FutureProvider<Map<String, dynamic>?>((ref) async {
+  try {
+    final response = await ApiClient().getCO2Stats();
+    if (response.statusCode == 200 && response.data != null) {
+      return response.data as Map<String, dynamic>;
+    }
+    return null;
+  } catch (_) {
+    return null;
+  }
+});
 
 // ══════════════════════════════════════
 // Card shadow helper
@@ -70,6 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       body: SafeArea(
+        bottom: false,
         child: RefreshIndicator(
           onRefresh: () async {
             ref.read(authStateProvider.notifier).fetchProfile();
@@ -78,7 +96,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+            padding: const EdgeInsets.fromLTRB(20, 14, 20, 100),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -119,8 +137,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           isDark
                               ? 'assets/images/b24_logo_dark.png'
                               : 'assets/images/b24_logo_light.png',
-                          width: 42,
-                          height: 42,
+                          width: 56,
+                          height: 56,
                         ),
                     ],
                   ),
@@ -321,6 +339,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 // ── Saisonaler Hinweis ──
                 _FadeSlideIn(delay: 6, child: _SeasonTipCard()),
+
+                const SizedBox(height: 16),
+
+                // ── CO2 Bilanz ──
+                _FadeSlideIn(delay: 7, child: _CO2BilanzCard()),
 
                 const SizedBox(height: 24),
               ],
@@ -1009,7 +1032,7 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
 class _ServicesGrid extends StatelessWidget {
   static const _services = [
     _ServiceItem('🔄', 'Reifen-\nwechsel', 'ab 59,90 €', 'TIRE_CHANGE', true,
-        'assets/images/services/reifenwechsel.jpg'),
+        'assets/images/services/reifenwechsel.jpg', true),
     _ServiceItem('🔧', 'Räder-\nwechsel', 'ab 29,90 €', 'WHEEL_CHANGE', true,
         'assets/images/services/raederwechsel.jpg'),
     _ServiceItem('🔨', 'Reifen-\nreparatur', 'ab 24,90 €', 'TIRE_REPAIR', false,
@@ -1017,7 +1040,7 @@ class _ServicesGrid extends StatelessWidget {
     _ServiceItem('📏', 'Achsver-\nmessung', 'ab 49,90 €', 'ALIGNMENT_BOTH',
         false, 'assets/images/services/achsvermessung.jpg'),
     _ServiceItem('🏍️', 'Motorrad-\nReifen', 'ab 39,90 €', 'MOTORCYCLE_TIRE',
-        false, 'assets/images/services/motorradreifen.jpg'),
+        false, 'assets/images/services/motorradreifen.jpg', true),
     _ServiceItem('❄️', 'Klima-\nservice', 'ab 69,90 €', 'CLIMATE_SERVICE',
         false, 'assets/images/services/klimaservice.jpg'),
   ];
@@ -1043,9 +1066,10 @@ class _ServiceItem {
   final String serviceType;
   final bool popular;
   final String? imagePath;
+  final bool zoomOut;
   const _ServiceItem(
       this.icon, this.name, this.price, this.serviceType, this.popular,
-      [this.imagePath]);
+      [this.imagePath, this.zoomOut = false]);
 }
 
 class _ServiceTile extends StatelessWidget {
@@ -1087,11 +1111,23 @@ class _ServiceTile extends StatelessWidget {
                       topLeft: Radius.circular(14),
                       topRight: Radius.circular(14),
                     ),
-                    child: Image.asset(
-                      service.imagePath!,
+                    child: Container(
                       width: double.infinity,
                       height: 80,
-                      fit: BoxFit.cover,
+                      color: isDark
+                          ? B24Colors.darkSurface
+                          : Colors.white,
+                      padding: service.zoomOut
+                          ? const EdgeInsets.all(6)
+                          : EdgeInsets.zero,
+                      child: Image.asset(
+                        service.imagePath!,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: service.zoomOut
+                            ? BoxFit.contain
+                            : BoxFit.cover,
+                      ),
                     ),
                   )
                 else
@@ -1285,6 +1321,165 @@ class _FadeSlideInState extends State<_FadeSlideIn>
       child: SlideTransition(
         position: _offset,
         child: widget.child,
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// CO2 Bilanz Card
+// ══════════════════════════════════════
+
+class _CO2BilanzCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final co2Async = ref.watch(co2StatsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return co2Async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (data) {
+        if (data == null) return const SizedBox.shrink();
+
+        final breakdown = data['breakdown'] as Map<String, dynamic>? ?? {};
+        final trips = data['numberOfRequests'] as int? ?? 0;
+        if (trips == 0) return const SizedBox.shrink();
+
+        final kmSaved = (breakdown['totalKmSaved'] as num?)?.toDouble() ?? 0;
+        final co2Kg = (data['totalCO2SavedKg'] as num?)?.toDouble() ?? 0;
+        final fuelSaved =
+            (breakdown['fuelSavedLiters'] as num?)?.toDouble() ?? 0;
+        final fuelUnit = breakdown['fuelUnit'] as String? ?? 'L';
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF065F46).withValues(alpha: 0.2)
+                : const Color(0xFFECFDF5),
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [_cardShadowLight(isDark: isDark)],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.eco,
+                        size: 20, color: Color(0xFF10B981)),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ihre CO\u2082-Bilanz',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: isDark
+                                ? B24Colors.darkTextPrimary
+                                : B24Colors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '$trips Online-Buchungen statt Werkstattbesuche',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: isDark
+                                ? B24Colors.darkTextSecondary
+                                : B24Colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _CO2Stat(
+                    value: '$trips',
+                    label: 'Fahrten\ngespart',
+                    isDark: isDark,
+                  ),
+                  _CO2Stat(
+                    value: '${kmSaved.round()} km',
+                    label: 'Fahrtwege\nvermieden',
+                    isDark: isDark,
+                  ),
+                  _CO2Stat(
+                    value: '${co2Kg.toStringAsFixed(1)} kg',
+                    label: 'CO\u2082\neingespart',
+                    isDark: isDark,
+                  ),
+                  _CO2Stat(
+                    value:
+                        '${fuelSaved.toStringAsFixed(1)} $fuelUnit',
+                    label: 'Kraftstoff\ngespart',
+                    isDark: isDark,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CO2Stat extends StatelessWidget {
+  final String value;
+  final String label;
+  final bool isDark;
+
+  const _CO2Stat({
+    required this.value,
+    required this.label,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              color: isDark
+                  ? B24Colors.darkTextPrimary
+                  : B24Colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 9,
+              fontWeight: FontWeight.w500,
+              color: isDark
+                  ? B24Colors.darkTextSecondary
+                  : B24Colors.textSecondary,
+              height: 1.3,
+            ),
+          ),
+        ],
       ),
     );
   }

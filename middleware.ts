@@ -128,7 +128,7 @@ async function checkApplicationAccess(
   // For B24_EMPLOYEE, check via API (cannot use Prisma in middleware)
   if (userRole === 'B24_EMPLOYEE') {
     try {
-      const baseUrl = process.env.NEXTAUTH_URL || 'https://www.bereifung24.de'
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://bereifung24.de'
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 1500) // 1.5s timeout
       
@@ -159,6 +159,14 @@ async function checkApplicationAccess(
 // This middleware runs before NextAuth can intercept calendar callbacks
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
+  
+  // === WWW → NON-WWW REDIRECT (SEO: canonical domain is bereifung24.de) ===
+  const host = request.headers.get('host') || ''
+  if (host.startsWith('www.')) {
+    const redirectUrl = new URL(request.url)
+    redirectUrl.host = host.replace('www.', '')
+    return NextResponse.redirect(redirectUrl, 301)
+  }
   
   console.log('[MIDDLEWARE] Path:', url.pathname, 'Search:', url.search)
   

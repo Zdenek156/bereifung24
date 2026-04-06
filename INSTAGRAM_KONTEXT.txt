@@ -1,0 +1,304 @@
+==============================================================================
+   BEREIFUNG24 - INSTAGRAM API PROBLEM - KONTEXT FÜR NEUEN CHAT
+   Stand: 02. April 2026
+==============================================================================
+
+Bitte lies diese Datei komplett, damit du den vollen Kontext hast.
+
+==============================================================================
+1. PROJEKT-ÜBERSICHT
+==============================================================================
+
+- Next.js 14.0.4 Webplattform auf Hetzner Server 167.235.24.110
+- SSH: ssh -i C:\Users\zdene\.ssh\bereifung24_hetzner root@167.235.24.110
+- NVM: export NVM_DIR=/root/.nvm; source /root/.nvm/nvm.sh; nvm use --delete-prefix v20.19.5 --silent
+- Deploy: cd /var/www/bereifung24 && rm -rf .next && npm run build && pm2 restart bereifung24
+- Prisma v6.19.2, PostgreSQL localhost:5432, database "bereifung24"
+- Workspace: c:\Bereifung24\Bereifung24 Workspace
+
+==============================================================================
+2. WAS FUNKTIONIERT ✅
+==============================================================================
+
+- Facebook Posting: FUNKTIONIERT PERFEKT
+  - publishToFacebook() in lib/social-media/publishingService.ts
+  - Nutzt /{pageId}/feed (Text) oder /{pageId}/photos (mit Bild)
+  - Getestet: Post erstellen + löschen funktioniert einwandfrei
+  - Facebook Page: "Bereifung24" (ID: 143218978878429)
+
+- Token-System: FUNKTIONIERT
+  - Long-Lived Token Konvertierung implementiert
+  - Aktueller Token: PAGE-Type, läuft NIE ab
+  - Token-Scopes: pages_show_list, business_management, 
+    instagram_manage_comments, instagram_manage_insights,
+    instagram_content_publish, pages_read_engagement,
+    pages_read_user_content, pages_manage_posts,
+    instagram_manage_contents, public_profile
+
+- Threads Publishing Code: IMPLEMENTIERT (aber noch nicht getestet)
+  - publishToThreads() in publishingService.ts
+  - Nutzt graph.threads.net API
+  - Braucht eigenen Threads-Token
+
+- Social Media Admin UI: FUNKTIONIERT
+  - /admin/social-media mit Tabs (Dashboard, Accounts, Beiträge, etc.)
+  - Account CRUD, KI-Textgenerierung (Gemini 2.5 Flash)
+  - Long-Lived Token Button im Account-Editor
+
+==============================================================================
+3. DAS PROBLEM: INSTAGRAM ❌
+==============================================================================
+
+Instagram-Posts schlagen fehl mit:
+  Error (#10): "Application does not have permission for this action"
+  OAuthException, code: 10
+
+URSACHE (diagnostiziert):
+
+a) Das Feld "instagram_business_account" auf der Facebook Page gibt
+   NUR die Page-ID zurück (143218978878429), NICHT eine Instagram User-ID.
+   Das bedeutet: Die API "sieht" die Verknüpfung nicht.
+
+b) Die Instagram-Verknüpfung existiert auf Facebook-Seiten-Ebene
+   (facebook.com/settings/?tab=linked_instagram zeigt bereifung24 als
+   "Connected Instagram"), aber die Graph API gibt sie nicht zurück.
+
+c) Der Token hat NICHT den Scope "instagram_basic" - dieser fehlt komplett.
+   Nur instagram_content_publish, instagram_manage_comments, etc. sind da.
+
+d) Die Permission "instagram_basic" ist in der Meta App nicht als 
+   "Bereit zum Testen" verfügbar - sie erscheint nicht im Graph API Explorer.
+
+e) Stattdessen gibt es die NEUEN Permissions:
+   - instagram_business_basic (Status: "Bereit zum Testen")
+   - instagram_business_content_publish (Status: "Bereit zum Testen")
+   Diese gehören zur NEUEN "Instagram Business Login API".
+
+GRANULAR SCOPES IM AKTUELLEN TOKEN:
+  - instagram_content_publish: targets=[17841465251272531]
+  - instagram_manage_comments: targets=[17841465251272531]
+  - instagram_manage_insights: targets=[17841465251272531]
+  - instagram_manage_contents: targets=[17841465251272531]
+  
+  PROBLEM: ID 17841465251272531 existiert NICHT in der API!
+  ("Object does not exist, cannot be loaded due to missing permissions")
+
+BEKANNTE INSTAGRAM-IDs:
+  - 17841462799004638: page_backed_instagram_accounts (Shadow-Account, kein Business)
+  - 17841465251272531: Im Token als Target, existiert aber nicht in der API
+  - Keine gültige instagram_business_account ID verfügbar
+
+==============================================================================
+4. WAS BEREITS VERSUCHT WURDE
+==============================================================================
+
+✅ Instagram ist ein Business-Konto (bestätigt im Screenshot)
+✅ Instagram @bereifung24 ist mit Facebook-Seite "Bereifung24" verknüpft
+   (bestätigt unter facebook.com/settings/?tab=linked_instagram)
+✅ Instagram-Tester Rolle für @bereifung24 in der App hinzugefügt
+   (sichtbar unter App-Rollen)
+✅ Permissions instagram_content_publish, instagram_manage_* sind "granted"
+✅ Alle API-Versionen getestet (v18.0 bis v22.0) - alle gleicher Fehler
+✅ Mehrere IDs getestet (17841462799004638, 17841465251272531, PageID)
+✅ Externes Bild (Wikipedia) getestet - gleicher Fehler (nicht am Bild)
+✅ Token mehrfach neu generiert
+✅ Instagram-Facebook Verknüpfung neu hergestellt
+✅ Bild-URL getestet: bereifung24.de/images/logo.png gibt 404 (nebensächlich)
+
+❌ "Konto hinzufügen" auf Instagram API Seite (developers.facebook.com)
+   → Fehler: "Entwickler-Rolle nicht ausreichend: Entwickler-Rolle nicht ausreichend"
+   → Trotz Instagram-Tester Rolle
+
+❌ instagram_basic erscheint NICHT im Graph API Explorer als auswählbare Permission
+   → Ist in keinem Anwendungsfall als "Bereit zum Testen" verfügbar
+
+❌ Tester-Einladung auf Instagram annehmen
+   → instagram.com/accounts/manage_access/ zeigt KEINE Einladungen
+   → "Du hast keiner App den Zugriff auf dein Instagram-Konto gestattet."
+
+==============================================================================
+5. AKTUELLER BLOCKER
+==============================================================================
+
+Es gibt ZWEI mögliche Wege nach vorne:
+
+WEG 1: Alte Instagram Graph API + instagram_basic
+  - instagram_basic muss als "Bereit zum Testen" aktiviert werden
+  - Problem: Erscheint nicht in der App
+  - Mögliche Lösung: In einem Anwendungsfall explizit hinzufügen
+
+WEG 2: Neue Instagram Business Login API (EMPFOHLEN)
+  - Nutzt instagram_business_basic + instagram_business_content_publish
+  - Beide sind bereits "Bereit zum Testen"
+  - ABER: "Konto hinzufügen" auf der API-Setup-Seite scheitert
+  - Fehler: "Entwickler-Rolle nicht ausreichend"
+  - Vermutlich weil die Instagram-Tester-Einladung nicht akzeptiert wurde
+  - instagram.com/accounts/manage_access/ zeigt keine Einladungen
+
+NÄCHSTER SCHRITT:
+  → Die Instagram-Tester-Einladung muss irgendwie akzeptiert werden
+  → Dann "Konto hinzufügen" auf der Instagram API Seite erneut versuchen
+  → Das generiert einen neuen Token mit instagram_business_basic
+  → Dann publishingService.ts eventuell anpassen für die neue API
+
+ALTERNATIVE:
+  → Instagram-Tester Rolle entfernen und NEU hinzufügen
+  → Dann sofort auf Instagram prüfen ob Einladung erscheint
+  → Oder: Über die Instagram-App (Handy) unter 
+    Einstellungen → Sicherheit → Apps und Websites prüfen
+
+==============================================================================
+6. DATENBANK-ACCOUNTS
+==============================================================================
+
+Facebook Account in DB:
+  - ID: cmnaomx0u0001ukna4a3bkobn
+  - Platform: FACEBOOK
+  - pageId: 143218978878429
+  - Name: Bereifung24 Facebook
+  - isActive: true
+  - Token: Page Token, 195 chars, nie ablaufend
+
+Instagram Account in DB:
+  - ID: cmnb9dd8v0000ukkowsf3zcnv
+  - Platform: INSTAGRAM
+  - pageId: 17841462799004638
+  - Name: bereifung24
+  - isActive: true
+  - Token: nutzt den gleichen wie Facebook
+
+==============================================================================
+7. META APP KONFIGURATION
+==============================================================================
+
+Meta App: "Bereifung24 App"
+  - App-ID: 1611247256762915
+  - Status: Unveröffentlicht (Development Mode)
+  - Business-ID: 812876024010921
+
+Instagram App (neue API):
+  - Name: "Bereifung24 App-IG"  
+  - Instagram-App-ID: 2315728085587152
+  - Hat eigenen App-Geheimcode
+
+META_APP_SECRET: 32 Zeichen (gespeichert in adminApiSetting)
+
+Anwendungsfälle (3 Stück, alle mit grünem Haken):
+  1. "Alles auf deiner Seite verwalten" (PAGES_API)
+  2. "Messaging und Content auf Instagram verwalten" (INSTAGRAM_BUSINESS)
+  3. "Auf Threads API zugreifen"
+
+App-Rollen:
+  - Zdenek Kyzlink: Administrator
+  - bereifung24: Instagram-Tester (Einladung möglicherweise nicht akzeptiert)
+
+Permissions-Status (Anwendungsfälle → Anpassen → Instagram):
+  - instagram_business_basic: "Bereit zum Testen" (0 API-Aufrufe)
+  - instagram_business_content_publish: "Bereit zum Testen" (0 API-Aufrufe)
+  - instagram_business_manage_comments: "Zur App-Review"
+  - instagram_manage_comments: hat API-Aufrufe
+  - instagram_content_publish: hat API-Aufrufe
+  - instagram_manage_contents: hat API-Aufrufe
+  - instagram_manage_insights: hat API-Aufrufe
+
+App-Review Status: "Nicht eingereicht" für alle Permissions
+  (Das ist OK im Development Mode, solange "Bereit zum Testen")
+
+==============================================================================
+8. CODE-ARCHITEKTUR
+==============================================================================
+
+Publishing Service: lib/social-media/publishingService.ts
+  - GRAPH_API_VERSION = 'v21.0'
+  - publishToFacebook(pageId, accessToken, content, imageUrl?)
+  - publishToInstagram(igUserId, accessToken, content, imageUrl?)
+    → 3-Step: /{igUserId}/media → wait 3s → /{igUserId}/media_publish
+    → Erfordert Bild (imageUrl pflicht)
+  - publishToThreads(threadsUserId, accessToken, content, imageUrl?)
+    → Nutzt graph.threads.net
+    → 3-Step: /{userId}/threads → wait 3s → /{userId}/threads_publish
+  - publishPost(postId) → Hauptfunktion, iteriert über alle Plattformen
+  - publishScheduledPosts() → Cron-Job für geplante Posts
+
+Long-Lived Token API: app/api/admin/social-media/accounts/long-lived-token/route.ts
+  - Konvertiert Short-Lived → Long-Lived → Page Token
+
+Social Media Admin Page: app/admin/social-media/page.tsx
+  - Tabs: Dashboard, Accounts, Beiträge, Vorlagen, Automatisierungen
+
+==============================================================================
+9. TEST-SCRIPTS AUF DEM SERVER
+==============================================================================
+
+Folgende Test-Scripts liegen noch auf dem Server unter /var/www/bereifung24/:
+  - test-final3.js (FB+IG Test mit Auto-Delete)
+  - diagnose-ig.js (Umfassende Diagnose)
+  - diagnose-ig2.js (Detaillierte Diagnose)
+  - diagnose-ig3.js (Verknüpfungs-Check)
+  - diagnose-ig4.js (Token-Scopes + API-Version Test)
+
+Lokale Dateien zum Aufräumen:
+  - c:\Bereifung24\Bereifung24 Workspace\diagnose-ig.js
+  - c:\Bereifung24\Bereifung24 Workspace\diagnose-ig2.js
+  - c:\Bereifung24\Bereifung24 Workspace\diagnose-ig3.js (existiert möglicherweise)
+  - c:\Bereifung24\Bereifung24 Workspace\diagnose-ig4.js
+
+==============================================================================
+10. ZUSAMMENFASSUNG DER DIAGNOSE-ERGEBNISSE
+==============================================================================
+
+diagnose-ig4.js (letzte Ausführung 30.03.2026):
+
+  TOKEN-INFO:
+    Typ: PAGE
+    App-ID: 1611247256762915
+    Profil-ID: 143218978878429
+    Läuft ab: NIE
+    Scopes: pages_show_list, business_management, instagram_manage_comments,
+            instagram_manage_insights, instagram_content_publish,
+            pages_read_engagement, pages_read_user_content, pages_manage_posts,
+            instagram_manage_contents, public_profile
+    FEHLT: instagram_basic, instagram_business_basic
+
+  PAGE-INFO: 
+    Page "Bereifung24" (143218978878429)
+    instagram_business_account: LEER (gibt nur Page-ID zurück)
+    page_backed_instagram_accounts: [17841462799004638] (Shadow)
+
+  ALLE PERMISSIONS: granted (aber instagram_basic fehlt ganz)
+
+  API-VERSIONEN v18-v22: Alle gleicher Fehler
+
+  BILD-URL: bereifung24.de/images/logo.png → 404
+
+==============================================================================
+11. EMPFOHLENE NÄCHSTE SCHRITTE
+==============================================================================
+
+1. Instagram-Tester Problem lösen:
+   a) Lösche die Instagram-Tester Rolle für @bereifung24
+   b) Füge sie NEU hinzu
+   c) Gehe SOFORT auf Instagram (App auf dem Handy!) → 
+      Einstellungen → Sicherheit → Apps und Websites → Tester-Einladungen
+   d) Akzeptiere die Einladung
+
+2. Nach Akzeptierung:
+   → Gehe zur Instagram API Seite auf developers.facebook.com
+   → "Konto hinzufügen" bei Schritt 2
+   → Logge dich mit @bereifung24 ein
+   → Das generiert einen Instagram-spezifischen Token
+
+3. Token speichern und Publishing Code anpassen:
+   → Möglicherweise muss publishToInstagram() angepasst werden
+   → Die neue Instagram Business Login API könnte andere Endpoints nutzen
+   → Oder: Der neue Token funktioniert auch mit der bestehenden Graph API
+
+4. Wenn Instagram funktioniert:
+   → Threads testen
+   → Ein gültiges Bild hochladen (bereifung24.de/images/logo.png gibt 404!)
+   → Test-Scripts aufräumen
+   → SOCIAL_MEDIA_ANLEITUNG.txt ist bereits aktualisiert
+
+==============================================================================
+   Sprache: Alle Antworten bitte auf Deutsch
+==============================================================================

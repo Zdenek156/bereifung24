@@ -113,127 +113,136 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Section: Persönliche Daten
-              Text('Persönliche Daten',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _firstNameCtrl,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(labelText: 'Vorname *'),
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Section: Persönliche Daten
+                    Text('Persönliche Daten',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _firstNameCtrl,
+                            textCapitalization: TextCapitalization.words,
+                            decoration:
+                                const InputDecoration(labelText: 'Vorname *'),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Pflichtfeld'
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _lastNameCtrl,
+                            textCapitalization: TextCapitalization.words,
+                            decoration:
+                                const InputDecoration(labelText: 'Nachname *'),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Pflichtfeld'
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      initialValue: user?.email ?? '',
+                      readOnly: true,
+                      enabled: false,
+                      decoration: const InputDecoration(
+                        labelText: 'E-Mail',
+                        helperText: 'E-Mail kann nicht geändert werden',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _phoneCtrl,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        labelText: 'Telefonnummer *',
+                      ),
                       validator: (v) =>
                           v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _lastNameCtrl,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(labelText: 'Nachname *'),
-                      validator: (v) =>
-                          v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                initialValue: user?.email ?? '',
-                readOnly: true,
-                enabled: false,
-                decoration: const InputDecoration(
-                  labelText: 'E-Mail',
-                  helperText: 'E-Mail kann nicht geändert werden',
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneCtrl,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'Telefonnummer *',
-                ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
-              ),
 
-              const SizedBox(height: 28),
+                    const SizedBox(height: 28),
 
-              // Section: Adresse
-              Text('Adresse',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold)),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _streetCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Straße & Hausnummer *',
-                ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 120,
-                    child: TextFormField(
-                      controller: _zipCodeCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Postleitzahl *'),
+                    // Section: Adresse
+                    Text('Adresse',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _streetCtrl,
+                      decoration: const InputDecoration(
+                        labelText: 'Straße & Hausnummer *',
+                      ),
                       validator: (v) =>
                           v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _cityCtrl,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: const InputDecoration(labelText: 'Stadt *'),
-                      validator: (v) =>
-                          v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          child: TextFormField(
+                            controller: _zipCodeCtrl,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                                labelText: 'Postleitzahl *'),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Pflichtfeld'
+                                : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextFormField(
+                            controller: _cityCtrl,
+                            textCapitalization: TextCapitalization.words,
+                            decoration:
+                                const InputDecoration(labelText: 'Stadt *'),
+                            validator: (v) => v == null || v.trim().isEmpty
+                                ? 'Pflichtfeld'
+                                : null,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: _isSaving ? null : _save,
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                    const SizedBox(height: 32),
+                    FilledButton(
+                      onPressed: _isSaving ? null : _save,
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isSaving
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : const Text('Speichern',
+                              style: TextStyle(fontSize: 16)),
+                    ),
+                  ],
                 ),
-                child: _isSaving
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
-                      )
-                    : const Text('Speichern', style: TextStyle(fontSize: 16)),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

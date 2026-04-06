@@ -32,6 +32,10 @@ export async function PUT(
 
   try {
     const body = await req.json()
+    // Convert scheduledAt string to Date object for Prisma
+    if (body.scheduledAt) {
+      body.scheduledAt = new Date(body.scheduledAt)
+    }
     const post = await socialMediaService.updatePost(params.id, body)
     return NextResponse.json(post)
   } catch (error) {

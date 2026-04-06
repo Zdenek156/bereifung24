@@ -16,12 +16,12 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  static const _bgDark  = Color(0xFF01395A);
+  static const _bgDark = Color(0xFF01395A);
   static const _bgLight = Color(0xFF0EA5E9);
 
   // Aspect-Ratios der transparenten PNG-Assets
   static const _reifenspurRatio = 3964 / 4969; // 0.798  (portrait)
-  static const _b24Ratio        = 6462 / 3122; // 2.070  (landscape)
+  static const _b24Ratio = 6462 / 3122; // 2.070  (landscape)
 
   late AnimationController _controller;
 
@@ -154,33 +154,33 @@ class _SplashScreenState extends State<SplashScreen>
           body: SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                final size    = constraints.biggest;
-                final centerX = size.width  * 0.5;
+                final size = constraints.biggest;
+                final centerX = size.width * 0.5;
                 final centerY = size.height * 0.5;
 
                 // ── Naht genau in der Screenmitte, kein Gap ─────────────────
                 // B24 muss in die rechte Hälfte passen → Höhe daraus ableiten
                 // logoHeight × _b24Ratio ≤ centerX  →  logoHeight ≤ centerX / _b24Ratio
                 const _marginFactor = 0.96; // 4% Rand rechts
-                final logoHeightByB24     = (centerX * _marginFactor) / _b24Ratio;
-                final logoHeightByScreen  = size.height * 0.20;
+                final logoHeightByB24 = (centerX * _marginFactor) / _b24Ratio;
+                final logoHeightByScreen = size.height * 0.20;
                 final logoHeight = logoHeightByB24 < logoHeightByScreen
                     ? logoHeightByB24
                     : logoHeightByScreen;
 
-                final b24W        = logoHeight * _b24Ratio;
+                final b24W = logoHeight * _b24Ratio;
 
                 // ── Reifenspur: 30% über B24-Top, 40% unter B24-Bottom ──────
-                final b24Top         = centerY - logoHeight / 2;
-                final b24Bottom      = centerY + logoHeight / 2;
-                final reifenspurTop  = b24Top    - logoHeight * 0.30;
-                final reifenspurH    = logoHeight * 1.70; // 30% oben + 40% unten
+                final b24Top = centerY - logoHeight / 2;
+                final b24Bottom = centerY + logoHeight / 2;
+                final reifenspurTop = b24Top - logoHeight * 0.30;
+                final reifenspurH = logoHeight * 1.70; // 30% oben + 40% unten
                 final reifenspurWNew = reifenspurH * _reifenspurRatio;
 
                 // Naht (Join-Point) = leicht links von der Mitte
                 final nudge = size.width * 0.05;
                 final reifenspurLeft = centerX - reifenspurWNew - nudge;
-                final b24Left        = centerX - nudge;
+                final b24Left = centerX - nudge;
 
                 return Stack(
                   children: [
@@ -192,7 +192,7 @@ class _SplashScreenState extends State<SplashScreen>
                           scale: _glowScale.value,
                           child: Center(
                             child: Container(
-                              width:  size.width * 0.55,
+                              width: size.width * 0.55,
                               height: size.width * 0.55,
                               decoration: const BoxDecoration(
                                 shape: BoxShape.circle,
@@ -208,9 +208,9 @@ class _SplashScreenState extends State<SplashScreen>
 
                     // ── Reifenspur ───────────────────────────────────────────
                     Positioned(
-                      left:   reifenspurLeft,
-                      top:    reifenspurTop,
-                      width:  reifenspurWNew,
+                      left: reifenspurLeft,
+                      top: reifenspurTop,
+                      width: reifenspurWNew,
                       height: reifenspurH,
                       child: Opacity(
                         opacity: _reifenspurFade.value * contentOpacity,
@@ -222,7 +222,8 @@ class _SplashScreenState extends State<SplashScreen>
                           child: Image.asset(
                             'assets/splash/Logo_Ausschnitt_Reifenspur_weiß.png',
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => _placeholder('Reifenspur'),
+                            errorBuilder: (_, __, ___) =>
+                                _placeholder('Reifenspur'),
                           ),
                         ),
                       ),
@@ -230,9 +231,9 @@ class _SplashScreenState extends State<SplashScreen>
 
                     // ── B24 ──────────────────────────────────────────────────
                     Positioned(
-                      left:   b24Left,
-                      top:    centerY - logoHeight / 2,
-                      width:  b24W,
+                      left: b24Left,
+                      top: centerY - logoHeight / 2,
+                      width: b24W,
                       height: logoHeight,
                       child: Opacity(
                         opacity: _b24Fade.value * contentOpacity,

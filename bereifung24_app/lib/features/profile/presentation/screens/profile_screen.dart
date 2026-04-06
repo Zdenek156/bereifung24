@@ -28,12 +28,14 @@ class ProfileScreen extends ConsumerWidget {
                 CircleAvatar(
                   radius: 48,
                   backgroundImage: NetworkImage(user.profileImage!),
-                  backgroundColor: B24Colors.primaryBlue.withValues(alpha: 0.15),
+                  backgroundColor:
+                      B24Colors.primaryBlue.withValues(alpha: 0.15),
                 )
               else
                 CircleAvatar(
                   radius: 48,
-                  backgroundColor: B24Colors.primaryBlue.withValues(alpha: 0.15),
+                  backgroundColor:
+                      B24Colors.primaryBlue.withValues(alpha: 0.15),
                   child: Text(
                     (user?.firstName?.isNotEmpty == true)
                         ? user!.firstName![0].toUpperCase()
@@ -155,7 +157,8 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  Text('  ·  ', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                  Text('  ·  ',
+                      style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                   GestureDetector(
                     onTap: () => context.push('/profile/datenschutz'),
                     child: Text(
@@ -167,7 +170,8 @@ class ProfileScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  Text('  ·  ', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                  Text('  ·  ',
+                      style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                   GestureDetector(
                     onTap: () => context.push('/profile/impressum'),
                     child: Text(

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -63,6 +63,9 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  Upload,
+  X,
+  Image as ImageIcon,
 } from 'lucide-react'
 
 // ============================================
@@ -204,6 +207,20 @@ function formatDate(dateStr: string | null) {
 export default function SocialMediaPage() {
   const { data: session, status: authStatus } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Show LinkedIn OAuth result
+  useEffect(() => {
+    const linkedinSuccess = searchParams.get('linkedin_success')
+    const linkedinError = searchParams.get('linkedin_error')
+    if (linkedinSuccess) {
+      alert(`✅ LinkedIn: ${linkedinSuccess}`)
+      router.replace('/admin/social-media')
+    } else if (linkedinError) {
+      alert(`❌ LinkedIn Fehler: ${linkedinError}`)
+      router.replace('/admin/social-media')
+    }
+  }, [searchParams, router])
 
   // Global state
   const [loading, setLoading] = useState(true)
@@ -240,11 +257,13 @@ export default function SocialMediaPage() {
     title: '',
     content: '',
     hashtags: '',
+    imageUrl: '',
     postType: 'CUSTOM',
     scheduledAt: '',
     accountIds: [] as string[],
   })
   const [generating, setGenerating] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [publishing, setPublishing] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
 
@@ -282,6 +301,7 @@ export default function SocialMediaPage() {
   useEffect(() => {
     if (authStatus === 'authenticated') {
       fetchStats()
+      fetchAccounts()
     }
   }, [authStatus])
 
@@ -364,7 +384,7 @@ export default function SocialMediaPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...postForm,
-        scheduledAt: postForm.scheduledAt || null,
+        scheduledAt: postForm.scheduledAt ? new Date(postForm.scheduledAt).toISOString() : null,
       })
     })
 
@@ -417,6 +437,7 @@ export default function SocialMediaPage() {
         const data = await res.json()
         setPostForm(prev => ({
           ...prev,
+          title: data.title || prev.title,
           content: data.content,
           hashtags: data.hashtags
         }))
@@ -434,8 +455,9 @@ export default function SocialMediaPage() {
       title: post.title || '',
       content: post.content,
       hashtags: post.hashtags || '',
+      imageUrl: post.imageUrl || '',
       postType: post.postType,
-      scheduledAt: post.scheduledAt ? new Date(post.scheduledAt).toISOString().slice(0, 16) : '',
+      scheduledAt: post.scheduledAt ? (() => { const d = new Date(post.scheduledAt); const pad = (n: number) => n.toString().padStart(2, '0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; })() : '',
       accountIds: post.platforms.map(p => p.account.id),
     })
     setShowPostDialog(true)
@@ -443,7 +465,29 @@ export default function SocialMediaPage() {
 
   function resetPostForm() {
     setEditingPost(null)
-    setPostForm({ title: '', content: '', hashtags: '', postType: 'CUSTOM', scheduledAt: '', accountIds: [] })
+    setPostForm({ title: '', content: '', hashtags: '', imageUrl: '', postType: 'CUSTOM', scheduledAt: '', accountIds: [] })
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('/api/admin/social-media/upload', { method: 'POST', body: formData })
+      if (res.ok) {
+        const data = await res.json()
+        setPostForm(prev => ({ ...prev, imageUrl: data.imageUrl }))
+      } else {
+        const err = await res.json()
+        alert(err.error || 'Fehler beim Hochladen')
+      }
+    } catch {
+      alert('Fehler beim Hochladen')
+    } finally {
+      setUploadingImage(false)
+    }
   }
 
   // ============================================
@@ -1143,6 +1187,18 @@ export default function SocialMediaPage() {
               <Button onClick={() => { setAccountForm({ platform: 'FACEBOOK', accountName: '', pageId: '', accessToken: '' }); setShowAccountDialog(true) }}>
                 <PlusCircle className="h-4 w-4 mr-2" /> Account verbinden
               </Button>
+              <Button variant="outline" onClick={async () => {
+                const res = await fetch('/api/admin/api-settings')
+                if (!res.ok) return alert('API-Einstellungen konnten nicht geladen werden')
+                const settings = await res.json()
+                const clientId = settings.find((s: any) => s.key === 'LINKEDIN_CLIENT_ID')?.value
+                if (!clientId) return alert('LinkedIn Client-ID fehlt! Bitte zuerst in Admin → API-Einstellungen eintragen.')
+                const redirectUri = encodeURIComponent('https://bereifung24.de/api/admin/social-media/linkedin/callback')
+                const scopes = encodeURIComponent('w_organization_social')
+                window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&state=bereifung24`
+              }}>
+                <Linkedin className="h-4 w-4 mr-2" /> Mit LinkedIn verbinden
+              </Button>
             </CardHeader>
             <CardContent>
               {accounts.length === 0 ? (
@@ -1266,6 +1322,22 @@ export default function SocialMediaPage() {
                 placeholder="Beitragstext..."
                 rows={6}
               />
+              {(() => {
+                const threadsSelected = accounts.some(a => a.platform === 'THREADS' && postForm.accountIds.includes(a.id))
+                const totalLength = postForm.content.length + (postForm.hashtags ? postForm.hashtags.length + 2 : 0)
+                if (!threadsSelected) return null
+                const isOver = totalLength > 500
+                return (
+                  <div className={`flex items-center justify-between mt-1 text-xs ${isOver ? 'text-red-500' : 'text-muted-foreground'}`}>
+                    <span>
+                      {isOver
+                        ? `⚠️ Text zu lang für Threads! Hashtags werden dort automatisch weggelassen${postForm.content.length > 500 ? ', Text wird gekürzt.' : '.'}`
+                        : 'Threads: max. 500 Zeichen (inkl. Hashtags)'}
+                    </span>
+                    <span className={`font-mono ${isOver ? 'font-bold' : ''}`}>{totalLength}/500</span>
+                  </div>
+                )
+              })()}
             </div>
 
             <div>
@@ -1275,6 +1347,35 @@ export default function SocialMediaPage() {
                 onChange={e => setPostForm(p => ({ ...p, hashtags: e.target.value }))}
                 placeholder="#Bereifung24 #Reifen #Werkstatt..."
               />
+            </div>
+
+            <div>
+              <Label>Bild (optional)</Label>
+              {postForm.imageUrl ? (
+                <div className="relative mt-1 inline-block">
+                  <img src={postForm.imageUrl} alt="Post-Bild" className="h-32 rounded-lg object-cover border" />
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                    onClick={() => setPostForm(p => ({ ...p, imageUrl: '' }))}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex items-center justify-center gap-2 mt-1 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                  {uploadingImage ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span className="text-sm text-muted-foreground">
+                    {uploadingImage ? 'Wird hochgeladen...' : 'Bild auswählen (JPG/PNG, max 8MB)'}
+                  </span>
+                  <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleImageUpload} disabled={uploadingImage} />
+                </label>
+              )}
             </div>
 
             <div>

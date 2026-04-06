@@ -14,19 +14,18 @@
 import 'tire_size_parser.dart';
 
 class VehicleDocResult {
-  String? make;           // Feld 2.1
-  String? model;          // Feld 2.2
-  int? year;              // Feld B (extracted year)
-  String? vin;            // Feld E
-  String? fuelType;       // Feld P.3 (mapped to app enum)
-  TireSize? tireSize;     // Feld 15.1 (front / only tire size)
+  String? make; // Feld 2.1
+  String? model; // Feld 2.2
+  int? year; // Feld B (extracted year)
+  String? vin; // Feld E
+  String? fuelType; // Feld P.3 (mapped to app enum)
+  TireSize? tireSize; // Feld 15.1 (front / only tire size)
   TireSize? rearTireSize; // Second tire size if Mischbereifung
   bool hasMixedTires = false; // true when front ≠ rear
   int fieldsFound = 0;
 
   @override
-  String toString() =>
-      'VehicleDocResult(make=$make, model=$model, '
+  String toString() => 'VehicleDocResult(make=$make, model=$model, '
       'year=$year, vin=$vin, fuel=$fuelType, tire=$tireSize, '
       'rearTire=$rearTireSize, mixed=$hasMixedTires, '
       'fields=$fieldsFound)';
@@ -34,32 +33,67 @@ class VehicleDocResult {
 
 /// Known German car manufacturers for matching
 const _manufacturers = {
-  'VOLKSWAGEN': 'Volkswagen', 'VW': 'Volkswagen',
-  'MERCEDES': 'Mercedes-Benz', 'MERCEDES-BENZ': 'Mercedes-Benz',
-  'BMW': 'BMW', 'AUDI': 'Audi', 'OPEL': 'Opel',
-  'FORD': 'Ford', 'PORSCHE': 'Porsche', 'FIAT': 'Fiat',
-  'RENAULT': 'Renault', 'PEUGEOT': 'Peugeot', 'CITROEN': 'Citroën',
-  'CITROËN': 'Citroën', 'SKODA': 'Škoda', 'ŠKODA': 'Škoda',
-  'SEAT': 'Seat', 'CUPRA': 'Cupra', 'TOYOTA': 'Toyota',
-  'HONDA': 'Honda', 'MAZDA': 'Mazda', 'NISSAN': 'Nissan',
-  'HYUNDAI': 'Hyundai', 'KIA': 'Kia', 'VOLVO': 'Volvo',
-  'DACIA': 'Dacia', 'SUZUKI': 'Suzuki', 'MITSUBISHI': 'Mitsubishi',
-  'SUBARU': 'Subaru', 'JAGUAR': 'Jaguar', 'JEEP': 'Jeep',
-  'LAND ROVER': 'Land Rover', 'LEXUS': 'Lexus', 'MINI': 'Mini',
-  'SMART': 'Smart', 'TESLA': 'Tesla', 'MG': 'MG',
-  'CHEVROLET': 'Chevrolet', 'DS': 'DS', 'ABARTH': 'Abarth',
+  'VOLKSWAGEN': 'Volkswagen',
+  'VW': 'Volkswagen',
+  'MERCEDES': 'Mercedes-Benz',
+  'MERCEDES-BENZ': 'Mercedes-Benz',
+  'BMW': 'BMW',
+  'AUDI': 'Audi',
+  'OPEL': 'Opel',
+  'FORD': 'Ford',
+  'PORSCHE': 'Porsche',
+  'FIAT': 'Fiat',
+  'RENAULT': 'Renault',
+  'PEUGEOT': 'Peugeot',
+  'CITROEN': 'Citroën',
+  'CITROËN': 'Citroën',
+  'SKODA': 'Škoda',
+  'ŠKODA': 'Škoda',
+  'SEAT': 'Seat',
+  'CUPRA': 'Cupra',
+  'TOYOTA': 'Toyota',
+  'HONDA': 'Honda',
+  'MAZDA': 'Mazda',
+  'NISSAN': 'Nissan',
+  'HYUNDAI': 'Hyundai',
+  'KIA': 'Kia',
+  'VOLVO': 'Volvo',
+  'DACIA': 'Dacia',
+  'SUZUKI': 'Suzuki',
+  'MITSUBISHI': 'Mitsubishi',
+  'SUBARU': 'Subaru',
+  'JAGUAR': 'Jaguar',
+  'JEEP': 'Jeep',
+  'LAND ROVER': 'Land Rover',
+  'LEXUS': 'Lexus',
+  'MINI': 'Mini',
+  'SMART': 'Smart',
+  'TESLA': 'Tesla',
+  'MG': 'MG',
+  'CHEVROLET': 'Chevrolet',
+  'DS': 'DS',
+  'ABARTH': 'Abarth',
   'ALFA ROMEO': 'Alfa Romeo',
 };
 
 /// Fuel type mappings (German → app enum)
 const _fuelMappings = {
-  'BENZIN': 'PETROL', 'OTTO': 'PETROL', 'SUPER': 'PETROL',
+  'BENZIN': 'PETROL',
+  'OTTO': 'PETROL',
+  'SUPER': 'PETROL',
   'DIESEL': 'DIESEL',
-  'ELEKTRO': 'ELECTRIC', 'ELEKTRISCH': 'ELECTRIC', 'STROM': 'ELECTRIC',
+  'ELEKTRO': 'ELECTRIC',
+  'ELEKTRISCH': 'ELECTRIC',
+  'STROM': 'ELECTRIC',
   'HYBRID': 'HYBRID',
-  'PLUG-IN': 'PLUGIN_HYBRID', 'PLUGIN': 'PLUGIN_HYBRID', 'PHEV': 'PLUGIN_HYBRID',
-  'AUTOGAS': 'LPG', 'LPG': 'LPG', 'FLÜSSIGGAS': 'LPG',
-  'ERDGAS': 'CNG', 'CNG': 'CNG',
+  'PLUG-IN': 'PLUGIN_HYBRID',
+  'PLUGIN': 'PLUGIN_HYBRID',
+  'PHEV': 'PLUGIN_HYBRID',
+  'AUTOGAS': 'LPG',
+  'LPG': 'LPG',
+  'FLÜSSIGGAS': 'LPG',
+  'ERDGAS': 'CNG',
+  'CNG': 'CNG',
 };
 
 /// German license plate pattern (kept for reference but not used in scanning)
@@ -184,7 +218,8 @@ VehicleDocResult parseVehicleDoc(List<String> textBlocks) {
 
   // Strategy 1 (HIGHEST PRIORITY): Look for D.3 field code in raw text
   if (result.model == null) {
-    final d3Pattern = RegExp(r'D\.?\s?3\s*[:\s]\s*(\S+(?:\s\S+){0,3})', caseSensitive: false);
+    final d3Pattern =
+        RegExp(r'D\.?\s?3\s*[:\s]\s*(\S+(?:\s\S+){0,3})', caseSensitive: false);
     for (final line in textBlocks) {
       final d3Match = d3Pattern.firstMatch(line);
       if (d3Match != null) {
@@ -200,7 +235,8 @@ VehicleDocResult parseVehicleDoc(List<String> textBlocks) {
 
   // Strategy 2: Look for D.2 field code (Handelsbezeichnung)
   if (result.model == null) {
-    final d2Pattern = RegExp(r'D\.?\s?2\s*[:\s]\s*(\S+(?:\s\S+){0,3})', caseSensitive: false);
+    final d2Pattern =
+        RegExp(r'D\.?\s?2\s*[:\s]\s*(\S+(?:\s\S+){0,3})', caseSensitive: false);
     for (final line in textBlocks) {
       final d2Match = d2Pattern.firstMatch(line);
       if (d2Match != null) {
@@ -216,7 +252,8 @@ VehicleDocResult parseVehicleDoc(List<String> textBlocks) {
 
   // Strategy 3: Look for 2.2 field code with flexible matching
   if (result.model == null) {
-    final model22 = RegExp(r'2[.\s]2\s*[:\s]+\s*(\S+(?:\s\S+){0,3})', caseSensitive: false);
+    final model22 =
+        RegExp(r'2[.\s]2\s*[:\s]+\s*(\S+(?:\s\S+){0,3})', caseSensitive: false);
     for (final line in textBlocks) {
       final match = model22.firstMatch(line);
       if (match != null) {
@@ -239,9 +276,12 @@ VehicleDocResult parseVehicleDoc(List<String> textBlocks) {
       final makeIdx = lineUpper.indexOf(makeUpper);
       if (makeIdx >= 0) {
         // Skip if line contains full manufacturer name indicators
-        if (lineUpper.contains('WERKE') || lineUpper.contains('MOT.') ||
-            lineUpper.contains('MOTOREN') || lineUpper.contains('BAYER') ||
-            lineUpper.contains('AKTIENGESELLSCHAFT') || lineUpper.contains('GMBH')) {
+        if (lineUpper.contains('WERKE') ||
+            lineUpper.contains('MOT.') ||
+            lineUpper.contains('MOTOREN') ||
+            lineUpper.contains('BAYER') ||
+            lineUpper.contains('AKTIENGESELLSCHAFT') ||
+            lineUpper.contains('GMBH')) {
           continue;
         }
         final afterMake = line.substring(makeIdx + result.make!.length).trim();
@@ -319,12 +359,20 @@ bool _isExcludedModelWord(String text) {
 void _parseFieldCodes(List<String> textBlocks, VehicleDocResult result) {
   // Field code regexes — code followed by separator then value
   final fieldPatterns = <String, RegExp>{
-    'make':   RegExp(r'(?:^|\s)2\.?1\s*[:\s]\s*(\S+(?:\s\S+)?)', caseSensitive: false),
-    'model':  RegExp(r'(?:^|\s)2\.?\s?2\s*[:\s]\s*(\S+(?:\s\S+){0,3})', caseSensitive: false),
-    'model_d3': RegExp(r'(?:^|\s)D\.?\s?3\s*[:\s]\s*(\S+(?:\s\S+){0,3})', caseSensitive: false),    'year':   RegExp(r'(?:^|\s)B\s*[:\s]\s*(\d{2}[./]\d{2}[./]\d{4}|\d{4})', caseSensitive: false),
-    'vin':    RegExp(r'(?:^|\s)E\s*[:\s]\s*([A-HJ-NPR-Z0-9]{17})', caseSensitive: false),
-    'fuel':   RegExp(r'(?:^|\s)P\.?3\s*[:\s]\s*(\S+)', caseSensitive: false),
-    'tire':   RegExp(r'(?:^|\s)15\.?1\s*[:\s]\s*(\d{2,3}\s?[/\\]\s?\d{2,3}\s?[RBD]\s?\d{2}(?:\s?\d{2,3}\s?[A-Z])?)', caseSensitive: false),
+    'make': RegExp(r'(?:^|\s)2\.?1\s*[:\s]\s*(\S+(?:\s\S+)?)',
+        caseSensitive: false),
+    'model': RegExp(r'(?:^|\s)2\.?\s?2\s*[:\s]\s*(\S+(?:\s\S+){0,3})',
+        caseSensitive: false),
+    'model_d3': RegExp(r'(?:^|\s)D\.?\s?3\s*[:\s]\s*(\S+(?:\s\S+){0,3})',
+        caseSensitive: false),
+    'year': RegExp(r'(?:^|\s)B\s*[:\s]\s*(\d{2}[./]\d{2}[./]\d{4}|\d{4})',
+        caseSensitive: false),
+    'vin': RegExp(r'(?:^|\s)E\s*[:\s]\s*([A-HJ-NPR-Z0-9]{17})',
+        caseSensitive: false),
+    'fuel': RegExp(r'(?:^|\s)P\.?3\s*[:\s]\s*(\S+)', caseSensitive: false),
+    'tire': RegExp(
+        r'(?:^|\s)15\.?1\s*[:\s]\s*(\d{2,3}\s?[/\\]\s?\d{2,3}\s?[RBD]\s?\d{2}(?:\s?\d{2,3}\s?[A-Z])?)',
+        caseSensitive: false),
   };
 
   for (final line in textBlocks) {
@@ -377,8 +425,8 @@ void _parseFieldCodes(List<String> textBlocks, VehicleDocResult result) {
           }
         case 'vin':
           if (result.vin == null) {
-            result.vin = value.toUpperCase()
-                .replaceAll('O', '0').replaceAll('I', '1');
+            result.vin =
+                value.toUpperCase().replaceAll('O', '0').replaceAll('I', '1');
             result.fieldsFound++;
           }
         case 'fuel':

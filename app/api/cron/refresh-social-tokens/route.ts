@@ -6,7 +6,7 @@ export async function GET() {
   return NextResponse.json({
     status: 'ok',
     service: 'social-media-token-refresh',
-    description: 'Refreshes Instagram, Facebook & Threads tokens before they expire (60-day tokens)',
+    description: 'Refreshes Instagram, Facebook, Threads & LinkedIn tokens before they expire',
   })
 }
 
@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         platform: true,
         accountName: true,
         accessToken: true,
+        refreshToken: true,
         tokenExpiresAt: true,
       },
     })
@@ -47,18 +48,84 @@ export async function POST(req: NextRequest) {
     console.log(`[Token Refresh] Found ${accounts.length} accounts to check`)
 
     // Load Meta App credentials from DB for Facebook token refresh
-    const metaSecrets = await prisma.adminApiSetting.findMany({
-      where: { key: { in: ['META_APP_ID', 'META_APP_SECRET'] } },
+    const apiSecrets = await prisma.adminApiSetting.findMany({
+      where: { key: { in: ['META_APP_ID', 'META_APP_SECRET', 'LINKEDIN_CLIENT_ID', 'LINKEDIN_CLIENT_SECRET'] } },
       select: { key: true, value: true },
     })
-    const metaAppId = metaSecrets.find(s => s.key === 'META_APP_ID')?.value || ''
-    const metaAppSecret = metaSecrets.find(s => s.key === 'META_APP_SECRET')?.value || ''
+    const metaAppId = apiSecrets.find(s => s.key === 'META_APP_ID')?.value || ''
+    const metaAppSecret = apiSecrets.find(s => s.key === 'META_APP_SECRET')?.value || ''
+    const linkedinClientId = apiSecrets.find(s => s.key === 'LINKEDIN_CLIENT_ID')?.value || ''
+    const linkedinClientSecret = apiSecrets.find(s => s.key === 'LINKEDIN_CLIENT_SECRET')?.value || ''
 
     const results: Array<{ account: string; platform: string; status: string; expiresAt?: string }> = []
 
     for (const account of accounts) {
-      // Only refresh Meta platform tokens (Instagram, Facebook, Threads)
       const token = account.accessToken || ''
+
+      // Handle LinkedIn refresh separately (uses refresh_token grant)
+      if (account.platform === 'LINKEDIN') {
+        if (!account.refreshToken) {
+          results.push({
+            account: account.accountName || account.id,
+            platform: account.platform,
+            status: 'skipped - no refresh token (re-authenticate with LinkedIn to get one)',
+          })
+          continue
+        }
+
+        if (!linkedinClientId || !linkedinClientSecret) {
+          results.push({
+            account: account.accountName || account.id,
+            platform: account.platform,
+            status: 'skipped - LinkedIn Client-ID/Secret nicht konfiguriert',
+          })
+          continue
+        }
+
+        try {
+          console.log(`[Token Refresh] Refreshing LINKEDIN: ${account.accountName}`)
+          const res = await fetch('https://www.linkedin.com/oauth/v2/accessToken', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              grant_type: 'refresh_token',
+              refresh_token: account.refreshToken,
+              client_id: linkedinClientId,
+              client_secret: linkedinClientSecret,
+            }).toString(),
+          })
+          const data = await res.json()
+
+          if (data.access_token) {
+            const expiresAt = data.expires_in
+              ? new Date(Date.now() + data.expires_in * 1000)
+              : null
+
+            await prisma.socialMediaAccount.update({
+              where: { id: account.id },
+              data: {
+                accessToken: data.access_token,
+                refreshToken: data.refresh_token || account.refreshToken,
+                tokenExpiresAt: expiresAt,
+              },
+            })
+
+            const expiresStr = expiresAt?.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) || 'unknown'
+            console.log(`[Token Refresh] ✅ ${account.accountName} refreshed, expires: ${expiresStr}`)
+            results.push({ account: account.accountName || account.id, platform: account.platform, status: 'refreshed', expiresAt: expiresStr })
+          } else {
+            const errorMsg = data.error_description || data.error || 'Unknown error'
+            console.error(`[Token Refresh] ❌ ${account.accountName}: ${errorMsg}`)
+            results.push({ account: account.accountName || account.id, platform: account.platform, status: `failed: ${errorMsg}` })
+          }
+        } catch (error: any) {
+          console.error(`[Token Refresh] ❌ ${account.accountName}:`, error.message)
+          results.push({ account: account.accountName || account.id, platform: account.platform, status: `error: ${error.message}` })
+        }
+        continue
+      }
+
+      // Meta platform tokens (Instagram, Facebook, Threads)
       const isMetaToken = token.startsWith('IGAAg') || token.startsWith('EAAW') || token.startsWith('THAA')
       
       if (!isMetaToken) {

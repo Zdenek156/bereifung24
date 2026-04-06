@@ -2514,7 +2514,7 @@ export default function NewHomePage({
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className={isWorkshopFixed ? 'max-w-5xl mx-auto flex flex-col gap-4' : 'flex flex-col lg:flex-row gap-6'}>
               {/* Filter: Sidebar (homepage) or Horizontal Bar (LP) */}
-              {workshops.length > 0 && (
+              {(workshops.length > 0 || (hasSearched && !loading)) && (
                 <div className={isWorkshopFixed ? 'w-full' : 'lg:w-80 flex-shrink-0'}>
                   <div className={`bg-white rounded-xl shadow-sm border border-gray-200 ${!isWorkshopFixed ? 'sticky top-24 z-40' : ''}`}>
                     {/* Filter Header */}

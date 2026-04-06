@@ -134,7 +134,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       ));
       _messages.add(_ChatMessage(
         role: 'ai',
-        text: '${vehicle.make} ${vehicle.model} ausgewählt! 🚗\nReifengröße: **${vehicle.tireSizeWithIndex.isNotEmpty ? vehicle.tireSizeWithIndex : 'nicht hinterlegt'}**',
+        text:
+            '${vehicle.make} ${vehicle.model} ausgewählt! 🚗\nReifengröße: **${vehicle.tireSizeWithIndex.isNotEmpty ? vehicle.tireSizeWithIndex : 'nicht hinterlegt'}**',
         time: _timeStr(),
       ));
     });
@@ -153,7 +154,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     setState(() {
       _messages.add(_ChatMessage(
         role: 'ai',
-        text: 'Hallo! 👋 Ich bin **Rollo**, dein KI-Reifen-Berater. Wie kann ich dir helfen?',
+        text:
+            'Hallo! 👋 Ich bin **Rollo**, dein KI-Reifen-Berater. Wie kann ich dir helfen?',
         time: _timeStr(),
         chips: [
           _QuickChip('recommend', '🎯 Reifen-Empfehlung'),
@@ -177,9 +179,14 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     // Check if vehicle selection is needed for tire-related queries
     if (_vehicleId == null) {
       final lc = text.trim().toLowerCase();
-      final needsVehicle = lc.contains('reifen') || lc.contains('empfehlung') ||
-          lc.contains('tire') || lc.contains('werkstatt') || lc.contains('montage') ||
-          lc.contains('sommer') || lc.contains('winter') || lc.contains('ganzjahr');
+      final needsVehicle = lc.contains('reifen') ||
+          lc.contains('empfehlung') ||
+          lc.contains('tire') ||
+          lc.contains('werkstatt') ||
+          lc.contains('montage') ||
+          lc.contains('sommer') ||
+          lc.contains('winter') ||
+          lc.contains('ganzjahr');
       if (needsVehicle) {
         final vehiclesAsync = ref.read(vehiclesProvider);
         List<Vehicle> vehicleList = [];
@@ -188,10 +195,12 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         });
         if (vehicleList.isEmpty) {
           setState(() {
-            _messages.add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+            _messages.add(_ChatMessage(
+                role: 'user', text: text.trim(), time: _timeStr()));
             _messages.add(_ChatMessage(
               role: 'ai',
-              text: 'Du hast noch kein Fahrzeug angelegt. Bitte füge zuerst ein Fahrzeug unter **Fahrzeuge** hinzu, damit ich dir Reifen empfehlen kann.',
+              text:
+                  'Du hast noch kein Fahrzeug angelegt. Bitte füge zuerst ein Fahrzeug unter **Fahrzeuge** hinzu, damit ich dir Reifen empfehlen kann.',
               time: _timeStr(),
             ));
           });
@@ -206,7 +215,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           // Multiple vehicles — ask user to pick, store message for later
           _pendingMessage = text.trim();
           setState(() {
-            _messages.add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+            _messages.add(_ChatMessage(
+                role: 'user', text: text.trim(), time: _timeStr()));
             _messages.add(_ChatMessage(
               role: 'ai',
               text: 'Für welches Fahrzeug brauchst du Hilfe?',
@@ -221,7 +231,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     }
 
     setState(() {
-      _messages.add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+      _messages
+          .add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
       _isTyping = true;
     });
     _scrollToBottom();
@@ -256,13 +267,19 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       final rawTires = data['recommendedTires'] as List?;
       if (rawTires != null && rawTires.isNotEmpty) {
         recTires = rawTires
-            .map((e) => _RecommendedTire.fromJson(Map<String, dynamic>.from(e as Map)))
+            .map((e) =>
+                _RecommendedTire.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
       }
 
       setState(() {
-        _chatHistory = newHistory.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-        _messages.add(_ChatMessage(role: 'ai', text: aiText, time: _timeStr(), recommendedTires: recTires));
+        _chatHistory =
+            newHistory.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _messages.add(_ChatMessage(
+            role: 'ai',
+            text: aiText,
+            time: _timeStr(),
+            recommendedTires: recTires));
         _isTyping = false;
       });
     } catch (e) {
@@ -270,7 +287,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       setState(() {
         _messages.add(_ChatMessage(
           role: 'ai',
-          text: 'Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal. 🔄',
+          text:
+              'Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal. 🔄',
           time: _timeStr(),
         ));
         _isTyping = false;
@@ -363,7 +381,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       height: 56,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: B24Colors.primaryBlue.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(
+            color: B24Colors.primaryBlue.withValues(alpha: 0.2), width: 1.5),
         image: const DecorationImage(
           image: AssetImage('assets/images/services/ki_berater.jpg'),
           fit: BoxFit.cover,
@@ -380,7 +399,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       height: 56,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: B24Colors.primaryBlue.withValues(alpha: 0.2), width: 1.5),
+        border: Border.all(
+            color: B24Colors.primaryBlue.withValues(alpha: 0.2), width: 1.5),
         image: profileUrl != null && profileUrl.isNotEmpty
             ? DecorationImage(
                 image: NetworkImage(profileUrl.replaceAll('=s96-c', '=s200-c')),
@@ -394,7 +414,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 shape: BoxShape.circle,
                 color: B24Colors.primaryPale,
               ),
-              child: const Icon(Icons.person, size: 30, color: B24Colors.primaryBlue),
+              child: const Icon(Icons.person,
+                  size: 30, color: B24Colors.primaryBlue),
             )
           : null,
     );
@@ -419,7 +440,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               if (!isUser) ...[_aiAvatar(), const SizedBox(width: 8)],
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: isUser
                         ? B24Colors.primaryBlue
@@ -432,7 +454,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
+                        color:
+                            Colors.black.withValues(alpha: isDark ? 0.2 : 0.06),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -459,7 +482,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               msg.time,
               style: TextStyle(
                 fontSize: 10,
-                color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+                color: isDark
+                    ? B24Colors.darkTextSecondary
+                    : B24Colors.textTertiary,
               ),
             ),
           ),
@@ -473,7 +498,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 return GestureDetector(
                   onTap: () => _onChipTapped(chip),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: isDark
                           ? B24Colors.primaryBlue.withValues(alpha: 0.15)
@@ -497,7 +523,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             ),
           ],
           // Vehicle choices
-          if (msg.vehicleChoices != null && msg.vehicleChoices!.isNotEmpty && _vehicleId == null) ...[
+          if (msg.vehicleChoices != null &&
+              msg.vehicleChoices!.isNotEmpty &&
+              _vehicleId == null) ...[
             const SizedBox(height: 10),
             ...msg.vehicleChoices!.map((v) {
               final icon = v.vehicleType == 'MOTORCYCLE'
@@ -511,7 +539,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                   onTap: () => _onVehicleSelected(v),
                   child: Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 12),
                     decoration: BoxDecoration(
                       color: isDark ? B24Colors.darkSurface : Colors.white,
                       borderRadius: BorderRadius.circular(14),
@@ -536,17 +565,23 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                             children: [
                               Text(
                                 '${v.make} ${v.model}',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w600, fontSize: 14),
                               ),
                               if (v.tireSizeWithIndex.isNotEmpty)
                                 Text(
                                   v.tireSizeWithIndex,
-                                  style: TextStyle(fontSize: 12, color: isDark ? B24Colors.darkTextSecondary : Colors.grey[600]),
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: isDark
+                                          ? B24Colors.darkTextSecondary
+                                          : Colors.grey[600]),
                                 ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right, color: B24Colors.primaryBlue, size: 20),
+                        const Icon(Icons.chevron_right,
+                            color: B24Colors.primaryBlue, size: 20),
                       ],
                     ),
                   ),
@@ -555,10 +590,15 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             }),
           ],
           // Recommended tire cards
-          if (msg.recommendedTires != null && msg.recommendedTires!.isNotEmpty) ...[
+          if (msg.recommendedTires != null &&
+              msg.recommendedTires!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            ...msg.recommendedTires!.map((tire) => _buildTireCard(tire, isDark)),
-            if (_selectedTire != null && msg.recommendedTires!.any((t) => t.brand == _selectedTire!.brand && t.model == _selectedTire!.model)) ...[
+            ...msg.recommendedTires!
+                .map((tire) => _buildTireCard(tire, isDark)),
+            if (_selectedTire != null &&
+                msg.recommendedTires!.any((t) =>
+                    t.brand == _selectedTire!.brand &&
+                    t.model == _selectedTire!.model)) ...[
               const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
@@ -569,17 +609,22 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                     if (_vehicleId != null) {
                       final vehiclesAsync = ref.read(vehiclesProvider);
                       vehiclesAsync.whenData((vehicles) {
-                        final v = vehicles.where((v) => v.id == _vehicleId).firstOrNull;
+                        final v = vehicles
+                            .where((v) => v.id == _vehicleId)
+                            .firstOrNull;
                         if (v != null) {
                           ref.read(selectedVehicleProvider.notifier).state = v;
                         }
                       });
                     }
                     // Convert season text to code: Sommer→s, Winter→w, Ganzjahr→g
-                    final seasonCode = t.season.toLowerCase().startsWith('s') ? 's'
-                        : t.season.toLowerCase().startsWith('w') ? 'w'
-                        : t.season.toLowerCase().startsWith('g') ? 'g'
-                        : t.season;
+                    final seasonCode = t.season.toLowerCase().startsWith('s')
+                        ? 's'
+                        : t.season.toLowerCase().startsWith('w')
+                            ? 'w'
+                            : t.season.toLowerCase().startsWith('g')
+                                ? 'g'
+                                : t.season;
                     context.go('/search?service=TIRE_CHANGE'
                         '&width=${Uri.encodeComponent(t.width)}'
                         '&height=${Uri.encodeComponent(t.height)}'
@@ -596,7 +641,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: B24Colors.primaryBlue,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                 ),
@@ -611,7 +657,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   // ── Tire Recommendation Card ──
 
   Widget _buildTireCard(_RecommendedTire tire, bool isDark) {
-    final isSelected = _selectedTire != null && _selectedTire!.brand == tire.brand && _selectedTire!.model == tire.model;
+    final isSelected = _selectedTire != null &&
+        _selectedTire!.brand == tire.brand &&
+        _selectedTire!.model == tire.model;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6, left: 40),
       child: GestureDetector(
@@ -628,7 +676,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 : (isDark ? B24Colors.darkSurface : Colors.white),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? B24Colors.primaryBlue : (isDark ? B24Colors.darkBorder : B24Colors.border),
+              color: isSelected
+                  ? B24Colors.primaryBlue
+                  : (isDark ? B24Colors.darkBorder : B24Colors.border),
               width: isSelected ? 2 : 1,
             ),
           ),
@@ -643,12 +693,15 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 13,
-                        color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                        color: isDark
+                            ? B24Colors.darkTextPrimary
+                            : B24Colors.textPrimary,
                       ),
                     ),
                   ),
                   if (isSelected)
-                    const Icon(Icons.check_circle, size: 18, color: B24Colors.primaryBlue),
+                    const Icon(Icons.check_circle,
+                        size: 18, color: B24Colors.primaryBlue),
                 ],
               ),
               const SizedBox(height: 2),
@@ -656,7 +709,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 '${tire.size} ${tire.loadIndex}${tire.speedIndex} · ${tire.season}',
                 style: TextStyle(
                   fontSize: 11,
-                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+                  color: isDark
+                      ? B24Colors.darkTextSecondary
+                      : B24Colors.textTertiary,
                 ),
               ),
               const SizedBox(height: 6),
@@ -717,7 +772,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.06),
+                  color: Colors.black.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.2
+                          : 0.06),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -735,7 +793,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   Widget _buildInputBar(bool isDark) {
     return Container(
       padding: EdgeInsets.fromLTRB(
-        12, 8, 12,
+        12,
+        8,
+        12,
         8 + MediaQuery.of(context).padding.bottom,
       ),
       decoration: BoxDecoration(
@@ -766,7 +826,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 decoration: InputDecoration(
                   hintText: 'Frag mich etwas...',
                   hintStyle: TextStyle(
-                    color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+                    color: isDark
+                        ? B24Colors.darkTextSecondary
+                        : B24Colors.textTertiary,
                     fontSize: 14,
                   ),
                   border: InputBorder.none,
@@ -775,7 +837,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 ),
                 style: TextStyle(
                   fontSize: 14,
-                  color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                  color: isDark
+                      ? B24Colors.darkTextPrimary
+                      : B24Colors.textPrimary,
                 ),
               ),
             ),
@@ -787,9 +851,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: _isTyping
-                    ? B24Colors.textTertiary
-                    : B24Colors.primaryBlue,
+                color:
+                    _isTyping ? B24Colors.textTertiary : B24Colors.primaryBlue,
                 borderRadius: BorderRadius.circular(22),
               ),
               alignment: Alignment.center,
@@ -895,7 +958,8 @@ class _TypingDotsState extends State<_TypingDots>
           children: List.generate(3, (i) {
             final delay = i * 0.2;
             final t = ((_controller.value - delay) % 1.0).clamp(0.0, 1.0);
-            final opacity = 0.3 + 0.7 * (t < 0.5 ? t * 2 : (1 - t) * 2).clamp(0.0, 1.0);
+            final opacity =
+                0.3 + 0.7 * (t < 0.5 ? t * 2 : (1 - t) * 2).clamp(0.0, 1.0);
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 2),
               child: Opacity(

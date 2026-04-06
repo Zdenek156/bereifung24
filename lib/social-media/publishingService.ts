@@ -170,6 +170,18 @@ export async function publishPost(postId: string) {
     ? `${post.content}\n\n${post.hashtags}`
     : post.content
 
+  // Resolve image URL to absolute public URL
+  let absoluteImageUrl: string | null = null
+  if (post.imageUrl) {
+    if (post.imageUrl.startsWith('http')) {
+      absoluteImageUrl = post.imageUrl
+    } else {
+      // Relative path like /uploads/social-media/xyz.jpg → full URL
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://bereifung24.de'
+      absoluteImageUrl = `${baseUrl}${post.imageUrl}`
+    }
+  }
+
   const results: { accountId: string; result: PublishResult }[] = []
 
   for (const platformPost of post.platforms) {
@@ -216,7 +228,7 @@ export async function publishPost(postId: string) {
           account.pageId,
           account.accessToken,
           fullContent,
-          post.imageUrl
+          absoluteImageUrl
         )
         break
 
@@ -225,25 +237,35 @@ export async function publishPost(postId: string) {
           account.pageId,
           account.accessToken,
           fullContent,
-          post.imageUrl
+          absoluteImageUrl
         )
         break
 
-      case SocialMediaPlatform.THREADS:
+      case SocialMediaPlatform.THREADS: {
+        // Threads has a 500 character limit - truncate if needed
+        let threadsContent = fullContent
+        if (threadsContent.length > 500) {
+          // Try content without hashtags first
+          threadsContent = post.content
+          if (threadsContent.length > 497) {
+            threadsContent = threadsContent.substring(0, 497) + '...'
+          }
+        }
         result = await publishToThreads(
           account.pageId,
           account.accessToken,
-          fullContent,
-          post.imageUrl
+          threadsContent,
+          absoluteImageUrl
         )
         break
+      }
 
       case SocialMediaPlatform.LINKEDIN:
         result = await publishToLinkedin(
           account.pageId,
           account.accessToken,
           fullContent,
-          post.imageUrl
+          absoluteImageUrl
         )
         break
 
@@ -463,53 +485,56 @@ async function publishToThreads(
 }
 
 // ============================================
-// LINKEDIN PUBLISHING
+// LINKEDIN PUBLISHING (Posts API v202401)
 // ============================================
 
-const LINKEDIN_API_BASE = 'https://api.linkedin.com/v2'
+const LINKEDIN_REST_BASE = 'https://api.linkedin.com/rest'
+const LINKEDIN_VERSION = '202504'
+
+function getLinkedinAuthorUrn(pageId: string): string {
+  if (pageId.startsWith('urn:li:')) return pageId
+  // Numeric IDs = organization, alphanumeric = person (OpenID sub)
+  const isOrg = /^\d+$/.test(pageId)
+  return isOrg ? `urn:li:organization:${pageId}` : `urn:li:person:${pageId}`
+}
 
 async function publishToLinkedin(
-  organizationId: string,
+  pageId: string,
   accessToken: string,
   content: string,
   imageUrl?: string | null
 ): Promise<PublishResult> {
   try {
-    // LinkedIn uses URN format for organizations: urn:li:organization:{id}
-    const authorUrn = organizationId.startsWith('urn:li:')
-      ? organizationId
-      : `urn:li:organization:${organizationId}`
+    const authorUrn = getLinkedinAuthorUrn(pageId)
+    const headers = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+      'LinkedIn-Version': LINKEDIN_VERSION,
+      'X-Restli-Protocol-Version': '2.0.0',
+    }
+
+    console.log(`[Social Media] LinkedIn posting as: ${authorUrn}`)
 
     if (imageUrl) {
-      // Step 1: Register image upload
-      const registerRes = await fetch(`${LINKEDIN_API_BASE}/assets?action=registerUpload`, {
+      // Step 1: Initialize image upload
+      const initRes = await fetch(`${LINKEDIN_REST_BASE}/images?action=initializeUpload`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
-          registerUploadRequest: {
-            recipes: ['urn:li:digitalmediaRecipe:feedshare-image'],
-            owner: authorUrn,
-            serviceRelationships: [{
-              relationshipType: 'OWNER',
-              identifier: 'urn:li:userGeneratedContent',
-            }],
-          },
+          initializeUploadRequest: { owner: authorUrn },
         }),
       })
-      const registerData = await registerRes.json()
+      const initData = await initRes.json()
 
-      if (!registerRes.ok) {
-        console.error('[Social Media] LinkedIn register upload error:', registerData)
-        return { success: false, error: registerData.message || `Upload Register HTTP ${registerRes.status}` }
+      if (!initRes.ok) {
+        console.error('[Social Media] LinkedIn image init error:', initData)
+        return { success: false, error: initData.message || `Image Init HTTP ${initRes.status}` }
       }
 
-      const uploadUrl = registerData.value?.uploadMechanism?.['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']?.uploadUrl
-      const asset = registerData.value?.asset
+      const uploadUrl = initData.value?.uploadUrl
+      const imageUrn = initData.value?.image
 
-      if (!uploadUrl || !asset) {
+      if (!uploadUrl || !imageUrn) {
         return { success: false, error: 'LinkedIn Upload-URL konnte nicht ermittelt werden' }
       }
 
@@ -521,7 +546,7 @@ async function publishToLinkedin(
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'image/jpeg',
+          'Content-Type': imageResponse.headers.get('content-type') || 'image/jpeg',
         },
         body: imageBuffer,
       })
@@ -531,66 +556,51 @@ async function publishToLinkedin(
       }
 
       // Step 3: Create post with image
-      const postRes = await fetch(`${LINKEDIN_API_BASE}/ugcPosts`, {
+      const postRes = await fetch(`${LINKEDIN_REST_BASE}/posts`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           author: authorUrn,
+          commentary: content,
+          visibility: 'PUBLIC',
+          distribution: { feedDistribution: 'MAIN_FEED', targetEntities: [], thirdPartyDistributionChannels: [] },
+          content: { media: { id: imageUrn } },
           lifecycleState: 'PUBLISHED',
-          specificContent: {
-            'com.linkedin.ugc.ShareContent': {
-              shareCommentary: { text: content },
-              shareMediaCategory: 'IMAGE',
-              media: [{
-                status: 'READY',
-                media: asset,
-              }],
-            },
-          },
-          visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
         }),
       })
-      const postData = await postRes.json()
 
-      if (!postRes.ok || postData.serviceErrorCode) {
+      if (!postRes.ok) {
+        const postData = await postRes.json().catch(() => ({}))
         const errorMsg = postData.message || `HTTP ${postRes.status}`
-        console.error('[Social Media] LinkedIn publish error:', errorMsg)
+        console.error('[Social Media] LinkedIn publish error:', errorMsg, postData)
         return { success: false, error: errorMsg }
       }
 
-      return { success: true, platformPostId: postData.id }
+      const postId = postRes.headers.get('x-restli-id') || postRes.headers.get('x-linkedin-id') || ''
+      return { success: true, platformPostId: postId }
     } else {
       // Text-only post
-      const postRes = await fetch(`${LINKEDIN_API_BASE}/ugcPosts`, {
+      const postRes = await fetch(`${LINKEDIN_REST_BASE}/posts`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           author: authorUrn,
+          commentary: content,
+          visibility: 'PUBLIC',
+          distribution: { feedDistribution: 'MAIN_FEED', targetEntities: [], thirdPartyDistributionChannels: [] },
           lifecycleState: 'PUBLISHED',
-          specificContent: {
-            'com.linkedin.ugc.ShareContent': {
-              shareCommentary: { text: content },
-              shareMediaCategory: 'NONE',
-            },
-          },
-          visibility: { 'com.linkedin.ugc.MemberNetworkVisibility': 'PUBLIC' },
         }),
       })
-      const postData = await postRes.json()
 
-      if (!postRes.ok || postData.serviceErrorCode) {
+      if (!postRes.ok) {
+        const postData = await postRes.json().catch(() => ({}))
         const errorMsg = postData.message || `HTTP ${postRes.status}`
-        console.error('[Social Media] LinkedIn publish error:', errorMsg)
+        console.error('[Social Media] LinkedIn publish error:', errorMsg, postData)
         return { success: false, error: errorMsg }
       }
 
-      return { success: true, platformPostId: postData.id }
+      const postId = postRes.headers.get('x-restli-id') || postRes.headers.get('x-linkedin-id') || ''
+      return { success: true, platformPostId: postId }
     }
   } catch (error: any) {
     console.error('[Social Media] LinkedIn publish exception:', error)
@@ -598,26 +608,19 @@ async function publishToLinkedin(
   }
 }
 
-export async function verifyLinkedinToken(organizationId: string, accessToken: string) {
+export async function verifyLinkedinToken(pageId: string, accessToken: string) {
   try {
-    // Verify token by getting organization info
-    const orgUrn = organizationId.startsWith('urn:li:')
-      ? organizationId
-      : `urn:li:organization:${organizationId}`
-
-    const response = await fetch(
-      `${LINKEDIN_API_BASE}/organizations/${organizationId.replace(/^urn:li:organization:/, '')}?projection=(id,localizedName,vanityName,logoV2)`,
-      {
-        headers: { 'Authorization': `Bearer ${accessToken}` },
-      }
-    )
+    // Verify token by calling userinfo endpoint (works for both person and org tokens)
+    const response = await fetch('https://api.linkedin.com/v2/userinfo', {
+      headers: { 'Authorization': `Bearer ${accessToken}` },
+    })
     const data = await response.json()
 
     if (!response.ok || data.serviceErrorCode) {
       return { valid: false, error: data.message || `HTTP ${response.status}` }
     }
 
-    return { valid: true, orgName: data.localizedName, orgId: data.id?.toString() }
+    return { valid: true, orgName: data.name || data.given_name, orgId: pageId }
   } catch (error: any) {
     return { valid: false, error: error.message }
   }

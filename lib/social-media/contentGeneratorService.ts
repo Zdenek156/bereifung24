@@ -21,6 +21,7 @@ interface ContentGenerationParams {
  * Generate post text using Gemini AI
  */
 export async function generatePostContent(params: ContentGenerationParams): Promise<{
+  title: string
   content: string
   hashtags: string
 }> {
@@ -45,7 +46,7 @@ export async function generatePostContent(params: ContentGenerationParams): Prom
         generationConfig: {
           temperature: 0.8,
           topP: 0.9,
-          maxOutputTokens: 1024
+          maxOutputTokens: 2048
         }
       })
     }
@@ -58,73 +59,183 @@ export async function generatePostContent(params: ContentGenerationParams): Prom
   const data = await response.json()
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 
-  // Parse content and hashtags from response
-  const hashtagMatch = text.match(/#[\wäöüÄÖÜß]+/g)
-  const hashtags = hashtagMatch ? hashtagMatch.join(' ') : '#Bereifung24 #Reifen #Werkstatt'
-  const content = text.replace(/#[\wäöüÄÖÜß]+/g, '').trim()
+  // Parse structured response: TITEL:, TEXT:, HASHTAGS:
+  const titleMatch = text.match(/TITEL:\s*(.+?)(?:\n|TEXT:)/si)
+  const textMatch = text.match(/TEXT:\s*([\s\S]+?)(?:HASHTAGS:|$)/si)
+  const hashtagMatch = text.match(/HASHTAGS:\s*([\s\S]+)/si)
 
-  return { content, hashtags }
+  const title = titleMatch?.[1]?.trim() || ''
+  let content = textMatch?.[1]?.trim() || text.replace(/TITEL:.*\n?/i, '').replace(/HASHTAGS:[\s\S]*/i, '').trim()
+  const hashtagLine = hashtagMatch?.[1]?.trim() || ''
+
+  // Extract hashtags - match all #words
+  const hashtagsArray = hashtagLine.match(/#[\wäöüÄÖÜß]+/g) || content.match(/#[\wäöüÄÖÜß]+/g) || []
+  const hashtags = hashtagsArray.length > 0 ? hashtagsArray.join(' ') : '#Bereifung24 #Reifen #Werkstatt #Reifenwechsel #KFZ'
+
+  // Remove any remaining hashtags from content
+  content = content.replace(/#[\wäöüÄÖÜß]+/g, '').replace(/\n{3,}/g, '\n\n').trim()
+
+  return { title, content, hashtags }
 }
 
 function buildPrompt(params: ContentGenerationParams): string {
-  const baseInstructions = `Du bist der Social-Media-Manager von Bereifung24, einer Plattform die Kunden mit Reifenwerkstätten verbindet. 
-Schreibe einen Social-Media-Post auf Deutsch. Sei professionell aber freundlich. 
-Verwende passende Emojis. Generiere am Ende passende Hashtags.
-Plattform: ${params.platform || 'Facebook/Instagram'}`
+  const baseInstructions = `Du bist der Social-Media-Manager von Bereifung24.de – einer Online-Plattform, die Autofahrer mit professionellen Reifenwerkstätten in ganz Deutschland verbindet. Kunden können über bereifung24.de Reifen montieren lassen, Termine buchen und Werkstätten vergleichen.
+
+WICHTIG – Antworte EXAKT in diesem Format:
+
+TITEL: [Kurzer, knackiger Titel, max 8 Wörter, mit 1-2 Emojis]
+
+TEXT: [Der vollständige Post-Text. Mindestens 150 Wörter. Verwende Absätze, Emojis und einen professionellen aber freundlichen Ton. Schließe mit einem Call-to-Action ab, z.B. "Jetzt auf bereifung24.de deinen Termin buchen!" oder "Besuche uns auf bereifung24.de!"]
+
+HASHTAGS: [Mindestens 15 themenrelevante Hashtags, jeweils mit # beginnend, durch Leerzeichen getrennt. Immer dabei: #Bereifung24 #Reifen #Werkstatt. Dann themenspezifische Hashtags.]
+
+Plattform: ${params.platform || 'Facebook/Instagram'}
+Schreibe alles auf Deutsch.`
 
   switch (params.postType) {
     case 'PARTNER_INTRO':
       return `${baseInstructions}
 
-Schreibe einen Willkommens-Post für eine neue Partnerwerkstatt:
-- Werkstattname: ${params.workshopName || 'Neue Werkstatt'}
-- Stadt: ${params.city || 'Deutschland'}
-- Services: ${params.services?.join(', ') || 'Reifenwechsel, Reifeneinlagerung'}
+AUFGABE: Schreibe einen herzlichen Willkommens-Post für eine neue Partnerwerkstatt auf Bereifung24.
 
-Der Post soll die Werkstatt willkommen heißen und die Partnerschaft hervorheben. Max 200 Wörter.`
+Details:
+- Werkstattname: ${params.workshopName || 'Neue Partnerwerkstatt'}
+- Stadt/Region: ${params.city || 'Deutschland'}
+- Angebotene Services: ${params.services?.join(', ') || 'Reifenwechsel, Reifeneinlagerung, Auswuchten'}
+
+Der Post soll:
+1. Die neue Werkstatt herzlich willkommen heißen
+2. Die Partnerschaft mit Bereifung24 hervorheben
+3. Die Services der Werkstatt vorstellen
+4. Kunden aus der Region einladen, die Werkstatt zu besuchen
+5. Mit einem Call-to-Action enden (Termin buchen auf bereifung24.de)
+
+Schreibe mindestens 200 Wörter. Verwende Emojis wie 🎉🔧🏪🤝🛞 passend im Text.`
 
     case 'TIRE_TIP':
       return `${baseInstructions}
 
-Schreibe einen nützlichen Saisontipp über Reifen. Aktuelle Saison berücksichtigen.
-- Thema: Wann sollte man Reifen wechseln, Profiltiefe, Reifenpflege, etc.
-- Sei informativ und hilfreich. Max 150 Wörter.`
+AUFGABE: Schreibe einen informativen und nützlichen Saisontipp rund um das Thema Reifen.
+
+Berücksichtige den aktuellen Monat und die Jahreszeit. Mögliche Themen:
+- Wann von Sommer- auf Winterreifen wechseln (und umgekehrt)
+- Mindestprofiltiefe und wie man sie prüft (1,6mm gesetzlich, 3mm empfohlen)
+- Reifendruck regelmäßig prüfen – Sicherheit und Spritverbrauch
+- Reifenalter: DOT-Nummer lesen und ab wann Reifen zu alt sind
+- Reifenlagerung: richtig einlagern bei Bereifung24-Partnern
+- Aquaplaning vermeiden durch gute Reifen
+- Ganzjahresreifen vs. Saisonreifen – Vorteile und Nachteile
+
+Schreibe mindestens 200 Wörter. Sei informativ, gib konkrete Tipps und erkläre, warum das wichtig ist. Verwende passende Emojis wie 🛞💡✅⚠️❄️☀️🌧️.`
 
     case 'BLOG_PROMO':
       return `${baseInstructions}
 
-Bewerbe einen neuen Blog-Artikel:
-- Titel: ${params.blogTitle || 'Neuer Artikel'}
-- Zusammenfassung: ${params.blogExcerpt || ''}
+AUFGABE: Bewerbe einen neuen Blog-Artikel von Bereifung24.
 
-Schreibe einen kurzen, neugierig machenden Post der zum Lesen animiert. Max 100 Wörter.`
+Blog-Details:
+- Titel: ${params.blogTitle || 'Neuer Blog-Artikel'}
+- Zusammenfassung: ${params.blogExcerpt || 'Ein informativer Artikel rund um Reifen und Fahrzeugsicherheit.'}
+
+Der Post soll:
+1. Neugier wecken – warum sollte man den Artikel lesen?
+2. Die wichtigsten Punkte anteasern ohne alles zu verraten
+3. Den Mehrwert für den Leser betonen
+4. Mit einem klaren Call-to-Action zum Blog-Link enden
+
+Schreibe mindestens 150 Wörter. Verwende Emojis wie 📖✨🔗👀💡.`
 
     case 'REVIEW_HIGHLIGHT':
       return `${baseInstructions}
 
-Stelle eine top-bewertete Werkstatt vor:
-- Werkstattname: ${params.workshopName || 'Top Werkstatt'}
-- Stadt: ${params.city || 'Deutschland'}
+AUFGABE: Stelle eine hervorragend bewertete Partnerwerkstatt vor und feiere ihre Leistung.
+
+Details:
+- Werkstattname: ${params.workshopName || 'Top-bewertete Werkstatt'}
+- Stadt/Region: ${params.city || 'Deutschland'}
 - Bewertung: ${params.rating || 5}/5 Sterne
 
-Schreibe einen Post der die Qualität hervorhebt. Max 120 Wörter.`
+Der Post soll:
+1. Die Werkstatt und ihre tolle Bewertung hervorheben
+2. Erklären, was diese Werkstatt besonders macht (z.B. Service, Freundlichkeit, Pünktlichkeit)
+3. Kunden motivieren, auch eine Bewertung abzugeben
+4. Andere Kunden einladen, die Werkstatt auf bereifung24.de zu finden
+
+Schreibe mindestens 180 Wörter. Verwende Emojis wie ⭐🏆🎊👏🛞.`
 
     case 'STATS':
       return `${baseInstructions}
 
-Erstelle einen Statistik-Post über das Wachstum von Bereifung24.
-Nutze beeindruckende Formulierungen. Max 100 Wörter.`
+AUFGABE: Erstelle einen beeindruckenden Meilenstein- oder Statistik-Post über das Wachstum von Bereifung24.
+
+Mögliche Themen (wähle ein passendes):
+- Wachsende Anzahl an Partnerwerkstätten in ganz Deutschland
+- Zufriedene Kunden und positive Bewertungen
+- Regionale Abdeckung und neue Städte
+- Gebuchte Termine und Servicequalität
+- Community-Wachstum auf Social Media
+
+Der Post soll:
+1. Einen beeindruckenden Statistik-Fakt in den Mittelpunkt stellen
+2. Dankbarkeit an Kunden und Partner ausdrücken
+3. Die Vision von Bereifung24 für die Zukunft teilen
+4. Mit einem motivierenden Call-to-Action enden
+
+Schreibe mindestens 180 Wörter. Verwende Emojis wie 📊🚀🎯💪✨📈.`
 
     case 'OFFER':
       return `${baseInstructions}
 
-Erstelle einen Aktions-Post für ein Sonderangebot oder eine Coupon-Kampagne.
-Sei aufmerksamkeitsstark und erstelle einen Call-to-Action. Max 120 Wörter.`
+AUFGABE: Erstelle einen aufmerksamkeitsstarken Aktions-Post für ein Sonderangebot oder eine Rabattaktion auf Bereifung24.
 
+Der Post soll:
+1. Sofort Aufmerksamkeit erregen (z.B. "🔥 MEGA-DEAL!" oder "⚡ Nur für kurze Zeit!")
+2. Das Angebot klar und verständlich beschreiben
+3. Dringlichkeit erzeugen (zeitlich begrenzt, limitierte Plätze, etc.)
+4. Einen starken Call-to-Action haben (Jetzt buchen, Code einlösen, etc.)
+5. Den Nutzen für den Kunden hervorheben (Geld sparen, Premium-Service, etc.)
+
+Schreibe mindestens 180 Wörter. Verwende Emojis wie 🔥💰🎁⚡✅🏷️.`
+
+    case 'SERVICE':
+      return `${baseInstructions}
+
+AUFGABE: Stelle einen der Services vor, die über Bereifung24 gebucht werden können.
+
+Mögliche Services:
+- Reifenwechsel (Sommer/Winter)
+- Reifeneinlagerung (Hotel für deine Reifen)
+- Auswuchten
+- RDKS-Service (Reifendruckkontrollsystem)
+- Felgenreparatur
+- Achsvermessung
+
+Beschreibe den Service ausführlich:
+1. Was genau wird gemacht?
+2. Warum ist dieser Service wichtig für Sicherheit/Komfort?
+3. Wie einfach ist die Buchung über bereifung24.de?
+4. Vorteile der Buchung über Bereifung24 (Preisvergleich, Bewertungen, etc.)
+
+Schreibe mindestens 200 Wörter. Verwende Emojis wie 🔧🛞✅💼🚗.`
+
+    case 'REEL':
+      return `${baseInstructions}
+
+AUFGABE: Schreibe einen kurzen, knackigen Text für ein Instagram Reel oder TikTok Video über Bereifung24.
+
+Der Text soll:
+1. Kurz und prägnant sein (max 100 Wörter für den Text-Overlay)
+2. Einen Hook am Anfang haben ("Wusstest du...?", "Das passiert wenn...", "3 Gründe warum...")
+3. Visuell beschreiben, was im Video zu sehen sein soll (in Klammern als Regie-Anweisung)
+4. Einen knackigen Abschluss mit CTA
+
+Trotzdem TITEL und HASHTAGS im geforderten Format liefern (mindestens 15 Hashtags, auch TikTok-relevante).`
+
+    case 'CUSTOM':
     default:
       return `${baseInstructions}
 
-${params.customPrompt || 'Erstelle einen allgemeinen Post über Bereifung24. Max 150 Wörter.'}`
+AUFGABE: ${params.customPrompt || 'Erstelle einen ansprechenden, allgemeinen Social-Media-Post über Bereifung24.de – die Plattform, die Autofahrer mit den besten Reifenwerkstätten verbindet. Beschreibe die Vorteile: einfache Online-Buchung, Werkstattvergleich, Kundenbewertungen, transparente Preise. Schreibe mindestens 180 Wörter.'}`
   }
 }
 

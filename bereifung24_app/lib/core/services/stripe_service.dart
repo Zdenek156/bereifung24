@@ -24,14 +24,15 @@ class StripeService {
         headers: {'Accept': 'application/json'},
       ));
       final response = await dio.get(url);
-      debugPrint('Stripe init: response status=${response.statusCode}, data=${response.data}');
-      
+      debugPrint(
+          'Stripe init: response status=${response.statusCode}, data=${response.data}');
+
       final data = response.data;
       String? key;
       if (data is Map) {
         key = data['publishableKey'] as String?;
       }
-      
+
       if (key != null && key.isNotEmpty && key.startsWith('pk_')) {
         Stripe.publishableKey = key;
         debugPrint('Stripe init: key set, calling applySettings...');
@@ -61,7 +62,8 @@ class StripeService {
       // Try to init one more time (force re-fetch to ensure correct key)
       await init(force: true);
       if (!_initialized) {
-        throw Exception('Stripe ist nicht konfiguriert. Bitte versuche es später erneut.');
+        throw Exception(
+            'Stripe ist nicht konfiguriert. Bitte versuche es später erneut.');
       }
     }
     try {

@@ -59,6 +59,8 @@ export interface TireSearchResult {
   // DOT Info
   isDOT?: boolean
   dotInfo?: string // e.g. "DOT2021" or "DOT 48/2021"
+  // Construction type (motorcycle)
+  construction?: string // R, ZR, -, B, D
   // Pricing
   purchasePrice: number // EK (Einkaufspreis)
   sellingPrice: number // VK (Verkaufspreis) - calculated with workshop markup
@@ -423,6 +425,7 @@ async function searchTiresViaAPI(
         labelNoise: tire.labelNoise || undefined,
         labelNoiseClass: tire.labelNoiseClass || undefined,
         eprelUrl: tire.eprelUrl || undefined,
+        construction: tire.construction || undefined,
         purchasePrice,
         sellingPrice,
         markup,
@@ -542,11 +545,52 @@ async function searchTiresViaDatabase(
     where.threePMSF = threePMSF
   }
 
-  // Construction type filter - SKIP for WorkshopInventory (CSV mode)
-  // WorkshopInventory does not have a 'construction' column.
-  // TireCatalog (API mode) supports it, but CSV-imported tires don't store construction info.
+  // Construction type filter - cross-reference with TireCatalog
+  // WorkshopInventory has no 'construction' column, so we look up matching
+  // articleNumbers in TireCatalog and filter by those
+  let constructionArticleNumbers: string[] | null = null
   if (filters.construction) {
-    console.log(`⚠️ [Database Mode] Skipping construction filter '${filters.construction}' - WorkshopInventory has no construction column`)
+    const constructionValues = filters.construction === 'radial' ? ['R', 'ZR'] : ['-', 'B', 'D']
+    const catalogMatches = await prisma.tireCatalog.findMany({
+      where: {
+        supplier: workshopSupplier.supplier,
+        width: width.toString(),
+        height: height.toString(),
+        diameter: diameter.toString(),
+        construction: { in: constructionValues },
+        isActive: true,
+      },
+      select: { articleId: true },
+    })
+    constructionArticleNumbers = catalogMatches.map(t => t.articleId)
+    console.log(`🔧 [Database Mode] Construction filter '${filters.construction}' → ${constructionArticleNumbers.length} matching articles from TireCatalog`)
+    if (constructionArticleNumbers.length > 0) {
+      where.articleNumber = { in: constructionArticleNumbers }
+    } else {
+      // No matching articles in TireCatalog - return empty
+      console.log(`⚠️ [Database Mode] No matching articles for construction '${filters.construction}' - returning empty`)
+      return []
+    }
+  }
+
+  // Build a construction lookup map from TireCatalog for enriching results
+  let constructionLookup: Map<string, string> = new Map()
+  {
+    const catalogForLookup = await prisma.tireCatalog.findMany({
+      where: {
+        supplier: workshopSupplier.supplier,
+        width: width.toString(),
+        height: height.toString(),
+        diameter: diameter.toString(),
+        isActive: true,
+      },
+      select: { articleId: true, construction: true },
+    })
+    for (const t of catalogForLookup) {
+      if (t.construction) {
+        constructionLookup.set(t.articleId, t.construction)
+      }
+    }
   }
 
   // Model exclusions
@@ -666,6 +710,7 @@ async function searchTiresViaDatabase(
       labelNoise: tire.labelNoise || undefined,
       labelNoiseClass: tire.labelNoiseClass || undefined,
       eprelUrl: tire.eprelUrl || undefined,
+      construction: constructionLookup.get(tire.articleNumber) || undefined,
       isDOT,
       dotInfo,
       purchasePrice: tire.price,

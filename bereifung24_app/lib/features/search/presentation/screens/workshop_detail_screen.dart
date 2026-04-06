@@ -6,6 +6,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
+import '../../../../utils/tire_category_utils.dart';
 import 'search_screen.dart';
 
 // ── Providers ──
@@ -141,18 +142,21 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
     final notifier = ref.read(workshopSearchProvider.notifier);
     final vehicle = ref.read(selectedVehicleProvider);
 
+    const _wp = EdgeInsets.fromLTRB(0, 4, 0, 12);
+
     switch (serviceType) {
       case 'TIRE_CHANGE':
         return TireChangeFilters(
-            state: state, notifier: notifier, vehicle: vehicle);
+            state: state, notifier: notifier, vehicle: vehicle, padding: _wp);
       case 'WHEEL_CHANGE':
         return WheelChangeFilters(
           state: state,
           notifier: notifier,
           serviceDetail: workshop?.getServiceDetail('WHEEL_CHANGE'),
+          padding: _wp,
         );
       case 'MOTORCYCLE_TIRE':
-        return MotorcycleTireFilters(state: state, notifier: notifier);
+        return MotorcycleTireFilters(state: state, notifier: notifier, padding: _wp);
       case 'TIRE_REPAIR':
         return ServiceToggleFilter(
           state: state,
@@ -168,6 +172,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
             'valve_damage':
                 'Austausch oder Reparatur defekter oder undichter Ventile',
           },
+          padding: _wp,
         );
       case 'ALIGNMENT_BOTH':
         return DropdownServiceFilter(
@@ -201,6 +206,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
             'full_service':
                 'Achsvermessung, Einstellung und zusätzliche Fahrwerksinspektion (Stoßdämpfer, Spurstangen, etc.)',
           },
+          padding: _wp,
         );
       case 'CLIMATE_SERVICE':
         return DropdownServiceFilter(
@@ -225,6 +231,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
             'premium':
                 'Kompletter Service: Kältemittel-Befüllung (bis 500ml), Desinfektion mit Ozon/Ultraschall, Premium-Aktivkohlefilter.',
           },
+          padding: _wp,
         );
       default:
         return const SizedBox.shrink();
@@ -329,26 +336,35 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     ]),
                   ),
                   background: workshop.displayImage != null
-                      ? Image.network(
-                          workshop.displayImage!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Container(
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  B24Colors.primaryBlue,
-                                  B24Colors.primaryLight
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                      ? Builder(builder: (context) {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            color: isDark
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFFF1F5F9),
+                            child: Image.network(
+                              workshop.displayImage!,
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => Container(
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      B24Colors.primaryBlue,
+                                      B24Colors.primaryLight
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                ),
+                                child: const Center(
+                                  child: Icon(Icons.build,
+                                      size: 64, color: Colors.white54),
+                                ),
                               ),
                             ),
-                            child: const Center(
-                              child: Icon(Icons.build,
-                                  size: 64, color: Colors.white54),
-                            ),
-                          ),
-                        )
+                          );
+                        })
                       : Container(
                           decoration: const BoxDecoration(
                             gradient: LinearGradient(
@@ -545,13 +561,6 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                       ],
                     ],
 
-                    // ── Filters for pre-selected service ──
-                    if (widget.serviceType != null) ...[
-                      const SizedBox(height: 12),
-                      _buildServiceFilters(context, ref, widget.serviceType!,
-                          workshop: workshop),
-                    ],
-
                     // ── Vehicle Info ──
                     if (selectedVehicle != null) ...[
                       const SizedBox(height: 12),
@@ -638,6 +647,13 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           ),
                         );
                       }),
+                    ],
+
+                    // ── Filters for pre-selected service ──
+                    if (widget.serviceType != null) ...[
+                      const SizedBox(height: 12),
+                      _buildServiceFilters(context, ref, widget.serviceType!,
+                          workshop: workshop),
                     ],
 
                     // ── Vehicle Type Mismatch Warning ──
@@ -808,6 +824,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     ? 'Vorderrad'
                                     : 'Vorderachse (VA)',
                                 preselected: _tireAutoSelected,
+                                isMotorcycle: effectiveService == 'MOTORCYCLE_TIRE',
                               ),
                               const SizedBox(height: 16),
                               _TireRecommendationsSection(
@@ -817,6 +834,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     ? 'Hinterrad'
                                     : 'Hinterachse (HA)',
                                 preselected: _tireAutoSelected,
+                                isMotorcycle: effectiveService == 'MOTORCYCLE_TIRE',
                               ),
                               // Combined Preisübersicht for Mischbereifung
                               if (hasAnySelected &&
@@ -901,6 +919,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         return _TireRecommendationsSection(
                           workshopId: widget.workshopId,
                           preselected: _tireAutoSelected,
+                          isMotorcycle: effectiveService == 'MOTORCYCLE_TIRE',
                         );
                       }),
                     ],
@@ -1452,11 +1471,13 @@ class _TireRecommendationsSection extends ConsumerStatefulWidget {
   final String? axleFilter; // 'front', 'rear', or null (all)
   final String? axleLabel; // e.g. 'Vorderachse (VA)'
   final bool preselected; // true if tire was auto-selected from AI advisor
+  final bool isMotorcycle; // hide label badges for motorcycle tires
   const _TireRecommendationsSection(
       {required this.workshopId,
       this.axleFilter,
       this.axleLabel,
-      this.preselected = false});
+      this.preselected = false,
+      this.isMotorcycle = false});
 
   @override
   ConsumerState<_TireRecommendationsSection> createState() =>
@@ -1466,9 +1487,11 @@ class _TireRecommendationsSection extends ConsumerStatefulWidget {
 class _TireRecommendationsSectionState
     extends ConsumerState<_TireRecommendationsSection> {
   static const _initialLimit = 5;
-  bool _showAll = false;
+  static const _pageSize = 5;
+  int _visibleCount = _initialLimit;
   bool _expanded = false; // false = collapsed when preselected
   String? _selectedBrand; // null = all brands
+  String? _lastCategory; // track last applied category to avoid infinite loops
 
   /// Returns the correct provider based on axle filter
   StateProvider<TireRecommendation?> get _tireProvider {
@@ -1482,6 +1505,7 @@ class _TireRecommendationsSectionState
     final searchState = ref.watch(workshopSearchProvider);
     final selectedTire = ref.watch(_tireProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedCategory = searchState.selectedTireCategory;
 
     final workshop = searchState.workshops
         .where((w) => w.id == widget.workshopId)
@@ -1499,6 +1523,31 @@ class _TireRecommendationsSectionState
 
     final allRecommendations =
         rawRecs.map((r) => TireRecommendation.fromJson(r)).toList();
+
+    // Apply web-style category filter
+    final categoryFiltered =
+        filterByCategory(allRecommendations, selectedCategory);
+
+    // Auto-select tire matching the selected category when it changes
+    if (selectedCategory != _lastCategory && allRecommendations.isNotEmpty) {
+      _lastCategory = selectedCategory;
+      _selectedBrand = null; // reset brand filter when category changes
+      if (selectedCategory != null && categoryFiltered.isNotEmpty) {
+        // Category selected: pick first from filtered list (cheapest in that category)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(_tireProvider.notifier).state = categoryFiltered.first;
+          }
+        });
+      } else {
+        // Category deselected or no matches: reset to first (cheapest) tire
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(_tireProvider.notifier).state = allRecommendations.first;
+          }
+        });
+      }
+    }
 
     if (allRecommendations.isEmpty) return const SizedBox.shrink();
 
@@ -1525,6 +1574,8 @@ class _TireRecommendationsSectionState
             tire: selectedTire,
             isSelected: true,
             onTap: () {},
+            categoryOverride: selectedCategory,
+            isMotorcycle: widget.isMotorcycle,
           ),
           // Price summary
           if (widget.axleFilter == null &&
@@ -1583,7 +1634,7 @@ class _TireRecommendationsSectionState
               onPressed: () => setState(() => _expanded = true),
               icon: const Icon(Icons.expand_more, size: 18),
               label: Text(
-                  'Weitere Reifen anzeigen (${allRecommendations.length - 1})'),
+                  'Weitere Reifen anzeigen (${categoryFiltered.length - 1})'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0284C7),
                 side: const BorderSide(color: Color(0xFF0284C7)),
@@ -1596,18 +1647,18 @@ class _TireRecommendationsSectionState
       );
     }
 
-    // Collect available brands
-    final brands = allRecommendations.map((t) => t.brand).toSet().toList()
+    // Collect available brands (from category-filtered list)
+    final brands = categoryFiltered.map((t) => t.brand).toSet().toList()
       ..sort();
 
-    // Apply brand filter
+    // Apply brand filter on top of category filter
     final filtered = _selectedBrand != null
-        ? allRecommendations.where((t) => t.brand == _selectedBrand).toList()
-        : allRecommendations;
+        ? categoryFiltered.where((t) => t.brand == _selectedBrand).toList()
+        : categoryFiltered;
 
     // Apply show more/less limit
-    final visible = _showAll ? filtered : filtered.take(_initialLimit).toList();
-    final hasMore = filtered.length > _initialLimit;
+    final visible = filtered.take(_visibleCount).toList();
+    final hasMore = filtered.length > _visibleCount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1655,7 +1706,7 @@ class _TireRecommendationsSectionState
               items: [
                 DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('Alle Hersteller (${allRecommendations.length})',
+                  child: Text('Alle Hersteller (${categoryFiltered.length})',
                       style: TextStyle(
                           fontSize: 13,
                           color: isDark
@@ -1664,7 +1715,7 @@ class _TireRecommendationsSectionState
                 ),
                 ...brands.map((brand) {
                   final count =
-                      allRecommendations.where((t) => t.brand == brand).length;
+                      categoryFiltered.where((t) => t.brand == brand).length;
                   return DropdownMenuItem<String?>(
                     value: brand,
                     child: Text('$brand ($count)',
@@ -1678,7 +1729,7 @@ class _TireRecommendationsSectionState
               ],
               onChanged: (value) => setState(() {
                 _selectedBrand = value;
-                _showAll = false;
+                _visibleCount = _initialLimit;
               }),
             ),
           ),
@@ -1692,23 +1743,55 @@ class _TireRecommendationsSectionState
           return _TireRecommendationCard(
             tire: tire,
             isSelected: isSelected,
+            categoryOverride: selectedCategory,
+            isMotorcycle: widget.isMotorcycle,
             onTap: () {
               ref.read(_tireProvider.notifier).state = isSelected ? null : tire;
             },
           );
         }),
 
-        // Show more / less button
+        // Show more / less buttons
         if (hasMore) ...[
           const SizedBox(height: 4),
           Center(
             child: TextButton.icon(
-              onPressed: () => setState(() => _showAll = !_showAll),
-              icon: Icon(_showAll ? Icons.expand_less : Icons.expand_more,
-                  size: 18),
-              label: Text(_showAll
-                  ? 'Weniger anzeigen'
-                  : 'Weitere anzeigen (${filtered.length - _initialLimit})'),
+              onPressed: () => setState(() => _visibleCount += _pageSize),
+              icon: const Icon(Icons.expand_more, size: 18),
+              label: Text(
+                  'Weitere anzeigen (${filtered.length - _visibleCount})'),
+            ),
+          ),
+        ],
+        if (_visibleCount > _initialLimit) ...[
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() => _visibleCount = _initialLimit),
+              icon: const Icon(Icons.expand_less, size: 18),
+              label: const Text('Weniger anzeigen'),
+            ),
+          ),
+        ],
+
+        // Collapse back to single-tire view
+        if (widget.preselected) ...[
+          const SizedBox(height: 4),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: () => setState(() {
+                _expanded = false;
+                _visibleCount = _initialLimit;
+                _selectedBrand = null;
+              }),
+              icon: const Icon(Icons.expand_less, size: 18),
+              label: const Text('Weniger Reifen anzeigen'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF0284C7),
+                side: const BorderSide(color: Color(0xFF0284C7)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
             ),
           ),
         ],
@@ -1774,30 +1857,43 @@ class _TireRecommendationCard extends StatelessWidget {
   final TireRecommendation tire;
   final bool isSelected;
   final VoidCallback onTap;
+  final String? categoryOverride;
+  final bool isMotorcycle;
 
   const _TireRecommendationCard({
     required this.tire,
     required this.isSelected,
     required this.onTap,
+    this.categoryOverride,
+    this.isMotorcycle = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hasLabel = tire.label.isNotEmpty;
+    // Use categoryOverride if provided, else fall back to tire.label
+    // For motorcycle: only show badge when category is explicitly selected (no tire.label data)
+    final effectiveLabel = (categoryOverride != null && categoryOverride!.isNotEmpty)
+        ? categoryOverride!
+        : (isMotorcycle ? '' : tire.label);
+    final hasLabel = effectiveLabel.isNotEmpty;
     Color? labelColor;
     IconData? labelIcon;
+    String displayLabel = effectiveLabel;
     if (hasLabel) {
-      switch (tire.label.toLowerCase()) {
+      switch (effectiveLabel.toLowerCase()) {
         case 'günstigster':
           labelColor = Colors.green;
           labelIcon = Icons.savings;
+          displayLabel = 'Günstigster';
         case 'testsieger':
           labelColor = Colors.amber[800];
-          labelIcon = Icons.emoji_events;
+          labelIcon = Icons.star;
+          displayLabel = 'Premium';
         case 'beliebt':
           labelColor = Colors.blue;
-          labelIcon = Icons.trending_up;
+          labelIcon = Icons.thumb_up;
+          displayLabel = 'Beste Eigensch.';
         default:
           labelColor = Colors.grey;
           labelIcon = Icons.label;
@@ -1845,7 +1941,7 @@ class _TireRecommendationCard extends StatelessWidget {
                           children: [
                             Icon(labelIcon, size: 12, color: labelColor),
                             const SizedBox(width: 4),
-                            Text(tire.label,
+                            Text(displayLabel,
                                 style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -1872,6 +1968,17 @@ class _TireRecommendationCard extends StatelessWidget {
                                     : Colors.grey[600],
                                 fontSize: 13),
                           ),
+                          // Tire dimensions (e.g. 120/70 R17 73W)
+                          if (tire.dimensions != null && tire.dimensions!.isNotEmpty)
+                            Text(
+                              tire.dimensions!,
+                              style: TextStyle(
+                                  color: isDark
+                                      ? const Color(0xFF64748B)
+                                      : Colors.grey[500],
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500),
+                            ),
                         ],
                       ),
                     ),
@@ -1900,7 +2007,8 @@ class _TireRecommendationCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                // EU Label row
+                // EU Label row (hide for motorcycle - no label data available)
+                if (!isMotorcycle)
                 Row(
                   children: [
                     _euLabelChip('⛽', tire.labelFuelEfficiency ?? '-',

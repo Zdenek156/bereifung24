@@ -15,30 +15,30 @@ import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 // ══════════════════════════════════════
 
 BoxShadow _cardShadow({bool isDark = false}) => BoxShadow(
-  color: isDark
-      ? Colors.black.withValues(alpha: 0.3)
-      : const Color(0xFF0F172A).withValues(alpha: 0.08),
-  blurRadius: 16,
-  offset: const Offset(0, 4),
-  spreadRadius: 0,
-);
+      color: isDark
+          ? Colors.black.withValues(alpha: 0.3)
+          : const Color(0xFF0F172A).withValues(alpha: 0.08),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+      spreadRadius: 0,
+    );
 
 BoxShadow _cardShadowLight({bool isDark = false}) => BoxShadow(
-  color: isDark
-      ? Colors.black.withValues(alpha: 0.2)
-      : const Color(0xFF0F172A).withValues(alpha: 0.05),
-  blurRadius: 10,
-  offset: const Offset(0, 2),
-  spreadRadius: 0,
-);
+      color: isDark
+          ? Colors.black.withValues(alpha: 0.2)
+          : const Color(0xFF0F172A).withValues(alpha: 0.05),
+      blurRadius: 10,
+      offset: const Offset(0, 2),
+      spreadRadius: 0,
+    );
 
 String _roleName(String role) => switch (role) {
-  'WORKSHOP' => 'Werkstatt',
-  'FREELANCER' => 'Freelancer',
-  'EMPLOYEE' => 'Mitarbeiter',
-  'ADMIN' => 'Administrator',
-  _ => role,
-};
+      'WORKSHOP' => 'Werkstatt',
+      'FREELANCER' => 'Freelancer',
+      'EMPLOYEE' => 'Mitarbeiter',
+      'ADMIN' => 'Administrator',
+      _ => role,
+    };
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -92,11 +92,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hallo${user?.firstName != null ? ', ${user!.firstName}' : ''}! 👋',
+                              'Hallo${user?.firstName != null ? ', ${user!.firstName}' : ''}!',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
-                                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                                color: isDark
+                                    ? B24Colors.darkTextPrimary
+                                    : B24Colors.textPrimary,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -105,59 +107,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
-                              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => context.go('/profile'),
-                      child: (user?.profileImage != null && user!.profileImage!.isNotEmpty)
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              user.profileImage!,
-                              width: 38,
-                              height: 38,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  color: B24Colors.primaryBlue,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  user.firstName![0].toUpperCase(),
-                                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white),
-                                ),
+                                color: isDark
+                                    ? B24Colors.darkTextSecondary
+                                    : B24Colors.textSecondary,
                               ),
                             ),
-                          )
-                        : Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: B24Colors.primaryBlue,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          (user?.firstName?.isNotEmpty == true)
-                              ? user!.firstName![0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                          ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
+                      GestureDetector(
+                        onTap: () => context.go('/profile'),
+                        child: Image.asset(
+                          isDark
+                              ? 'assets/images/b24_logo_dark.png'
+                              : 'assets/images/b24_logo_light.png',
+                          width: 42,
+                          height: 42,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 18),
@@ -174,7 +143,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, color: Colors.orange[800], size: 22),
+                        Icon(Icons.info_outline,
+                            color: Colors.orange[800], size: 22),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -191,7 +161,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const SizedBox(height: 2),
                               Text(
                                 'Diese App ist für Kunden. Für die Werkstattverwaltung nutze bitte das Web-Dashboard.',
-                                style: TextStyle(fontSize: 11, color: Colors.orange[800]),
+                                style: TextStyle(
+                                    fontSize: 11, color: Colors.orange[800]),
                               ),
                             ],
                           ),
@@ -204,9 +175,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 // ── Adresse unvollständig (Google-Login) ──
                 if (user != null &&
-                    (user.street == null || user.street!.isEmpty ||
-                     user.zipCode == null || user.zipCode!.isEmpty ||
-                     user.city == null || user.city!.isEmpty)) ...[
+                    (user.street == null ||
+                        user.street!.isEmpty ||
+                        user.zipCode == null ||
+                        user.zipCode!.isEmpty ||
+                        user.city == null ||
+                        user.city!.isEmpty)) ...[
                   Builder(builder: (context) {
                     return Container(
                       width: double.infinity,
@@ -270,8 +244,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 style: FilledButton.styleFrom(
                                   backgroundColor: B24Colors.primaryBlue,
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -296,26 +270,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                 const SizedBox(height: 16),
 
-                // ── KI-Berater + Pannenhilfe ──
-                _FadeSlideIn(
-                  delay: 3,
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(child: _AIAdvisorCard()),
-                        const SizedBox(width: 12),
-                        Expanded(child: _SOSCard()),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
                 // ── Services (kompaktes 3×2 Grid) ──
                 _FadeSlideIn(
-                  delay: 4,
+                  delay: 3,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -324,7 +281,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                          color: isDark
+                              ? B24Colors.darkTextPrimary
+                              : B24Colors.textPrimary,
                         ),
                       ),
                       GestureDetector(
@@ -342,7 +301,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                _FadeSlideIn(delay: 5, child: _ServicesGrid()),
+                _FadeSlideIn(delay: 4, child: _ServicesGrid()),
+
+                const SizedBox(height: 16),
+
+                // ── KI-Berater + Pannenhilfe ──
+                _FadeSlideIn(
+                  delay: 5,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(child: _AIAdvisorCard()),
+                        const SizedBox(width: 12),
+                        Expanded(child: _SOSCard()),
+                      ],
+                    ),
+                  ),
+                ),
 
                 const SizedBox(height: 16),
 
@@ -399,7 +375,8 @@ class _AIAdvisorCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                color:
+                    isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
@@ -410,7 +387,9 @@ class _AIAdvisorCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                  color: isDark
+                      ? B24Colors.darkTextSecondary
+                      : B24Colors.textSecondary,
                 ),
               ),
             ),
@@ -461,7 +440,8 @@ class _SOSCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                color:
+                    isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),
@@ -472,7 +452,9 @@ class _SOSCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                  color: isDark
+                      ? B24Colors.darkTextSecondary
+                      : B24Colors.textSecondary,
                 ),
               ),
             ),
@@ -506,105 +488,116 @@ class _NextAppointmentCard extends ConsumerWidget {
     if (bookings == null) return const SizedBox.shrink();
 
     {
-        final now = DateTime.now();
-        final upcoming = bookings
-            .where((b) {
-                // Build full DateTime including time
-                var apptDateTime = b.appointmentDate;
-                if (b.appointmentTime != null && b.appointmentTime!.isNotEmpty) {
-                  final parts = b.appointmentTime!.split(':');
-                  if (parts.length >= 2) {
-                    final h = int.tryParse(parts[0]) ?? 0;
-                    final m = int.tryParse(parts[1]) ?? 0;
-                    apptDateTime = DateTime(
-                      apptDateTime.year, apptDateTime.month, apptDateTime.day, h, m,
-                    );
-                  }
-                }
-                return apptDateTime.isAfter(now) &&
-                    b.status != 'CANCELLED' &&
-                    b.status != 'NO_SHOW';
-            })
-            .toList()
-          ..sort((a, b) => a.appointmentDate.compareTo(b.appointmentDate));
+      final now = DateTime.now();
+      final upcoming = bookings.where((b) {
+        // Build full DateTime including time
+        var apptDateTime = b.appointmentDate;
+        if (b.appointmentTime != null && b.appointmentTime!.isNotEmpty) {
+          final parts = b.appointmentTime!.split(':');
+          if (parts.length >= 2) {
+            final h = int.tryParse(parts[0]) ?? 0;
+            final m = int.tryParse(parts[1]) ?? 0;
+            apptDateTime = DateTime(
+              apptDateTime.year,
+              apptDateTime.month,
+              apptDateTime.day,
+              h,
+              m,
+            );
+          }
+        }
+        return apptDateTime.isAfter(now) &&
+            b.status != 'CANCELLED' &&
+            b.status != 'NO_SHOW';
+      }).toList()
+        ..sort((a, b) => a.appointmentDate.compareTo(b.appointmentDate));
 
-        if (upcoming.isEmpty) return const SizedBox.shrink();
+      if (upcoming.isEmpty) return const SizedBox.shrink();
 
-        final next = upcoming.first;
-        final dateStr = DateFormat('EEE, d. MMM yyyy', 'de_DE').format(next.appointmentDate);
-        final timeStr = next.appointmentTime ?? '';
-        final daysUntil = next.appointmentDate.difference(now).inDays;
-        final daysLabel = daysUntil == 0
-            ? 'Heute'
-            : daysUntil == 1
-                ? 'Morgen'
-                : 'In $daysUntil Tagen';
+      final next = upcoming.first;
+      final dateStr =
+          DateFormat('EEE, d. MMM yyyy', 'de_DE').format(next.appointmentDate);
+      final timeStr = next.appointmentTime ?? '';
+      final daysUntil = next.appointmentDate.difference(now).inDays;
+      final daysLabel = daysUntil == 0
+          ? 'Heute'
+          : daysUntil == 1
+              ? 'Morgen'
+              : 'In $daysUntil Tagen';
 
-        return GestureDetector(
-          onTap: () => context.go('/bookings'),
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: isDark
-                  ? const Color(0xFF0284C7).withValues(alpha: 0.15)
-                  : const Color(0xFFE0F2FE),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [_cardShadowLight(isDark: isDark)],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _serviceLabels[next.serviceType] ?? next.serviceTypeDisplay,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '$dateStr ($daysLabel)${timeStr.isNotEmpty ? '\n$timeStr Uhr' : ''}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
-                          ),
-                        ),
-                        if (next.workshopName != null) ...[    
-                          const SizedBox(height: 1),
-                          Text(
-                            '📍 ${next.workshopName}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topRight: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                  child: Image.asset(
-                    'assets/images/services/termin.jpg',
-                    width: 100,
-                    height: 100,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ],
-            ),
+      return GestureDetector(
+        onTap: () => context.go('/bookings'),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDark
+                ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                : const Color(0xFFE0F2FE),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [_cardShadowLight(isDark: isDark)],
           ),
-        );
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _serviceLabels[next.serviceType] ??
+                            next.serviceTypeDisplay,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: isDark
+                              ? B24Colors.darkTextPrimary
+                              : B24Colors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$dateStr ($daysLabel)${timeStr.isNotEmpty ? '\n$timeStr Uhr' : ''}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark
+                              ? B24Colors.darkTextSecondary
+                              : B24Colors.textSecondary,
+                        ),
+                      ),
+                      if (next.workshopName != null) ...[
+                        const SizedBox(height: 1),
+                        Text(
+                          '📍 ${next.workshopName}',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isDark
+                                ? B24Colors.darkTextSecondary
+                                : B24Colors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topRight: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
+                child: Image.asset(
+                  'assets/images/services/termin.jpg',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
   }
 }
@@ -630,7 +623,8 @@ Future<void> _saveVehicleIndex(int index) async {
 
 class _VehicleQuickBookCard extends ConsumerStatefulWidget {
   @override
-  ConsumerState<_VehicleQuickBookCard> createState() => _VehicleQuickBookCardState();
+  ConsumerState<_VehicleQuickBookCard> createState() =>
+      _VehicleQuickBookCardState();
 }
 
 class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
@@ -663,7 +657,8 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
       return _buildEmpty(context);
     }
 
-    final idx = ref.watch(_homeVehicleIndexProvider).clamp(0, vehicles.length - 1);
+    final idx =
+        ref.watch(_homeVehicleIndexProvider).clamp(0, vehicles.length - 1);
     final v = vehicles[idx];
 
     // Always keep search provider in sync with home selection
@@ -675,86 +670,95 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
 
     return Container(
       decoration: BoxDecoration(
-            color: isDark ? B24Colors.darkSurface : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [_cardShadow(isDark: isDark)],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${v.make} ${v.model}',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        '${v.licensePlate ?? ''}${v.year != null ? ' · ${v.year}' : ''}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
-                        ),
-                      ),
-                      if (vehicles.length > 1) ...[    
-                        const SizedBox(height: 8),
-                        OutlinedButton(
-                          onPressed: () => _showVehiclePicker(context, vehicles, idx),
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                            side: BorderSide(
-                              color: isDark
-                                  ? Colors.white.withValues(alpha: 0.3)
-                                  : Colors.grey.withValues(alpha: 0.3),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            'Fahrzeug wechseln',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+        color: isDark ? B24Colors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [_cardShadow(isDark: isDark)],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${v.make} ${v.model}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? B24Colors.darkTextPrimary
+                          : B24Colors.textPrimary,
+                    ),
                   ),
-                ),
+                  Text(
+                    '${v.licensePlate ?? ''}${v.year != null ? ' · ${v.year}' : ''}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isDark
+                          ? B24Colors.darkTextSecondary
+                          : B24Colors.textSecondary,
+                    ),
+                  ),
+                  if (vehicles.length > 1) ...[
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      onPressed: () =>
+                          _showVehiclePicker(context, vehicles, idx),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: isDark
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF64748B),
+                        side: BorderSide(
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.3)
+                              : Colors.grey.withValues(alpha: 0.3),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: const Text(
+                        'Fahrzeug wechseln',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topRight: Radius.circular(16),
-                  bottomRight: Radius.circular(16),
-                ),
-                child: Image.asset(
-                  v.vehicleType == 'MOTORCYCLE'
-                      ? 'assets/images/services/fahrzeug_motorrad.jpg'
-                      : v.vehicleType == 'TRAILER'
-                          ? 'assets/images/services/fahrzeug_anhaenger.jpg'
-                          : 'assets/images/services/fahrzeug_car.jpg',
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ],
+            ),
           ),
-        );
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topRight: Radius.circular(16),
+              bottomRight: Radius.circular(16),
+            ),
+            child: Image.asset(
+              v.vehicleType == 'MOTORCYCLE'
+                  ? 'assets/images/services/fahrzeug_motorrad.jpg'
+                  : v.vehicleType == 'TRAILER'
+                      ? 'assets/images/services/fahrzeug_anhaenger.jpg'
+                      : 'assets/images/services/fahrzeug_car.jpg',
+              width: 100,
+              height: 100,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  void _showVehiclePicker(BuildContext context, List<Vehicle> vehicles, int currentIdx) {
+  void _showVehiclePicker(
+      BuildContext context, List<Vehicle> vehicles, int currentIdx) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -800,8 +804,10 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                       final isSelected = i == currentIdx;
                       return GestureDetector(
                         onTap: () {
-                          ref.read(_homeVehicleIndexProvider.notifier).state = i;
-                          ref.read(selectedVehicleProvider.notifier).state = vehicles[i];
+                          ref.read(_homeVehicleIndexProvider.notifier).state =
+                              i;
+                          ref.read(selectedVehicleProvider.notifier).state =
+                              vehicles[i];
                           _saveVehicleIndex(i);
                           Navigator.pop(ctx);
                         },
@@ -809,17 +815,25 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                           margin: const EdgeInsets.only(bottom: 8),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: isSelected ? B24Colors.primaryPale : Colors.white,
+                            color: isSelected
+                                ? B24Colors.primaryPale
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? B24Colors.primaryBlue : B24Colors.border,
+                              color: isSelected
+                                  ? B24Colors.primaryBlue
+                                  : B24Colors.border,
                               width: isSelected ? 1.5 : 1,
                             ),
                           ),
                           child: Row(
                             children: [
                               Text(
-                                veh.vehicleType == 'MOTORCYCLE' ? '🏍️' : veh.vehicleType == 'TRAILER' ? '🚛' : '🚗',
+                                veh.vehicleType == 'MOTORCYCLE'
+                                    ? '🏍️'
+                                    : veh.vehicleType == 'TRAILER'
+                                        ? '🚛'
+                                        : '🚗',
                                 style: const TextStyle(fontSize: 20),
                               ),
                               const SizedBox(width: 12),
@@ -847,7 +861,8 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                                 ),
                               ),
                               if (isSelected)
-                                const Icon(Icons.check_circle, color: B24Colors.primaryBlue, size: 22),
+                                const Icon(Icons.check_circle,
+                                    color: B24Colors.primaryBlue, size: 22),
                             ],
                           ),
                         ),
@@ -885,7 +900,9 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                     width: 140,
                     height: 14,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.grey[200],
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.grey[200],
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -894,7 +911,9 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                     width: 100,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey[100],
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
@@ -910,7 +929,9 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
             child: Container(
               width: 100,
               height: 100,
-              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+              color: isDark
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : Colors.grey[100],
             ),
           ),
         ],
@@ -953,7 +974,11 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
           const SizedBox(height: 4),
           Text(
             'für personalisierte Empfehlungen',
-            style: TextStyle(fontSize: 12, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary),
+            style: TextStyle(
+                fontSize: 12,
+                color: isDark
+                    ? B24Colors.darkTextSecondary
+                    : B24Colors.textSecondary),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -986,12 +1011,18 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
 
 class _ServicesGrid extends StatelessWidget {
   static const _services = [
-    _ServiceItem('🔄', 'Reifen-\nwechsel', 'ab 59,90 €', 'TIRE_CHANGE', true, 'assets/images/services/reifenwechsel.jpg'),
-    _ServiceItem('🔧', 'Räder-\nwechsel', 'ab 29,90 €', 'WHEEL_CHANGE', true, 'assets/images/services/raederwechsel.jpg'),
-    _ServiceItem('🔨', 'Reifen-\nreparatur', 'ab 24,90 €', 'TIRE_REPAIR', false, 'assets/images/services/reifenreparatur.jpg'),
-    _ServiceItem('📏', 'Achsver-\nmessung', 'ab 49,90 €', 'ALIGNMENT_BOTH', false, 'assets/images/services/achsvermessung.jpg'),
-    _ServiceItem('🏍️', 'Motorrad-\nReifen', 'ab 39,90 €', 'MOTORCYCLE_TIRE', false, 'assets/images/services/motorradreifen.jpg'),
-    _ServiceItem('❄️', 'Klima-\nservice', 'ab 69,90 €', 'CLIMATE_SERVICE', false, 'assets/images/services/klimaservice.jpg'),
+    _ServiceItem('🔄', 'Reifen-\nwechsel', 'ab 59,90 €', 'TIRE_CHANGE', true,
+        'assets/images/services/reifenwechsel.jpg'),
+    _ServiceItem('🔧', 'Räder-\nwechsel', 'ab 29,90 €', 'WHEEL_CHANGE', true,
+        'assets/images/services/raederwechsel.jpg'),
+    _ServiceItem('🔨', 'Reifen-\nreparatur', 'ab 24,90 €', 'TIRE_REPAIR', false,
+        'assets/images/services/reifenreparatur.jpg'),
+    _ServiceItem('📏', 'Achsver-\nmessung', 'ab 49,90 €', 'ALIGNMENT_BOTH',
+        false, 'assets/images/services/achsvermessung.jpg'),
+    _ServiceItem('🏍️', 'Motorrad-\nReifen', 'ab 39,90 €', 'MOTORCYCLE_TIRE',
+        false, 'assets/images/services/motorradreifen.jpg'),
+    _ServiceItem('❄️', 'Klima-\nservice', 'ab 69,90 €', 'CLIMATE_SERVICE',
+        false, 'assets/images/services/klimaservice.jpg'),
   ];
 
   @override
@@ -1015,7 +1046,9 @@ class _ServiceItem {
   final String serviceType;
   final bool popular;
   final String? imagePath;
-  const _ServiceItem(this.icon, this.name, this.price, this.serviceType, this.popular, [this.imagePath]);
+  const _ServiceItem(
+      this.icon, this.name, this.price, this.serviceType, this.popular,
+      [this.imagePath]);
 }
 
 class _ServiceTile extends StatelessWidget {
@@ -1077,7 +1110,8 @@ class _ServiceTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       alignment: Alignment.center,
-                      child: Text(service.icon, style: const TextStyle(fontSize: 18)),
+                      child: Text(service.icon,
+                          style: const TextStyle(fontSize: 18)),
                     ),
                   ),
                 const SizedBox(height: 8),
@@ -1087,7 +1121,9 @@ class _ServiceTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                    color: isDark
+                        ? B24Colors.darkTextPrimary
+                        : B24Colors.textPrimary,
                     height: 1.3,
                   ),
                 ),
@@ -1125,8 +1161,12 @@ class _SeasonTipCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: isDark
-            ? (isWinterSeason ? const Color(0xFF0284C7).withValues(alpha: 0.15) : const Color(0xFFF59E0B).withValues(alpha: 0.12))
-            : (isWinterSeason ? const Color(0xFFE0F2FE) : const Color(0xFFFEF3C7)),
+            ? (isWinterSeason
+                ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                : const Color(0xFFF59E0B).withValues(alpha: 0.12))
+            : (isWinterSeason
+                ? const Color(0xFFE0F2FE)
+                : const Color(0xFFFEF3C7)),
         borderRadius: BorderRadius.circular(14),
         boxShadow: [_cardShadowLight(isDark: isDark)],
       ),
@@ -1153,11 +1193,15 @@ class _SeasonTipCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isWinterSeason ? 'Winterreifen-Saison' : 'Sommerreifen-Saison',
+                  isWinterSeason
+                      ? 'Winterreifen-Saison'
+                      : 'Sommerreifen-Saison',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                    color: isDark
+                        ? B24Colors.darkTextPrimary
+                        : B24Colors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -1167,7 +1211,9 @@ class _SeasonTipCard extends StatelessWidget {
                       : 'Zeit für den Wechsel! Jetzt Termin sichern bevor es voll wird.',
                   style: TextStyle(
                     fontSize: 11,
-                    color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                    color: isDark
+                        ? B24Colors.darkTextSecondary
+                        : B24Colors.textSecondary,
                     height: 1.4,
                   ),
                 ),
@@ -1246,5 +1292,3 @@ class _FadeSlideInState extends State<_FadeSlideIn>
     );
   }
 }
-
-

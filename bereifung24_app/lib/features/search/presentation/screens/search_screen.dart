@@ -7,6 +7,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../data/models/models.dart';
+import '../../../../utils/tire_category_utils.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 
 // ── Providers ──
@@ -46,6 +47,10 @@ class WorkshopSearchState {
   final String? selectedAxle; // 'front', 'rear', or null (= all/4 tires)
   final bool
       needsAxleSelection; // true when Mischbereifung+2 Reifen but no axle chosen
+  // Tire category filter: 'Günstigster', 'Beliebt', 'Testsieger' or null (= all)
+  final String? selectedTireCategory;
+  // Construction type for motorcycle: 'radial', 'diagonal', or null (= both)
+  final String? tireConstruction;
 
   // Services that use the POST API with packageTypes
   static const postApiServices = {
@@ -78,6 +83,8 @@ class WorkshopSearchState {
     this.selectedPackage,
     this.selectedAxle,
     this.needsAxleSelection = false,
+    this.selectedTireCategory = 'Günstigster',
+    this.tireConstruction,
   });
 
   WorkshopSearchState copyWith({
@@ -104,6 +111,10 @@ class WorkshopSearchState {
     String? selectedAxle,
     bool clearSelectedAxle = false,
     bool? needsAxleSelection,
+    String? selectedTireCategory,
+    bool clearSelectedTireCategory = false,
+    String? tireConstruction,
+    bool clearTireConstruction = false,
   }) =>
       WorkshopSearchState(
         workshops: workshops ?? this.workshops,
@@ -131,6 +142,12 @@ class WorkshopSearchState {
         selectedAxle:
             clearSelectedAxle ? null : (selectedAxle ?? this.selectedAxle),
         needsAxleSelection: needsAxleSelection ?? this.needsAxleSelection,
+        selectedTireCategory: clearSelectedTireCategory
+            ? null
+            : (selectedTireCategory ?? this.selectedTireCategory),
+        tireConstruction: clearTireConstruction
+            ? null
+            : (tireConstruction ?? this.tireConstruction),
       );
 }
 
@@ -224,6 +241,19 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
 
   void toggleThreePMSF() {
     state = state.copyWith(withThreePMSF: !state.withThreePMSF);
+    _reSearch();
+  }
+
+  void setTireCategory(String? category) {
+    state = state.copyWith(
+        selectedTireCategory: category,
+        clearSelectedTireCategory: category == null);
+  }
+
+  void setTireConstruction(String? construction) {
+    state = state.copyWith(
+        tireConstruction: construction,
+        clearTireConstruction: construction == null);
     _reSearch();
   }
 
@@ -471,6 +501,14 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
             body['tireDimensionsRear'] = body['tireDimensionsFront'];
           }
         }
+      }
+
+      // Add construction filter (Radial/Diagonal) if set
+      if (state.tireConstruction != null &&
+          state.tireConstruction!.isNotEmpty) {
+        body['tireFilters'] = {
+          'construction': state.tireConstruction,
+        };
       }
 
       debugPrint('🏍️ Motorcycle search body: $body');
@@ -1281,8 +1319,9 @@ class TireChangeFilters extends StatelessWidget {
   final WorkshopSearchState state;
   final WorkshopSearchNotifier notifier;
   final Vehicle? vehicle;
+  final EdgeInsetsGeometry? padding;
   const TireChangeFilters(
-      {required this.state, required this.notifier, this.vehicle});
+      {required this.state, required this.notifier, this.vehicle, this.padding});
 
   bool get _vehicleHasMixedTires {
     if (vehicle == null) return false;
@@ -1309,7 +1348,7 @@ class TireChangeFilters extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 4, 16, 12),
       child: Column(
         children: [
           // Row 1: Mit Reifen / Nur Montage (equal width, centered)
@@ -1413,7 +1452,66 @@ class TireChangeFilters extends StatelessWidget {
               ],
             ),
           ],
+          // Tire category selection (only when Mit Reifen)
+          if (state.includeTires) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                    child: _categoryBadge(
+                        context, '💰', 'Günstigster', 'Günstigster')),
+                const SizedBox(width: 6),
+                Expanded(
+                    child: _categoryBadge(
+                        context, '👍', 'Beste Eigensch.', 'Beliebt')),
+                const SizedBox(width: 6),
+                Expanded(
+                    child:
+                        _categoryBadge(context, '⭐', 'Premium', 'Testsieger')),
+              ],
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _categoryBadge(
+      BuildContext context, String emoji, String label, String category) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final current = state.selectedTireCategory;
+    final isActive = current == category;
+    return GestureDetector(
+      onTap: () => notifier.setTireCategory(isActive ? null : category),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (category == 'Günstigster'
+                  ? const Color(0xFF16A34A)
+                  : category == 'Testsieger'
+                      ? const Color(0xFFD97706)
+                      : const Color(0xFF0284C7))
+              : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(8),
+          border: isActive
+              ? null
+              : Border.all(
+                  color:
+                      isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          '$emoji $label',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: isActive
+                ? Colors.white
+                : (isDark ? const Color(0xFFCBD5E1) : Colors.grey[700]),
+          ),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -1624,6 +1722,7 @@ class DropdownServiceFilter extends StatelessWidget {
   final String defaultPackage;
   final List<(String, String)> options; // (packageId, displayLabel)
   final Map<String, String> descriptions;
+  final EdgeInsetsGeometry? padding;
 
   const DropdownServiceFilter({
     required this.state,
@@ -1633,6 +1732,7 @@ class DropdownServiceFilter extends StatelessWidget {
     required this.defaultPackage,
     required this.options,
     required this.descriptions,
+    this.padding,
   });
 
   @override
@@ -1646,7 +1746,7 @@ class DropdownServiceFilter extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 4, 16, 12),
       child: Column(
         children: [
           GestureDetector(
@@ -1798,6 +1898,7 @@ class ServiceToggleFilter extends StatelessWidget {
   final String defaultPackage;
   final List<(String, String, String)> options; // (packageId, emoji, label)
   final Map<String, String> descriptions;
+  final EdgeInsetsGeometry? padding;
 
   const ServiceToggleFilter({
     required this.state,
@@ -1805,6 +1906,7 @@ class ServiceToggleFilter extends StatelessWidget {
     required this.defaultPackage,
     required this.options,
     required this.descriptions,
+    this.padding,
   });
 
   @override
@@ -1815,7 +1917,7 @@ class ServiceToggleFilter extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 4, 16, 12),
       child: Column(
         children: [
           Row(
@@ -1909,17 +2011,18 @@ class ServiceToggleFilter extends StatelessWidget {
 class MotorcycleTireFilters extends StatelessWidget {
   final WorkshopSearchState state;
   final WorkshopSearchNotifier notifier;
+  final EdgeInsetsGeometry? padding;
 
-  const MotorcycleTireFilters({required this.state, required this.notifier});
+  const MotorcycleTireFilters({required this.state, required this.notifier, this.padding});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 4, 16, 12),
       child: Column(
         children: [
-          // Row 1: Mit Reifenkauf / Nur Montage
+          // Row 1: Mit Reifen / Nur Montage
           Row(
             children: [
               Expanded(
@@ -1927,7 +2030,7 @@ class MotorcycleTireFilters extends StatelessWidget {
                       context,
                       SvgPicture.asset('assets/images/tire_icon.svg',
                           width: 18, height: 18),
-                      'Mit Reifenkauf',
+                      'Mit Reifen',
                       true)),
               const SizedBox(width: 8),
               Expanded(
@@ -1963,7 +2066,123 @@ class MotorcycleTireFilters extends StatelessWidget {
             _hintBox(context,
                 '💡 Sie bringen Ihre eigenen Motorradreifen mit. Räder müssen ausgebaut zur Werkstatt gebracht werden.'),
           ],
+          // Radial / Diagonal construction filter (only when Mit Reifen)
+          if (state.includeTires) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                    child: _constructionBadge(context, 'Radial', 'radial',
+                        'Standard für moderne Motorräder')),
+                const SizedBox(width: 6),
+                Expanded(
+                    child: _constructionBadge(context, 'Diagonal', 'diagonal',
+                        'Chopper, Enduro & Oldtimer')),
+              ],
+            ),
+          ],
+          // Tire category selection (Günstigster / Premium) - no Beste Eigensch. for motorcycle (no EU labels)
+          if (state.includeTires) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                    child: _categoryBadge(
+                        context, '💰', 'Günstigster', 'Günstigster')),
+                const SizedBox(width: 6),
+                Expanded(
+                    child:
+                        _categoryBadge(context, '⭐', 'Premium', 'Testsieger')),
+              ],
+            ),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _constructionBadge(
+      BuildContext context, String label, String value, String subtitle) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isActive = state.tireConstruction == value;
+    return GestureDetector(
+      onTap: () => notifier.setTireConstruction(isActive ? null : value),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        decoration: BoxDecoration(
+          color: isActive
+              ? const Color(0xFF0284C7)
+              : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(10),
+          border: isActive
+              ? null
+              : Border.all(
+                  color:
+                      isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+        ),
+        alignment: Alignment.center,
+        child: Column(
+          children: [
+            Text(
+              '🏍️ $label',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: isActive
+                    ? Colors.white
+                    : (isDark ? const Color(0xFFF9FAFB) : Colors.grey[800]),
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 9,
+                color: isActive
+                    ? Colors.white70
+                    : (isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _categoryBadge(
+      BuildContext context, String emoji, String label, String category) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final current = state.selectedTireCategory;
+    final isActive = current == category;
+    return GestureDetector(
+      onTap: () => notifier.setTireCategory(isActive ? null : category),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (category == 'Günstigster'
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFD97706))
+              : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(8),
+          border: isActive
+              ? null
+              : Border.all(
+                  color:
+                      isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          '$emoji $label',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: isActive
+                ? Colors.white
+                : (isDark ? const Color(0xFFCBD5E1) : Colors.grey[700]),
+          ),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
@@ -2082,9 +2301,10 @@ class WheelChangeFilters extends StatelessWidget {
   final WorkshopSearchState state;
   final WorkshopSearchNotifier notifier;
   final WorkshopServiceDetail? serviceDetail;
+  final EdgeInsetsGeometry? padding;
 
   const WheelChangeFilters(
-      {required this.state, required this.notifier, this.serviceDetail});
+      {required this.state, required this.notifier, this.serviceDetail, this.padding});
 
   @override
   Widget build(BuildContext context) {
@@ -2119,7 +2339,7 @@ class WheelChangeFilters extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+      padding: padding ?? const EdgeInsets.fromLTRB(16, 4, 16, 12),
       child: Column(
         children: [
           Row(children: badges),
@@ -2440,46 +2660,151 @@ class _WorkshopCard extends ConsumerWidget {
     double? totalPrice;
     final breakdown = <String, double>{};
 
+    // Resolve selected tire category recommendation using filterByCategory
+    Map<String, dynamic>? selectedRec;
+    Map<String, dynamic>? selectedFrontRec;
+    Map<String, dynamic>? selectedRearRec;
+    if ((isTireChange || isMotorcycleTire) &&
+        workshop.tireRecommendationsRaw.isNotEmpty) {
+      final category = searchState.selectedTireCategory;
+      final hasFrontRear = workshop.tireRecommendationsRaw
+          .any((r) => r['axle'] == 'front' || r['axle'] == 'rear');
+      if (hasFrontRear) {
+        // Mischbereifung / Motorcycle: filter per axle
+        final frontRecs = workshop.tireRecommendationsRaw
+            .where((r) => r['axle'] == 'front')
+            .map((r) => TireRecommendation.fromJson(r))
+            .toList();
+        final rearRecs = workshop.tireRecommendationsRaw
+            .where((r) => r['axle'] == 'rear')
+            .map((r) => TireRecommendation.fromJson(r))
+            .toList();
+        final filteredFront = filterByCategory(frontRecs, category);
+        final filteredRear = filterByCategory(rearRecs, category);
+        if (filteredFront.isNotEmpty) {
+          final f = filteredFront.first;
+          selectedFrontRec = {
+            'brand': f.brand,
+            'model': f.model,
+            'pricePerTire': f.pricePerTire,
+            'totalPrice': f.totalPrice,
+            'quantity': f.quantity,
+            'label': category ?? f.label,
+            'dimensions': f.dimensions,
+          };
+        }
+        if (filteredRear.isNotEmpty) {
+          final r = filteredRear.first;
+          selectedRearRec = {
+            'brand': r.brand,
+            'model': r.model,
+            'pricePerTire': r.pricePerTire,
+            'totalPrice': r.totalPrice,
+            'quantity': r.quantity,
+            'label': category ?? r.label,
+            'dimensions': r.dimensions,
+          };
+        }
+      } else {
+        // Single tire: filter all recs by category
+        final allRecs = workshop.tireRecommendationsRaw
+            .map((r) => TireRecommendation.fromJson(r))
+            .toList();
+        final filtered = filterByCategory(allRecs, category);
+        if (filtered.isNotEmpty) {
+          final t = filtered.first;
+          selectedRec = {
+            'brand': t.brand,
+            'model': t.model,
+            'pricePerTire': t.pricePerTire,
+            'totalPrice': t.totalPrice,
+            'quantity': t.quantity,
+            'label': category ?? t.label,
+            'articleId': t.articleId,
+            'dimensions': t.dimensions,
+            'loadIndex': t.loadIndex,
+            'speedIndex': t.speedIndex,
+          };
+        } else {
+          selectedRec = workshop.tireRecommendationsRaw.first;
+        }
+      }
+    }
+
     if (isTireChange && workshop.tireAvailable) {
       // Tire search API already computed prices (includeTires is always true here)
       if (workshop.searchTotalPrice != null) {
-        totalPrice = workshop.searchTotalPrice;
-        // Mit Reifen: Original Breakdown
-        if (workshop.searchBasePrice != null) {
-          breakdown['Montage'] = workshop.searchBasePrice!;
-        }
         // Check for Mischbereifung (front/rear different tires)
         final hasFrontRear =
             workshop.tireFront != null || workshop.tireRear != null;
         if (hasFrontRear) {
-          if (workshop.tireFront != null) {
-            final fBrand = workshop.tireFront!['brand'] ?? '';
-            final fPrice =
-                (workshop.tireFront!['totalPrice'] as num?)?.toDouble() ?? 0;
-            final fQty =
-                (workshop.tireFront!['quantity'] as num?)?.toInt() ?? 2;
-            final fPerTire =
-                (workshop.tireFront!['pricePerTire'] as num?)?.toDouble();
+          // Use category-filtered front/rear recs if available
+          final fRec = selectedFrontRec ?? workshop.tireFront;
+          final rRec = selectedRearRec ?? workshop.tireRear;
+          // Recompute total from filtered tires
+          double computed = workshop.searchBasePrice ?? 0;
+          if (workshop.searchBasePrice != null) {
+            breakdown['Montage'] = workshop.searchBasePrice!;
+          }
+          if (fRec != null) {
+            final fBrand = fRec['brand'] ?? '';
+            final fPrice = (fRec['totalPrice'] as num?)?.toDouble() ?? 0;
+            final fQty = (fRec['quantity'] as num?)?.toInt() ?? 2;
+            final fPerTire = (fRec['pricePerTire'] as num?)?.toDouble();
+            computed += fPrice;
             breakdown[
                     'VA: $fQty× $fBrand à ${fPerTire?.toStringAsFixed(2) ?? "-"}€'] =
                 fPrice;
           }
-          if (workshop.tireRear != null) {
-            final rBrand = workshop.tireRear!['brand'] ?? '';
-            final rPrice =
-                (workshop.tireRear!['totalPrice'] as num?)?.toDouble() ?? 0;
-            final rQty = (workshop.tireRear!['quantity'] as num?)?.toInt() ?? 2;
-            final rPerTire =
-                (workshop.tireRear!['pricePerTire'] as num?)?.toDouble();
+          if (rRec != null) {
+            final rBrand = rRec['brand'] ?? '';
+            final rPrice = (rRec['totalPrice'] as num?)?.toDouble() ?? 0;
+            final rQty = (rRec['quantity'] as num?)?.toInt() ?? 2;
+            final rPerTire = (rRec['pricePerTire'] as num?)?.toDouble();
+            computed += rPrice;
             breakdown[
                     'HA: $rQty× $rBrand à ${rPerTire?.toStringAsFixed(2) ?? "-"}€'] =
                 rPrice;
           }
-        } else if (workshop.tirePrice > 0) {
-          final qty = workshop.tireQuantity ?? searchState.tireCount;
-          breakdown[
-                  '$qty× ${workshop.tireBrand ?? "Reifen"} à ${workshop.tirePricePerTire?.toStringAsFixed(2) ?? "-"}€'] =
-              workshop.tirePrice;
+          if (workshop.disposalFeeApplied != null &&
+              workshop.disposalFeeApplied! > 0)
+            computed += workshop.disposalFeeApplied!;
+          if (workshop.runFlatSurchargeApplied != null &&
+              workshop.runFlatSurchargeApplied! > 0)
+            computed += workshop.runFlatSurchargeApplied!;
+          totalPrice = computed;
+        } else {
+          // Single tire: use selected category recommendation
+          final recPricePerTire =
+              (selectedRec?['pricePerTire'] as num?)?.toDouble();
+          final recQty = (selectedRec?['quantity'] as num?)?.toInt() ??
+              workshop.tireQuantity ??
+              searchState.tireCount;
+          final recBrand = selectedRec?['brand']?.toString() ??
+              workshop.tireBrand ??
+              'Reifen';
+          final recTireTotal = recPricePerTire != null
+              ? recPricePerTire * recQty
+              : workshop.tirePrice;
+
+          double computed = workshop.searchBasePrice ?? 0;
+          computed += recTireTotal;
+          if (workshop.disposalFeeApplied != null &&
+              workshop.disposalFeeApplied! > 0)
+            computed += workshop.disposalFeeApplied!;
+          if (workshop.runFlatSurchargeApplied != null &&
+              workshop.runFlatSurchargeApplied! > 0)
+            computed += workshop.runFlatSurchargeApplied!;
+          totalPrice = computed;
+
+          if (workshop.searchBasePrice != null) {
+            breakdown['Montage'] = workshop.searchBasePrice!;
+          }
+          if (recTireTotal > 0) {
+            breakdown[
+                    '$recQty× $recBrand à ${recPricePerTire?.toStringAsFixed(2) ?? "-"}€'] =
+                recTireTotal;
+          }
         }
         if (workshop.disposalFeeApplied != null &&
             workshop.disposalFeeApplied! > 0) {
@@ -2491,49 +2816,56 @@ class _WorkshopCard extends ConsumerWidget {
         }
       }
     } else if (isMotorcycleTire && workshop.tireAvailable) {
-      // Motorcycle tire pricing with front/rear
+      // Motorcycle tire pricing with front/rear (use category-filtered recs)
       if (workshop.searchTotalPrice != null) {
-        totalPrice = workshop.searchTotalPrice;
+        final fRec = selectedFrontRec ??
+            (workshop.tireFront != null
+                ? Map<String, dynamic>.from(workshop.tireFront!)
+                : null);
+        final rRec = selectedRearRec ??
+            (workshop.tireRear != null
+                ? Map<String, dynamic>.from(workshop.tireRear!)
+                : null);
+        double computed = workshop.searchBasePrice ?? 0;
         if (workshop.searchBasePrice != null) {
           breakdown['Montage'] = workshop.searchBasePrice!;
         }
         // Front tire
-        if (workshop.tireFront != null) {
-          final fBrand = workshop.tireFront!['brand'] ?? '';
-          final fPrice =
-              (workshop.tireFront!['totalPrice'] as num?)?.toDouble() ?? 0;
-          final fQty = (workshop.tireFront!['quantity'] as num?)?.toInt() ?? 1;
-          final fPerTire =
-              (workshop.tireFront!['pricePerTire'] as num?)?.toDouble();
+        if (fRec != null) {
+          final fBrand = fRec['brand'] ?? '';
+          final fPrice = (fRec['totalPrice'] as num?)?.toDouble() ?? 0;
+          final fQty = (fRec['quantity'] as num?)?.toInt() ?? 1;
+          final fPerTire = (fRec['pricePerTire'] as num?)?.toDouble();
+          computed += fPrice;
           breakdown[
                   'VR: $fQty× $fBrand à ${fPerTire?.toStringAsFixed(2) ?? "-"}€'] =
               fPrice;
         }
         // Rear tire
-        if (workshop.tireRear != null) {
-          final rBrand = workshop.tireRear!['brand'] ?? '';
-          final rPrice =
-              (workshop.tireRear!['totalPrice'] as num?)?.toDouble() ?? 0;
-          final rQty = (workshop.tireRear!['quantity'] as num?)?.toInt() ?? 1;
-          final rPerTire =
-              (workshop.tireRear!['pricePerTire'] as num?)?.toDouble();
+        if (rRec != null) {
+          final rBrand = rRec['brand'] ?? '';
+          final rPrice = (rRec['totalPrice'] as num?)?.toDouble() ?? 0;
+          final rQty = (rRec['quantity'] as num?)?.toInt() ?? 1;
+          final rPerTire = (rRec['pricePerTire'] as num?)?.toDouble();
+          computed += rPrice;
           breakdown[
                   'HR: $rQty× $rBrand à ${rPerTire?.toStringAsFixed(2) ?? "-"}€'] =
               rPrice;
         }
         // Flat tire info fallback
-        if (workshop.tireFront == null &&
-            workshop.tireRear == null &&
-            workshop.tirePrice > 0) {
+        if (fRec == null && rRec == null && workshop.tirePrice > 0) {
           final qty = workshop.tireQuantity ?? 2;
+          computed += workshop.tirePrice;
           breakdown[
                   '$qty× ${workshop.tireBrand ?? "Reifen"} à ${workshop.tirePricePerTire?.toStringAsFixed(2) ?? "-"}€'] =
               workshop.tirePrice;
         }
         if (workshop.disposalFeeApplied != null &&
             workshop.disposalFeeApplied! > 0) {
+          computed += workshop.disposalFeeApplied!;
           breakdown['Entsorgung'] = workshop.disposalFeeApplied!;
         }
+        totalPrice = computed;
       }
     } else if (isPostApiService && workshop.searchBasePrice != null) {
       // POST API returned package-based pricing (ALIGNMENT_BOTH, TIRE_REPAIR, etc.)
@@ -2679,8 +3011,13 @@ class _WorkshopCard extends ConsumerWidget {
         onTap: () {
           final qp = <String, String>{};
           if (serviceType != null) qp['service'] = serviceType!;
-          if (workshop.tireBrand != null) qp['tireBrand'] = workshop.tireBrand!;
-          if (workshop.tireModel != null) qp['tireModel'] = workshop.tireModel!;
+          // Use selected category recommendation's brand/model
+          final recBrand =
+              selectedRec?['brand']?.toString() ?? workshop.tireBrand;
+          final recModel =
+              selectedRec?['model']?.toString() ?? workshop.tireModel;
+          if (recBrand != null) qp['tireBrand'] = recBrand;
+          if (recModel != null) qp['tireModel'] = recModel;
           final uri = Uri(
             path: '/search/workshop/${workshop.id}',
             queryParameters: qp.isNotEmpty ? qp : null,
@@ -2873,27 +3210,21 @@ class _WorkshopCard extends ConsumerWidget {
 
                       // Build tire dimension string from recommendation data (single-tire case)
                       String? tireDimStr;
-                      if (!hasFrontRear &&
-                          workshop.tireRecommendationsRaw.isNotEmpty) {
-                        final rec = workshop.tireRecommendationsRaw.first;
-                        final w = rec['width']?.toString() ?? '';
-                        final h = rec['height']?.toString() ?? '';
-                        final d = rec['diameter']?.toString() ?? '';
-                        final li = rec['loadIndex']?.toString() ?? '';
-                        final si = rec['speedIndex']?.toString() ?? '';
-                        if (w.isNotEmpty && d.isNotEmpty) {
-                          tireDimStr = '$w/${h.isNotEmpty ? h : "-"} R$d';
-                          if (li.isNotEmpty || si.isNotEmpty)
-                            tireDimStr = '$tireDimStr $li$si';
-                        }
+                      if (!hasFrontRear && selectedRec != null) {
+                        tireDimStr = selectedRec['dimensions']?.toString();
                       }
 
                       if (hasFrontRear) {
                         // Mischbereifung: TWO separate containers for VA and HA
+                        // Use category-filtered recs if available
+                        final displayFront =
+                            selectedFrontRec ?? workshop.tireFront;
+                        final displayRear =
+                            selectedRearRec ?? workshop.tireRear;
                         return Column(
                           children: [
                             // VA (Front) container
-                            if (workshop.tireFront != null) ...[
+                            if (displayFront != null) ...[
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
@@ -2907,6 +3238,16 @@ class _WorkshopCard extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    if (displayFront['label'] != null &&
+                                        (displayFront['label'] as String)
+                                            .isNotEmpty)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 4),
+                                        child: _TireCategoryBadge(
+                                            label: displayFront['label']
+                                                as String),
+                                      ),
                                     Row(
                                       children: [
                                         Container(
@@ -2929,7 +3270,7 @@ class _WorkshopCard extends ConsumerWidget {
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
-                                            '${workshop.tireFront!['brand'] ?? ''} ${workshop.tireFront!['model'] ?? ''}',
+                                            '${displayFront['brand'] ?? ''} ${displayFront['model'] ?? ''}',
                                             style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w600),
@@ -2939,13 +3280,12 @@ class _WorkshopCard extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
-                                    if (workshop.tireFront!['dimensions'] !=
-                                        null)
+                                    if (displayFront['dimensions'] != null)
                                       Padding(
                                         padding: const EdgeInsets.only(
                                             left: 46, top: 2),
                                         child: Text(
-                                            workshop.tireFront!['dimensions']
+                                            displayFront['dimensions']
                                                 .toString(),
                                             style: TextStyle(
                                                 fontSize: 11,
@@ -2959,7 +3299,7 @@ class _WorkshopCard extends ConsumerWidget {
                               const SizedBox(height: 6),
                             ],
                             // HA (Rear) container
-                            if (workshop.tireRear != null) ...[
+                            if (displayRear != null) ...[
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
@@ -2973,6 +3313,16 @@ class _WorkshopCard extends ConsumerWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    if (displayRear['label'] != null &&
+                                        (displayRear['label'] as String)
+                                            .isNotEmpty)
+                                      Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 4),
+                                        child: _TireCategoryBadge(
+                                            label:
+                                                displayRear['label'] as String),
+                                      ),
                                     Row(
                                       children: [
                                         Container(
@@ -2995,7 +3345,7 @@ class _WorkshopCard extends ConsumerWidget {
                                         const SizedBox(width: 6),
                                         Expanded(
                                           child: Text(
-                                            '${workshop.tireRear!['brand'] ?? ''} ${workshop.tireRear!['model'] ?? ''}',
+                                            '${displayRear['brand'] ?? ''} ${displayRear['model'] ?? ''}',
                                             style: const TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w600),
@@ -3005,13 +3355,12 @@ class _WorkshopCard extends ConsumerWidget {
                                         ),
                                       ],
                                     ),
-                                    if (workshop.tireRear!['dimensions'] !=
-                                        null)
+                                    if (displayRear['dimensions'] != null)
                                       Padding(
                                         padding: const EdgeInsets.only(
                                             left: 46, top: 2),
                                         child: Text(
-                                            workshop.tireRear!['dimensions']
+                                            displayRear['dimensions']
                                                 .toString(),
                                             style: TextStyle(
                                                 fontSize: 11,
@@ -3085,6 +3434,14 @@ class _WorkshopCard extends ConsumerWidget {
                         );
                       }
 
+                      // Build tire category label from recommendation data
+                      String? tireLabel;
+                      if (!hasFrontRear && selectedRec != null) {
+                        tireLabel = selectedRec['label']?.toString();
+                        if (tireLabel != null && tireLabel.isEmpty)
+                          tireLabel = null;
+                      }
+
                       // Standard single tire display
                       return Container(
                         padding: const EdgeInsets.all(10),
@@ -3099,6 +3456,36 @@ class _WorkshopCard extends ConsumerWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (tireLabel != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: tireLabel == 'Günstigster'
+                                        ? const Color(0xFF16A34A)
+                                        : tireLabel == 'Testsieger'
+                                            ? const Color(0xFFD97706)
+                                            : const Color(0xFF0284C7),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    tireLabel == 'Günstigster'
+                                        ? '💰 Günstigster'
+                                        : tireLabel == 'Testsieger'
+                                            ? '⭐ Premium'
+                                            : tireLabel == 'Beliebt'
+                                                ? '👍 Beste Eigenschaften'
+                                                : tireLabel,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             Row(
                               children: [
                                 const Icon(Icons.tire_repair,
@@ -3106,7 +3493,7 @@ class _WorkshopCard extends ConsumerWidget {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    '${workshop.tireBrand ?? ""} ${workshop.tireModel ?? ""}',
+                                    '${selectedRec?['brand'] ?? workshop.tireBrand ?? ""} ${selectedRec?['model'] ?? workshop.tireModel ?? ""}',
                                     style: const TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600),
@@ -3225,131 +3612,152 @@ class _WorkshopCard extends ConsumerWidget {
 
                   // Motorcycle tire info (front/rear) — separate containers
                   if (isMotorcycleTire && workshop.tireAvailable) ...[
-                    // VR (Front) container
-                    if (workshop.tireFront != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color:
-                              const Color(0xFF0284C7).withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: const Color(0xFF0284C7)
-                                  .withValues(alpha: 0.15)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF0284C7),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Text('VR',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)),
+                    // VR (Front) container - use category-filtered rec
+                    if ((selectedFrontRec ?? workshop.tireFront) != null) ...[
+                      Builder(builder: (context) {
+                        final displayFront =
+                            selectedFrontRec ?? workshop.tireFront!;
+                        return Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFF0284C7).withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.15)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (displayFront['label'] != null &&
+                                  (displayFront['label'] as String).isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: _TireCategoryBadge(
+                                      label: displayFront['label'] as String),
                                 ),
-                                const SizedBox(width: 6),
-                                const Icon(Icons.tire_repair,
-                                    size: 16, color: Color(0xFF0284C7)),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    '${workshop.tireFront!['brand'] ?? ''} ${workshop.tireFront!['model'] ?? ''}',
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0284C7),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text('VR',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white)),
                                   ),
-                                ),
-                              ],
-                            ),
-                            if (workshop.tireFront!['dimensions'] != null)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 46, top: 2),
-                                child: Text(
-                                    workshop.tireFront!['dimensions']
-                                        .toString(),
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color: isDark
-                                            ? const Color(0xFF94A3B8)
-                                            : Colors.grey[600])),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.tire_repair,
+                                      size: 16, color: Color(0xFF0284C7)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      '${displayFront['brand'] ?? ''} ${displayFront['model'] ?? ''}',
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
-                          ],
-                        ),
-                      ),
+                              if (displayFront['dimensions'] != null)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(left: 46, top: 2),
+                                  child: Text(
+                                      displayFront['dimensions'].toString(),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? const Color(0xFF94A3B8)
+                                              : Colors.grey[600])),
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 6),
                     ],
-                    // HR (Rear) container
-                    if (workshop.tireRear != null) ...[
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color:
-                              const Color(0xFF0284C7).withValues(alpha: 0.05),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                              color: const Color(0xFF0284C7)
-                                  .withValues(alpha: 0.15)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF0284C7),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: const Text('HR',
-                                      style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white)),
+                    // HR (Rear) container - use category-filtered rec
+                    if ((selectedRearRec ?? workshop.tireRear) != null) ...[
+                      Builder(builder: (context) {
+                        final displayRear =
+                            selectedRearRec ?? workshop.tireRear!;
+                        return Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color:
+                                const Color(0xFF0284C7).withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.15)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (displayRear['label'] != null &&
+                                  (displayRear['label'] as String).isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 4),
+                                  child: _TireCategoryBadge(
+                                      label: displayRear['label'] as String),
                                 ),
-                                const SizedBox(width: 6),
-                                const Icon(Icons.tire_repair,
-                                    size: 16, color: Color(0xFF0284C7)),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    '${workshop.tireRear!['brand'] ?? ''} ${workshop.tireRear!['model'] ?? ''}',
-                                    style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0284C7),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text('HR',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white)),
                                   ),
-                                ),
-                              ],
-                            ),
-                            if (workshop.tireRear!['dimensions'] != null)
-                              Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 46, top: 2),
-                                child: Text(
-                                    workshop.tireRear!['dimensions'].toString(),
-                                    style: TextStyle(
-                                        fontSize: 11,
-                                        color: isDark
-                                            ? const Color(0xFF94A3B8)
-                                            : Colors.grey[600])),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.tire_repair,
+                                      size: 16, color: Color(0xFF0284C7)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      '${displayRear['brand'] ?? ''} ${displayRear['model'] ?? ''}',
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
                               ),
-                          ],
-                        ),
-                      ),
+                              if (displayRear['dimensions'] != null)
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(left: 46, top: 2),
+                                  child: Text(
+                                      displayRear['dimensions'].toString(),
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? const Color(0xFF94A3B8)
+                                              : Colors.grey[600])),
+                                ),
+                            ],
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 6),
                     ],
                     // Fallback: flat tire info
@@ -3596,10 +4004,12 @@ class _WorkshopCard extends ConsumerWidget {
                       child: FilledButton.icon(
                         onPressed: () {
                           final qp = <String, String>{'service': 'TIRE_CHANGE'};
-                          if (workshop.tireBrand != null)
-                            qp['tireBrand'] = workshop.tireBrand!;
-                          if (workshop.tireModel != null)
-                            qp['tireModel'] = workshop.tireModel!;
+                          final recBrand = selectedRec?['brand']?.toString() ??
+                              workshop.tireBrand;
+                          final recModel = selectedRec?['model']?.toString() ??
+                              workshop.tireModel;
+                          if (recBrand != null) qp['tireBrand'] = recBrand;
+                          if (recModel != null) qp['tireModel'] = recModel;
                           final uri = Uri(
                             path: '/search/workshop/${workshop.id}',
                             queryParameters: qp,
@@ -3627,10 +4037,12 @@ class _WorkshopCard extends ConsumerWidget {
                         onPressed: () {
                           final qp = <String, String>{};
                           if (serviceType != null) qp['service'] = serviceType!;
-                          if (workshop.tireBrand != null)
-                            qp['tireBrand'] = workshop.tireBrand!;
-                          if (workshop.tireModel != null)
-                            qp['tireModel'] = workshop.tireModel!;
+                          final recBrand = selectedRec?['brand']?.toString() ??
+                              workshop.tireBrand;
+                          final recModel = selectedRec?['model']?.toString() ??
+                              workshop.tireModel;
+                          if (recBrand != null) qp['tireBrand'] = recBrand;
+                          if (recModel != null) qp['tireModel'] = recModel;
                           final uri = Uri(
                             path: '/search/workshop/${workshop.id}',
                             queryParameters: qp.isNotEmpty ? qp : null,
@@ -3864,6 +4276,54 @@ class _VehicleSelector extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ══════════════════════════════════════
+// Tire Category Badge (Günstigster, Testsieger, Beliebt)
+// ══════════════════════════════════════
+
+class _TireCategoryBadge extends StatelessWidget {
+  final String label;
+  const _TireCategoryBadge({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color;
+    final String displayLabel;
+    switch (label) {
+      case 'Günstigster':
+        color = const Color(0xFF16A34A);
+        displayLabel = '💰 Günstigster';
+        break;
+      case 'Testsieger':
+        color = const Color(0xFFD97706);
+        displayLabel = '⭐ Premium';
+        break;
+      case 'Beliebt':
+        color = const Color(0xFF0284C7);
+        displayLabel = '👍 Beste Eigenschaften';
+        break;
+      default:
+        color = const Color(0xFF64748B);
+        displayLabel = label;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        displayLabel,
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
         ),
       ),
     );

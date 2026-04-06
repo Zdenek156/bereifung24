@@ -199,6 +199,15 @@ export const SERVICE_CITIES: ServiceCityData[] = [
     nearbyAreas: 'Ludwigsburg, Sachsenheim, Freiberg am Neckar, Tamm und Ingersheim',
     localHighlight: 'Die Große Kreisstadt liegt strategisch an der A81 zwischen Stuttgart und Heilbronn und ist Hauptsitz des Dürr-Konzerns.',
   },
+  {
+    citySlug: 'stuttgart',
+    cityName: 'Stuttgart',
+    region: 'Landeshauptstadt Baden-Württemberg',
+    population: 635911,
+    postalCodes: ['70173', '70174', '70176', '70178', '70180', '70182', '70184', '70186', '70188', '70190', '70191', '70192', '70193', '70195', '70197', '70199', '70327', '70329', '70372', '70374', '70376', '70378', '70435', '70437', '70439', '70469', '70499', '70563', '70565', '70567', '70569', '70597', '70599', '70619', '70629'],
+    nearbyAreas: 'Esslingen, Ludwigsburg, Böblingen, Sindelfingen, Fellbach und Waiblingen',
+    localHighlight: 'Die Landeshauptstadt Baden-Württembergs ist Sitz von Porsche und Mercedes-Benz und eines der wichtigsten Automobilzentren Europas.',
+  },
 ]
 
 // --- Helper Functions ---

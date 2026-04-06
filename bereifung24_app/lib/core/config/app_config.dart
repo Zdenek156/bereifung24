@@ -4,7 +4,8 @@ class AppConfig {
   static const String apiBaseUrl = '$baseUrl/api';
 
   // Stripe
-  static const String stripePublishableKey = 'pk_live_XXXXX'; // TODO: Set real key
+  static const String stripePublishableKey =
+      'pk_live_XXXXX'; // TODO: Set real key
 
   // Deep Link scheme
   static const String deepLinkScheme = 'bereifung24';

@@ -93,6 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ref.read(authStateProvider.notifier).fetchProfile();
             ref.invalidate(bookingsProvider);
             ref.invalidate(vehiclesProvider);
+            ref.invalidate(co2StatsProvider);
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -137,8 +138,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           isDark
                               ? 'assets/images/b24_logo_dark.png'
                               : 'assets/images/b24_logo_light.png',
-                          width: 56,
-                          height: 56,
+                          width: 64,
+                          height: 64,
                         ),
                     ],
                   ),
@@ -1032,15 +1033,15 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
 class _ServicesGrid extends StatelessWidget {
   static const _services = [
     _ServiceItem('🔄', 'Reifen-\nwechsel', 'ab 59,90 €', 'TIRE_CHANGE', true,
-        'assets/images/services/reifenwechsel.jpg', true),
+        'assets/images/services/reifenwechsel.jpg'),
     _ServiceItem('🔧', 'Räder-\nwechsel', 'ab 29,90 €', 'WHEEL_CHANGE', true,
-        'assets/images/services/raederwechsel.jpg'),
+        'assets/images/services/raederwechsel.jpg', true),
     _ServiceItem('🔨', 'Reifen-\nreparatur', 'ab 24,90 €', 'TIRE_REPAIR', false,
         'assets/images/services/reifenreparatur.jpg'),
     _ServiceItem('📏', 'Achsver-\nmessung', 'ab 49,90 €', 'ALIGNMENT_BOTH',
         false, 'assets/images/services/achsvermessung.jpg'),
     _ServiceItem('🏍️', 'Motorrad-\nReifen', 'ab 39,90 €', 'MOTORCYCLE_TIRE',
-        false, 'assets/images/services/motorradreifen.jpg', true),
+        false, 'assets/images/services/motorradreifen.jpg'),
     _ServiceItem('❄️', 'Klima-\nservice', 'ab 69,90 €', 'CLIMATE_SERVICE',
         false, 'assets/images/services/klimaservice.jpg'),
   ];
@@ -1111,23 +1112,25 @@ class _ServiceTile extends StatelessWidget {
                       topLeft: Radius.circular(14),
                       topRight: Radius.circular(14),
                     ),
-                    child: Container(
+                    child: SizedBox(
                       width: double.infinity,
                       height: 80,
-                      color: isDark
-                          ? B24Colors.darkSurface
-                          : Colors.white,
-                      padding: service.zoomOut
-                          ? const EdgeInsets.all(6)
-                          : EdgeInsets.zero,
-                      child: Image.asset(
-                        service.imagePath!,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: service.zoomOut
-                            ? BoxFit.contain
-                            : BoxFit.cover,
-                      ),
+                      child: service.zoomOut
+                          ? Transform.scale(
+                              scale: 1.15,
+                              child: Image.asset(
+                                service.imagePath!,
+                                width: double.infinity,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : Image.asset(
+                              service.imagePath!,
+                              width: double.infinity,
+                              height: 80,
+                              fit: BoxFit.cover,
+                            ),
                     ),
                   )
                 else
@@ -1336,106 +1339,97 @@ class _CO2BilanzCard extends ConsumerWidget {
     final co2Async = ref.watch(co2StatsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return co2Async.when(
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-      data: (data) {
-        if (data == null) return const SizedBox.shrink();
+    final data = co2Async.valueOrNull;
+    final breakdown = data?['breakdown'] as Map<String, dynamic>? ?? {};
+    final trips = (data?['numberOfRequests'] as int?) ?? 0;
+    final kmSaved = (breakdown['totalKmSaved'] as num?)?.toDouble() ?? 0;
+    final co2Kg = (data?['totalCO2SavedKg'] as num?)?.toDouble() ?? 0;
+    final fuelSaved = (breakdown['fuelSavedLiters'] as num?)?.toDouble() ?? 0;
+    final fuelUnit = breakdown['fuelUnit'] as String? ?? 'L';
 
-        final breakdown = data['breakdown'] as Map<String, dynamic>? ?? {};
-        final trips = data['numberOfRequests'] as int? ?? 0;
-        if (trips == 0) return const SizedBox.shrink();
-
-        final kmSaved = (breakdown['totalKmSaved'] as num?)?.toDouble() ?? 0;
-        final co2Kg = (data['totalCO2SavedKg'] as num?)?.toDouble() ?? 0;
-        final fuelSaved =
-            (breakdown['fuelSavedLiters'] as num?)?.toDouble() ?? 0;
-        final fuelUnit = breakdown['fuelUnit'] as String? ?? 'L';
-
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF065F46).withValues(alpha: 0.2)
-                : const Color(0xFFECFDF5),
-            borderRadius: BorderRadius.circular(14),
-            boxShadow: [_cardShadowLight(isDark: isDark)],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark
+            ? const Color(0xFF065F46).withValues(alpha: 0.2)
+            : const Color(0xFFECFDF5),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [_cardShadowLight(isDark: isDark)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF10B981).withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.eco,
-                        size: 20, color: Color(0xFF10B981)),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ihre CO\u2082-Bilanz',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: isDark
-                                ? B24Colors.darkTextPrimary
-                                : B24Colors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          '$trips Online-Buchungen statt Werkstattbesuche',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: isDark
-                                ? B24Colors.darkTextSecondary
-                                : B24Colors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.eco,
+                    size: 20, color: Color(0xFF10B981)),
               ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  _CO2Stat(
-                    value: '$trips',
-                    label: 'Fahrten\ngespart',
-                    isDark: isDark,
-                  ),
-                  _CO2Stat(
-                    value: '${kmSaved.round()} km',
-                    label: 'Fahrtwege\nvermieden',
-                    isDark: isDark,
-                  ),
-                  _CO2Stat(
-                    value: '${co2Kg.toStringAsFixed(1)} kg',
-                    label: 'CO\u2082\neingespart',
-                    isDark: isDark,
-                  ),
-                  _CO2Stat(
-                    value:
-                        '${fuelSaved.toStringAsFixed(1)} $fuelUnit',
-                    label: 'Kraftstoff\ngespart',
-                    isDark: isDark,
-                  ),
-                ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Ihre CO\u2082-Bilanz durch Online-Buchung',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? B24Colors.darkTextPrimary
+                            : B24Colors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      trips > 0
+                          ? '$trips Online-Buchungen statt Werkstattbesuche'
+                          : 'Basierend auf Ihren Fahrzeugdaten',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: isDark
+                            ? B24Colors.darkTextSecondary
+                            : B24Colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        );
-      },
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              _CO2Stat(
+                value: '$trips',
+                label: 'Fahrten\ngespart',
+                isDark: isDark,
+              ),
+              _CO2Stat(
+                value: '${kmSaved.round()} km',
+                label: 'Fahrtwege\nvermieden',
+                isDark: isDark,
+              ),
+              _CO2Stat(
+                value: '${co2Kg.toStringAsFixed(1)} kg',
+                label: 'CO\u2082\neingespart',
+                isDark: isDark,
+              ),
+              _CO2Stat(
+                value: '${fuelSaved.toStringAsFixed(1)} $fuelUnit',
+                label: 'Kraftstoff\ngespart',
+                isDark: isDark,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

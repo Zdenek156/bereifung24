@@ -71,6 +71,7 @@ class StripeService {
     }
     try {
       // 1. Create payment intent on the server
+      debugPrint('Stripe: Creating payment intent for amount=$amount, method=$paymentMethod');
       final response = await ApiClient().createPaymentIntent({
         'bookingId': bookingId,
         'amount': amount,
@@ -78,28 +79,27 @@ class StripeService {
       });
 
       final data = response.data;
+      debugPrint('Stripe: PaymentIntent response: $data');
       final clientSecret = data['clientSecret'] as String?;
       final paymentIntentId = data['paymentIntentId'] as String?;
       if (clientSecret == null) throw Exception('No client secret');
 
       // Build payment method order based on user selection (selected first)
-      final walletMethod = Platform.isIOS ? 'applePay' : 'googlePay';
-      final allMethods = ['card', 'paypal', 'klarna', walletMethod];
+      final allMethods = ['card', 'paypal', 'klarna'];
       List<String>? methodOrder;
       if (paymentMethod != null) {
         final methodMap = {
           'card': 'card',
           'paypal': 'paypal',
           'klarna': 'klarna',
-          'apple_pay': 'applePay',
-          'google_pay': 'googlePay',
+          'apple_pay': 'card', // Fallback to card (Apple Pay handled natively below)
+          'google_pay': 'card', // Fallback to card (Google Pay handled natively below)
         };
-        final selected = methodMap[paymentMethod];
-        if (selected != null) {
-          methodOrder = [selected, ...allMethods.where((m) => m != selected)];
-        }
+        final selected = methodMap[paymentMethod] ?? 'card';
+        methodOrder = [selected, ...allMethods.where((m) => m != selected)];
       }
 
+      debugPrint('Stripe: Initializing payment sheet...');
       // 2. Initialize payment sheet
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
@@ -107,6 +107,7 @@ class StripeService {
           merchantDisplayName: 'Bereifung24',
           style: ThemeMode.system,
           paymentMethodOrder: methodOrder,
+          // Google Pay on Android
           googlePay: Platform.isAndroid
               ? const PaymentSheetGooglePay(
                   merchantCountryCode: 'DE',
@@ -114,6 +115,7 @@ class StripeService {
                   testEnv: false,
                 )
               : null,
+          // Apple Pay on iOS
           applePay: Platform.isIOS
               ? const PaymentSheetApplePay(
                   merchantCountryCode: 'DE',
@@ -131,13 +133,19 @@ class StripeService {
       );
 
       // 3. Present payment sheet
+      debugPrint('Stripe: Presenting payment sheet...');
       await Stripe.instance.presentPaymentSheet();
+      debugPrint('Stripe: Payment completed successfully');
 
       return paymentIntentId ?? 'stripe_completed'; // payment succeeded
     } on StripeException catch (e) {
+      debugPrint('Stripe: StripeException: ${e.error.code} - ${e.error.message}');
       if (e.error.code == FailureCode.Canceled) {
         return null; // user cancelled
       }
+      rethrow;
+    } catch (e) {
+      debugPrint('Stripe: General error: $e');
       rethrow;
     }
   }

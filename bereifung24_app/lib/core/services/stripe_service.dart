@@ -37,8 +37,9 @@ class StripeService {
 
       if (key != null && key.isNotEmpty && key.startsWith('pk_')) {
         Stripe.publishableKey = key;
-        // Required for Apple Pay on iOS
-        Stripe.merchantIdentifier = 'merchant.de.bereifung24.bereifung24App';
+        // Apple Pay disabled for testing — merchantIdentifier can cause
+        // applySettings() to hang on iOS during merchant validation
+        // Stripe.merchantIdentifier = 'merchant.de.bereifung24.bereifung24App';
         // Required for iOS redirect-based payment methods (3D Secure, PayPal, Klarna)
         Stripe.urlScheme = 'bereifung24';
         debugPrint('Stripe init: key set, calling applySettings...');

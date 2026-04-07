@@ -1222,10 +1222,12 @@ class _SeasonTipCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
             ),
             alignment: Alignment.center,
-            child: Text(
-              isWinterSeason ? '❄️' : '☀️',
-              style: const TextStyle(fontSize: 20, height: 1),
-              textAlign: TextAlign.center,
+            child: Icon(
+              isWinterSeason ? Icons.ac_unit : Icons.wb_sunny,
+              size: 22,
+              color: isWinterSeason
+                  ? const Color(0xFF0284C7)
+                  : const Color(0xFFF59E0B),
             ),
           ),
           const SizedBox(width: 12),

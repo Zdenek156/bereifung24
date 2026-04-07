@@ -333,6 +333,108 @@ const defaultApplications = [
     category: 'SALES',
     sortOrder: 70
   },
+  {
+    key: 'blog',
+    name: 'Blog & Content',
+    description: 'SEO-Blog System für Kunden- und Werkstatt-Content',
+    icon: 'FileEdit',
+    adminRoute: '/admin/blog',
+    color: 'green',
+    category: 'SALES',
+    sortOrder: 71
+  },
+
+  // CONTENT & LEGAL
+  {
+    key: 'legal-texts',
+    name: 'Rechtliche Texte',
+    description: 'AGB, Impressum und Datenschutz verwalten',
+    icon: 'Scale',
+    adminRoute: '/admin/legal-texts',
+    color: 'blue',
+    category: 'GENERAL',
+    sortOrder: 80
+  },
+  {
+    key: 'gdpr',
+    name: 'DSGVO Datenexport',
+    description: 'Export aller personenbezogenen Daten gemäß Art. 15 DSGVO',
+    icon: 'Shield',
+    adminRoute: '/admin/gdpr',
+    color: 'blue',
+    category: 'GENERAL',
+    sortOrder: 81
+  },
+
+  // OPERATIONS
+  {
+    key: 'payment-methods',
+    name: 'Zahlungsmethoden',
+    description: 'Übersicht aller verfügbaren Zahlungsmethoden für Kunden (Stripe, PayPal)',
+    icon: 'CreditCard',
+    adminRoute: '/admin/payment-methods',
+    color: 'green',
+    category: 'ACCOUNTING',
+    sortOrder: 82
+  },
+  {
+    key: 'eprel',
+    name: 'EPREL Reifendaten',
+    description: 'EU-Reifenlabel Datenbank mit wöchentlichen Updates',
+    icon: 'Database',
+    adminRoute: '/admin/eprel',
+    color: 'cyan',
+    category: 'GENERAL',
+    sortOrder: 83
+  },
+
+  // PLANUNG
+  {
+    key: 'roadmap',
+    name: 'Roadmap',
+    description: 'Unternehmensplanung und Meilensteine für 2026',
+    icon: 'Map',
+    adminRoute: '/admin/roadmap',
+    color: 'purple',
+    category: 'GENERAL',
+    sortOrder: 84
+  },
+
+  // TIRE CATALOG
+  {
+    key: 'reifenkatalog',
+    name: 'Reifenkatalog',
+    description: 'Zentraler Multi-Supplier Reifenkatalog mit CSV-Import',
+    icon: 'CircleDot',
+    adminRoute: '/admin/tire-catalog',
+    color: 'orange',
+    category: 'GENERAL',
+    sortOrder: 85
+  },
+
+  // INVOICES
+  {
+    key: 'rechnungen',
+    name: 'Rechnungen',
+    description: 'Provisionsrechnungen für Werkstätten verwalten',
+    icon: 'FileText',
+    adminRoute: '/admin/invoices',
+    color: 'indigo',
+    category: 'ACCOUNTING',
+    sortOrder: 86
+  },
+
+  // ANFRAGEN
+  {
+    key: 'anfragen',
+    name: 'Anfragen-Übersicht',
+    description: 'Zentrale Verwaltung aller Kundenanfragen mit KPIs, Filtern und Notizen',
+    icon: 'ClipboardList',
+    adminRoute: '/admin/tire-requests',
+    color: 'blue',
+    category: 'GENERAL',
+    sortOrder: 87
+  },
 ]
 
 async function main() {

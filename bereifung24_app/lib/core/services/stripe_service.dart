@@ -36,6 +36,8 @@ class StripeService {
 
       if (key != null && key.isNotEmpty && key.startsWith('pk_')) {
         Stripe.publishableKey = key;
+        // Required for Apple Pay on iOS
+        Stripe.merchantIdentifier = 'merchant.de.bereifung24.bereifung24App';
         debugPrint('Stripe init: key set, calling applySettings...');
         await Stripe.instance.applySettings();
         _initialized = true;

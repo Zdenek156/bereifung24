@@ -75,7 +75,7 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions)
 
-    if (!session || session.user.role !== 'B24_EMPLOYEE') {
+    if (!session || (session.user.role !== 'B24_EMPLOYEE' && session.user.role !== 'ADMIN')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -94,25 +94,21 @@ export async function DELETE(
       )
     }
 
-    // Prüfen ob Berechtigung: Entweder Admin oder Ersteller
-    const hasPermission = await prisma.b24EmployeePermission.findFirst({
-      where: {
-        employeeId,
-        resource: 'announcements',
-        canDelete: true
-      }
-    })
-
+    // Prüfen ob Berechtigung: ADMIN oder Ersteller
+    const isAdmin = session.user.role === 'ADMIN'
     const isAuthor = announcement.authorId === employeeId
 
-    if (!hasPermission && !isAuthor) {
+    if (!isAdmin && !isAuthor) {
       return NextResponse.json(
         { error: 'Keine Berechtigung zum Löschen' },
         { status: 403 }
       )
     }
 
-    // Ankündigung löschen
+    // Zuerst Lesebestätigungen löschen, dann Ankündigung
+    await prisma.announcementRead.deleteMany({
+      where: { announcementId }
+    })
     await prisma.announcement.delete({
       where: { id: announcementId }
     })
@@ -154,18 +150,11 @@ export async function PUT(
       )
     }
 
-    // Prüfen ob Berechtigung: Entweder Admin oder Ersteller
-    const hasPermission = await prisma.b24EmployeePermission.findFirst({
-      where: {
-        employeeId,
-        resource: 'announcements',
-        canWrite: true
-      }
-    })
-
+    // Prüfen ob Berechtigung: ADMIN oder Ersteller
+    const isAdmin = session.user.role === 'ADMIN'
     const isAuthor = existingAnnouncement.authorId === employeeId
 
-    if (!hasPermission && !isAuthor) {
+    if (!isAdmin && !isAuthor) {
       return NextResponse.json(
         { error: 'Keine Berechtigung zum Bearbeiten' },
         { status: 403 }

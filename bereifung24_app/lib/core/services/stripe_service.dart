@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -103,6 +104,10 @@ class StripeService {
 
       debugPrint('Stripe: Initializing payment sheet...');
       // 2. Initialize payment sheet
+      // Note: Apple Pay works automatically via automatic_payment_methods
+      // on the server side. Do NOT pass explicit applePay parameter —
+      // it causes initPaymentSheet to hang on iOS when merchant validation
+      // fails silently (provisioning profile / SDK version issue).
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: clientSecret,
@@ -111,18 +116,12 @@ class StripeService {
           returnURL: 'bereifung24://stripe-redirect',
           style: ThemeMode.system,
           paymentMethodOrder: methodOrder,
-          // Google Pay on Android
+          // Google Pay on Android (explicit config needed)
           googlePay: Platform.isAndroid
               ? const PaymentSheetGooglePay(
                   merchantCountryCode: 'DE',
                   currencyCode: 'EUR',
                   testEnv: false,
-                )
-              : null,
-          // Apple Pay on iOS
-          applePay: Platform.isIOS
-              ? const PaymentSheetApplePay(
-                  merchantCountryCode: 'DE',
                 )
               : null,
           appearance: const PaymentSheetAppearance(
@@ -136,9 +135,12 @@ class StripeService {
         ),
       );
 
-      // 3. Present payment sheet
+      // 3. Present payment sheet (with timeout to prevent infinite spinner)
       debugPrint('Stripe: Presenting payment sheet...');
-      await Stripe.instance.presentPaymentSheet();
+      await Stripe.instance.presentPaymentSheet()
+          .timeout(const Duration(seconds: 120), onTimeout: () {
+        throw Exception('Zahlung hat zu lange gedauert. Bitte versuche es erneut.');
+      });
       debugPrint('Stripe: Payment completed successfully');
 
       return paymentIntentId ?? 'stripe_completed'; // payment succeeded

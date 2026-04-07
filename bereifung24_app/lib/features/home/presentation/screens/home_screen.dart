@@ -1397,7 +1397,7 @@ class _CO2BilanzCard extends ConsumerWidget {
                     Text(
                       trips > 0
                           ? '$trips Online-Buchungen statt Werkstattbesuche'
-                          : 'Basierend auf Ihren Fahrzeugdaten',
+                          : 'Basierend auf deinen Fahrzeugdaten',
                       style: TextStyle(
                         fontSize: 10,
                         color: isDark

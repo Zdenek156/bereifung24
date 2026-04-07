@@ -38,6 +38,8 @@ class StripeService {
         Stripe.publishableKey = key;
         // Required for Apple Pay on iOS
         Stripe.merchantIdentifier = 'merchant.de.bereifung24.bereifung24App';
+        // Required for iOS redirect-based payment methods (3D Secure, PayPal, Klarna)
+        Stripe.urlScheme = 'bereifung24';
         debugPrint('Stripe init: key set, calling applySettings...');
         await Stripe.instance.applySettings();
         _initialized = true;
@@ -105,6 +107,8 @@ class StripeService {
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: clientSecret,
           merchantDisplayName: 'Bereifung24',
+          // Required for iOS: return URL after 3D Secure / external auth
+          returnURL: 'bereifung24://stripe-redirect',
           style: ThemeMode.system,
           paymentMethodOrder: methodOrder,
           // Google Pay on Android

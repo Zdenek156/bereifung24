@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
@@ -80,13 +81,15 @@ class StripeService {
       if (clientSecret == null) throw Exception('No client secret');
 
       // Build payment method order based on user selection (selected first)
-      final allMethods = ['card', 'paypal', 'klarna', 'googlePay'];
+      final walletMethod = Platform.isIOS ? 'applePay' : 'googlePay';
+      final allMethods = ['card', 'paypal', 'klarna', walletMethod];
       List<String>? methodOrder;
       if (paymentMethod != null) {
-        const methodMap = {
+        final methodMap = {
           'card': 'card',
           'paypal': 'paypal',
           'klarna': 'klarna',
+          'apple_pay': 'applePay',
           'google_pay': 'googlePay',
         };
         final selected = methodMap[paymentMethod];
@@ -102,6 +105,18 @@ class StripeService {
           merchantDisplayName: 'Bereifung24',
           style: ThemeMode.system,
           paymentMethodOrder: methodOrder,
+          googlePay: Platform.isAndroid
+              ? const PaymentSheetGooglePay(
+                  merchantCountryCode: 'DE',
+                  currencyCode: 'EUR',
+                  testEnv: false,
+                )
+              : null,
+          applePay: Platform.isIOS
+              ? const PaymentSheetApplePay(
+                  merchantCountryCode: 'DE',
+                )
+              : null,
           appearance: const PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
               primary: Color(0xFF0284C7),

@@ -844,6 +844,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final q = _searchCtrl.text.trim();
     if (q.isEmpty) return;
 
+    // Dismiss keyboard
+    FocusScope.of(context).unfocus();
+
     AnalyticsService().logSearch(q);
     final isZip = RegExp(r'^\d{5}$').hasMatch(q);
     final vehicle = ref.read(selectedVehicleProvider);

@@ -1224,7 +1224,8 @@ class _SeasonTipCard extends StatelessWidget {
             alignment: Alignment.center,
             child: Text(
               isWinterSeason ? '❄️' : '☀️',
-              style: const TextStyle(fontSize: 20),
+              style: const TextStyle(fontSize: 20, height: 1),
+              textAlign: TextAlign.center,
             ),
           ),
           const SizedBox(width: 12),

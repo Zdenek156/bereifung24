@@ -7,6 +7,7 @@ import '../../../../core/services/analytics_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
 import '../../../../utils/tire_category_utils.dart';
+import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 import 'search_screen.dart';
 
 // ── Providers ──
@@ -246,6 +247,20 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
     final selectedVehicle = ref.watch(selectedVehicleProvider);
     final selectedDate = ref.watch(selectedDateProvider);
 
+    // Auto-select first vehicle if none selected but vehicles exist
+    if (selectedVehicle == null) {
+      final vehiclesAsync = ref.watch(vehiclesProvider);
+      vehiclesAsync.whenData((vehicles) {
+        if (vehicles.isNotEmpty) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref.read(selectedVehicleProvider.notifier).state = vehicles.first;
+            }
+          });
+        }
+      });
+    }
+
     // Auto-select preferred tire (from AI advisor / search card)
     if (!_tireAutoSelected &&
         widget.preferredTireBrand != null &&
@@ -327,7 +342,21 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
               // ── Hero Image ──
               SliverAppBar(
                 expandedHeight: 220,
-                pinned: true,
+                pinned: false,
+                floating: true,
+                snap: true,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.black45,
+                    radius: 18,
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                      padding: EdgeInsets.zero,
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ),
+                ),
                 flexibleSpace: FlexibleSpaceBar(
                   title: Text(
                     workshop.name,
@@ -1555,6 +1584,10 @@ class _TireRecommendationsSectionState
         ? 'Reifenempfehlungen – ${widget.axleLabel}'
         : 'Reifenempfehlungen';
 
+    // Collect available brands (from category-filtered list) — needed in both views
+    final brands = categoryFiltered.map((t) => t.brand).toSet().toList()
+      ..sort();
+
     // Collapsed view: show only the selected tire when preselected
     if (widget.preselected && !_expanded && selectedTire != null) {
       return Column(
@@ -1570,6 +1603,67 @@ class _TireRecommendationsSectionState
                 ?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
+          // Brand filter dropdown (also in collapsed view)
+          if (brands.length > 1) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: isDark
+                        ? const Color(0xFF334155)
+                        : Colors.grey.shade300),
+              ),
+              child: DropdownButton<String?>(
+                value: _selectedBrand,
+                isExpanded: true,
+                underline: const SizedBox.shrink(),
+                icon: Icon(Icons.filter_list,
+                    size: 18,
+                    color:
+                        isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
+                hint: Text('Alle Hersteller',
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: isDark
+                            ? const Color(0xFFF9FAFB)
+                            : Colors.grey[800])),
+                dropdownColor:
+                    isDark ? const Color(0xFF1E293B) : Colors.white,
+                items: [
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text(
+                        'Alle Hersteller (${categoryFiltered.length})',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: isDark
+                                ? const Color(0xFFF9FAFB)
+                                : Colors.grey[800])),
+                  ),
+                  ...brands.map((brand) {
+                    final count = categoryFiltered
+                        .where((t) => t.brand == brand)
+                        .length;
+                    return DropdownMenuItem<String?>(
+                      value: brand,
+                      child: Text('$brand ($count)',
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: isDark
+                                  ? const Color(0xFFF9FAFB)
+                                  : Colors.grey[800])),
+                    );
+                  }),
+                ],
+                onChanged: (value) => setState(() {
+                  _selectedBrand = value;
+                }),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
           _TireRecommendationCard(
             tire: selectedTire,
             isSelected: true,
@@ -1646,10 +1740,6 @@ class _TireRecommendationsSectionState
         ],
       );
     }
-
-    // Collect available brands (from category-filtered list)
-    final brands = categoryFiltered.map((t) => t.brand).toSet().toList()
-      ..sort();
 
     // Apply brand filter on top of category filter
     final filtered = _selectedBrand != null

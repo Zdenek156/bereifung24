@@ -110,14 +110,11 @@ class StripeService {
 
       await RemoteLogger.log('stripe', 'step 2: Calling initPaymentSheet...', data: {
         'methodOrder': methodOrder,
+        'hasApplePay': Platform.isIOS,
         'hasGooglePay': Platform.isAndroid,
         'returnURL': 'bereifung24://stripe-redirect',
       });
       // 2. Initialize payment sheet
-      // Note: Apple Pay works automatically via automatic_payment_methods
-      // on the server side. Do NOT pass explicit applePay parameter —
-      // it causes initPaymentSheet to hang on iOS when merchant validation
-      // fails silently (provisioning profile / SDK version issue).
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
           paymentIntentClientSecret: clientSecret,
@@ -126,7 +123,13 @@ class StripeService {
           returnURL: 'bereifung24://stripe-redirect',
           style: ThemeMode.system,
           paymentMethodOrder: methodOrder,
-          // Google Pay on Android (explicit config needed)
+          // Apple Pay on iOS
+          applePay: Platform.isIOS
+              ? const PaymentSheetApplePay(
+                  merchantCountryCode: 'DE',
+                )
+              : null,
+          // Google Pay on Android
           googlePay: Platform.isAndroid
               ? const PaymentSheetGooglePay(
                   merchantCountryCode: 'DE',
@@ -134,6 +137,8 @@ class StripeService {
                   testEnv: false,
                 )
               : null,
+          // German locale for button text ("Bezahlen" statt "Pay")
+          primaryButtonLabel: 'Bezahlen',
           appearance: const PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
               primary: Color(0xFF0284C7),

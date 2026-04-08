@@ -4,7 +4,12 @@
     {
       "label": "🚀 Deploy: Full (Clean Build + Restart)",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"cd /var/www/bereifung24 && git fetch origin && git reset --hard origin/main && rm -rf .next && npm run build && pm2 restart bereifung24 && pm2 logs bereifung24 --lines 5 --nostream\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "cd /var/www/bereifung24 && git fetch origin && git reset --hard origin/main && rm -rf .next && npm run build && pm2 restart bereifung24 && pm2 logs bereifung24 --lines 5 --nostream"
+      ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -14,7 +19,12 @@
     {
       "label": "⚡ Deploy: Quick Restart",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"pm2 restart bereifung24 && pm2 logs bereifung24 --lines 5 --nostream\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "pm2 restart bereifung24 && pm2 logs bereifung24 --lines 5 --nostream"
+      ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -24,17 +34,24 @@
     {
       "label": "📤 Deploy: Current File",
       "type": "shell",
-      "command": "scp -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner \"${relativeFile}\" root@167.235.24.110:\"/var/www/bereifung24/${relativeFileDirname}/${fileBasename}\" && ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"cd /var/www/bereifung24 && rm -rf .next && npm run build && pm2 restart bereifung24\"",
+      "command": "scp -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner '${relativeFile}' root@167.235.24.110:'/var/www/bereifung24/${relativeFileDirname}/${fileBasename}'",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
         "panel": "new"
-      }
+      },
+      "dependsOn": [],
+      "dependsOrder": "sequence"
     },
     {
       "label": "📊 PM2: Status",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"pm2 list && echo '\\n--- Recent Logs ---' && pm2 logs bereifung24 --lines 20 --nostream\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "pm2 list && echo '--- Recent Logs ---' && pm2 logs bereifung24 --lines 20 --nostream"
+      ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -44,7 +61,12 @@
     {
       "label": "📝 PM2: Logs (50 lines)",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"pm2 logs bereifung24 --lines 50 --nostream\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "pm2 logs bereifung24 --lines 50 --nostream"
+      ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -54,7 +76,12 @@
     {
       "label": "🔴 PM2: Live Logs",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"pm2 logs bereifung24\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "pm2 logs bereifung24"
+      ],
       "problemMatcher": [],
       "isBackground": true,
       "presentation": {
@@ -65,7 +92,12 @@
     {
       "label": "🧹 Clean: Delete .next cache",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"cd /var/www/bereifung24 && rm -rf .next && echo '✅ .next cache deleted'\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "cd /var/www/bereifung24 && rm -rf .next && echo '.next cache deleted'"
+      ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -75,7 +107,12 @@
     {
       "label": "🔨 Build: Only Build (no restart)",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"cd /var/www/bereifung24 && npm run build\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "cd /var/www/bereifung24 && npm run build"
+      ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -85,7 +122,12 @@
     {
       "label": "💾 Backup: Create Server Backup",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"cd /var/www/bereifung24 && tar -czf ../backup-$(date +%Y%m%d-%H%M%S).tar.gz . && ls -lh ../backup-*.tar.gz | tail -3\"",
+      "command": "ssh",
+      "args": [
+        "-i", "C:\\Users\\zdene\\.ssh\\bereifung24_hetzner",
+        "root@167.235.24.110",
+        "cd /var/www/bereifung24 && tar -czf ../backup-$(date +%Y%m%d-%H%M%S).tar.gz . && ls -lh ../backup-*.tar.gz | tail -3"
+      ],
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

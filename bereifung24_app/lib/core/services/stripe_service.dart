@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import '../config/app_config.dart';
 import '../network/api_client.dart';
+import 'remote_logger.dart';
 
 class StripeService {
   static final StripeService _instance = StripeService._internal();
@@ -19,15 +20,14 @@ class StripeService {
     try {
       // Use full URL to avoid any baseUrl path resolution issues
       final url = '${AppConfig.apiBaseUrl}/config/stripe';
-      debugPrint('Stripe init: fetching key from $url');
+      await RemoteLogger.log('stripe', 'init: fetching key from $url');
       final dio = Dio(BaseOptions(
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {'Accept': 'application/json'},
       ));
       final response = await dio.get(url);
-      debugPrint(
-          'Stripe init: response status=${response.statusCode}, data=${response.data}');
+      await RemoteLogger.log('stripe', 'init: response status=${response.statusCode}');
 
       final data = response.data;
       String? key;
@@ -39,16 +39,15 @@ class StripeService {
         Stripe.publishableKey = key;
         Stripe.merchantIdentifier = 'merchant.de.bereifung24.bereifung24App';
         Stripe.urlScheme = 'bereifung24';
-        debugPrint('Stripe init: key set, calling applySettings...');
+        await RemoteLogger.log('stripe', 'init: key set, calling applySettings...');
         await Stripe.instance.applySettings();
         _initialized = true;
-        debugPrint('Stripe initialized successfully');
+        await RemoteLogger.log('stripe', 'init: SUCCESS — initialized');
       } else {
-        debugPrint('Stripe init: invalid key received: $key');
+        await RemoteLogger.error('stripe', 'init: invalid key received: ${key?.substring(0, 10)}...');
       }
     } catch (e, stack) {
-      debugPrint('Stripe init failed: $e');
-      debugPrint('Stack: $stack');
+      await RemoteLogger.error('stripe', 'init FAILED: $e', data: {'stack': '$stack'});
     }
   }
 
@@ -64,15 +63,21 @@ class StripeService {
   }) async {
     if (!_initialized) {
       // Try to init one more time (force re-fetch to ensure correct key)
+      await RemoteLogger.log('stripe', 'processPayment: not initialized, forcing init...');
       await init(force: true);
       if (!_initialized) {
+        await RemoteLogger.error('stripe', 'processPayment: STILL not initialized after force init');
         throw Exception(
             'Stripe ist nicht konfiguriert. Bitte versuche es später erneut.');
       }
     }
     try {
       // 1. Create payment intent on the server
-      debugPrint('Stripe: Creating payment intent for amount=$amount, method=$paymentMethod');
+      await RemoteLogger.log('stripe', 'step 1: Creating PaymentIntent', data: {
+        'amount': amount,
+        'method': paymentMethod,
+        'platform': Platform.operatingSystem,
+      });
       final response = await ApiClient().createPaymentIntent({
         'bookingId': bookingId,
         'amount': amount,
@@ -80,9 +85,12 @@ class StripeService {
       });
 
       final data = response.data;
-      debugPrint('Stripe: PaymentIntent response: $data');
       final clientSecret = data['clientSecret'] as String?;
       final paymentIntentId = data['paymentIntentId'] as String?;
+      await RemoteLogger.log('stripe', 'step 1: PaymentIntent created', data: {
+        'hasClientSecret': clientSecret != null,
+        'paymentIntentId': paymentIntentId,
+      });
       if (clientSecret == null) throw Exception('No client secret');
 
       // Build payment method order based on user selection (selected first)
@@ -100,7 +108,11 @@ class StripeService {
         methodOrder = [selected, ...allMethods.where((m) => m != selected)];
       }
 
-      debugPrint('Stripe: Initializing payment sheet...');
+      await RemoteLogger.log('stripe', 'step 2: Calling initPaymentSheet...', data: {
+        'methodOrder': methodOrder,
+        'hasGooglePay': Platform.isAndroid,
+        'returnURL': 'bereifung24://stripe-redirect',
+      });
       // 2. Initialize payment sheet
       // Note: Apple Pay works automatically via automatic_payment_methods
       // on the server side. Do NOT pass explicit applePay parameter —
@@ -132,24 +144,30 @@ class StripeService {
           ),
         ),
       );
+      await RemoteLogger.log('stripe', 'step 2: initPaymentSheet DONE');
 
       // 3. Present payment sheet (with timeout to prevent infinite spinner)
-      debugPrint('Stripe: Presenting payment sheet...');
+      await RemoteLogger.log('stripe', 'step 3: Calling presentPaymentSheet...');
       await Stripe.instance.presentPaymentSheet()
           .timeout(const Duration(seconds: 120), onTimeout: () {
+        RemoteLogger.error('stripe', 'step 3: TIMEOUT after 120s');
         throw Exception('Zahlung hat zu lange gedauert. Bitte versuche es erneut.');
       });
-      debugPrint('Stripe: Payment completed successfully');
+      await RemoteLogger.log('stripe', 'step 3: presentPaymentSheet DONE — payment succeeded');
 
       return paymentIntentId ?? 'stripe_completed'; // payment succeeded
     } on StripeException catch (e) {
-      debugPrint('Stripe: StripeException: ${e.error.code} - ${e.error.message}');
+      await RemoteLogger.error('stripe', 'StripeException: ${e.error.code} - ${e.error.message}', data: {
+        'code': e.error.code.toString(),
+        'message': e.error.message,
+        'localizedMessage': e.error.localizedMessage,
+      });
       if (e.error.code == FailureCode.Canceled) {
         return null; // user cancelled
       }
       rethrow;
-    } catch (e) {
-      debugPrint('Stripe: General error: $e');
+    } catch (e, stack) {
+      await RemoteLogger.error('stripe', 'General error: $e', data: {'stack': '$stack'});
       rethrow;
     }
   }

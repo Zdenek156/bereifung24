@@ -67,12 +67,16 @@ class ApiClient {
   }
 
   Future<Response> socialLogin(String provider, String idToken,
-      {String? firstName, String? lastName}) {
+      {String? firstName, String? lastName, String? phone, String? street, String? zipCode, String? city}) {
     return _dio.post('/mobile-auth/social', data: {
       'provider': provider,
       'idToken': idToken,
       if (firstName != null) 'firstName': firstName,
       if (lastName != null) 'lastName': lastName,
+      if (phone != null) 'phone': phone,
+      if (street != null) 'street': street,
+      if (zipCode != null) 'zipCode': zipCode,
+      if (city != null) 'city': city,
     });
   }
 

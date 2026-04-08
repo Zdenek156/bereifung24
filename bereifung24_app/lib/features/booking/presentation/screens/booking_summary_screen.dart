@@ -818,16 +818,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               setState(() => _selectedPayment = 'klarna'),
                         ),
                         const Divider(height: 1),
-                        if (Platform.isIOS)
-                          _PaymentMethodTile(
-                            label: 'Apple Pay',
-                            subtitle: 'Schnell bezahlen',
-                            iconWidget: const _ApplePayLogo(),
-                            selected: _selectedPayment == 'apple_pay',
-                            onTap: () =>
-                                setState(() => _selectedPayment = 'apple_pay'),
-                          )
-                        else
+                        // Apple Pay temporarily hidden until Stripe 11.5 is verified on iOS
+                        if (Platform.isAndroid)
                           _PaymentMethodTile(
                             label: 'Google Pay',
                             subtitle: 'Schnell bezahlen',

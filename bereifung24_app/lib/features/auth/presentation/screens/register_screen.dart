@@ -147,11 +147,50 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         return;
       }
 
+      String? appleFirstName = credential.givenName;
+      String? appleLastName = credential.familyName;
+      String? phone;
+      String? street;
+      String? zipCode;
+      String? city;
+
+      // Apple only provides name on first sign-in. If missing, ask user.
+      if (appleFirstName == null || appleFirstName.isEmpty ||
+          appleLastName == null || appleLastName.isEmpty) {
+        final result = await _showProfileDialog(
+          firstName: appleFirstName,
+          lastName: appleLastName,
+        );
+        if (result == null) return; // User cancelled
+        appleFirstName = result['firstName'];
+        appleLastName = result['lastName'];
+        phone = result['phone'];
+        street = result['street'];
+        zipCode = result['zipCode'];
+        city = result['city'];
+      } else {
+        // Name available (first Apple login) — still ask for address
+        final result = await _showProfileDialog(
+          firstName: appleFirstName,
+          lastName: appleLastName,
+          nameProvided: true,
+        );
+        if (result == null) return;
+        phone = result['phone'];
+        street = result['street'];
+        zipCode = result['zipCode'];
+        city = result['city'];
+      }
+
       final success = await ref.read(authStateProvider.notifier).socialLogin(
             'apple',
             idToken,
-            firstName: credential.givenName,
-            lastName: credential.familyName,
+            firstName: appleFirstName,
+            lastName: appleLastName,
+            phone: phone,
+            street: street,
+            zipCode: zipCode,
+            city: city,
           );
 
       if (mounted) {
@@ -175,6 +214,138 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         );
       }
     }
+  }
+
+  /// Shows a dialog to collect name and address for Apple Sign-In users.
+  /// [nameProvided] = true if Apple already provided the name (first login).
+  Future<Map<String, String>?> _showProfileDialog({
+    String? firstName,
+    String? lastName,
+    bool nameProvided = false,
+  }) async {
+    final firstNameCtrl = TextEditingController(text: firstName ?? '');
+    final lastNameCtrl = TextEditingController(text: lastName ?? '');
+    final phoneCtrl = TextEditingController();
+    final streetCtrl = TextEditingController();
+    final zipCtrl = TextEditingController();
+    final cityCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(nameProvided ? 'Adresse vervollständigen' : 'Profil vervollständigen'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  nameProvided
+                      ? 'Bitte gib noch deine Adresse an, damit wir Werkstätten in deiner Nähe finden können.'
+                      : 'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
+                  style: const TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                if (!nameProvided) ...[
+                  TextFormField(
+                    controller: firstNameCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(labelText: 'Vorname *'),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: lastNameCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(labelText: 'Nachname *'),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                TextFormField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Telefon (optional)',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: streetCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Straße & Hausnummer *',
+                    prefixIcon: Icon(Icons.home_outlined),
+                  ),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 100,
+                      child: TextFormField(
+                        controller: zipCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'PLZ *'),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Pflicht';
+                          if (v.trim().length != 5) return '5 Ziffern';
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: cityCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(labelText: 'Stadt *'),
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(ctx, {
+                  'firstName': firstNameCtrl.text.trim(),
+                  'lastName': lastNameCtrl.text.trim(),
+                  'phone': phoneCtrl.text.trim(),
+                  'street': streetCtrl.text.trim(),
+                  'zipCode': zipCtrl.text.trim(),
+                  'city': cityCtrl.text.trim(),
+                });
+              }
+            },
+            child: const Text('Weiter'),
+          ),
+        ],
+      ),
+    );
+
+    firstNameCtrl.dispose();
+    lastNameCtrl.dispose();
+    phoneCtrl.dispose();
+    streetCtrl.dispose();
+    zipCtrl.dispose();
+    cityCtrl.dispose();
+
+    return result;
   }
 
   @override
@@ -212,6 +383,87 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       .textTheme
                       .bodyMedium
                       ?.copyWith(color: Colors.grey[600]),
+                ),
+
+                const SizedBox(height: 24),
+
+                // Social login buttons (platform-specific)
+                if (Platform.isAndroid)
+                  OutlinedButton(
+                    onPressed:
+                        authState.isLoading ? null : () => _googleSignIn(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset('assets/images/google_logo.svg',
+                            height: 20, width: 20),
+                        const SizedBox(width: 12),
+                        const Text('Mit Google registrieren'),
+                      ],
+                    ),
+                  ),
+
+                if (Platform.isIOS) ...[
+                  OutlinedButton(
+                    onPressed:
+                        authState.isLoading ? null : () => _appleSignIn(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset('assets/images/apple_logo.svg',
+                            height: 20, width: 20),
+                        const SizedBox(width: 12),
+                        const Text('Mit Apple registrieren'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed:
+                        authState.isLoading ? null : () => _googleSignIn(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset('assets/images/google_logo.svg',
+                            height: 20, width: 20),
+                        const SizedBox(width: 12),
+                        const Text('Mit Google registrieren'),
+                      ],
+                    ),
+                  ),
+                ],
+
+                const SizedBox(height: 24),
+
+                // Divider
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text('oder',
+                          style: TextStyle(color: Colors.grey[600])),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
                 ),
 
                 const SizedBox(height: 24),
@@ -505,87 +757,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       : const Text('Registrieren',
                           style: TextStyle(fontSize: 16)),
                 ),
-
-                const SizedBox(height: 24),
-
-                // Divider
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('oder',
-                          style: TextStyle(color: Colors.grey[600])),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Social login buttons (platform-specific)
-                if (Platform.isAndroid)
-                  OutlinedButton(
-                    onPressed:
-                        authState.isLoading ? null : () => _googleSignIn(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset('assets/images/google_logo.svg',
-                            height: 20, width: 20),
-                        const SizedBox(width: 12),
-                        const Text('Mit Google registrieren'),
-                      ],
-                    ),
-                  ),
-
-                if (Platform.isIOS) ...[
-                  OutlinedButton(
-                    onPressed:
-                        authState.isLoading ? null : () => _appleSignIn(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset('assets/images/apple_logo.svg',
-                            height: 20, width: 20),
-                        const SizedBox(width: 12),
-                        const Text('Mit Apple registrieren'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed:
-                        authState.isLoading ? null : () => _googleSignIn(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset('assets/images/google_logo.svg',
-                            height: 20, width: 20),
-                        const SizedBox(width: 12),
-                        const Text('Mit Google registrieren'),
-                      ],
-                    ),
-                  ),
-                ],
 
                 const SizedBox(height: 24),
 

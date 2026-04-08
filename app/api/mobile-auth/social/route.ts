@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { provider, idToken, firstName: providedFirstName, lastName: providedLastName } = await request.json()
+    const { provider, idToken, firstName: providedFirstName, lastName: providedLastName, phone: providedPhone, street: providedStreet, zipCode: providedZipCode, city: providedCity } = await request.json()
 
     if (!provider || !idToken) {
       return NextResponse.json(
@@ -137,10 +137,10 @@ export async function POST(request: NextRequest) {
           googleId: provider === 'google' ? providerId : undefined,
           appleId: provider === 'apple' ? providerId : undefined,
           profileImage: pictureUrl || undefined,
-          phone: '',
-          street: '',
-          zipCode: '',
-          city: '',
+          phone: providedPhone || '',
+          street: providedStreet || '',
+          zipCode: providedZipCode || '',
+          city: providedCity || '',
           customer: { create: {} },
         },
         include: { customer: true, workshop: true },

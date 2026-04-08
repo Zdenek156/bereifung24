@@ -107,11 +107,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> socialLogin(String provider, String idToken,
-      {String? firstName, String? lastName}) async {
+      {String? firstName, String? lastName, String? phone, String? street, String? zipCode, String? city}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.socialLogin(provider, idToken,
-          firstName: firstName, lastName: lastName);
+          firstName: firstName, lastName: lastName, phone: phone, street: street, zipCode: zipCode, city: city);
       final data = response.data;
 
       await _saveTokens(data);

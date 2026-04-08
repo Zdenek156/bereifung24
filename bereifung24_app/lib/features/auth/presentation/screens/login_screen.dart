@@ -399,11 +399,38 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
 
+      String? appleFirstName = credential.givenName;
+      String? appleLastName = credential.familyName;
+      String? phone;
+      String? street;
+      String? zipCode;
+      String? city;
+
+      // Apple only provides name on first sign-in. If missing, ask user.
+      if (appleFirstName == null || appleFirstName.isEmpty ||
+          appleLastName == null || appleLastName.isEmpty) {
+        final result = await _showProfileDialog(
+          firstName: appleFirstName,
+          lastName: appleLastName,
+        );
+        if (result == null) return; // User cancelled
+        appleFirstName = result['firstName'];
+        appleLastName = result['lastName'];
+        phone = result['phone'];
+        street = result['street'];
+        zipCode = result['zipCode'];
+        city = result['city'];
+      }
+
       final success = await ref.read(authStateProvider.notifier).socialLogin(
         'apple',
         idToken,
-        firstName: credential.givenName,
-        lastName: credential.familyName,
+        firstName: appleFirstName,
+        lastName: appleLastName,
+        phone: phone,
+        street: street,
+        zipCode: zipCode,
+        city: city,
       );
 
       if (mounted) {
@@ -424,5 +451,131 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
       }
     }
+  }
+
+  /// Shows a dialog to collect name and address for Apple Sign-In users.
+  Future<Map<String, String>?> _showProfileDialog({
+    String? firstName,
+    String? lastName,
+  }) async {
+    final firstNameCtrl = TextEditingController(text: firstName ?? '');
+    final lastNameCtrl = TextEditingController(text: lastName ?? '');
+    final phoneCtrl = TextEditingController();
+    final streetCtrl = TextEditingController();
+    final zipCtrl = TextEditingController();
+    final cityCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Profil vervollständigen'),
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
+                  style: TextStyle(fontSize: 13),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: firstNameCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Vorname *'),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: lastNameCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Nachname *'),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                    labelText: 'Telefon (optional)',
+                    prefixIcon: Icon(Icons.phone_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: streetCtrl,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Straße & Hausnummer *',
+                    prefixIcon: Icon(Icons.home_outlined),
+                  ),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 100,
+                      child: TextFormField(
+                        controller: zipCtrl,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'PLZ *'),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) return 'Pflicht';
+                          if (v.trim().length != 5) return '5 Ziffern';
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: cityCtrl,
+                        textCapitalization: TextCapitalization.words,
+                        decoration: const InputDecoration(labelText: 'Stadt *'),
+                        validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Abbrechen'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(ctx, {
+                  'firstName': firstNameCtrl.text.trim(),
+                  'lastName': lastNameCtrl.text.trim(),
+                  'phone': phoneCtrl.text.trim(),
+                  'street': streetCtrl.text.trim(),
+                  'zipCode': zipCtrl.text.trim(),
+                  'city': cityCtrl.text.trim(),
+                });
+              }
+            },
+            child: const Text('Weiter'),
+          ),
+        ],
+      ),
+    );
+
+    firstNameCtrl.dispose();
+    lastNameCtrl.dispose();
+    phoneCtrl.dispose();
+    streetCtrl.dispose();
+    zipCtrl.dispose();
+    cityCtrl.dispose();
+
+    return result;
   }
 }

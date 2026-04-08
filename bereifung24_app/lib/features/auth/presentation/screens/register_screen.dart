@@ -96,11 +96,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         return;
       }
 
+      final googleFirstName = googleUser.displayName?.split(' ').first;
+      final googleLastName = googleUser.displayName?.split(' ').skip(1).join(' ');
+
+      // Ask for address before registration
+      final result = await _showProfileDialog(
+        firstName: googleFirstName,
+        lastName: googleLastName,
+        nameProvided: true,
+      );
+      if (result == null) return; // User cancelled
+
       final success = await ref.read(authStateProvider.notifier).socialLogin(
             'google',
             idToken,
-            firstName: googleUser.displayName?.split(' ').first,
-            lastName: googleUser.displayName?.split(' ').skip(1).join(' '),
+            firstName: googleFirstName,
+            lastName: googleLastName,
+            phone: result['phone'],
+            street: result['street'],
+            zipCode: result['zipCode'],
+            city: result['city'],
           );
 
       if (mounted) {

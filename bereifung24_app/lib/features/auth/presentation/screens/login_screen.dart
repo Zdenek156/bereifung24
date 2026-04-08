@@ -352,11 +352,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return;
       }
 
+      final googleFirstName = googleUser.displayName?.split(' ').first;
+      final googleLastName = googleUser.displayName?.split(' ').skip(1).join(' ');
+
+      // Ask for address before login
+      final result = await _showProfileDialog(
+        firstName: googleFirstName,
+        lastName: googleLastName,
+        nameProvided: true,
+      );
+      if (result == null) return; // User cancelled
+
       final success = await ref.read(authStateProvider.notifier).socialLogin(
         'google',
         idToken,
-        firstName: googleUser.displayName?.split(' ').first,
-        lastName: googleUser.displayName?.split(' ').skip(1).join(' '),
+        firstName: googleFirstName,
+        lastName: googleLastName,
+        phone: result['phone'],
+        street: result['street'],
+        zipCode: result['zipCode'],
+        city: result['city'],
       );
 
       if (mounted) {
@@ -464,10 +479,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  /// Shows a dialog to collect name and address for Apple Sign-In users.
+  /// Shows a dialog to collect name and address for social sign-in users.
   Future<Map<String, String>?> _showProfileDialog({
     String? firstName,
     String? lastName,
+    bool nameProvided = false,
     bool askForEmail = false,
   }) async {
     final firstNameCtrl = TextEditingController(text: firstName ?? '');
@@ -483,7 +499,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('Profil vervollständigen'),
+        title: Text(nameProvided ? 'Adresse vervollständigen' : 'Profil vervollständigen'),
         content: SingleChildScrollView(
           child: Form(
             key: formKey,
@@ -493,7 +509,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   askForEmail
                       ? 'Apple hat deine E-Mail-Adresse verborgen. Bitte gib deine echte E-Mail-Adresse an.'
-                      : 'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
+                      : nameProvided
+                          ? 'Bitte gib noch deine Adresse an, damit wir Werkstätten in deiner Nähe finden können.'
+                          : 'Dein Name wurde nicht übermittelt. Bitte vervollständige dein Profil.',
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -513,20 +531,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-                TextFormField(
-                  controller: firstNameCtrl,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(labelText: 'Vorname *'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: lastNameCtrl,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(labelText: 'Nachname *'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
-                ),
-                const SizedBox(height: 12),
+                if (!nameProvided) ...[
+                  TextFormField(
+                    controller: firstNameCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(labelText: 'Vorname *'),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: lastNameCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(labelText: 'Nachname *'),
+                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 TextFormField(
                   controller: phoneCtrl,
                   keyboardType: TextInputType.phone,

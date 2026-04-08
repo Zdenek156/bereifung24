@@ -1,6 +1,5 @@
 import cron from 'node-cron'
 import { prisma } from '@/lib/prisma'
-import { createPayment } from '@/lib/gocardless'
 
 const COMMISSION_RATE = 0.049 // 4.9%
 const TAX_RATE = 0.19 // 19%
@@ -34,20 +33,17 @@ async function runMonthlyBilling(year: number, month: number) {
 
   console.log(`📅 Billing for ${month}/${year}`)
 
-  // Get all workshops with SEPA mandates
-  // Note: pending_submission and submitted are valid states for payment creation
-  // Mandate becomes 'active' only after first successful payment
+  // Get all workshops with PENDING commissions
   const workshops = await prisma.workshop.findMany({
     where: {
-      gocardlessMandateId: { not: null },
-      gocardlessMandateStatus: {
-        in: ['pending_submission', 'submitted', 'active']
+      commissions: {
+        some: { status: 'PENDING' }
       }
     },
     include: {
       commissions: {
         where: {
-          status: 'PENDING' // Get all PENDING commissions
+          status: 'PENDING'
         }
       }
     }
@@ -80,22 +76,8 @@ async function runMonthlyBilling(year: number, month: number) {
     results.totalCommissions += workshop.commissions.length
     results.totalGrossAmount += commissionGross
 
-    // Create GoCardless payment for all PENDING commissions
+    // Mark commissions as COLLECTED for billing
     try {
-      const payment = await createPayment({
-        amount: Math.round(commissionGross * 100), // in cents
-        currency: 'EUR',
-        description: `Provision ${month}/${year} - ${workshop.companyName}`,
-        mandateId: workshop.gocardlessMandateId!,
-        metadata: {
-          workshopId: workshop.id,
-          billingYear: String(year),
-          billingMonth: String(month),
-          commissionsCount: String(workshop.commissions.length)
-        }
-      })
-
-      // Update commissions with payment info and mark as COLLECTED
       await prisma.commission.updateMany({
         where: {
           id: {
@@ -103,35 +85,19 @@ async function runMonthlyBilling(year: number, month: number) {
           }
         },
         data: {
-          gocardlessPaymentId: payment.id,
-          gocardlessPaymentStatus: payment.status,
-          gocardlessChargeDate: payment.charge_date ? new Date(payment.charge_date) : null,
           status: 'COLLECTED',
           billedAt: new Date(),
           billingMonth: month,
           billingYear: year,
-          notes: `Automatische Abrechnung für ${month}/${year} - Payment ID: ${payment.id}`
+          notes: `Automatische Abrechnung für ${month}/${year}`
         }
       })
 
       results.successfulPayments++
-      console.log(`✅ Payment created for ${workshop.companyName}: ${commissionGross.toFixed(2)}€ (${workshop.commissions.length} commissions)`)
-    } catch (paymentError) {
-      console.error(`❌ Failed to create payment for ${workshop.companyName}:`, paymentError)
+      console.log(`✅ Billing for ${workshop.companyName}: ${commissionGross.toFixed(2)}€ (${workshop.commissions.length} commissions)`)
+    } catch (billingError) {
+      console.error(`❌ Failed to bill ${workshop.companyName}:`, billingError)
       results.failedPayments++
-
-      // Mark commissions as FAILED
-      await prisma.commission.updateMany({
-        where: {
-          id: {
-            in: workshop.commissions.map(c => c.id)
-          }
-        },
-        data: {
-          status: 'FAILED',
-          notes: `GoCardless payment failed: ${paymentError instanceof Error ? paymentError.message : 'Unknown error'}`
-        }
-      })
     }
   }
 

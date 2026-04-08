@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       type: type
     })
     
-    const authUrl = getAuthUrl(state)
+    const authUrl = await getAuthUrl(state)
     
     console.log('Generated calendar auth URL:', authUrl)
     

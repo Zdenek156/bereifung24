@@ -3,16 +3,19 @@
 
 import { google } from 'googleapis'
 import { createBerlinDate, isDSTInBerlin, getBerlinOffset, toBerlinTimeString } from '@/lib/timezone-utils'
+import { getApiSetting } from '@/lib/api-settings'
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 /**
  * Get OAuth2 Client for Calendar (separate from NextAuth login)
  */
-export function getOAuth2Client() {
+export async function getOAuth2Client() {
+  const clientId = await getApiSetting('GOOGLE_OAUTH_CLIENT_ID', 'GOOGLE_OAUTH_CLIENT_ID')
+  const clientSecret = await getApiSetting('GOOGLE_OAUTH_CLIENT_SECRET', 'GOOGLE_OAUTH_CLIENT_SECRET')
   return new google.auth.OAuth2(
-    process.env.GOOGLE_OAUTH_CLIENT_ID,
-    process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+    clientId || '',
+    clientSecret || '',
     `${process.env.NEXTAUTH_URL}/api/gcal/callback`
   )
 }
@@ -20,8 +23,8 @@ export function getOAuth2Client() {
 /**
  * Generate Authorization URL for OAuth flow
  */
-export function getAuthUrl(state: string) {
-  const oauth2Client = getOAuth2Client()
+export async function getAuthUrl(state: string) {
+  const oauth2Client = await getOAuth2Client()
   
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
@@ -35,7 +38,7 @@ export function getAuthUrl(state: string) {
  * Exchange authorization code for tokens
  */
 export async function getTokensFromCode(code: string) {
-  const oauth2Client = getOAuth2Client()
+  const oauth2Client = await getOAuth2Client()
   const { tokens } = await oauth2Client.getToken(code)
   return tokens
 }
@@ -45,7 +48,7 @@ export async function getTokensFromCode(code: string) {
  */
 export async function refreshAccessToken(refreshToken: string) {
   try {
-    const oauth2Client = getOAuth2Client()
+    const oauth2Client = await getOAuth2Client()
     oauth2Client.setCredentials({ refresh_token: refreshToken })
     
     console.log('Attempting to refresh access token...')
@@ -66,8 +69,8 @@ export async function refreshAccessToken(refreshToken: string) {
 /**
  * Get authenticated calendar client
  */
-export function getCalendarClient(accessToken: string, refreshToken: string) {
-  const oauth2Client = getOAuth2Client()
+export async function getCalendarClient(accessToken: string, refreshToken: string) {
+  const oauth2Client = await getOAuth2Client()
   oauth2Client.setCredentials({
     access_token: accessToken,
     refresh_token: refreshToken
@@ -92,7 +95,7 @@ export async function createCalendarEvent(
   }
 ) {
   try {
-    const calendar = getCalendarClient(accessToken, refreshToken)
+    const calendar = await getCalendarClient(accessToken, refreshToken)
     
     const response = await calendar.events.insert({
       calendarId: calendarId,
@@ -140,7 +143,7 @@ export async function updateCalendarEvent(
   }
 ) {
   try {
-    const calendar = getCalendarClient(accessToken, refreshToken)
+    const calendar = await getCalendarClient(accessToken, refreshToken)
     
     const updateData: any = {}
     
@@ -180,7 +183,7 @@ export async function deleteCalendarEvent(
   eventId: string
 ) {
   try {
-    const calendar = getCalendarClient(accessToken, refreshToken)
+    const calendar = await getCalendarClient(accessToken, refreshToken)
     
     await calendar.events.delete({
       calendarId: calendarId,
@@ -206,7 +209,7 @@ export async function getBusySlots(
 ) {
   try {
     console.log('🔍 getBusySlots called:', { calendarId, timeMin, timeMax })
-    const calendar = getCalendarClient(accessToken, refreshToken)
+    const calendar = await getCalendarClient(accessToken, refreshToken)
     
     const response = await calendar.freebusy.query({
       requestBody: {
@@ -347,7 +350,7 @@ export async function getPrimaryCalendarId(
   refreshToken: string
 ): Promise<string> {
   try {
-    const calendar = getCalendarClient(accessToken, refreshToken)
+    const calendar = await getCalendarClient(accessToken, refreshToken)
     
     const response = await calendar.calendarList.list()
     const primaryCalendar = response.data.items?.find(cal => cal.primary)

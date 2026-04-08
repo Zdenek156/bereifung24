@@ -4,6 +4,10 @@ import GoogleProvider from 'next-auth/providers/google'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 
+// Google OAuth and NextAuth credentials are loaded from process.env
+// These must be configured on the server's .env file (never committed to git)
+// Admin panel API settings are used for runtime-configurable keys only
+
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt', // JWT for Credentials + Google

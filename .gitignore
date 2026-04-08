@@ -28,6 +28,8 @@ yarn-error.log*
 # local env files
 .env*.local
 .env
+.env.production
+.env.production.*
 
 # vercel
 .vercel
@@ -48,3 +50,19 @@ bereifung24_app/.dart_tool/
 # Firebase/Google secrets
 *firebase-adminsdk*
 firebase-sa-*.txt
+
+# Sensitive deployment files (contain passwords/tokens)
+MANUAL_DEPLOYMENT_COMMANDS.txt
+EMPLOYEE_PORTAL_DEPLOYMENT.md
+
+# Scripts with hardcoded credentials
+setup-db.sh
+send-test-email.js
+check-smtp*.sh
+install-ssh-key.ps1
+update-ecosystem.js
+create-admin-user.js
+scripts/create-admin.js
+scripts/create-test-employee.js
+scripts/backup-database.sh
+scripts/restore-database.sh

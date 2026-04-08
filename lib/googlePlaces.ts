@@ -8,7 +8,14 @@
  * - Deduplication logic
  */
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+import { getApiSetting } from '@/lib/api-settings'
+
+let _cachedApiKey: string | null = null
+async function getGooglePlacesApiKey(): Promise<string | null> {
+  if (_cachedApiKey) return _cachedApiKey
+  _cachedApiKey = await getApiSetting('GOOGLE_MAPS_API_KEY', 'GOOGLE_MAPS_API_KEY')
+  return _cachedApiKey
+}
 const PLACES_API_BASE = 'https://maps.googleapis.com/maps/api/place';
 
 export interface PlaceSearchParams {
@@ -94,6 +101,7 @@ export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<
   searchLocation?: { lat: number; lng: number };
 }> {
   try {
+    const GOOGLE_PLACES_API_KEY = await getGooglePlacesApiKey()
     const country = params.country || 'DE';
     
     // Geocode if location is an address (skip for pagination requests)
@@ -154,6 +162,7 @@ export async function searchNearbyWorkshops(params: PlaceSearchParams): Promise<
  */
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | null> {
   try {
+    const GOOGLE_PLACES_API_KEY = await getGooglePlacesApiKey()
     const detailsUrl = new URL(`${PLACES_API_BASE}/details/json`);
     detailsUrl.searchParams.set('place_id', placeId);
     detailsUrl.searchParams.set('fields', [
@@ -193,7 +202,8 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails | n
 /**
  * Generate photo URL from photo reference
  */
-export function getPhotoUrl(photoReference: string, maxWidth: number = 400): string {
+export async function getPhotoUrl(photoReference: string, maxWidth: number = 400): Promise<string> {
+  const GOOGLE_PLACES_API_KEY = await getGooglePlacesApiKey()
   return `${PLACES_API_BASE}/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${GOOGLE_PLACES_API_KEY}`;
 }
 
@@ -202,6 +212,7 @@ export function getPhotoUrl(photoReference: string, maxWidth: number = 400): str
  */
 async function geocodeAddress(address: string, country: string = 'DE'): Promise<string> {
   try {
+    const GOOGLE_PLACES_API_KEY = await getGooglePlacesApiKey()
     const geocodeUrl = new URL('https://maps.googleapis.com/maps/api/geocode/json');
     geocodeUrl.searchParams.set('address', address);
     geocodeUrl.searchParams.set('key', GOOGLE_PLACES_API_KEY!);

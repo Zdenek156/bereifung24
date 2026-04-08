@@ -5,8 +5,13 @@ async function setupEmployeePortal() {
   console.log('🔧 Employee Portal Setup wird gestartet...\n');
 
   try {
-    // 1. ENCRYPTION_KEY hinzufügen
-    const encryptionKey = '***REMOVED***';
+    // 1. ENCRYPTION_KEY aus Umgebungsvariable lesen
+    const encryptionKey = process.env.ENCRYPTION_KEY;
+    if (!encryptionKey) {
+      console.error('❌ ENCRYPTION_KEY Umgebungsvariable ist nicht gesetzt!');
+      console.error('   Bitte setzen Sie ENCRYPTION_KEY in der .env Datei auf dem Server.');
+      process.exit(1);
+    }
     
     await prisma.adminApiSetting.upsert({
       where: { key: 'ENCRYPTION_KEY' },
@@ -32,8 +37,6 @@ async function setupEmployeePortal() {
     console.log('\n✨ Setup abgeschlossen!');
     console.log('\n📍 ENCRYPTION_KEY kann jetzt in Admin-Panel verwaltet werden:');
     console.log('   http://localhost:3000/admin/api-settings');
-    console.log('\n⚠️  WICHTIG: Notieren Sie sich den Key für Produktions-Deployment!');
-    console.log(`   Key: ${encryptionKey}`);
     
   } catch (error) {
     console.error('❌ Fehler:', error);

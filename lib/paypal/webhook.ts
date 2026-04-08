@@ -1,4 +1,5 @@
 import crypto from 'crypto'
+import { getApiSetting } from '@/lib/api-settings'
 
 /**
  * PayPal Webhook Signature Verification
@@ -40,7 +41,7 @@ export async function verifyPayPalWebhookSignature(
       return true
     }
     
-    const webhookId = process.env.PAYPAL_WEBHOOK_ID
+    const webhookId = await getApiSetting('PAYPAL_WEBHOOK_ID', 'PAYPAL_WEBHOOK_ID')
     if (!webhookId) {
       console.error('❌ PAYPAL_WEBHOOK_ID not configured')
       return false
@@ -237,9 +238,9 @@ export async function verifyPayPalWebhookViaAPI(
  * Get PayPal access token
  */
 async function getPayPalAccessToken(): Promise<string> {
-  const clientId = process.env.PAYPAL_CLIENT_ID
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET
-  const apiUrl = process.env.PAYPAL_API_URL || 'https://api-m.sandbox.paypal.com'
+  const clientId = await getApiSetting('PAYPAL_CLIENT_ID', 'PAYPAL_CLIENT_ID')
+  const clientSecret = await getApiSetting('PAYPAL_CLIENT_SECRET', 'PAYPAL_CLIENT_SECRET')
+  const apiUrl = await getApiSetting('PAYPAL_API_URL', 'PAYPAL_API_URL') || 'https://api-m.sandbox.paypal.com'
   
   if (!clientId || !clientSecret) {
     throw new Error('PayPal credentials not configured')

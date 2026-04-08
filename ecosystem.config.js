@@ -22,10 +22,7 @@ module.exports = {
     shutdown_with_message: true,  // Graceful shutdown
     env: {
       NODE_ENV: 'production',
-      PORT: 3000,
-      GOCARDLESS_ACCESS_TOKEN: '***REMOVED***',
-      GOCARDLESS_ENVIRONMENT: 'live',
-      GOCARDLESS_WEBHOOK_SECRET: '***REMOVED***'
+      PORT: 3000
     }
   }]
 }

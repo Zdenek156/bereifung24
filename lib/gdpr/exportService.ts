@@ -179,8 +179,7 @@ export async function exportUserData(email: string): Promise<GDPRExportData> {
         mandateRef: workshop.sepaMandateRef,
         mandateDate: workshop.sepaMandateDate,
         iban: workshop.iban ? '***' + workshop.iban.slice(-4) : null, // Masked for security
-        accountHolder: workshop.accountHolder,
-        gocardlessMandateStatus: workshop.gocardlessMandateStatus
+        accountHolder: workshop.accountHolder
       })
     }
   }

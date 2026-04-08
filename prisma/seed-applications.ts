@@ -271,16 +271,7 @@ const defaultApplications = [
     category: 'GENERAL',
     sortOrder: 63
   },
-  {
-    key: 'sepa-mandates',
-    name: 'SEPA-Mandate',
-    description: 'GoCardless Status prüfen & synchronisieren',
-    icon: 'CreditCard',
-    adminRoute: '/admin/sepa-mandates',
-    color: 'indigo',
-    category: 'ACCOUNTING',
-    sortOrder: 64
-  },
+
   {
     key: 'cleanup',
     name: 'Datenbank Bereinigung',
@@ -294,7 +285,7 @@ const defaultApplications = [
   {
     key: 'api-settings',
     name: 'API-Einstellungen',
-    description: 'GoCardless, Google & andere API-Keys verwalten',
+    description: 'Google, PayPal, Stripe & andere API-Keys verwalten',
     icon: 'Key',
     adminRoute: '/admin/api-settings',
     color: 'teal',

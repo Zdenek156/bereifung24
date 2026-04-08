@@ -1,6 +1,8 @@
 // Google Maps Geocoding Service
 // Konvertiert Adressen zu Koordinaten für Umkreissuche
 
+import { getApiSetting } from '@/lib/api-settings'
+
 interface GeocodeResult {
   latitude: number
   longitude: number
@@ -20,7 +22,7 @@ export async function geocodeAddress(
   zipCode: string,
   city: string
 ): Promise<GeocodeResult | null> {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  const apiKey = await getApiSetting('GOOGLE_MAPS_API_KEY', 'GOOGLE_MAPS_API_KEY')
 
   if (!apiKey) {
     console.error('GOOGLE_MAPS_API_KEY not configured')

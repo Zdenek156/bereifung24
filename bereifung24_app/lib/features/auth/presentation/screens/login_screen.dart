@@ -405,13 +405,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       String? street;
       String? zipCode;
       String? city;
+      String? realEmail;
+
+      // Check if Apple provided a private relay email
+      final appleEmail = credential.email ?? '';
+      final isRelayEmail = appleEmail.contains('privaterelay.appleid.com');
 
       // Apple only provides name on first sign-in. If missing, ask user.
       if (appleFirstName == null || appleFirstName.isEmpty ||
-          appleLastName == null || appleLastName.isEmpty) {
+          appleLastName == null || appleLastName.isEmpty ||
+          isRelayEmail) {
         final result = await _showProfileDialog(
           firstName: appleFirstName,
           lastName: appleLastName,
+          askForEmail: isRelayEmail,
         );
         if (result == null) return; // User cancelled
         appleFirstName = result['firstName'];
@@ -420,6 +427,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         street = result['street'];
         zipCode = result['zipCode'];
         city = result['city'];
+        if (isRelayEmail && result['email'] != null && result['email']!.isNotEmpty) {
+          realEmail = result['email'];
+        }
       }
 
       final success = await ref.read(authStateProvider.notifier).socialLogin(
@@ -431,6 +441,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         street: street,
         zipCode: zipCode,
         city: city,
+        email: realEmail,
       );
 
       if (mounted) {
@@ -457,6 +468,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<Map<String, String>?> _showProfileDialog({
     String? firstName,
     String? lastName,
+    bool askForEmail = false,
   }) async {
     final firstNameCtrl = TextEditingController(text: firstName ?? '');
     final lastNameCtrl = TextEditingController(text: lastName ?? '');
@@ -464,6 +476,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final streetCtrl = TextEditingController();
     final zipCtrl = TextEditingController();
     final cityCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<Map<String, String>>(
@@ -477,11 +490,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
-                  'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
-                  style: TextStyle(fontSize: 13),
+                Text(
+                  askForEmail
+                      ? 'Apple hat deine E-Mail-Adresse verborgen. Bitte gib deine echte E-Mail-Adresse an.'
+                      : 'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
+                  style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
+                if (askForEmail) ...[                  TextFormField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'E-Mail-Adresse *',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                      if (!v.contains('@') || !v.contains('.')) return 'Ungültige E-Mail';
+                      if (v.contains('privaterelay.appleid.com')) return 'Bitte echte E-Mail angeben';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 TextFormField(
                   controller: firstNameCtrl,
                   textCapitalization: TextCapitalization.words,
@@ -560,6 +591,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   'street': streetCtrl.text.trim(),
                   'zipCode': zipCtrl.text.trim(),
                   'city': cityCtrl.text.trim(),
+                  if (askForEmail) 'email': emailCtrl.text.trim(),
                 });
               }
             },
@@ -575,6 +607,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     streetCtrl.dispose();
     zipCtrl.dispose();
     cityCtrl.dispose();
+    emailCtrl.dispose();
 
     return result;
   }

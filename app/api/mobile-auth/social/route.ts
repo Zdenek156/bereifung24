@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { provider, idToken, firstName: providedFirstName, lastName: providedLastName, phone: providedPhone, street: providedStreet, zipCode: providedZipCode, city: providedCity } = await request.json()
+    const { provider, idToken, firstName: providedFirstName, lastName: providedLastName, phone: providedPhone, street: providedStreet, zipCode: providedZipCode, city: providedCity, email: providedEmail } = await request.json()
 
     if (!provider || !idToken) {
       return NextResponse.json(
@@ -85,6 +85,16 @@ export async function POST(request: NextRequest) {
       // Apple only sends name on first sign-in, so we accept provided values
       firstName = providedFirstName || ''
       lastName = providedLastName || ''
+
+      // If the email is a private relay address and user provided a real email, use that
+      if (providedEmail && email.includes('privaterelay.appleid.com')) {
+        const realEmail = providedEmail.toLowerCase().trim()
+        // Basic server-side email validation
+        if (realEmail.includes('@') && realEmail.includes('.') && !realEmail.includes('privaterelay.appleid.com')) {
+          console.log(`[SOCIAL LOGIN] Replacing Apple relay email with provided email: ${realEmail}`)
+          email = realEmail
+        }
+      }
 
     } else {
       return NextResponse.json({ error: 'Unbekannter Provider. Erlaubt: google, apple' }, { status: 400 })

@@ -153,13 +153,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       String? street;
       String? zipCode;
       String? city;
+      String? realEmail;
+
+      // Check if Apple provided a private relay email
+      final appleEmail = credential.email ?? '';
+      final isRelayEmail = appleEmail.contains('privaterelay.appleid.com');
 
       // Apple only provides name on first sign-in. If missing, ask user.
       if (appleFirstName == null || appleFirstName.isEmpty ||
-          appleLastName == null || appleLastName.isEmpty) {
+          appleLastName == null || appleLastName.isEmpty ||
+          isRelayEmail) {
         final result = await _showProfileDialog(
           firstName: appleFirstName,
           lastName: appleLastName,
+          askForEmail: isRelayEmail,
         );
         if (result == null) return; // User cancelled
         appleFirstName = result['firstName'];
@@ -168,18 +175,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         street = result['street'];
         zipCode = result['zipCode'];
         city = result['city'];
+        if (isRelayEmail && result['email'] != null && result['email']!.isNotEmpty) {
+          realEmail = result['email'];
+        }
       } else {
         // Name available (first Apple login) — still ask for address
         final result = await _showProfileDialog(
           firstName: appleFirstName,
           lastName: appleLastName,
           nameProvided: true,
+          askForEmail: isRelayEmail,
         );
         if (result == null) return;
         phone = result['phone'];
         street = result['street'];
         zipCode = result['zipCode'];
         city = result['city'];
+        if (isRelayEmail && result['email'] != null && result['email']!.isNotEmpty) {
+          realEmail = result['email'];
+        }
       }
 
       final success = await ref.read(authStateProvider.notifier).socialLogin(
@@ -191,6 +205,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             street: street,
             zipCode: zipCode,
             city: city,
+            email: realEmail,
           );
 
       if (mounted) {
@@ -222,6 +237,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     String? firstName,
     String? lastName,
     bool nameProvided = false,
+    bool askForEmail = false,
   }) async {
     final firstNameCtrl = TextEditingController(text: firstName ?? '');
     final lastNameCtrl = TextEditingController(text: lastName ?? '');
@@ -229,6 +245,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final streetCtrl = TextEditingController();
     final zipCtrl = TextEditingController();
     final cityCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
     final result = await showDialog<Map<String, String>>(
@@ -243,12 +260,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  nameProvided
-                      ? 'Bitte gib noch deine Adresse an, damit wir Werkstätten in deiner Nähe finden können.'
-                      : 'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
+                  askForEmail
+                      ? 'Apple hat deine E-Mail-Adresse verborgen. Bitte gib deine echte E-Mail-Adresse und deine Daten an.'
+                      : nameProvided
+                          ? 'Bitte gib noch deine Adresse an, damit wir Werkstätten in deiner Nähe finden können.'
+                          : 'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
+                if (askForEmail) ...[                  TextFormField(
+                    controller: emailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: 'E-Mail-Adresse *',
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                      if (!v.contains('@') || !v.contains('.')) return 'Ungültige E-Mail';
+                      if (v.contains('privaterelay.appleid.com')) return 'Bitte echte E-Mail angeben';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (!nameProvided) ...[
                   TextFormField(
                     controller: firstNameCtrl,
@@ -329,6 +364,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   'street': streetCtrl.text.trim(),
                   'zipCode': zipCtrl.text.trim(),
                   'city': cityCtrl.text.trim(),
+                  if (askForEmail) 'email': emailCtrl.text.trim(),
                 });
               }
             },
@@ -344,6 +380,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     streetCtrl.dispose();
     zipCtrl.dispose();
     cityCtrl.dispose();
+    emailCtrl.dispose();
 
     return result;
   }

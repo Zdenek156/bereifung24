@@ -4,7 +4,7 @@
     {
       "label": "🚀 Deploy: Full (Clean Build + Restart)",
       "type": "shell",
-      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"cd /var/www/bereifung24 && rm -rf .next && npm run build && pm2 restart bereifung24 && pm2 logs bereifung24 --lines 5 --nostream\"",
+      "command": "ssh -i C:\\Users\\zdene\\.ssh\\bereifung24_hetzner root@167.235.24.110 \"cd /var/www/bereifung24 && git fetch origin && git reset --hard origin/main && rm -rf .next && npm run build && pm2 restart bereifung24 && pm2 logs bereifung24 --lines 5 --nostream\"",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",

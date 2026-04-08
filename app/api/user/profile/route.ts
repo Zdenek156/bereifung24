@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
         street: true,
         zipCode: true,
         city: true,
+        profileImage: true,
         googleId: true,
         customerType: true,
         companyName: true,

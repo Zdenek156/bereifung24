@@ -343,8 +343,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
               SliverAppBar(
                 expandedHeight: 220,
                 pinned: false,
-                floating: true,
-                snap: true,
+                floating: false,
+                snap: false,
                 leading: Padding(
                   padding: const EdgeInsets.all(8),
                   child: CircleAvatar(

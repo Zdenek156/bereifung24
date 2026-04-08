@@ -1194,7 +1194,7 @@ export default function SocialMediaPage() {
                 const clientId = settings.find((s: any) => s.key === 'LINKEDIN_CLIENT_ID')?.value
                 if (!clientId) return alert('LinkedIn Client-ID fehlt! Bitte zuerst in Admin → API-Einstellungen eintragen.')
                 const redirectUri = encodeURIComponent('https://bereifung24.de/api/admin/social-media/linkedin/callback')
-                const scopes = encodeURIComponent('w_organization_social')
+                const scopes = encodeURIComponent('openid profile w_organization_social')
                 window.location.href = `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&state=bereifung24`
               }}>
                 <Linkedin className="h-4 w-4 mr-2" /> Mit LinkedIn verbinden

@@ -48,6 +48,20 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    // Validate user has complete profile (address required for booking)
+    const bookingUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { street: true, zipCode: true, city: true, firstName: true, lastName: true }
+    })
+    if (!bookingUser || !bookingUser.street?.trim() || !bookingUser.zipCode?.trim() || !bookingUser.city?.trim()) {
+      console.log('[BOOK API] ❌ Incomplete profile - missing address')
+      return NextResponse.json(
+        { error: 'Bitte vervollständigen Sie Ihr Profil (Adresse) bevor Sie buchen können.' },
+        { status: 400 }
+      )
+    }
+
     const body = await request.json()
     console.log('[BOOK API] Request body:', body)
 

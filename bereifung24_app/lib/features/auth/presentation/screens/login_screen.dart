@@ -445,6 +445,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (isRelayEmail && result['email'] != null && result['email']!.isNotEmpty) {
           realEmail = result['email'];
         }
+      } else {
+        // Name available (first Apple login) — still ask for address
+        final result = await _showProfileDialog(
+          firstName: appleFirstName,
+          lastName: appleLastName,
+          nameProvided: true,
+          askForEmail: isRelayEmail,
+        );
+        if (result == null) return;
+        phone = result['phone'];
+        street = result['street'];
+        zipCode = result['zipCode'];
+        city = result['city'];
       }
 
       final success = await ref.read(authStateProvider.notifier).socialLogin(

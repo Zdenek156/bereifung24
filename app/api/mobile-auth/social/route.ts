@@ -126,6 +126,26 @@ export async function POST(request: NextRequest) {
         updateData.profileImage = pictureUrl
       }
 
+      // Update address/name if user has empty fields and client provides values
+      if ((!user.street || user.street === '') && providedStreet) {
+        updateData.street = providedStreet
+      }
+      if ((!user.zipCode || user.zipCode === '') && providedZipCode) {
+        updateData.zipCode = providedZipCode
+      }
+      if ((!user.city || user.city === '') && providedCity) {
+        updateData.city = providedCity
+      }
+      if ((!user.phone || user.phone === '') && providedPhone) {
+        updateData.phone = providedPhone
+      }
+      if ((!user.firstName || user.firstName === '') && providedFirstName) {
+        updateData.firstName = providedFirstName
+      }
+      if ((!user.lastName || user.lastName === '') && providedLastName) {
+        updateData.lastName = providedLastName
+      }
+
       if (Object.keys(updateData).length > 0) {
         user = await prisma.user.update({
           where: { id: user.id },

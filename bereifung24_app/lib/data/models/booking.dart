@@ -32,6 +32,7 @@ class Booking {
   final double? disposalFee;
   final String? couponCode;
   final String? paymentMethod;
+  final String? paymentMethodDetail;
   final String? paymentStatus;
   final String? notes;
   final DateTime? createdAt;
@@ -71,6 +72,7 @@ class Booking {
     this.disposalFee,
     this.couponCode,
     this.paymentMethod,
+    this.paymentMethodDetail,
     this.paymentStatus,
     this.notes,
     this.createdAt,
@@ -163,6 +165,29 @@ class Booking {
   }
 
   String get paymentMethodDisplay {
+    // Use detailed payment method info from Stripe webhook if available
+    if (paymentMethodDetail != null && paymentMethodDetail!.isNotEmpty) {
+      switch (paymentMethodDetail!) {
+        case 'card':
+          return 'Kreditkarte';
+        case 'google_pay':
+          return 'Google Pay';
+        case 'apple_pay':
+          return 'Apple Pay';
+        case 'klarna':
+          return 'Klarna';
+        case 'eps':
+          return 'EPS';
+        case 'ideal':
+          return 'iDEAL';
+        case 'amazon_pay':
+          return 'Amazon Pay';
+        case 'link':
+          return 'Link';
+        default:
+          return paymentMethodDetail!;
+      }
+    }
     switch (paymentMethod) {
       case 'STRIPE':
         return 'Kreditkarte / Online';
@@ -253,6 +278,7 @@ class Booking {
       disposalFee: (json['disposalFee'] as num?)?.toDouble(),
       couponCode: json['couponCode'],
       paymentMethod: json['paymentMethod'],
+      paymentMethodDetail: json['paymentMethodDetail'],
       paymentStatus: json['paymentStatus'],
       notes: json['notes'] ?? tireRequest?['additionalNotes'],
       createdAt: json['createdAt'] != null

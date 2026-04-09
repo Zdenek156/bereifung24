@@ -1,7 +1,9 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -89,6 +91,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
   String? _selectedSlot;
   String? _selectedServiceType;
   bool _tireAutoSelected = false;
+  final _reviewsKey = GlobalKey();
 
   static const _serviceLabels = <String, String>{
     'TIRE_CHANGE': 'Reifenwechsel',
@@ -421,9 +424,53 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     Row(
                       children: [
                         if (workshop.averageRating != null) ...[
-                          _RatingBadge(
-                            rating: workshop.averageRating!,
-                            count: workshop.reviewCount,
+                          GestureDetector(
+                            onTap: () => Scrollable.ensureVisible(
+                              _reviewsKey.currentContext!,
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOut,
+                            ),
+                            child: _RatingBadge(
+                              rating: workshop.averageRating!,
+                              count: workshop.reviewCount,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ] else ...[
+                          GestureDetector(
+                            onTap: () => Scrollable.ensureVisible(
+                              _reviewsKey.currentContext!,
+                              duration: const Duration(milliseconds: 400),
+                              curve: Curves.easeInOut,
+                            ),
+                            child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                  color: const Color(0xFF0284C7)
+                                      .withValues(alpha: 0.3)),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.fiber_new,
+                                    size: 18, color: Color(0xFF0284C7)),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Neu',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    color: Color(0xFF0284C7),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           ),
                           const SizedBox(width: 12),
                         ],
@@ -438,7 +485,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     // ── Über die Werkstatt (Description) ──
                     if (workshop.description != null) ...[
                       const SizedBox(height: 16),
-                      _InfoCard(
+                      _CollapsibleInfoCard(
                         icon: Icons.info_outline,
                         title: 'Über die Werkstatt',
                         child: Text(workshop.description!),
@@ -450,7 +497,55 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     _InfoCard(
                       icon: Icons.location_on_outlined,
                       title: 'Adresse',
-                      child: Text(workshop.fullAddress),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(workshop.fullAddress),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final address =
+                                    Uri.encodeComponent(workshop.fullAddress);
+                                final Uri url;
+                                if (Platform.isIOS) {
+                                  url = Uri.parse(
+                                      'https://maps.apple.com/?q=$address');
+                                } else {
+                                  if (workshop.latitude != null &&
+                                      workshop.longitude != null) {
+                                    url = Uri.parse(
+                                        'geo:${workshop.latitude},${workshop.longitude}?q=$address');
+                                  } else {
+                                    url = Uri.parse(
+                                        'geo:0,0?q=$address');
+                                  }
+                                }
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(url,
+                                      mode: LaunchMode.externalApplication);
+                                }
+                              },
+                              icon: Icon(
+                                Platform.isIOS
+                                    ? Icons.map_outlined
+                                    : Icons.map_outlined,
+                                size: 18,
+                              ),
+                              label: Text(
+                                Platform.isIOS
+                                    ? 'In Karten öffnen'
+                                    : 'In Maps öffnen',
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                     // ── Service Selection (when no service pre-selected) ──
@@ -1020,6 +1115,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     // ── Reviews ──
                     const SizedBox(height: 24),
                     Text(
+                      key: _reviewsKey,
                       'Bewertungen',
                       style: Theme.of(context)
                           .textTheme
@@ -2442,6 +2538,76 @@ class _PriceBreakdownSection extends StatelessWidget {
 }
 
 // ── Shared Widgets ──
+
+class _CollapsibleInfoCard extends StatefulWidget {
+  final IconData icon;
+  final String title;
+  final Widget child;
+  const _CollapsibleInfoCard(
+      {required this.icon, required this.title, required this.child});
+
+  @override
+  State<_CollapsibleInfoCard> createState() => _CollapsibleInfoCardState();
+}
+
+class _CollapsibleInfoCardState extends State<_CollapsibleInfoCard> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+              color: isDark ? const Color(0xFF334155) : Colors.grey.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(widget.icon, size: 20, color: B24Colors.primaryBlue),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(widget.title,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14)),
+                ),
+                AnimatedRotation(
+                  turns: _expanded ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Icon(Icons.keyboard_arrow_down,
+                      size: 22,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : Colors.grey[500]),
+                ),
+              ],
+            ),
+            AnimatedCrossFade(
+              firstChild: const SizedBox.shrink(),
+              secondChild: Padding(
+                padding: const EdgeInsets.only(left: 32, top: 8),
+                child: widget.child,
+              ),
+              crossFadeState: _expanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
+              duration: const Duration(milliseconds: 200),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class _InfoCard extends StatelessWidget {
   final IconData icon;

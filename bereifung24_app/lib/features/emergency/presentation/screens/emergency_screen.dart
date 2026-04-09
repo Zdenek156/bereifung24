@@ -321,7 +321,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
               Expanded(
                 child: Text(
                   _workshops.isNotEmpty
-                      ? '${_workshops.length} Werkstätten in deiner Nähe gefunden'
+                      ? '${_workshops.length} ${_workshops.length == 1 ? "Werkstatt" : "Werkstätten"} in deiner Nähe gefunden'
                       : 'Keine Werkstätten in der Nähe gefunden',
                   style: TextStyle(
                     fontSize: 13,

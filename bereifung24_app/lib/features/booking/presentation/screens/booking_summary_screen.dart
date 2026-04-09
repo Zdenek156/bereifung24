@@ -172,14 +172,20 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
           pricing?.tireChangePricePKW ??
           0;
     }
-    if (widget.withBalancing && pricing?.balancingPrice != null) {
-      total += pricing!.balancingPrice! * 4;
-    }
-    if (widget.withStorage && pricing?.storagePrice != null) {
-      total += pricing!.storagePrice!;
-    }
-    if (widget.withWashing && pricing?.washingPrice != null) {
-      total += pricing!.washingPrice!;
+    // WHEEL_CHANGE: searchBasePrice from API already includes balancing/storage/washing
+    // Only add add-ons when using fallback pricing (no searchBasePrice)
+    final addOnsAlreadyIncluded =
+        widget.serviceType == 'WHEEL_CHANGE' && widget.searchBasePrice != null;
+    if (!addOnsAlreadyIncluded) {
+      if (widget.withBalancing && pricing?.balancingPrice != null) {
+        total += pricing!.balancingPrice! * 4;
+      }
+      if (widget.withStorage && pricing?.storagePrice != null) {
+        total += pricing!.storagePrice!;
+      }
+      if (widget.withWashing && pricing?.washingPrice != null) {
+        total += pricing!.washingPrice!;
+      }
     }
     // Add disposal and runflat fees
     if (widget.disposalFeeApplied != null) {
@@ -735,14 +741,21 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                         pricing?.tireChangePricePKW ??
                                         0)),
                           ),
-                        if (widget.withBalancing &&
-                            pricing?.balancingPrice != null)
-                          _PriceLine(
-                              'Auswuchten (×4)', pricing!.balancingPrice! * 4),
-                        if (widget.withStorage && pricing?.storagePrice != null)
-                          _PriceLine('Einlagerung', pricing!.storagePrice!),
-                        if (widget.withWashing && pricing?.washingPrice != null)
-                          _PriceLine('Waschen', pricing!.washingPrice!),
+                        // WHEEL_CHANGE: searchBasePrice already includes add-ons, don't show separate lines
+                        if (!(widget.serviceType == 'WHEEL_CHANGE' &&
+                            widget.searchBasePrice != null)) ...[
+                          if (widget.withBalancing &&
+                              pricing?.balancingPrice != null)
+                            _PriceLine(
+                                'Auswuchten (×4)',
+                                pricing!.balancingPrice! * 4),
+                          if (widget.withStorage &&
+                              pricing?.storagePrice != null)
+                            _PriceLine('Einlagerung', pricing!.storagePrice!),
+                          if (widget.withWashing &&
+                              pricing?.washingPrice != null)
+                            _PriceLine('Waschen', pricing!.washingPrice!),
+                        ],
                         if (widget.disposalFeeApplied != null &&
                             widget.disposalFeeApplied! > 0)
                           _PriceLine('Entsorgung', widget.disposalFeeApplied!),

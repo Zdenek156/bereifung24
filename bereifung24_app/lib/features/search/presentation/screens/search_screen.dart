@@ -2313,17 +2313,18 @@ class WheelChangeFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Show option if: no serviceDetail (show all), serviceDetail supports it, OR it's already selected from search
     final showBalancing =
-        serviceDetail == null || serviceDetail!.balancingPrice != null;
+        serviceDetail == null || serviceDetail!.balancingPrice != null || state.withBalancing;
     final showStorage =
-        serviceDetail == null || serviceDetail!.storageAvailable;
+        serviceDetail == null || serviceDetail!.storageAvailable || state.withStorage;
     final showWashing =
-        serviceDetail == null || serviceDetail!.washingAvailable;
+        serviceDetail == null || serviceDetail!.washingAvailable || state.withWashing;
 
     final badges = <Widget>[];
     if (showBalancing) {
       badges.add(Expanded(
-          child: _badge(context, isDark, '🎯', 'Auswuchten',
+          child: _badge(context, isDark, '⚖️', 'Auswuchten',
               state.withBalancing, () => notifier.toggleBalancing())));
     }
     if (showStorage) {
@@ -2345,7 +2346,19 @@ class WheelChangeFilters extends StatelessWidget {
       width: double.infinity,
       padding: padding ?? const EdgeInsets.fromLTRB(16, 4, 16, 12),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(
+              'Zusätzliche Optionen',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+              ),
+            ),
+          ),
           Row(children: badges),
         ],
       ),
@@ -3198,6 +3211,38 @@ class _WorkshopCard extends ConsumerWidget {
                                 color: Colors.grey[500], fontSize: 12),
                           ),
                         ],
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0284C7)
+                              .withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color: const Color(0xFF0284C7)
+                                  .withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.fiber_new,
+                                size: 16, color: Color(0xFF0284C7)),
+                            SizedBox(width: 4),
+                            Text(
+                              'Neu',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                color: Color(0xFF0284C7),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 

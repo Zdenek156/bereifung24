@@ -143,6 +143,21 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     return _serviceLabels[widget.serviceType] ?? 'Reifenwechsel';
   }
 
+  /// For WHEEL_CHANGE: compute the actual base price by subtracting add-ons from searchBasePrice
+  double _wheelChangeBasePrice(WorkshopPricing? pricing) {
+    double base = widget.searchBasePrice ?? 0;
+    if (widget.withBalancing && pricing?.balancingPrice != null) {
+      base -= pricing!.balancingPrice! * 4;
+    }
+    if (widget.withStorage && pricing?.storagePrice != null) {
+      base -= pricing!.storagePrice!;
+    }
+    if (widget.withWashing && pricing?.washingPrice != null) {
+      base -= pricing!.washingPrice!;
+    }
+    return base;
+  }
+
   double _calculateTotal(WorkshopPricing? pricing) {
     // Wenn Reifen gekauft werden, wie gehabt
     if (widget.tireTotalPrice != null) {
@@ -204,13 +219,19 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     try {
       final pricing = workshop.pricing;
       final total = _calculateTotal(pricing);
-      final basePrice = widget.searchBasePrice ??
-          (widget.serviceType == 'WHEEL_CHANGE'
-              ? (pricing?.basePrice ??
-                  pricing?.basePrice4 ??
-                  pricing?.tireChangePricePKW ??
-                  0.0)
-              : (pricing?.basePrice ?? pricing?.tireChangePricePKW ?? 0.0));
+      // For WHEEL_CHANGE: send actual base (without add-ons) to server
+      final double basePrice;
+      if (widget.serviceType == 'WHEEL_CHANGE' && widget.searchBasePrice != null) {
+        basePrice = _wheelChangeBasePrice(pricing);
+      } else {
+        basePrice = widget.searchBasePrice ??
+            (widget.serviceType == 'WHEEL_CHANGE'
+                ? (pricing?.basePrice ??
+                    pricing?.basePrice4 ??
+                    pricing?.tireChangePricePKW ??
+                    0.0)
+                : (pricing?.basePrice ?? pricing?.tireChangePricePKW ?? 0.0));
+      }
 
       // Process Stripe payment first
       String? paymentId;
@@ -726,7 +747,27 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                     pricing?.tireChangePricePKW ??
                                     0),
                           )
-                        else
+                        else if (widget.serviceType == 'WHEEL_CHANGE' &&
+                            widget.searchBasePrice != null) ...[
+                          // WHEEL_CHANGE: searchBasePrice includes add-ons, show breakdown
+                          _PriceLine(
+                            widget.tireTotalPrice != null
+                                ? 'Montage'
+                                : 'Räderwechsel',
+                            _wheelChangeBasePrice(pricing),
+                          ),
+                          if (widget.withBalancing &&
+                              pricing?.balancingPrice != null)
+                            _PriceLine(
+                                'Auswuchten (×4)',
+                                pricing!.balancingPrice! * 4),
+                          if (widget.withStorage &&
+                              pricing?.storagePrice != null)
+                            _PriceLine('Einlagerung', pricing!.storagePrice!),
+                          if (widget.withWashing &&
+                              pricing?.washingPrice != null)
+                            _PriceLine('Waschen', pricing!.washingPrice!),
+                        ] else ...[
                           _PriceLine(
                             widget.tireTotalPrice != null
                                 ? 'Montage'
@@ -741,9 +782,6 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                         pricing?.tireChangePricePKW ??
                                         0)),
                           ),
-                        // WHEEL_CHANGE: searchBasePrice already includes add-ons, don't show separate lines
-                        if (!(widget.serviceType == 'WHEEL_CHANGE' &&
-                            widget.searchBasePrice != null)) ...[
                           if (widget.withBalancing &&
                               pricing?.balancingPrice != null)
                             _PriceLine(

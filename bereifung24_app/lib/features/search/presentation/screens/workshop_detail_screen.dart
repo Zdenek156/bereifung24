@@ -377,7 +377,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 : const Color(0xFFF1F5F9),
                             child: Image.network(
                               workshop.displayImage!,
-                              fit: BoxFit.contain,
+                              fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Container(
                                 decoration: const BoxDecoration(
                                   gradient: LinearGradient(
@@ -522,6 +522,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     _InfoCard(
                       icon: Icons.location_on_outlined,
                       title: 'Adresse',
+                      compact: true,
                       child: Row(
                         children: [
                           Expanded(child: Text(workshop.fullAddress)),
@@ -632,14 +633,20 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     ? const Color(0xFF0284C7)
                                     : (isDark
                                         ? const Color(0xFF1E293B)
-                                        : Colors.grey.shade100),
+                                        : Colors.white),
                                 borderRadius: BorderRadius.circular(14),
                                 border: isSelected
                                     ? null
-                                    : Border.all(
-                                        color: isDark
-                                            ? const Color(0xFF334155)
-                                            : Colors.grey.shade300),
+                                    : null,
+                                boxShadow: isSelected
+                                    ? null
+                                    : [
+                                        BoxShadow(
+                                          color: (isDark ? Colors.black : Colors.black).withValues(alpha: isDark ? 0.3 : 0.08),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
@@ -653,7 +660,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                       child: Image.asset(
                                         imagePath,
                                         width: double.infinity,
-                                        height: 70,
+                                        height: 80,
                                         fit: BoxFit.cover,
                                       ),
                                     )
@@ -673,8 +680,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     label,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
                                       color: isSelected
                                           ? Colors.white
                                           : (isDark
@@ -2679,15 +2686,16 @@ class _InfoCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final Widget child;
+  final bool compact;
   const _InfoCard(
-      {required this.icon, required this.title, required this.child});
+      {required this.icon, required this.title, required this.child, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(14),
+      padding: EdgeInsets.all(compact ? 10 : 14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),

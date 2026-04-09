@@ -298,9 +298,9 @@ export async function POST(request: NextRequest) {
             `Fahrzeug: ${vehicleMake} ${booking.vehicle.model}${booking.vehicle.licensePlate ? ` - ${booking.vehicle.licensePlate}` : ''}`,
             `Service: ${serviceDisplayName || serviceLabels[booking.serviceType] || booking.serviceType}`,
           ]
-          if (booking.hasBalancing) calDescription.push('✅ Auswuchtung')
-          if (booking.hasStorage) calDescription.push('✅ Einlagerung')
-          if (booking.hasWashing) calDescription.push('✅ Räder waschen')
+          if (booking.hasBalancing) calDescription.push(`✅ Auswuchtung${booking.balancingPrice ? `: ${Number(booking.balancingPrice).toFixed(2)} €` : ''}`)
+          if (booking.hasStorage) calDescription.push(`✅ Einlagerung${booking.storagePrice ? `: ${Number(booking.storagePrice).toFixed(2)} €` : ''}`)
+          if (booking.hasWashing) calDescription.push(`✅ Räder waschen${booking.washingPrice ? `: ${Number(booking.washingPrice).toFixed(2)} €` : ''}`)
           if (booking.hasDisposal) calDescription.push('✅ Entsorgung')
           // Add tire info to calendar
           if (tireData?.isMixedTires) {
@@ -318,9 +318,19 @@ export async function POST(request: NextRequest) {
             if (tireSize) calDescription.push(`   Größe: ${tireSize}`)
           }
           calDescription.push('')
-          // Für Nur Montage: Kombinierte Montage-Zeile
-          if (booking.serviceType === 'TIRE_CHANGE' && !tireTotalPrice && booking.basePrice) {
-            calDescription.push(`Montage: ${Number(booking.basePrice).toFixed(2)} €`)
+          // Price breakdown in calendar
+          if (booking.basePrice && Number(booking.basePrice) > 0) {
+            const basePriceLabel = (booking.serviceType === 'TIRE_CHANGE' && !tireTotalPrice) ? 'Montage' : (serviceDisplayName || serviceLabels[booking.serviceType] || 'Service')
+            calDescription.push(`${basePriceLabel}: ${Number(booking.basePrice).toFixed(2)} €`)
+          }
+          if (booking.balancingPrice && Number(booking.balancingPrice) > 0) {
+            calDescription.push(`Auswuchtung: ${Number(booking.balancingPrice).toFixed(2)} €`)
+          }
+          if (booking.storagePrice && Number(booking.storagePrice) > 0) {
+            calDescription.push(`Einlagerung: ${Number(booking.storagePrice).toFixed(2)} €`)
+          }
+          if (booking.washingPrice && Number(booking.washingPrice) > 0) {
+            calDescription.push(`Räder waschen: ${Number(booking.washingPrice).toFixed(2)} €`)
           }
           if (booking.disposalFee && Number(booking.disposalFee) > 0) {
             calDescription.push(`Entsorgung: ${Number(booking.disposalFee).toFixed(2)} €`)

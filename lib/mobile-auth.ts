@@ -122,6 +122,10 @@ export async function issueTokenPair(user: {
   role: string
   firstName: string
   lastName: string
+  phone?: string | null
+  street?: string | null
+  zipCode?: string | null
+  city?: string | null
   profileImage?: string | null
   customer?: { id: string } | null
   workshop?: { id: string } | null
@@ -145,6 +149,10 @@ export async function issueTokenPair(user: {
       firstName: user.firstName,
       lastName: user.lastName,
       role: user.role,
+      phone: user.phone || null,
+      street: user.street || null,
+      zipCode: user.zipCode || null,
+      city: user.city || null,
       profileImage: user.profileImage || null,
       customerId: user.customer?.id,
       workshopId: user.workshop?.id,

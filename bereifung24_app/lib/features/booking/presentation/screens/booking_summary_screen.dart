@@ -105,7 +105,6 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
 class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
   bool _isSubmitting = false;
   bool _bookingComplete = false;
-  String? _selectedPayment;
 
   static const _serviceLabels = {
     'TIRE_CHANGE': 'Reifenwechsel',
@@ -214,7 +213,6 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
           final result = await StripeService().processPayment(
             bookingId: 'pending_${widget.workshopId}_${widget.date}',
             amount: total,
-            paymentMethod: _selectedPayment,
           );
           if (result == null) {
             if (mounted) setState(() => _isSubmitting = false);
@@ -779,12 +777,10 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 if (total > 0) ...[
                   _SummaryCard(
                     icon: Icons.payment,
-                    title: 'Zahlungsmethode wählen',
+                    title: 'Akzeptierte Zahlungsmethoden',
                     child: Column(
                       children: [
-                        _PaymentMethodTile(
-                          label: 'Kreditkarte',
-                          subtitle: 'Visa, Mastercard, Amex',
+                        _PaymentInfoRow(
                           iconWidget: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -795,46 +791,28 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               _PaymentLogo('amex'),
                             ],
                           ),
-                          selected: _selectedPayment == 'card',
-                          onTap: () =>
-                              setState(() => _selectedPayment = 'card'),
+                          label: 'Kreditkarte',
                         ),
                         const Divider(height: 1),
-                        _PaymentMethodTile(
-                          label: 'PayPal',
-                          subtitle: 'Schnell & sicher via Stripe',
+                        _PaymentInfoRow(
                           iconWidget: _PaymentLogo('paypal'),
-                          selected: _selectedPayment == 'paypal',
-                          onTap: () =>
-                              setState(() => _selectedPayment = 'paypal'),
+                          label: 'PayPal',
                         ),
                         const Divider(height: 1),
-                        _PaymentMethodTile(
-                          label: 'Klarna',
-                          subtitle: 'Jetzt kaufen, später bezahlen',
+                        _PaymentInfoRow(
                           iconWidget: _KlarnaLogo(),
-                          selected: _selectedPayment == 'klarna',
-                          onTap: () =>
-                              setState(() => _selectedPayment = 'klarna'),
+                          label: 'Klarna',
                         ),
                         const Divider(height: 1),
                         if (Platform.isIOS)
-                          _PaymentMethodTile(
-                            label: 'Apple Pay',
-                            subtitle: 'Schnell bezahlen',
+                          _PaymentInfoRow(
                             iconWidget: const _ApplePayLogo(),
-                            selected: _selectedPayment == 'apple_pay',
-                            onTap: () =>
-                                setState(() => _selectedPayment = 'apple_pay'),
+                            label: 'Apple Pay',
                           ),
                         if (Platform.isAndroid)
-                          _PaymentMethodTile(
-                            label: 'Google Pay',
-                            subtitle: 'Schnell bezahlen',
+                          _PaymentInfoRow(
                             iconWidget: _PaymentLogo('google-pay'),
-                            selected: _selectedPayment == 'google_pay',
-                            onTap: () =>
-                                setState(() => _selectedPayment = 'google_pay'),
+                            label: 'Google Pay',
                           ),
                       ],
                     ),
@@ -898,8 +876,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.icon(
-                    onPressed:
-                        _isSubmitting || (total > 0 && _selectedPayment == null)
+                    onPressed: _isSubmitting
                             ? null
                             : () => _submitBooking(workshop, selectedVehicle),
                     icon: _isSubmitting
@@ -921,8 +898,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       style: const TextStyle(fontSize: 16),
                     ),
                     style: FilledButton.styleFrom(
-                      backgroundColor: _isSubmitting ||
-                              (total > 0 && _selectedPayment == null)
+                      backgroundColor: _isSubmitting
                           ? Colors.grey[400]
                           : const Color(0xFF0284C7),
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -1041,67 +1017,28 @@ class _PriceLine extends StatelessWidget {
   }
 }
 
-class _PaymentMethodTile extends StatelessWidget {
-  final String label;
-  final String subtitle;
+class _PaymentInfoRow extends StatelessWidget {
   final Widget iconWidget;
-  final bool selected;
-  final VoidCallback onTap;
-  const _PaymentMethodTile({
-    required this.label,
-    required this.subtitle,
+  final String label;
+  const _PaymentInfoRow({
     required this.iconWidget,
-    required this.selected,
-    required this.onTap,
+    required this.label,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
-        decoration: selected
-            ? BoxDecoration(
-                color: const Color(0xFF0284C7).withOpacity(0.06),
-                borderRadius: BorderRadius.circular(8),
-                border:
-                    Border.all(color: const Color(0xFF0284C7).withOpacity(0.3)),
-              )
-            : null,
-        child: Row(
-          children: [
-            SizedBox(
-              width: 24,
-              height: 24,
-              child: Radio<bool>(
-                value: true,
-                groupValue: selected,
-                onChanged: (_) => onTap(),
-                activeColor: const Color(0xFF0284C7),
-              ),
-            ),
-            const SizedBox(width: 8),
-            iconWidget,
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(label,
-                      style: TextStyle(
-                        fontWeight:
-                            selected ? FontWeight.w700 : FontWeight.w500,
-                        fontSize: 14,
-                      )),
-                  Text(subtitle,
-                      style: TextStyle(fontSize: 11, color: Colors.grey[500])),
-                ],
-              ),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      child: Row(
+        children: [
+          iconWidget,
+          const SizedBox(width: 12),
+          Text(label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 14,
+              )),
+        ],
       ),
     );
   }

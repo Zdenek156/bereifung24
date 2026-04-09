@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/services/biometric_service.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -355,35 +356,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final googleFirstName = googleUser.displayName?.split(' ').first;
       final googleLastName = googleUser.displayName?.split(' ').skip(1).join(' ');
 
-      // Ask for address before login
-      final result = await _showProfileDialog(
-        firstName: googleFirstName,
-        lastName: googleLastName,
-        nameProvided: true,
-      );
-      if (result == null) return; // User cancelled
-
+      // Login first without address — server returns existing user data
       final success = await ref.read(authStateProvider.notifier).socialLogin(
         'google',
         idToken,
         firstName: googleFirstName,
         lastName: googleLastName,
-        phone: result['phone'],
-        street: result['street'],
-        zipCode: result['zipCode'],
-        city: result['city'],
       );
 
-      if (mounted) {
-        if (success) {
-          context.go('/home');
-        } else {
+      if (!success) {
+        if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(error ?? 'Google-Anmeldung fehlgeschlagen')),
           );
         }
+        return;
       }
+
+      // Check if user already has a complete address
+      final user = ref.read(authStateProvider).user;
+      if (user != null &&
+          (user.street == null || user.street!.isEmpty ||
+           user.zipCode == null || user.zipCode!.isEmpty ||
+           user.city == null || user.city!.isEmpty)) {
+        // Address missing — ask user
+        final result = await _showProfileDialog(
+          firstName: googleFirstName,
+          lastName: googleLastName,
+          nameProvided: true,
+        );
+        if (result != null) {
+          // Update profile with address
+          try {
+            await ApiClient().updateProfile({
+              if (result['phone'] != null && result['phone']!.isNotEmpty)
+                'phone': result['phone'],
+              'street': result['street'],
+              'zipCode': result['zipCode'],
+              'city': result['city'],
+            });
+          } catch (e) {
+            debugPrint('Profile update failed: $e');
+          }
+        }
+      }
+
+      if (mounted) context.go('/home');
     } catch (e) {
       debugPrint('Google Sign-In error: $e');
       if (mounted) {
@@ -416,17 +435,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       String? appleFirstName = credential.givenName;
       String? appleLastName = credential.familyName;
-      String? phone;
-      String? street;
-      String? zipCode;
-      String? city;
       String? realEmail;
 
       // Check if Apple provided a private relay email
       final appleEmail = credential.email ?? '';
       final isRelayEmail = appleEmail.contains('privaterelay.appleid.com');
 
-      // Apple only provides name on first sign-in. If missing, ask user.
+      // Apple only provides name on first sign-in. If missing, ask for name & email BEFORE login
       if (appleFirstName == null || appleFirstName.isEmpty ||
           appleLastName == null || appleLastName.isEmpty ||
           isRelayEmail) {
@@ -434,54 +449,63 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           firstName: appleFirstName,
           lastName: appleLastName,
           askForEmail: isRelayEmail,
+          addressOptional: true,
         );
         if (result == null) return; // User cancelled
         appleFirstName = result['firstName'];
         appleLastName = result['lastName'];
-        phone = result['phone'];
-        street = result['street'];
-        zipCode = result['zipCode'];
-        city = result['city'];
         if (isRelayEmail && result['email'] != null && result['email']!.isNotEmpty) {
           realEmail = result['email'];
         }
-      } else {
-        // Name available (first Apple login) — still ask for address
-        final result = await _showProfileDialog(
-          firstName: appleFirstName,
-          lastName: appleLastName,
-          nameProvided: true,
-          askForEmail: isRelayEmail,
-        );
-        if (result == null) return;
-        phone = result['phone'];
-        street = result['street'];
-        zipCode = result['zipCode'];
-        city = result['city'];
       }
 
+      // Login first — server returns existing user data including address
       final success = await ref.read(authStateProvider.notifier).socialLogin(
         'apple',
         idToken,
         firstName: appleFirstName,
         lastName: appleLastName,
-        phone: phone,
-        street: street,
-        zipCode: zipCode,
-        city: city,
         email: realEmail,
       );
 
-      if (mounted) {
-        if (success) {
-          context.go('/home');
-        } else {
+      if (!success) {
+        if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(error ?? 'Apple-Anmeldung fehlgeschlagen')),
           );
         }
+        return;
       }
+
+      // Check if user already has a complete address
+      final user = ref.read(authStateProvider).user;
+      if (user != null &&
+          (user.street == null || user.street!.isEmpty ||
+           user.zipCode == null || user.zipCode!.isEmpty ||
+           user.city == null || user.city!.isEmpty)) {
+        // Address missing — ask user
+        final result = await _showProfileDialog(
+          firstName: appleFirstName,
+          lastName: appleLastName,
+          nameProvided: true,
+        );
+        if (result != null) {
+          try {
+            await ApiClient().updateProfile({
+              if (result['phone'] != null && result['phone']!.isNotEmpty)
+                'phone': result['phone'],
+              'street': result['street'],
+              'zipCode': result['zipCode'],
+              'city': result['city'],
+            });
+          } catch (e) {
+            debugPrint('Profile update failed: $e');
+          }
+        }
+      }
+
+      if (mounted) context.go('/home');
     } catch (e) {
       debugPrint('Apple Sign-In error: $e');
       if (mounted) {
@@ -493,11 +517,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   /// Shows a dialog to collect name and address for social sign-in users.
+  /// [addressOptional] = true if only name/email are needed (address check happens after login).
   Future<Map<String, String>?> _showProfileDialog({
     String? firstName,
     String? lastName,
     bool nameProvided = false,
     bool askForEmail = false,
+    bool addressOptional = false,
   }) async {
     final firstNameCtrl = TextEditingController(text: firstName ?? '');
     final lastNameCtrl = TextEditingController(text: lastName ?? '');
@@ -568,6 +594,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
                 ),
+                if (!addressOptional) ...[
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: streetCtrl,
@@ -605,6 +632,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ],
                 ),
+                ],
               ],
             ),
           ),

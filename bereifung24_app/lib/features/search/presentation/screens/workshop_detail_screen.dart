@@ -92,6 +92,42 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
   String? _selectedServiceType;
   bool _tireAutoSelected = false;
   final _reviewsKey = GlobalKey();
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToReviews() {
+    final ctx = _reviewsKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      // Reviews widget not yet built (off-screen). Scroll to bottom first,
+      // then ensureVisible after the widget is laid out.
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx2 = _reviewsKey.currentContext;
+        if (ctx2 != null) {
+          Scrollable.ensureVisible(
+            ctx2,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
+  }
 
   static const _serviceLabels = <String, String>{
     'TIRE_CHANGE': 'Reifenwechsel',
@@ -341,6 +377,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                   workshop, withBalancing, searchState.tireCount);
 
           return CustomScrollView(
+            controller: _scrollController,
             slivers: [
               // ── Hero Image ──
               SliverAppBar(
@@ -426,16 +463,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         if (workshop.averageRating != null) ...[
                           GestureDetector(
                             behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              final ctx = _reviewsKey.currentContext;
-                              if (ctx != null) {
-                                Scrollable.ensureVisible(
-                                  ctx,
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            },
+                            onTap: () => _scrollToReviews(),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -469,16 +497,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           const SizedBox(width: 12),
                         ] else ...[
                           GestureDetector(
-                            onTap: () {
-                              final ctx = _reviewsKey.currentContext;
-                              if (ctx != null) {
-                                Scrollable.ensureVisible(
-                                  ctx,
-                                  duration: const Duration(milliseconds: 400),
-                                  curve: Curves.easeInOut,
-                                );
-                              }
-                            },
+                            onTap: () => _scrollToReviews(),
                             child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
@@ -2706,7 +2725,9 @@ class _InfoCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(compact ? 10 : 14),
+      padding: compact
+          ? const EdgeInsets.only(left: 14, right: 14, top: 14, bottom: 8)
+          : const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -2714,17 +2735,17 @@ class _InfoCard extends StatelessWidget {
             color: isDark ? const Color(0xFF334155) : Colors.grey.shade200),
       ),
       child: Row(
-        crossAxisAlignment: compact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: B24Colors.primaryBlue),
-          SizedBox(width: compact ? 10 : 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: compact ? 13 : 14)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: 14)),
                 SizedBox(height: compact ? 2 : 4),
                 child,
               ],

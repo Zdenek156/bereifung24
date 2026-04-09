@@ -2313,13 +2313,13 @@ class WheelChangeFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Determine if workshop supports each option
+    // Determine if workshop supports each option (check prices, not boolean flags)
     final supportsBalancing =
         serviceDetail == null || serviceDetail!.balancingPrice != null;
     final supportsStorage =
-        serviceDetail == null || serviceDetail!.storageAvailable;
+        serviceDetail == null || serviceDetail!.storagePrice != null;
     final supportsWashing =
-        serviceDetail == null || serviceDetail!.washingAvailable;
+        serviceDetail == null || serviceDetail!.washingPrice != null;
 
     final badges = <Widget>[
       Expanded(

@@ -117,7 +117,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
 
   static const _serviceImages = <String, String>{
     'TIRE_CHANGE': 'assets/images/services/reifenwechsel.jpg',
-    'WHEEL_CHANGE': 'assets/images/services/raederwechsel.jpg',
+    'WHEEL_CHANGE': 'assets/images/services/raederwechsel.png',
     'TIRE_REPAIR': 'assets/images/services/reifenreparatur.jpg',
     'MOTORCYCLE_TIRE': 'assets/images/services/motorradreifen.jpg',
     'ALIGNMENT_BOTH': 'assets/images/services/achsvermessung.jpg',
@@ -425,11 +425,17 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                       children: [
                         if (workshop.averageRating != null) ...[
                           GestureDetector(
-                            onTap: () => Scrollable.ensureVisible(
-                              _reviewsKey.currentContext!,
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeInOut,
-                            ),
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              final ctx = _reviewsKey.currentContext;
+                              if (ctx != null) {
+                                Scrollable.ensureVisible(
+                                  ctx,
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -463,11 +469,16 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           const SizedBox(width: 12),
                         ] else ...[
                           GestureDetector(
-                            onTap: () => Scrollable.ensureVisible(
-                              _reviewsKey.currentContext!,
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeInOut,
-                            ),
+                            onTap: () {
+                              final ctx = _reviewsKey.currentContext;
+                              if (ctx != null) {
+                                Scrollable.ensureVisible(
+                                  ctx,
+                                  duration: const Duration(milliseconds: 400),
+                                  curve: Curves.easeInOut,
+                                );
+                              }
+                            },
                             child: Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
@@ -2703,18 +2714,18 @@ class _InfoCard extends StatelessWidget {
             color: isDark ? const Color(0xFF334155) : Colors.grey.shade200),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: compact ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: B24Colors.primaryBlue),
-          const SizedBox(width: 12),
+          SizedBox(width: compact ? 10 : 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w600, fontSize: 14)),
-                const SizedBox(height: 4),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600, fontSize: compact ? 13 : 14)),
+                SizedBox(height: compact ? 2 : 4),
                 child,
               ],
             ),

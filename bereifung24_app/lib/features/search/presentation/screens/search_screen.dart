@@ -2313,34 +2313,33 @@ class WheelChangeFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    // Show option if: no serviceDetail (show all), serviceDetail supports it, OR it's already selected from search
-    final showBalancing =
-        serviceDetail == null || serviceDetail!.balancingPrice != null || state.withBalancing;
-    final showStorage =
-        serviceDetail == null || serviceDetail!.storageAvailable || state.withStorage;
-    final showWashing =
-        serviceDetail == null || serviceDetail!.washingAvailable || state.withWashing;
+    // Determine if workshop supports each option
+    final supportsBalancing =
+        serviceDetail == null || serviceDetail!.balancingPrice != null;
+    final supportsStorage =
+        serviceDetail == null || serviceDetail!.storageAvailable;
+    final supportsWashing =
+        serviceDetail == null || serviceDetail!.washingAvailable;
 
-    final badges = <Widget>[];
-    if (showBalancing) {
-      badges.add(Expanded(
+    final badges = <Widget>[
+      Expanded(
           child: _badge(context, isDark, '⚖️', 'Auswuchten',
-              state.withBalancing, () => notifier.toggleBalancing())));
-    }
-    if (showStorage) {
-      if (badges.isNotEmpty) badges.add(const SizedBox(width: 6));
-      badges.add(Expanded(
-          child: _badge(context, isDark, '📦', 'Einlagerung', state.withStorage,
-              () => notifier.toggleStorage())));
-    }
-    if (showWashing) {
-      if (badges.isNotEmpty) badges.add(const SizedBox(width: 6));
-      badges.add(Expanded(
-          child: _badge(context, isDark, '🧼', 'Waschen', state.withWashing,
-              () => notifier.toggleWashing())));
-    }
-
-    if (badges.isEmpty) return const SizedBox.shrink();
+              state.withBalancing, supportsBalancing, () {
+                if (supportsBalancing) notifier.toggleBalancing();
+              })),
+      const SizedBox(width: 6),
+      Expanded(
+          child: _badge(context, isDark, '📦', 'Einlagerung',
+              state.withStorage, supportsStorage, () {
+                if (supportsStorage) notifier.toggleStorage();
+              })),
+      const SizedBox(width: 6),
+      Expanded(
+          child: _badge(context, isDark, '🧼', 'Waschen',
+              state.withWashing, supportsWashing, () {
+                if (supportsWashing) notifier.toggleWashing();
+              })),
+    ];
 
     return Container(
       width: double.infinity,
@@ -2366,32 +2365,55 @@ class WheelChangeFilters extends StatelessWidget {
   }
 
   Widget _badge(BuildContext context, bool isDark, String emoji, String label,
-      bool selected, VoidCallback onTap) {
+      bool selected, bool supported, VoidCallback onTap) {
     return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFF0284C7)
-              : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 13)),
-            const SizedBox(width: 4),
-            Text(label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: selected
-                      ? Colors.white
-                      : (isDark ? const Color(0xFFF9FAFB) : Colors.grey[800]),
-                )),
-          ],
+      onTap: supported ? onTap : () {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$label wird von dieser Werkstatt nicht angeboten'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      },
+      child: Opacity(
+        opacity: supported ? 1.0 : 0.4,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected && supported
+                ? const Color(0xFF0284C7)
+                : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 13)),
+                  const SizedBox(width: 4),
+                  Text(label,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: selected && supported
+                            ? Colors.white
+                            : (isDark ? const Color(0xFFF9FAFB) : Colors.grey[800]),
+                      )),
+                ],
+              ),
+              if (!supported) ...[
+                const SizedBox(height: 2),
+                Text('Nicht verfügbar',
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500],
+                    )),
+              ],
+            ],
+          ),
         ),
       ),
     );

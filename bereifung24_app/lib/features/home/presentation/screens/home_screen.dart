@@ -1035,7 +1035,7 @@ class _ServicesGrid extends StatelessWidget {
     _ServiceItem('🔄', 'Reifen-\nwechsel', 'ab 59,90 €', 'TIRE_CHANGE', true,
         'assets/images/services/reifenwechsel.jpg'),
     _ServiceItem('🔧', 'Räder-\nwechsel', 'ab 29,90 €', 'WHEEL_CHANGE', true,
-        'assets/images/services/raederwechsel.jpg', true),
+        'assets/images/services/raederwechsel.png', true),
     _ServiceItem('🔨', 'Reifen-\nreparatur', 'ab 24,90 €', 'TIRE_REPAIR', false,
         'assets/images/services/reifenreparatur.jpg'),
     _ServiceItem('📏', 'Achsver-\nmessung', 'ab 49,90 €', 'ALIGNMENT_BOTH',

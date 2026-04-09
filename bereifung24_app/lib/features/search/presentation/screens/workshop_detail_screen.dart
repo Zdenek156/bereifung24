@@ -430,9 +430,34 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                               duration: const Duration(milliseconds: 400),
                               curve: Curves.easeInOut,
                             ),
-                            child: _RatingBadge(
-                              rating: workshop.averageRating!,
-                              count: workshop.reviewCount,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                ...List.generate(5, (i) {
+                                  final rating = workshop.averageRating!;
+                                  if (i < rating.floor()) {
+                                    return Icon(Icons.star,
+                                        size: 18, color: Colors.amber[700]);
+                                  } else if (i < rating) {
+                                    return Icon(Icons.star_half,
+                                        size: 18, color: Colors.amber[700]);
+                                  }
+                                  return Icon(Icons.star_border,
+                                      size: 18, color: Colors.amber[700]);
+                                }),
+                                const SizedBox(width: 6),
+                                Text(
+                                  workshop.averageRating!.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14),
+                                ),
+                                Text(
+                                  ' (${workshop.reviewCount} ${workshop.reviewCount == 1 ? "Bewertung" : "Bewertungen"})',
+                                  style: TextStyle(
+                                      color: Colors.grey[600], fontSize: 12),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -497,51 +522,38 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     _InfoCard(
                       icon: Icons.location_on_outlined,
                       title: 'Adresse',
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Text(workshop.fullAddress),
-                          const SizedBox(height: 8),
-                          SizedBox(
-                            width: double.infinity,
-                            child: OutlinedButton.icon(
-                              onPressed: () async {
-                                final address =
-                                    Uri.encodeComponent(workshop.fullAddress);
-                                final Uri url;
-                                if (Platform.isIOS) {
+                          Expanded(child: Text(workshop.fullAddress)),
+                          const SizedBox(width: 8),
+                          IconButton(
+                            onPressed: () async {
+                              final address =
+                                  Uri.encodeComponent(workshop.fullAddress);
+                              final Uri url;
+                              if (Platform.isIOS) {
+                                url = Uri.parse(
+                                    'https://maps.apple.com/?q=$address');
+                              } else {
+                                if (workshop.latitude != null &&
+                                    workshop.longitude != null) {
                                   url = Uri.parse(
-                                      'https://maps.apple.com/?q=$address');
+                                      'geo:${workshop.latitude},${workshop.longitude}?q=$address');
                                 } else {
-                                  if (workshop.latitude != null &&
-                                      workshop.longitude != null) {
-                                    url = Uri.parse(
-                                        'geo:${workshop.latitude},${workshop.longitude}?q=$address');
-                                  } else {
-                                    url = Uri.parse(
-                                        'geo:0,0?q=$address');
-                                  }
+                                  url = Uri.parse('geo:0,0?q=$address');
                                 }
-                                if (await canLaunchUrl(url)) {
-                                  await launchUrl(url,
-                                      mode: LaunchMode.externalApplication);
-                                }
-                              },
-                              icon: Icon(
-                                Platform.isIOS
-                                    ? Icons.map_outlined
-                                    : Icons.map_outlined,
-                                size: 18,
-                              ),
-                              label: Text(
-                                Platform.isIOS
-                                    ? 'In Karten öffnen'
-                                    : 'In Maps öffnen',
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 8),
-                              ),
+                              }
+                              if (await canLaunchUrl(url)) {
+                                await launchUrl(url,
+                                    mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            icon: const Icon(Icons.map_outlined),
+                            tooltip: Platform.isIOS
+                                ? 'In Karten öffnen'
+                                : 'In Maps öffnen',
+                            style: IconButton.styleFrom(
+                              foregroundColor: const Color(0xFF0284C7),
                             ),
                           ),
                         ],
@@ -873,6 +885,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           withWashing: withWashing,
                           searchBasePrice: resolvedPrice,
                           searchTotalPrice: searchWs?.searchTotalPrice,
+                          wheelChangeBreakdown: searchWs?.wheelChangeBreakdown,
                           mountingOnlySurchargeApplied:
                               searchWs?.mountingOnlySurchargeApplied,
                           disposalFeeApplied: searchWs?.disposalFeeApplied,
@@ -2353,6 +2366,7 @@ class _PriceBreakdownSection extends StatelessWidget {
   final bool withWashing;
   final double? searchBasePrice;
   final double? searchTotalPrice;
+  final Map<String, dynamic>? wheelChangeBreakdown;
   final double? mountingOnlySurchargeApplied;
   final double? disposalFeeApplied;
   final double? runFlatSurchargeApplied;
@@ -2367,6 +2381,7 @@ class _PriceBreakdownSection extends StatelessWidget {
     required this.withWashing,
     this.searchBasePrice,
     this.searchTotalPrice,
+    this.wheelChangeBreakdown,
     this.mountingOnlySurchargeApplied,
     this.disposalFeeApplied,
     this.runFlatSurchargeApplied,
@@ -2415,6 +2430,57 @@ class _PriceBreakdownSection extends StatelessWidget {
 
     switch (serviceType) {
       case 'WHEEL_CHANGE':
+        // Use wheelChangeBreakdown if available (searchBasePrice includes add-ons)
+        if (wheelChangeBreakdown != null && searchBasePrice != null) {
+          final wcbBase = (wheelChangeBreakdown!['basePrice'] as num?)?.toDouble();
+          final balSurcharge = (wheelChangeBreakdown!['balancingSurcharge'] as num?)?.toDouble();
+          final stoSurcharge = (wheelChangeBreakdown!['storageSurcharge'] as num?)?.toDouble();
+          final washSurcharge = (wheelChangeBreakdown!['washingSurcharge'] as num?)?.toDouble();
+          if (wcbBase != null) {
+            total += wcbBase;
+            rows.add(_PriceRow('Räderwechsel', wcbBase));
+          }
+          if (withBalancing && balSurcharge != null && balSurcharge > 0) {
+            total += balSurcharge;
+            rows.add(_PriceRow('Auswuchten', balSurcharge));
+          }
+          if (withStorage && stoSurcharge != null && stoSurcharge > 0) {
+            total += stoSurcharge;
+            rows.add(_PriceRow('Einlagerung', stoSurcharge));
+          }
+          if (withWashing && washSurcharge != null && washSurcharge > 0) {
+            total += washSurcharge;
+            rows.add(_PriceRow('Waschen', washSurcharge));
+          }
+          return _InfoCard(
+            icon: Icons.euro,
+            title: 'Preisübersicht',
+            child: Column(
+              children: [
+                ...rows,
+                if (rows.length > 1) ...[
+                  const Divider(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Gesamt',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        '${total.toStringAsFixed(2)} €',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF0284C7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
         basePrice = searchBasePrice ??
             pricing?.basePrice ??
             pricing?.basePrice4 ??

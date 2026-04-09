@@ -98,14 +98,6 @@ class _NotificationSettingsScreenState
                 const SizedBox(height: 16),
 
                 _NotificationTile(
-                  icon: Icons.check_circle_outline,
-                  title: 'Buchungsbestätigung',
-                  subtitle: 'Benachrichtigung bei Bestätigung deiner Buchung',
-                  value: _bookingConfirmation,
-                  onChanged: (v) =>
-                      setState(() => _bookingConfirmation = v),
-                ),
-                _NotificationTile(
                   icon: Icons.alarm,
                   title: 'Terminerinnerung',
                   subtitle: 'Erinnerung 24h vor deinem Termin',

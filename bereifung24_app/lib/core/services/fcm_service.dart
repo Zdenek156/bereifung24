@@ -44,7 +44,7 @@ class FcmService {
 
     if (settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional) {
-      await _registerToken();
+      await registerToken();
       _listenToTokenRefresh();
       _listenToForegroundMessages();
     }
@@ -89,7 +89,8 @@ class FcmService {
     );
   }
 
-  Future<void> _registerToken() async {
+  /// Register FCM token with backend. Public so it can be called after login.
+  Future<void> registerToken() async {
     try {
       final token = await _messaging.getToken();
       if (token != null) {

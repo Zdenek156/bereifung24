@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/services/analytics_service.dart';
 import '../../../core/services/crash_reporting_service.dart';
+import '../../../core/services/fcm_service.dart';
 import '../../../core/storage/secure_storage.dart';
 import '../../../data/models/models.dart';
 
@@ -44,6 +45,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final user = User.fromJson(jsonDecode(userData));
         _setUserContext(user);
         state = AuthState(user: user);
+        FcmService().registerToken();
       } else {
         state = const AuthState();
       }
@@ -63,6 +65,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _setUserContext(user);
       AnalyticsService().logLogin('email');
       state = AuthState(user: user);
+      FcmService().registerToken();
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: _extractError(e));
@@ -99,6 +102,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _setUserContext(user);
       AnalyticsService().logSignUp('email');
       state = AuthState(user: user);
+      FcmService().registerToken();
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: _extractError(e));
@@ -119,6 +123,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       _setUserContext(user);
       AnalyticsService().logLogin(provider);
       state = AuthState(user: user);
+      FcmService().registerToken();
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: _extractError(e));

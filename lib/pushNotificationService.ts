@@ -140,6 +140,20 @@ async function sendFcmMessage(message: FcmMessage): Promise<{ success: boolean; 
     if (!response.ok) {
       const errorBody = await response.text()
       console.error('[FCM] Send failed:', response.status, errorBody)
+
+      // Handle stale/invalid tokens: remove from DB so we don't keep failing
+      if (response.status === 404 || errorBody.includes('UNREGISTERED') || errorBody.includes('NotRegistered')) {
+        console.warn('[FCM] Token is stale/unregistered, clearing from DB:', message.token.substring(0, 20) + '...')
+        try {
+          await prisma.user.updateMany({
+            where: { fcmToken: message.token },
+            data: { fcmToken: null },
+          })
+        } catch (dbErr) {
+          console.error('[FCM] Failed to clear stale token:', dbErr)
+        }
+      }
+
       return { success: false, error: `FCM ${response.status}: ${errorBody}` }
     }
 

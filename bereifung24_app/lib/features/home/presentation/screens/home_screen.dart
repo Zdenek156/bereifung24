@@ -539,7 +539,9 @@ class _NextAppointmentCard extends ConsumerWidget {
       final dateStr =
           DateFormat('EEE, d. MMM yyyy', 'de_DE').format(next.appointmentDate);
       final timeStr = next.appointmentTime ?? '';
-      final daysUntil = next.appointmentDate.difference(now).inDays;
+      final today = DateTime(now.year, now.month, now.day);
+      final apptDay = DateTime(next.appointmentDate.year, next.appointmentDate.month, next.appointmentDate.day);
+      final daysUntil = apptDay.difference(today).inDays;
       final daysLabel = daysUntil == 0
           ? 'Heute'
           : daysUntil == 1

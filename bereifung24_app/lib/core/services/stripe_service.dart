@@ -93,16 +93,18 @@ class StripeService {
       });
       if (clientSecret == null) throw Exception('No client secret');
 
-      // Build payment method order based on user selection (selected first)
-      final allMethods = ['card', 'paypal', 'klarna'];
+      // Build payment method order (card first, then alternatives)
+      final allMethods = ['card', 'klarna', 'ideal', 'eps', 'amazon_pay'];
       List<String>? methodOrder;
       if (paymentMethod != null) {
         final methodMap = {
           'card': 'card',
-          'paypal': 'paypal',
           'klarna': 'klarna',
-          'apple_pay': 'card', // Fallback to card (Apple Pay handled natively below)
-          'google_pay': 'card', // Fallback to card (Google Pay handled natively below)
+          'ideal': 'ideal',
+          'eps': 'eps',
+          'amazon_pay': 'amazon_pay',
+          'apple_pay': 'card',
+          'google_pay': 'card',
         };
         final selected = methodMap[paymentMethod] ?? 'card';
         methodOrder = [selected, ...allMethods.where((m) => m != selected)];

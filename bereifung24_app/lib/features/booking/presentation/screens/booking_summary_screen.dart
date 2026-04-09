@@ -795,13 +795,23 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         ),
                         const Divider(height: 1),
                         _PaymentInfoRow(
-                          iconWidget: _PaymentLogo('paypal'),
-                          label: 'PayPal',
+                          iconWidget: _KlarnaLogo(),
+                          label: 'Klarna',
                         ),
                         const Divider(height: 1),
                         _PaymentInfoRow(
-                          iconWidget: _KlarnaLogo(),
-                          label: 'Klarna',
+                          iconWidget: _PaymentLogo('ideal-wero'),
+                          label: 'iDEAL | Wero',
+                        ),
+                        const Divider(height: 1),
+                        _PaymentInfoRow(
+                          iconWidget: _PaymentLogo('eps'),
+                          label: 'EPS',
+                        ),
+                        const Divider(height: 1),
+                        _PaymentInfoRow(
+                          iconWidget: _PaymentLogo('amazon-pay'),
+                          label: 'Amazon Pay',
                         ),
                         const Divider(height: 1),
                         if (Platform.isIOS)

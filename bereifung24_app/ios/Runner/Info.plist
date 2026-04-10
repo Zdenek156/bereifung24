@@ -77,6 +77,12 @@
 	<string>Verwenden Sie Face ID für eine schnelle und sichere Anmeldung.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Bereifung24 benötigt Zugriff auf die Kamera für Foto-Uploads.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Bereifung24 benötigt Zugriff auf das Mikrofon für den Rollo Sprachassistenten.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Bereifung24 verwendet Spracherkennung für den Rollo Sprachassistenten.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Bereifung24 benötigt Ihren Standort, um Werkstätten in Ihrer Nähe zu finden.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

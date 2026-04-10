@@ -269,6 +269,124 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     super.dispose();
   }
 
+  void _showBrandPicker(BuildContext context, List<String> brands) {
+    String searchQuery = '';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final filtered = searchQuery.isEmpty
+                ? brands
+                : brands
+                    .where((b) =>
+                        b.toLowerCase().contains(searchQuery.toLowerCase()))
+                    .toList();
+            return DraggableScrollableSheet(
+              initialChildSize: 0.7,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (ctx, scrollController) {
+                return Column(
+                  children: [
+                    // Handle bar
+                    Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[400],
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    // Header with close button
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'Hersteller wählen',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            icon: const Icon(Icons.close, size: 24),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Search field
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      child: TextField(
+                        autofocus: false,
+                        decoration: InputDecoration(
+                          hintText: 'Suchen...',
+                          prefixIcon: const Icon(Icons.search, size: 20),
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onChanged: (v) =>
+                            setSheetState(() => searchQuery = v),
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    // Brand list
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: filtered.length,
+                        itemBuilder: (ctx, i) {
+                          final brand = filtered[i];
+                          final isSelected = brand == _makeCtrl.text;
+                          return ListTile(
+                            title: Text(
+                              brand,
+                              style: TextStyle(
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.normal,
+                                color: isSelected
+                                    ? B24Colors.primaryBlue
+                                    : null,
+                              ),
+                            ),
+                            trailing: isSelected
+                                ? const Icon(Icons.check,
+                                    color: B24Colors.primaryBlue)
+                                : null,
+                            onTap: () {
+                              setState(() => _makeCtrl.text = brand);
+                              Navigator.pop(ctx);
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isSubmitting = true);
@@ -445,18 +563,25 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       !brands.contains(_makeCtrl.text)) {
                     brands.insert(0, _makeCtrl.text);
                   }
-                  return DropdownButtonFormField<String>(
-                    value:
-                        brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
-                    isExpanded: true,
-                    decoration:
-                        const InputDecoration(hintText: 'Hersteller wählen'),
-                    items: brands
-                        .map((b) => DropdownMenuItem(value: b, child: Text(b)))
-                        .toList(),
-                    onChanged: (v) => setState(() => _makeCtrl.text = v ?? ''),
+                  return FormField<String>(
+                    initialValue: brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
                     validator: (v) =>
                         (v == null || v.isEmpty) ? 'Pflichtfeld' : null,
+                    builder: (fieldState) {
+                      return InkWell(
+                        onTap: () => _showBrandPicker(context, brands),
+                        child: InputDecorator(
+                          decoration: InputDecoration(
+                            hintText: 'Hersteller wählen',
+                            errorText: fieldState.errorText,
+                            suffixIcon: const Icon(Icons.arrow_drop_down),
+                          ),
+                          child: _makeCtrl.text.isNotEmpty
+                              ? Text(_makeCtrl.text)
+                              : null,
+                        ),
+                      );
+                    },
                   );
                 }),
               ] else ...[

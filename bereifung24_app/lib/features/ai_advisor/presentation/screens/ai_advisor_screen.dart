@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/location_service.dart';
@@ -12,6 +13,7 @@ import '../../../../data/models/models.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
 import '../../../auth/providers/auth_provider.dart';
+import '../widgets/rollo_voice_mode.dart';
 
 // ══════════════════════════════════════
 // 🤖 KI Reifen-Berater
@@ -116,6 +118,12 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   bool _autoSpeak = true; // auto-speak AI responses
   String _partialSpeech = '';
 
+  // Voice Mode (fullscreen immersive)
+  bool _isVoiceMode = false;
+  VoiceState _voiceState = VoiceState.idle;
+  String _voiceStatusText = 'Tippe zum Sprechen';
+  String? _lastAiText;
+
   @override
   void initState() {
     super.initState();
@@ -131,10 +139,6 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     super.dispose();
   }
 
-  void _loadVehicle() {
-    // No longer auto-selects — vehicle is chosen by user in chat
-  }
-
   Future<void> _initTts() async {
     try {
       final response = await ApiClient().getTtsConfig();
@@ -146,52 +150,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         );
         if (mounted) setState(() => _ttsEnabled = true);
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('[TTS] Init failed: $e');
       // TTS not available — silently ignore
     }
-  }
-
-  Future<void> _toggleListening() async {
-    if (_isListening) {
-      await SpeechService().stopListening();
-      setState(() => _isListening = false);
-      // Send the accumulated speech
-      if (_partialSpeech.trim().isNotEmpty) {
-        _sendMessage(_partialSpeech.trim());
-        _partialSpeech = '';
-      }
-      return;
-    }
-
-    // Request microphone permission
-    final status = await Permission.microphone.request();
-    if (!status.isGranted) return;
-
-    // Stop TTS if playing
-    if (_isSpeaking) await _stopSpeaking();
-
-    setState(() {
-      _isListening = true;
-      _partialSpeech = '';
-    });
-
-    await SpeechService().startListening(
-      onResult: (result) {
-        if (!mounted) return;
-        setState(() {
-          _partialSpeech = result.recognizedWords;
-          _controller.text = _partialSpeech;
-        });
-        if (result.finalResult) {
-          setState(() => _isListening = false);
-          if (_partialSpeech.trim().isNotEmpty) {
-            _sendMessage(_partialSpeech.trim());
-            _partialSpeech = '';
-            _controller.clear();
-          }
-        }
-      },
-    );
   }
 
   Future<void> _speakText(String text) async {
@@ -216,6 +178,258 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   Future<void> _stopSpeaking() async {
     await ElevenLabsTtsService().stop();
     setState(() => _isSpeaking = false);
+  }
+
+  // ── Voice Mode ──
+
+  Future<void> _enterVoiceMode() async {
+    // Request microphone permission first
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) return;
+
+    // Stop TTS if playing
+    if (_isSpeaking) await _stopSpeaking();
+
+    // Keep screen awake during voice mode
+    WakelockPlus.enable();
+
+    setState(() {
+      _isVoiceMode = true;
+      _voiceState = VoiceState.speaking;
+      _voiceStatusText = 'Rollo begrüßt dich...';
+      _partialSpeech = '';
+      _isSpeaking = true;
+    });
+
+    // Rollo greets the user first
+    const greeting = 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
+    setState(() {
+      _messages.add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
+      _lastAiText = greeting;
+    });
+    _scrollToBottom();
+
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted || !_isVoiceMode) return;
+    await ElevenLabsTtsService().speak(greeting);
+    _waitForTtsFinish();
+  }
+
+  void _exitVoiceMode() {
+    _stopSpeaking();
+    if (_isListening) {
+      SpeechService().stopListening();
+    }
+    // Allow screen to turn off again
+    WakelockPlus.disable();
+    setState(() {
+      _isVoiceMode = false;
+      _isListening = false;
+      _voiceState = VoiceState.idle;
+      _partialSpeech = '';
+    });
+  }
+
+  Future<void> _voiceModeStartListening() async {
+    if (_isListening) return;
+
+    // Stop TTS if playing
+    if (_isSpeaking) await _stopSpeaking();
+
+    setState(() {
+      _isListening = true;
+      _voiceState = VoiceState.listening;
+      _voiceStatusText = 'Ich höre zu...';
+      _partialSpeech = '';
+    });
+
+    await SpeechService().startListening(
+      onResult: (result) {
+        if (!mounted) return;
+        setState(() {
+          _partialSpeech = result.recognizedWords;
+        });
+        if (result.finalResult) {
+          setState(() => _isListening = false);
+          if (_partialSpeech.trim().isNotEmpty) {
+            _voiceModeSendMessage(_partialSpeech.trim());
+            _partialSpeech = '';
+          } else {
+            setState(() {
+              _voiceState = VoiceState.idle;
+              _voiceStatusText = 'Tippe zum Sprechen';
+            });
+          }
+        }
+      },
+    );
+  }
+
+  void _voiceModeStopAction() {
+    if (_isListening) {
+      SpeechService().stopListening();
+      setState(() {
+        _isListening = false;
+        _voiceState = VoiceState.idle;
+        _voiceStatusText = 'Tippe zum Sprechen';
+      });
+      // Send partial speech if any
+      if (_partialSpeech.trim().isNotEmpty) {
+        _voiceModeSendMessage(_partialSpeech.trim());
+        _partialSpeech = '';
+      }
+    } else if (_isSpeaking) {
+      _stopSpeaking();
+      setState(() {
+        _voiceState = VoiceState.idle;
+        _voiceStatusText = 'Tippe zum Sprechen';
+      });
+    }
+  }
+
+  Future<void> _voiceModeSendMessage(String text) async {
+    // Explicitly stop speech recognition to release audio session
+    if (_isListening) {
+      SpeechService().stopListening();
+      setState(() => _isListening = false);
+    }
+
+    setState(() {
+      _voiceState = VoiceState.thinking;
+      _voiceStatusText = 'Rollo denkt nach...';
+    });
+
+    // Add user message to chat history
+    setState(() {
+      _messages.add(
+          _ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+      _isTyping = true;
+    });
+    _scrollToBottom();
+
+    try {
+      // Vehicle selection — auto-select single vehicle or use existing
+      if (_vehicleId == null) {
+        final lc = text.trim().toLowerCase();
+        final needsVehicle = lc.contains('reifen') ||
+            lc.contains('empfehlung') ||
+            lc.contains('tire') ||
+            lc.contains('werkstatt') ||
+            lc.contains('montage') ||
+            lc.contains('sommer') ||
+            lc.contains('winter') ||
+            lc.contains('ganzjahr');
+        if (needsVehicle) {
+          final vehiclesAsync = ref.read(vehiclesProvider);
+          List<Vehicle> vehicleList = [];
+          vehiclesAsync.whenData((vehicles) {
+            vehicleList = vehicles;
+          });
+          if (vehicleList.length == 1) {
+            _vehicleId = vehicleList.first.id;
+            ref.read(selectedVehicleProvider.notifier).state =
+                vehicleList.first;
+          }
+        }
+      }
+
+      double? lat, lng;
+      try {
+        final pos = await LocationService().getCurrentPosition();
+        if (pos != null) {
+          lat = pos.latitude;
+          lng = pos.longitude;
+        }
+      } catch (_) {}
+
+      final response = await ApiClient().sendAIChat(
+        message: text.trim(),
+        chatHistory: _chatHistory,
+        vehicleId: _vehicleId,
+        latitude: lat,
+        longitude: lng,
+      );
+
+      if (!mounted) return;
+
+      final data = response.data;
+      final aiText = data['response'] as String? ?? 'Keine Antwort erhalten.';
+      final newHistory = data['chatHistory'] as List? ?? [];
+
+      // Parse recommended tires
+      List<_RecommendedTire>? recTires;
+      final rawTires = data['recommendedTires'] as List?;
+      if (rawTires != null && rawTires.isNotEmpty) {
+        recTires = rawTires
+            .map((e) => _RecommendedTire
+                .fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+
+      setState(() {
+        _chatHistory =
+            newHistory.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+        _messages.add(_ChatMessage(
+            role: 'ai',
+            text: aiText,
+            time: _timeStr(),
+            recommendedTires: recTires));
+        _isTyping = false;
+        _lastAiText = aiText;
+      });
+
+      // Speak the response in voice mode
+      if (_ttsEnabled && _isVoiceMode) {
+        setState(() {
+          _voiceState = VoiceState.speaking;
+          _voiceStatusText = 'Rollo spricht...';
+          _isSpeaking = true;
+        });
+        // Small delay to let Android release the audio session from speech recognition
+        await Future.delayed(const Duration(milliseconds: 400));
+        if (!mounted || !_isVoiceMode) return;
+        await ElevenLabsTtsService().speak(aiText);
+        // Wait for TTS to finish, then go back to idle
+        _waitForTtsFinish();
+      } else {
+        setState(() {
+          _voiceState = VoiceState.idle;
+          _voiceStatusText = 'Tippe zum Sprechen';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _messages.add(_ChatMessage(
+          role: 'ai',
+          text:
+              'Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal.',
+          time: _timeStr(),
+        ));
+        _isTyping = false;
+        _voiceState = VoiceState.idle;
+        _voiceStatusText = 'Tippe zum Sprechen';
+      });
+    }
+    _scrollToBottom();
+  }
+
+  void _waitForTtsFinish() {
+    if (!mounted || !_isVoiceMode) return;
+    if (ElevenLabsTtsService().isSpeaking) {
+      Future.delayed(const Duration(milliseconds: 300), _waitForTtsFinish);
+    } else {
+      setState(() {
+        _isSpeaking = false;
+        _voiceState = VoiceState.idle;
+        _voiceStatusText = 'Tippe zum Sprechen';
+      });
+      // Auto-restart listening after AI finishes speaking
+      if (_isVoiceMode) {
+        Future.delayed(
+            const Duration(milliseconds: 500), _voiceModeStartListening);
+      }
+    }
   }
 
   void _onVehicleSelected(Vehicle vehicle) {
@@ -421,6 +635,72 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Voice Mode: fullscreen immersive
+    if (_isVoiceMode) {
+      // Collect recommended tires from last AI message
+      List<_RecommendedTire>? lastTires;
+      for (int i = _messages.length - 1; i >= 0; i--) {
+        if (_messages[i].recommendedTires != null &&
+            _messages[i].recommendedTires!.isNotEmpty) {
+          lastTires = _messages[i].recommendedTires;
+          break;
+        }
+      }
+
+      return RolloVoiceMode(
+        voiceState: _voiceState,
+        statusText: _voiceStatusText,
+        partialSpeech: _partialSpeech.isNotEmpty ? _partialSpeech : null,
+        lastAiText: _lastAiText,
+        recommendedTires: lastTires,
+        selectedTire: _selectedTire,
+        onClose: _exitVoiceMode,
+        onMicTap: _voiceModeStartListening,
+        onStopTap: _voiceModeStopAction,
+        onTireSelected: (tire) {
+          setState(() {
+            final t = tire as _RecommendedTire;
+            _selectedTire = (_selectedTire != null &&
+                    _selectedTire!.brand == t.brand &&
+                    _selectedTire!.model == t.model)
+                ? null
+                : t;
+          });
+        },
+        onTireSearch: (tire) {
+          final t = tire as _RecommendedTire;
+          _exitVoiceMode();
+          if (_vehicleId != null) {
+            final vehiclesAsync = ref.read(vehiclesProvider);
+            vehiclesAsync.whenData((vehicles) {
+              final v =
+                  vehicles.where((v) => v.id == _vehicleId).firstOrNull;
+              if (v != null) {
+                ref.read(selectedVehicleProvider.notifier).state = v;
+              }
+            });
+          }
+          final seasonCode = t.season.toLowerCase().startsWith('s')
+              ? 's'
+              : t.season.toLowerCase().startsWith('w')
+                  ? 'w'
+                  : t.season.toLowerCase().startsWith('g')
+                      ? 'g'
+                      : t.season;
+          context.go('/search?service=TIRE_CHANGE'
+              '&width=${Uri.encodeComponent(t.width)}'
+              '&height=${Uri.encodeComponent(t.height)}'
+              '&diameter=${Uri.encodeComponent(t.diameter)}'
+              '&season=${Uri.encodeComponent(seasonCode)}'
+              '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
+              '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
+              '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
+              '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
+              '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}');
+        },
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -948,30 +1228,31 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       ),
       child: Row(
         children: [
-          // Microphone button
+          // Microphone button → launches Voice Mode
           GestureDetector(
-            onTap: _isTyping ? null : _toggleListening,
+            onTap: _isTyping ? null : _enterVoiceMode,
             child: Container(
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: _isListening
-                    ? Colors.red
-                    : (isDark
-                        ? B24Colors.darkBackground
-                        : B24Colors.background),
+                gradient: const LinearGradient(
+                  colors: [B24Colors.primaryBlue, B24Colors.primaryLight],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: BorderRadius.circular(22),
-                border: _isListening
-                    ? null
-                    : Border.all(
-                        color:
-                            B24Colors.primaryBlue.withValues(alpha: 0.3),
-                      ),
+                boxShadow: [
+                  BoxShadow(
+                    color: B24Colors.primaryBlue.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               alignment: Alignment.center,
-              child: Icon(
-                _isListening ? Icons.stop : Icons.mic,
-                color: _isListening ? Colors.white : B24Colors.primaryBlue,
+              child: const Icon(
+                Icons.mic,
+                color: Colors.white,
                 size: 22,
               ),
             ),
@@ -991,15 +1272,11 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (text) => _sendMessage(text),
                 decoration: InputDecoration(
-                  hintText: _isListening
-                      ? 'Ich höre zu...'
-                      : 'Frag mich etwas...',
+                  hintText: 'Frag mich etwas...',
                   hintStyle: TextStyle(
-                    color: _isListening
-                        ? Colors.red.withValues(alpha: 0.7)
-                        : (isDark
+                    color: isDark
                             ? B24Colors.darkTextSecondary
-                            : B24Colors.textTertiary),
+                            : B24Colors.textTertiary,
                     fontSize: 14,
                   ),
                   border: InputBorder.none,

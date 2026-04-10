@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -13,6 +14,7 @@ class ElevenLabsTtsService {
 
   final _player = AudioPlayer();
   final _dio = Dio();
+  StreamSubscription<PlayerState>? _playerSub;
 
   // ElevenLabs config - fetched from backend
   String? _apiKey;
@@ -25,11 +27,16 @@ class ElevenLabsTtsService {
   Future<void> init({required String apiKey, String? voiceId}) async {
     _apiKey = apiKey;
     if (voiceId != null) _voiceId = voiceId;
+    debugPrint('[TTS] Initialized with voiceId=$_voiceId, apiKey length=${apiKey.length}');
   }
 
   /// Speak text using ElevenLabs TTS
   Future<void> speak(String text) async {
-    if (_apiKey == null || _apiKey!.isEmpty || text.trim().isEmpty) return;
+    if (_apiKey == null || _apiKey!.isEmpty || text.trim().isEmpty) {
+      debugPrint('[TTS] speak() aborted: apiKey=${_apiKey == null ? "null" : "len=${_apiKey!.length}"}, text empty=${text.trim().isEmpty}');
+      return;
+    }
+    debugPrint('[TTS] Speaking text (${text.length} chars)...');
 
     // Stop any current playback
     await stop();
@@ -37,10 +44,31 @@ class ElevenLabsTtsService {
     _isSpeaking = true;
 
     try {
-      // Clean text: remove markdown bold, emojis for cleaner speech
-      final cleanText = text
-          .replaceAll(RegExp(r'\*\*(.+?)\*\*'), r'$1')
-          .replaceAll(RegExp(r'[^\w\s.,!?äöüÄÖÜß€\-:;()]+'), ' ')
+      // Clean text: remove markdown and emojis, keep all readable text
+      var cleanText = text;
+      // Remove bold markers but keep content
+      cleanText = cleanText.replaceAllMapped(
+        RegExp(r'\*\*([^*]+)\*\*'),
+        (m) => m.group(1) ?? '',
+      );
+      // Remove italic markers but keep content
+      cleanText = cleanText.replaceAllMapped(
+        RegExp(r'\*([^*]+)\*'),
+        (m) => m.group(1) ?? '',
+      );
+      // Remove remaining markdown
+      cleanText = cleanText
+          .replaceAll(RegExp(r'#{1,3}\s'), '') // headers
+          .replaceAll(RegExp(r'`[^`]+`'), '') // inline code
+          .replaceAll(RegExp(r'- '), ', ') // list items → commas
+          .replaceAllMapped(
+            RegExp(r'\[([^\]]+)\]\([^)]+\)'),
+            (m) => m.group(1) ?? '',
+          ) // links
+          .replaceAll(RegExp(r'[\u{1F300}-\u{1FAFF}]', unicode: true), '') // emojis
+          .replaceAll(RegExp(r'[\u{2600}-\u{27BF}]', unicode: true), '') // symbols
+          .replaceAll(RegExp(r'[\u{FE00}-\u{FEFF}]', unicode: true), '')
+          .replaceAll(RegExp(r'[\u{200B}-\u{200F}]', unicode: true), '')
           .replaceAll(RegExp(r'\s+'), ' ')
           .trim();
 
@@ -71,15 +99,19 @@ class ElevenLabsTtsService {
         },
       );
 
+      debugPrint('[TTS] ElevenLabs response: ${response.statusCode}, data size: ${(response.data as List<int>).length} bytes');
       if (response.statusCode == 200) {
         final bytes = response.data as List<int>;
         final tempDir = await getTemporaryDirectory();
         final file = File(
             '${tempDir.path}/tts_${DateTime.now().millisecondsSinceEpoch}.mp3');
         await file.writeAsBytes(Uint8List.fromList(bytes));
+        debugPrint('[TTS] Saved to ${file.path}, playing...');
 
         await _player.setFilePath(file.path);
-        _player.playerStateStream.listen((state) {
+        // Cancel any previous listener to avoid leaks
+        await _playerSub?.cancel();
+        _playerSub = _player.playerStateStream.listen((state) {
           if (state.processingState == ProcessingState.completed) {
             _isSpeaking = false;
             file.delete().catchError((_) => file); // cleanup
@@ -87,7 +119,9 @@ class ElevenLabsTtsService {
         });
         await _player.play();
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[TTS] Error: $e');
+      debugPrint('[TTS] Stack: $stack');
       _isSpeaking = false;
     }
   }

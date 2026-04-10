@@ -51,6 +51,8 @@ class WorkshopSearchState {
   final String? selectedTireCategory;
   // Construction type for motorcycle: 'radial', 'diagonal', or null (= both)
   final String? tireConstruction;
+  // Article ID from AI recommendation — forces display of that specific tire
+  final String? aiArticleId;
 
   // Services that use the POST API with packageTypes
   static const postApiServices = {
@@ -85,6 +87,7 @@ class WorkshopSearchState {
     this.needsAxleSelection = false,
     this.selectedTireCategory = 'Günstigster',
     this.tireConstruction,
+    this.aiArticleId,
   });
 
   WorkshopSearchState copyWith({
@@ -115,6 +118,8 @@ class WorkshopSearchState {
     bool clearSelectedTireCategory = false,
     String? tireConstruction,
     bool clearTireConstruction = false,
+    String? aiArticleId,
+    bool clearAiArticleId = false,
   }) =>
       WorkshopSearchState(
         workshops: workshops ?? this.workshops,
@@ -148,6 +153,9 @@ class WorkshopSearchState {
         tireConstruction: clearTireConstruction
             ? null
             : (tireConstruction ?? this.tireConstruction),
+        aiArticleId: clearAiArticleId
+            ? null
+            : (aiArticleId ?? this.aiArticleId),
       );
 }
 
@@ -326,10 +334,21 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     if (vehicle != null) _lastVehicle = vehicle;
     if (tireDimensionOverride != null) _tireDimOverride = tireDimensionOverride;
 
+    // When coming from AI recommendation with specific tire, clear category filter
+    // so the AI-matched tire is shown, not just the cheapest
+    final hasAiTire = tireDimensionOverride != null &&
+        (tireDimensionOverride.containsKey('articleId') ||
+            tireDimensionOverride.containsKey('tireBrand'));
+
+    final aiArtId = tireDimensionOverride?['articleId'];
+
     state = state.copyWith(
       isLoading: true,
       error: null,
       query: zipCode ?? city ?? state.query,
+      clearSelectedTireCategory: hasAiTire,
+      aiArticleId: aiArtId,
+      clearAiArticleId: aiArtId == null,
     );
 
     try {
@@ -2706,6 +2725,7 @@ class _WorkshopCard extends ConsumerWidget {
     if ((isTireChange || isMotorcycleTire) &&
         workshop.tireRecommendationsRaw.isNotEmpty) {
       final category = searchState.selectedTireCategory;
+      final aiArticleId = searchState.aiArticleId;
       final hasFrontRear = workshop.tireRecommendationsRaw
           .any((r) => r['axle'] == 'front' || r['axle'] == 'rear');
       if (hasFrontRear) {
@@ -2745,27 +2765,41 @@ class _WorkshopCard extends ConsumerWidget {
           };
         }
       } else {
-        // Single tire: filter all recs by category
+        // Single tire: prefer AI-recommended tire by articleId if available
         final allRecs = workshop.tireRecommendationsRaw
             .map((r) => TireRecommendation.fromJson(r))
             .toList();
-        final filtered = filterByCategory(allRecs, category);
-        if (filtered.isNotEmpty) {
-          final t = filtered.first;
+
+        TireRecommendation? chosen;
+        // 1) Match by articleId from AI recommendation
+        if (aiArticleId != null && aiArticleId.isNotEmpty) {
+          final match = allRecs.where((t) => t.articleId == aiArticleId);
+          if (match.isNotEmpty) chosen = match.first;
+        }
+        // 2) Fallback to category filter
+        if (chosen == null) {
+          final filtered = filterByCategory(allRecs, category);
+          if (filtered.isNotEmpty) chosen = filtered.first;
+        }
+        // 3) Fallback to first available
+        chosen ??= allRecs.isNotEmpty ? allRecs.first : null;
+
+        if (chosen != null) {
+          final t = chosen;
           selectedRec = {
             'brand': t.brand,
             'model': t.model,
             'pricePerTire': t.pricePerTire,
             'totalPrice': t.totalPrice,
             'quantity': t.quantity,
-            'label': category ?? t.label,
+            'label': aiArticleId != null && t.articleId == aiArticleId
+                ? 'KI-Empfehlung'
+                : (category ?? t.label),
             'articleId': t.articleId,
             'dimensions': t.dimensions,
             'loadIndex': t.loadIndex,
             'speedIndex': t.speedIndex,
           };
-        } else {
-          selectedRec = workshop.tireRecommendationsRaw.first;
         }
       }
     }

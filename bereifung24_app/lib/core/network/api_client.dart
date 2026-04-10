@@ -253,6 +253,12 @@ class ApiClient {
       if (longitude != null) 'longitude': longitude,
     });
   }
+
+  // ── TTS Config ──
+
+  Future<Response> getTtsConfig() {
+    return _dio.get('/ai/tts-config');
+  }
 }
 
 /// Interceptor that adds Bearer token and handles 401 refresh flow

@@ -2,9 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/location_service.dart';
+import '../../../../core/services/speech_service.dart';
+import '../../../../core/services/elevenlabs_tts_service.dart';
 import '../../../../data/models/models.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
@@ -106,10 +109,18 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   _RecommendedTire? _selectedTire;
   String? _pendingMessage; // stored when vehicle selection is needed first
 
+  // Voice
+  bool _isListening = false;
+  bool _isSpeaking = false;
+  bool _ttsEnabled = false;
+  bool _autoSpeak = true; // auto-speak AI responses
+  String _partialSpeech = '';
+
   @override
   void initState() {
     super.initState();
     _initChat();
+    _initTts();
   }
 
   @override
@@ -122,6 +133,89 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
   void _loadVehicle() {
     // No longer auto-selects — vehicle is chosen by user in chat
+  }
+
+  Future<void> _initTts() async {
+    try {
+      final response = await ApiClient().getTtsConfig();
+      final data = response.data;
+      if (data['enabled'] == true && data['apiKey'] != null) {
+        await ElevenLabsTtsService().init(
+          apiKey: data['apiKey'],
+          voiceId: data['voiceId'],
+        );
+        if (mounted) setState(() => _ttsEnabled = true);
+      }
+    } catch (_) {
+      // TTS not available — silently ignore
+    }
+  }
+
+  Future<void> _toggleListening() async {
+    if (_isListening) {
+      await SpeechService().stopListening();
+      setState(() => _isListening = false);
+      // Send the accumulated speech
+      if (_partialSpeech.trim().isNotEmpty) {
+        _sendMessage(_partialSpeech.trim());
+        _partialSpeech = '';
+      }
+      return;
+    }
+
+    // Request microphone permission
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) return;
+
+    // Stop TTS if playing
+    if (_isSpeaking) await _stopSpeaking();
+
+    setState(() {
+      _isListening = true;
+      _partialSpeech = '';
+    });
+
+    await SpeechService().startListening(
+      onResult: (result) {
+        if (!mounted) return;
+        setState(() {
+          _partialSpeech = result.recognizedWords;
+          _controller.text = _partialSpeech;
+        });
+        if (result.finalResult) {
+          setState(() => _isListening = false);
+          if (_partialSpeech.trim().isNotEmpty) {
+            _sendMessage(_partialSpeech.trim());
+            _partialSpeech = '';
+            _controller.clear();
+          }
+        }
+      },
+    );
+  }
+
+  Future<void> _speakText(String text) async {
+    if (!_ttsEnabled) return;
+    setState(() => _isSpeaking = true);
+    await ElevenLabsTtsService().speak(text);
+    // Listen for completion
+    Future.delayed(const Duration(milliseconds: 500), () {
+      _checkSpeakingState();
+    });
+  }
+
+  void _checkSpeakingState() {
+    if (!mounted) return;
+    if (ElevenLabsTtsService().isSpeaking) {
+      Future.delayed(const Duration(milliseconds: 300), _checkSpeakingState);
+    } else {
+      setState(() => _isSpeaking = false);
+    }
+  }
+
+  Future<void> _stopSpeaking() async {
+    await ElevenLabsTtsService().stop();
+    setState(() => _isSpeaking = false);
   }
 
   void _onVehicleSelected(Vehicle vehicle) {
@@ -282,6 +376,11 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             recommendedTires: recTires));
         _isTyping = false;
       });
+
+      // Auto-speak AI response
+      if (_autoSpeak && _ttsEnabled) {
+        _speakText(aiText);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -338,10 +437,23 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (_ttsEnabled)
+            IconButton(
+              icon: Icon(
+                _autoSpeak ? Icons.volume_up : Icons.volume_off,
+                size: 22,
+              ),
+              tooltip: _autoSpeak ? 'Sprachausgabe an' : 'Sprachausgabe aus',
+              onPressed: () {
+                setState(() => _autoSpeak = !_autoSpeak);
+                if (!_autoSpeak && _isSpeaking) _stopSpeaking();
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 22),
             tooltip: 'Chat löschen',
             onPressed: () {
+              _stopSpeaking();
               setState(() {
                 _messages.clear();
                 _chatHistory.clear();
@@ -471,21 +583,47 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               if (isUser) ...[const SizedBox(width: 8), _userAvatar()],
             ],
           ),
-          // Time
+          // Time + Speaker
           Padding(
             padding: EdgeInsets.only(
               top: 4,
               left: isUser ? 0 : 64,
               right: isUser ? 64 : 0,
             ),
-            child: Text(
-              msg.time,
-              style: TextStyle(
-                fontSize: 10,
-                color: isDark
-                    ? B24Colors.darkTextSecondary
-                    : B24Colors.textTertiary,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment:
+                  isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+              children: [
+                Text(
+                  msg.time,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: isDark
+                        ? B24Colors.darkTextSecondary
+                        : B24Colors.textTertiary,
+                  ),
+                ),
+                if (!isUser && _ttsEnabled) ...[
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () {
+                      if (_isSpeaking) {
+                        _stopSpeaking();
+                      } else {
+                        _speakText(msg.text);
+                      }
+                    },
+                    child: Icon(
+                      _isSpeaking ? Icons.stop_circle_outlined : Icons.play_circle_outline,
+                      size: 16,
+                      color: _isSpeaking
+                          ? Colors.red
+                          : B24Colors.primaryBlue.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           // Quick chips
@@ -810,6 +948,35 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       ),
       child: Row(
         children: [
+          // Microphone button
+          GestureDetector(
+            onTap: _isTyping ? null : _toggleListening,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _isListening
+                    ? Colors.red
+                    : (isDark
+                        ? B24Colors.darkBackground
+                        : B24Colors.background),
+                borderRadius: BorderRadius.circular(22),
+                border: _isListening
+                    ? null
+                    : Border.all(
+                        color:
+                            B24Colors.primaryBlue.withValues(alpha: 0.3),
+                      ),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                _isListening ? Icons.stop : Icons.mic,
+                color: _isListening ? Colors.white : B24Colors.primaryBlue,
+                size: 22,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Container(
               decoration: BoxDecoration(
@@ -824,11 +991,15 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (text) => _sendMessage(text),
                 decoration: InputDecoration(
-                  hintText: 'Frag mich etwas...',
+                  hintText: _isListening
+                      ? 'Ich höre zu...'
+                      : 'Frag mich etwas...',
                   hintStyle: TextStyle(
-                    color: isDark
-                        ? B24Colors.darkTextSecondary
-                        : B24Colors.textTertiary,
+                    color: _isListening
+                        ? Colors.red.withValues(alpha: 0.7)
+                        : (isDark
+                            ? B24Colors.darkTextSecondary
+                            : B24Colors.textTertiary),
                     fontSize: 14,
                   ),
                   border: InputBorder.none,

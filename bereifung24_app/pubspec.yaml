@@ -3,7 +3,7 @@ description: Bereifung24 – Reifenservice buchen
 
 publish_to: 'none'
 
-version: 1.0.3+4
+version: 1.0.4+5
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -69,6 +69,12 @@ dependencies:
   # Camera & OCR
   camera: ^0.11.0+2
   google_mlkit_text_recognition: ^0.15.0
+
+  # Voice / Speech
+  speech_to_text: ^7.0.0
+  just_audio: ^0.9.40
+  permission_handler: ^11.3.1
+  path_provider: ^2.1.2
 
   # Caching
   hive_flutter: ^1.1.0

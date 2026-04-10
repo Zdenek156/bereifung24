@@ -315,6 +315,8 @@ export default function AdminApiSettings() {
             <li>• <strong>STRIPE_PUBLISHABLE_KEY</strong> - Stripe Publishable Key (pk_test_xxx oder pk_live_xxx)</li>
             <li>• <strong>STRIPE_WEBHOOK_SECRET</strong> - Stripe Webhook Signing Secret (whsec_xxx) für Webhook-Verifizierung</li>
             <li>• <strong>GEMINI_API_KEY</strong> - Google Gemini API Key für KI-Reifen-Berater (ca. 0,50€/Monat bei 1000 Beratungen)</li>
+            <li>• <strong>ELEVENLABS_API_KEY</strong> - ElevenLabs API Key für KI-Sprachausgabe "Rollo" (Text-to-Speech)</li>
+            <li>• <strong>ELEVENLABS_VOICE_ID</strong> - ElevenLabs Voice ID für die Stimme von "Rollo" (Standard: pNInz6obpgDQGcFmaJgB)</li>
             <li>• <strong>META_APP_ID</strong> - Meta/Facebook App ID für Social Media Integration</li>
             <li>• <strong>META_APP_SECRET</strong> - Meta/Facebook App Secret für Long-Lived Token Konvertierung</li>
             <li>• <strong>INSTAGRAM_APP_SECRET</strong> - Instagram App-Geheimnis (Instagram Business Login API)</li>
@@ -328,6 +330,9 @@ export default function AdminApiSettings() {
           </p>
           <p className="text-xs text-blue-600 mt-1">
             🤖 <strong>Gemini API Key:</strong> Erstellen auf <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">Google AI Studio</a> (Gemini 2.5 Flash)
+          </p>
+          <p className="text-xs text-blue-600 mt-1">
+            🔊 <strong>ElevenLabs API Key:</strong> Erstellen auf <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">elevenlabs.io</a> → Settings → API Keys
           </p>
           <p className="text-xs text-blue-600 mt-1">
             📱 <strong>Meta App Secret:</strong> Findest du unter <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-800">developers.facebook.com</a> → App auswählen → Einstellungen → Allgemeines → App-Geheimnis → &quot;Anzeigen&quot;

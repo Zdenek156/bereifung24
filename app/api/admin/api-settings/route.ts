@@ -103,6 +103,8 @@ function getDescriptionForKey(key: string): string {
     'TIKTOK_CLIENT_SECRET': 'TikTok App Client Secret (von TikTok for Developers → App → Keys)',
     'YOUTUBE_CLIENT_ID': 'YouTube/Google OAuth Client ID für YouTube Data API v3',
     'YOUTUBE_CLIENT_SECRET': 'YouTube/Google OAuth Client Secret für YouTube Data API v3',
+    'ELEVENLABS_API_KEY': 'ElevenLabs API Key für KI-Sprachausgabe (Text-to-Speech) im App KI-Berater "Rollo" (elevenlabs.io)',
+    'ELEVENLABS_VOICE_ID': 'ElevenLabs Voice ID für die Stimme von "Rollo" (z.B. pNInz6obpgDQGcFmaJgB für Adam)',
   }
   return descriptions[key] || ''
 }

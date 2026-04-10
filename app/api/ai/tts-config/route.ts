@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyMobileToken } from '@/lib/auth/mobile-auth';
+import { authenticateMobileRequest } from '@/lib/mobile-auth';
 import { getApiSetting } from '@/lib/api-settings';
 
 export async function GET(request: NextRequest) {
-  const authResult = await verifyMobileToken(request);
-  if (!authResult.success) {
+  const user = await authenticateMobileRequest(request);
+  if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

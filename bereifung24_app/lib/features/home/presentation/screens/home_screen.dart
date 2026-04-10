@@ -293,7 +293,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Alle Services',
+                        'Serviceangebote',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,

@@ -7,6 +7,8 @@ import { sendEmail, createICSFile, directBookingConfirmationCustomerEmail, direc
 import { createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 import { createBerlinDate } from '@/lib/timezone-utils'
 import { Decimal } from '@prisma/client/runtime/library'
+import Stripe from 'stripe'
+import { getApiSetting } from '@/lib/api-settings'
 
 /**
  * POST /api/customer/direct-booking/book
@@ -169,6 +171,15 @@ export async function POST(request: NextRequest) {
       // Create booking after successful payment
       console.log('💰 [BOOK] Creating CONFIRMED booking:', { workshop: workshopId, date, totalPrice })
       
+      // Calculate commission breakdown (6.9% platform commission)
+      const PLATFORM_COMMISSION_RATE = 0.069
+      const totalPriceNum = parseFloat(totalPrice)
+      const platformCommission = totalPriceNum * PLATFORM_COMMISSION_RATE
+      const workshopPayout = totalPriceNum - platformCommission
+      const platformCommissionCents = Math.round(platformCommission * 100)
+      const stripeFeesEstimate = (totalPriceNum * 0.015) + 0.25
+      const platformNetCommission = platformCommission - stripeFeesEstimate
+      
       const booking = await prisma.directBooking.create({
         data: {
           workshopId,
@@ -191,7 +202,14 @@ export async function POST(request: NextRequest) {
           paymentStatus: 'PAID',
           paymentMethod: paymentMethod,
           paymentId: paymentId,
+          stripePaymentId: paymentMethod === 'STRIPE' ? paymentId : null,
           paidAt: new Date(),
+          // Commission fields
+          platformCommission,
+          platformCommissionCents,
+          workshopPayout,
+          stripeFeesEstimate,
+          platformNetCommission,
           // Tire data
           ...(tireBrand ? { tireBrand } : {}),
           ...(tireModel ? { tireModel } : {}),
@@ -213,6 +231,45 @@ export async function POST(request: NextRequest) {
       })
 
       console.log('[BOOK API] ✅ Booking created:', booking.id)
+
+      // Fetch actual Stripe fee and payment method detail (async, non-blocking)
+      if (paymentMethod === 'STRIPE' && paymentId) {
+        try {
+          const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY')
+          if (stripeSecretKey) {
+            const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-11-20.acacia' as Stripe.LatestApiVersion })
+            const paymentIntent = await stripe.paymentIntents.retrieve(paymentId, {
+              expand: ['latest_charge']
+            })
+            
+            const charge = paymentIntent.latest_charge as Stripe.Charge | null
+            if (charge) {
+              const pmDetail = charge.payment_method_details?.type || null
+              let actualStripeFee: number | null = null
+              
+              if (charge.balance_transaction) {
+                const btId = typeof charge.balance_transaction === 'string'
+                  ? charge.balance_transaction
+                  : charge.balance_transaction.id
+                const bt = await stripe.balanceTransactions.retrieve(btId)
+                actualStripeFee = bt.fee / 100
+              }
+              
+              await prisma.directBooking.update({
+                where: { id: booking.id },
+                data: {
+                  paymentMethodDetail: pmDetail,
+                  ...(actualStripeFee !== null && { stripeFee: actualStripeFee }),
+                  ...(actualStripeFee !== null && { platformNetCommission: platformCommission - actualStripeFee }),
+                }
+              })
+              console.log('[BOOK API] 💰 Stripe fee updated:', { stripeFee: actualStripeFee, paymentMethodDetail: pmDetail })
+            }
+          }
+        } catch (feeError) {
+          console.error('[BOOK API] ⚠️ Error retrieving Stripe fee (non-critical):', feeError instanceof Error ? feeError.message : feeError)
+        }
+      }
 
       // Derived fields for convenience
       const customerName = `${booking.customer.user.firstName || ''} ${booking.customer.user.lastName || ''}`.trim() || 'Kunde'

@@ -51,7 +51,7 @@ workflows:
           echo "=== Latest TestFlight build: $LATEST_BUILD, New build number: $BUILD_NUMBER ==="
 
           flutter build ipa --release \
-            --build-name=1.0.1 \
+            --build-name=1.0.7 \
             --build-number=$BUILD_NUMBER \
             --export-options-plist=/Users/builder/export_options.plist || true
 

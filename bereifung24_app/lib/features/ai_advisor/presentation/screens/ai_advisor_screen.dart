@@ -126,11 +126,14 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   String _voiceStatusText = 'Tippe zum Sprechen';
   String? _lastAiText;
 
+  // TTS init future (await before first speech)
+  late final Future<void> _ttsInitFuture;
+
   @override
   void initState() {
     super.initState();
     _initChat();
-    _initTts();
+    _ttsInitFuture = _initTts();
   }
 
   @override
@@ -210,6 +213,20 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _lastAiText = greeting;
     });
     _scrollToBottom();
+
+    // Wait for TTS to be initialized before speaking
+    await _ttsInitFuture;
+    if (!mounted || !_isVoiceMode) return;
+
+    if (!_ttsEnabled) {
+      // TTS not available — go straight to idle listening state
+      setState(() {
+        _isSpeaking = false;
+        _voiceState = VoiceState.idle;
+        _voiceStatusText = 'Tippe zum Sprechen';
+      });
+      return;
+    }
 
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted || !_isVoiceMode) return;
@@ -333,6 +350,21 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 vehicleList.first;
             ref.read(homeVehicleIndexProvider.notifier).state = 0;
             saveHomeVehicleIndex(0);
+          } else if (vehicleList.length > 1) {
+            // Multiple vehicles — exit voice mode and show picker in chat
+            _pendingMessage = text.trim();
+            _exitVoiceMode();
+            setState(() {
+              _messages.add(_ChatMessage(
+                role: 'ai',
+                text: 'Für welches Fahrzeug brauchst du Hilfe?',
+                time: _timeStr(),
+                vehicleChoices: vehicleList,
+              ));
+              _isTyping = false;
+            });
+            _scrollToBottom();
+            return;
           }
         }
       }

@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
           })))
           // Track full tire data for post-processing
           dedupedTires.forEach(t => {
-            const key = `${t.brand}|${t.model || ''}`
+            const key = `${t.brand}|${t.model || ''}|${t.width}/${t.height}R${t.diameter}`
             if (!rawTiresMap.has(key)) {
               rawTiresMap.set(key, {
                 brand: t.brand,
@@ -233,11 +233,23 @@ export async function POST(request: NextRequest) {
     )
 
     // ── Extract recommended tires from AI response (max 3) ──
+    // Determine primary tire size(s) from the first vehicle to prefer matching sizes
+    const primarySizes: Set<string> = new Set()
+    if (vehicleContexts.length > 0) {
+      const pv = vehicleContexts[0]
+      if (pv.tireSize) primarySizes.add(pv.tireSize)
+      if (pv.rearTireSize) primarySizes.add(pv.rearTireSize)
+    }
+
     const recommendedTires: Array<{ brand: string; model: string; size: string; width: string; height: string; diameter: string; season: string; loadIndex: string; speedIndex: string; labelFuelEfficiency: string; labelWetGrip: string; labelNoise: number; articleId: string }> = []
     if (rawTiresMap.size > 0) {
+      // Filter to primary vehicle sizes when possible
+      const candidates = Array.from(rawTiresMap.values()).filter(tire =>
+        primarySizes.size === 0 || primarySizes.has(tire.size)
+      )
       const responseLC = response.toLowerCase()
       // First pass: strict match (brand AND full model name)
-      Array.from(rawTiresMap.values()).forEach(tire => {
+      candidates.forEach(tire => {
         if (recommendedTires.length >= 3) return
         if (tire.model && responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(tire.model.toLowerCase())) {
           recommendedTires.push(tire)
@@ -246,7 +258,7 @@ export async function POST(request: NextRequest) {
       // Second pass: try matching brand + first word of model (for cases where AI abbreviates model names)
       if (recommendedTires.length < 3) {
         const matchedKeys = new Set(recommendedTires.map(t => `${t.brand}|${t.model}`))
-        Array.from(rawTiresMap.values()).forEach(tire => {
+        candidates.forEach(tire => {
           if (recommendedTires.length >= 3) return
           const key = `${tire.brand}|${tire.model}`
           if (matchedKeys.has(key)) return

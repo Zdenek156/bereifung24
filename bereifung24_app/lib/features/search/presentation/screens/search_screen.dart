@@ -841,7 +841,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // Clear stale results from a previous service when entering a new search screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(workshopSearchProvider.notifier).reset();
+      // Auto-search with GPS when arriving from AI advisor with tire override
+      if (widget.tireDimensionOverride != null) {
+        _autoSearchWithLocation();
+      }
     });
+  }
+
+  Future<void> _autoSearchWithLocation() async {
+    try {
+      final position = await LocationService().getCurrentPosition();
+      if (!mounted) return;
+      if (position != null) {
+        _searchCtrl.text = 'Mein Standort';
+        final vehicle = ref.read(selectedVehicleProvider);
+        ref.read(workshopSearchProvider.notifier).search(
+              lat: position.latitude,
+              lng: position.longitude,
+              serviceType: widget.serviceType,
+              vehicle: vehicle,
+              tireDimensionOverride: widget.tireDimensionOverride,
+            );
+      }
+    } catch (e) {
+      debugPrint('Auto-search location error: $e');
+    }
   }
 
   @override

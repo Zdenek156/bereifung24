@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -189,8 +190,18 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
   Future<void> _enterVoiceMode() async {
     // Request microphone permission first
-    final status = await Permission.microphone.request();
-    if (!status.isGranted) return;
+    final micStatus = await Permission.microphone.request();
+    if (!micStatus.isGranted) return;
+
+    // iOS also requires speech recognition permission separately
+    if (Platform.isIOS) {
+      final speechStatus = await Permission.speech.request();
+      if (!speechStatus.isGranted) return;
+    }
+
+    // Pre-initialize speech service so it's ready when user taps mic
+    final speechReady = await SpeechService().init();
+    debugPrint('[VoiceMode] Speech service ready: $speechReady');
 
     // Stop TTS if playing
     if (_isSpeaking) await _stopSpeaking();
@@ -255,6 +266,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     // Stop TTS if playing
     if (_isSpeaking) await _stopSpeaking();
 
+    // On iOS: ensure audio session is released from playback mode
+    // by explicitly stopping the player and giving iOS time to switch
+    if (Platform.isIOS) {
+      await ElevenLabsTtsService().stop();
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+
     setState(() {
       _isListening = true;
       _voiceState = VoiceState.listening;
@@ -262,7 +280,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _partialSpeech = '';
     });
 
-    await SpeechService().startListening(
+    final success = await SpeechService().startListening(
       onResult: (result) {
         if (!mounted) return;
         setState(() {
@@ -282,6 +300,14 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         }
       },
     );
+
+    if (!success && mounted) {
+      setState(() {
+        _isListening = false;
+        _voiceState = VoiceState.idle;
+        _voiceStatusText = 'Spracherkennung nicht verfügbar';
+      });
+    }
   }
 
   void _voiceModeStopAction() {
@@ -462,8 +488,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       });
       // Auto-restart listening after AI finishes speaking
       if (_isVoiceMode) {
+        // iOS needs more time for audio session to switch from playback to recording
+        final delay = Platform.isIOS ? 800 : 500;
         Future.delayed(
-            const Duration(milliseconds: 500), _voiceModeStartListening);
+            Duration(milliseconds: delay), _voiceModeStartListening);
       }
     }
   }

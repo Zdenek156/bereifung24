@@ -54,7 +54,7 @@ export const authOptions: NextAuthOptions = {
         // First, try to find regular user
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email
+            email: credentials.email.toLowerCase().trim()
           },
           include: {
             customer: true,
@@ -79,7 +79,7 @@ export const authOptions: NextAuthOptions = {
           )
 
           if (!isPasswordValid) {
-            throw new Error('Ungültiges Passwort')
+            throw new Error('Das Passwort ist nicht korrekt.')
           }
 
           // For ADMIN users, check if they also have a B24Employee profile
@@ -143,7 +143,7 @@ export const authOptions: NextAuthOptions = {
           )
 
           if (!isPasswordValid) {
-            throw new Error('Ungültiges Passwort')
+            throw new Error('Das Passwort ist nicht korrekt.')
           }
 
           // Update last login
@@ -164,7 +164,7 @@ export const authOptions: NextAuthOptions = {
           } as any
         }
 
-        throw new Error('Benutzer nicht gefunden')
+        throw new Error('Es existiert kein Konto mit dieser E-Mail-Adresse.')
       }
     })
   ],

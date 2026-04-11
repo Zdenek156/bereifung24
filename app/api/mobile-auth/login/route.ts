@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Ungültige Anmeldedaten' },
+        { error: 'Es existiert kein Konto mit dieser E-Mail-Adresse.' },
         { status: 401 }
       )
     }
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Ungültige Anmeldedaten' },
+        { error: 'Das Passwort ist nicht korrekt.' },
         { status: 401 }
       )
     }

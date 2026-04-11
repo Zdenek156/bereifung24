@@ -180,6 +180,9 @@ export async function sendEmail({ to, subject, text, html, attachments }: EmailO
         user: config.user,
         pass: config.password,
       },
+      connectionTimeout: 10000, // 10s to connect
+      greetingTimeout: 10000,   // 10s for SMTP greeting
+      socketTimeout: 15000,     // 15s for socket inactivity
     })
 
     const info = await transporter.sendMail({

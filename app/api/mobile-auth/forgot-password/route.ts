@@ -97,7 +97,10 @@ export async function POST(request: NextRequest) {
       text: `Hallo ${user.firstName},\n\nSetzen Sie Ihr Passwort zurück: ${resetLink}\n\nDer Link ist 1 Stunde gültig.\n\nBereifung24`,
     })
 
-    return NextResponse.json(successResponse)
+    return NextResponse.json({
+      success: true,
+      message: 'Ein Link zum Zurücksetzen wurde an Ihre E-Mail gesendet.',
+    })
 
   } catch (error) {
     console.error('[MOBILE FORGOT-PASSWORD] Error:', error)

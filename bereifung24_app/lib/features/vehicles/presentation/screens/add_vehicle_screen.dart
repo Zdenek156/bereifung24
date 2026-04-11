@@ -4,6 +4,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/vehicle.dart';
 import '../../utils/vehicle_doc_parser.dart';
+import '../../utils/tire_size_parser.dart';
 import '../widgets/interactive_tire_selector.dart';
 import 'vehicle_doc_scanner_screen.dart';
 import 'vehicles_screen.dart';
@@ -48,6 +49,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   // Doc scanner result
   VehicleDocResult? _scanResult;
   bool _showTireWarning = false;
+  bool _scanTireInvalid = false;
 
   static const _vehicleTypes = [
     ('CAR', 'Auto', Icons.directions_car),
@@ -203,9 +205,35 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
       // Show tire warning with accept button (don't apply yet)
       if (result.tireSize != null) {
-        _showTireWarning = true;
+        if (_isValidScannedTire(result.tireSize!) &&
+            (result.rearTireSize == null ||
+                _isValidScannedTire(result.rearTireSize!))) {
+          _showTireWarning = true;
+          _scanTireInvalid = false;
+        } else {
+          _showTireWarning = false;
+          _scanTireInvalid = true;
+        }
       }
     });
+  }
+
+  /// Check if a scanned tire size has valid dimensions for the current vehicle type
+  bool _isValidScannedTire(TireSize ts) {
+    final isMoto = _vehicleType == 'MOTORCYCLE';
+    final widths = isMoto
+        ? const [70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220]
+        : const [125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395, 405, 415, 425];
+    final aspects = isMoto
+        ? const [45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100]
+        : const [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90];
+    final diameters = isMoto
+        ? const [8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 23]
+        : const [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+
+    return widths.contains(ts.width) &&
+        aspects.contains(ts.aspectRatio) &&
+        diameters.contains(ts.diameter);
   }
 
   /// Apply scanned tire sizes to all seasons after user confirms
@@ -568,6 +596,12 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               // ── Tire warning ──
               if (_showTireWarning) ...[
                 _buildTireWarning(),
+                const SizedBox(height: 8),
+              ],
+
+              // ── Invalid tire scan warning ──
+              if (_scanTireInvalid) ...[
+                _buildInvalidTireWarning(),
                 const SizedBox(height: 8),
               ],
 
@@ -1024,6 +1058,79 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   style: TextStyle(fontWeight: FontWeight.w700)),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF0284C7),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInvalidTireWarning() {
+    String scannedStr = '';
+    if (_scanResult?.tireSize != null) {
+      final ts = _scanResult!.tireSize!;
+      scannedStr = '${ts.width}/${ts.aspectRatio} R${ts.diameter}';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.warning_amber_rounded,
+                  color: Colors.orange.shade700, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Reifengröße nicht erkannt',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.orange.shade700,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _scanTireInvalid = false),
+                child: const Icon(Icons.close, size: 18, color: Colors.grey),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (scannedStr.isNotEmpty)
+            Text('Gescannt: $scannedStr',
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.orange.shade900)),
+          const SizedBox(height: 4),
+          Text(
+            'Die gescannte Reifengröße stimmt nicht mit den verfügbaren Werten überein. '
+            'Bitte scanne den Fahrzeugschein erneut oder gib die Reifengröße von Hand ein.',
+            style: TextStyle(fontSize: 11, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _openDocScanner,
+              icon: const Icon(Icons.document_scanner, size: 18),
+              label: const Text('Erneut scannen',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.orange.shade700,
+                side: BorderSide(color: Colors.orange.shade300),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8)),

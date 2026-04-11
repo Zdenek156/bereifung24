@@ -25,18 +25,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Always return success for security (don't reveal if email exists)
-    const successResponse = {
-      success: true,
-      message: 'Wenn ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link gesendet.',
-    }
-
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },
     })
 
     if (!user) {
-      return NextResponse.json(successResponse)
+      return NextResponse.json(
+        { error: 'Es existiert kein Konto mit dieser E-Mail-Adresse.' },
+        { status: 404 }
+      )
     }
 
     // Generate reset token (1 hour validity)

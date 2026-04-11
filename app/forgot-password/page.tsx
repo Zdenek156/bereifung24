@@ -7,10 +7,12 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
 
     try {
       const response = await fetch('/api/auth/forgot-password', {
@@ -21,12 +23,17 @@ export default function ForgotPasswordPage() {
         body: JSON.stringify({ email }),
       })
 
-      // Immer Erfolg anzeigen aus Sicherheitsgründen
+      if (!response.ok) {
+        const data = await response.json()
+        setError(data.error || 'Ein Fehler ist aufgetreten.')
+        setLoading(false)
+        return
+      }
+
       setSubmitted(true)
       setLoading(false)
     } catch (err) {
-      // Auch bei Fehler Erfolg anzeigen
-      setSubmitted(true)
+      setError('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.')
       setLoading(false)
     }
   }
@@ -77,6 +84,11 @@ export default function ForgotPasswordPage() {
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               E-Mail-Adresse

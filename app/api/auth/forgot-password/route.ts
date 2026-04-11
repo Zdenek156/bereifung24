@@ -18,17 +18,14 @@ export async function POST(request: NextRequest) {
 
     // Benutzer suchen
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email: email.toLowerCase().trim() }
     })
 
-    // Aus Sicherheitsgründen immer "Erfolg" zurückgeben,
-    // auch wenn der Benutzer nicht existiert
     if (!user) {
-      console.log(`Password reset requested for non-existent email: ${email}`)
-      return NextResponse.json({
-        success: true,
-        message: 'Wenn ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link gesendet.'
-      })
+      return NextResponse.json(
+        { error: 'Es existiert kein Konto mit dieser E-Mail-Adresse.' },
+        { status: 404 }
+      )
     }
 
     // Reset-Token generieren

@@ -49,7 +49,17 @@ export async function POST(request: NextRequest) {
 
     // ── Build tire sizes from ALL vehicles (including rear for mixed tires) ──
     const tireSizes: Set<string> = new Set()
-    const vehicleContexts: AdvisorContext['vehicles'] = vehicles.map(v => {
+    // Speed rating rank for comparison (higher = faster)
+    const speedRatingRank: Record<string, number> = {
+      'J': 1, 'K': 2, 'L': 3, 'M': 4, 'N': 5, 'P': 6, 'Q': 7, 'R': 8,
+      'S': 9, 'T': 10, 'U': 11, 'H': 12, 'V': 13, 'W': 14, 'Y': 15, 'Z': 16,
+    }
+
+    // Track primary vehicle's loadIndex and speedIndex for filtering
+    let primaryLoadIndex: number | null = null
+    let primarySpeedRating: string | null = null
+
+    const vehicleContexts: AdvisorContext['vehicles'] = vehicles.map((v, idx) => {
       let tireSize = ''
       let rearTireSize = ''
       const specs = v.summerTires || v.winterTires || v.allSeasonTires
@@ -64,6 +74,11 @@ export async function POST(request: NextRequest) {
           if (parsed.hasDifferentSizes && parsed.rearWidth && parsed.rearAspectRatio && parsed.rearDiameter) {
             rearTireSize = `${parsed.rearWidth}/${parsed.rearAspectRatio} R${parsed.rearDiameter}`
             tireSizes.add(rearTireSize)
+          }
+          // Capture loadIndex and speedRating from first vehicle
+          if (idx === 0) {
+            if (parsed.loadIndex) primaryLoadIndex = Number(parsed.loadIndex)
+            if (parsed.speedRating) primarySpeedRating = String(parsed.speedRating).toUpperCase()
           }
         } catch { /* ignore parse errors */ }
       }
@@ -243,10 +258,22 @@ export async function POST(request: NextRequest) {
 
     const recommendedTires: Array<{ brand: string; model: string; size: string; width: string; height: string; diameter: string; season: string; loadIndex: string; speedIndex: string; labelFuelEfficiency: string; labelWetGrip: string; labelNoise: number; articleId: string }> = []
     if (rawTiresMap.size > 0) {
-      // Filter to primary vehicle sizes when possible
-      const candidates = Array.from(rawTiresMap.values()).filter(tire =>
-        primarySizes.size === 0 || primarySizes.has(tire.size)
-      )
+      // Filter to primary vehicle sizes, loadIndex, and speedIndex when possible
+      const candidates = Array.from(rawTiresMap.values()).filter(tire => {
+        if (primarySizes.size > 0 && !primarySizes.has(tire.size)) return false
+        // Load index must be >= vehicle's requirement
+        if (primaryLoadIndex && tire.loadIndex !== '-') {
+          const tireLoad = Number(tire.loadIndex)
+          if (!isNaN(tireLoad) && tireLoad < primaryLoadIndex) return false
+        }
+        // Speed rating must be >= vehicle's requirement
+        if (primarySpeedRating && tire.speedIndex !== '-') {
+          const vehicleRank = speedRatingRank[primarySpeedRating] ?? 0
+          const tireRank = speedRatingRank[tire.speedIndex.toUpperCase()] ?? 0
+          if (tireRank > 0 && vehicleRank > 0 && tireRank < vehicleRank) return false
+        }
+        return true
+      })
       const responseLC = response.toLowerCase()
       // First pass: strict match (brand AND full model name)
       candidates.forEach(tire => {

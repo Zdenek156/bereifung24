@@ -93,8 +93,8 @@ TireSize? parseTireSize(String text) {
   final isValidDiameter = _validDiameters.contains(diameter);
   final isValidSpeed = speedRating != null && _validSpeedRatings.contains(speedRating);
 
-  // Must have at least valid width + diameter
-  if (!isValidWidth || !isValidDiameter) return null;
+  // Must have valid width, diameter, AND aspect ratio
+  if (!isValidWidth || !isValidDiameter || !isValidRatio) return null;
 
   // Calculate confidence
   var confidence = 0.0;

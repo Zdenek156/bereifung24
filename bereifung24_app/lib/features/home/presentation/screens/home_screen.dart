@@ -629,17 +629,17 @@ class _NextAppointmentCard extends ConsumerWidget {
 // Vehicle Quick Book Card
 // ══════════════════════════════════════
 
-final _homeVehicleIndexProvider = StateProvider<int>((ref) => 0);
+final homeVehicleIndexProvider = StateProvider<int>((ref) => 0);
 
 /// Load saved vehicle index from SharedPreferences
 Future<void> _loadSavedVehicleIndex(WidgetRef ref) async {
   final prefs = await SharedPreferences.getInstance();
   final savedIdx = prefs.getInt('selectedVehicleIndex') ?? 0;
-  ref.read(_homeVehicleIndexProvider.notifier).state = savedIdx;
+  ref.read(homeVehicleIndexProvider.notifier).state = savedIdx;
 }
 
 /// Save vehicle index to SharedPreferences
-Future<void> _saveVehicleIndex(int index) async {
+Future<void> saveHomeVehicleIndex(int index) async {
   final prefs = await SharedPreferences.getInstance();
   await prefs.setInt('selectedVehicleIndex', index);
 }
@@ -681,7 +681,7 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
     }
 
     final idx =
-        ref.watch(_homeVehicleIndexProvider).clamp(0, vehicles.length - 1);
+        ref.watch(homeVehicleIndexProvider).clamp(0, vehicles.length - 1);
     final v = vehicles[idx];
 
     // Always keep search provider in sync with home selection
@@ -827,11 +827,11 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                       final isSelected = i == currentIdx;
                       return GestureDetector(
                         onTap: () {
-                          ref.read(_homeVehicleIndexProvider.notifier).state =
+                          ref.read(homeVehicleIndexProvider.notifier).state =
                               i;
                           ref.read(selectedVehicleProvider.notifier).state =
                               vehicles[i];
-                          _saveVehicleIndex(i);
+                          saveHomeVehicleIndex(i);
                           Navigator.pop(ctx);
                         },
                         child: Container(

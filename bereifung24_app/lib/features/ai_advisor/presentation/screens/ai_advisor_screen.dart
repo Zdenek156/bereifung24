@@ -12,6 +12,8 @@ import '../../../../core/services/elevenlabs_tts_service.dart';
 import '../../../../data/models/models.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
+import '../../../home/presentation/screens/home_screen.dart'
+    show homeVehicleIndexProvider, saveHomeVehicleIndex;
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/rollo_voice_mode.dart';
 
@@ -329,6 +331,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             _vehicleId = vehicleList.first.id;
             ref.read(selectedVehicleProvider.notifier).state =
                 vehicleList.first;
+            ref.read(homeVehicleIndexProvider.notifier).state = 0;
+            saveHomeVehicleIndex(0);
           }
         }
       }
@@ -447,8 +451,17 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         time: _timeStr(),
       ));
     });
-    // Sync to selectedVehicleProvider for workshop detail
+    // Sync to selectedVehicleProvider AND home vehicle card
     ref.read(selectedVehicleProvider.notifier).state = vehicle;
+    // Update home screen vehicle card so it stays in sync
+    final vehiclesAsync = ref.read(vehiclesProvider);
+    if (vehiclesAsync is AsyncData<List<Vehicle>>) {
+      final idx = vehiclesAsync.value.indexWhere((v) => v.id == vehicle.id);
+      if (idx >= 0) {
+        ref.read(homeVehicleIndexProvider.notifier).state = idx;
+        saveHomeVehicleIndex(idx);
+      }
+    }
     _scrollToBottom();
     // If there was a pending message, send it now
     if (_pendingMessage != null) {
@@ -519,6 +532,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           final v = vehicleList.first;
           _vehicleId = v.id;
           ref.read(selectedVehicleProvider.notifier).state = v;
+          ref.read(homeVehicleIndexProvider.notifier).state = 0;
+          saveHomeVehicleIndex(0);
         } else {
           // Multiple vehicles — ask user to pick, store message for later
           _pendingMessage = text.trim();
@@ -674,10 +689,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           if (_vehicleId != null) {
             final vehiclesAsync = ref.read(vehiclesProvider);
             if (vehiclesAsync is AsyncData<List<Vehicle>>) {
-              final v =
-                  vehiclesAsync.value.where((v) => v.id == _vehicleId).firstOrNull;
-              if (v != null) {
-                ref.read(selectedVehicleProvider.notifier).state = v;
+              final idx =
+                  vehiclesAsync.value.indexWhere((v) => v.id == _vehicleId);
+              if (idx >= 0) {
+                ref.read(selectedVehicleProvider.notifier).state =
+                    vehiclesAsync.value[idx];
+                ref.read(homeVehicleIndexProvider.notifier).state = idx;
+                saveHomeVehicleIndex(idx);
               }
             }
           }
@@ -1023,15 +1041,18 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () {
                     final t = _selectedTire!;
-                    // Sync vehicle provider so workshop detail shows the correct vehicle
+                    // Sync vehicle provider + home vehicle card
                     if (_vehicleId != null) {
                       final vehiclesAsync = ref.read(vehiclesProvider);
                       if (vehiclesAsync is AsyncData<List<Vehicle>>) {
-                        final v = vehiclesAsync.value
-                            .where((v) => v.id == _vehicleId)
-                            .firstOrNull;
-                        if (v != null) {
-                          ref.read(selectedVehicleProvider.notifier).state = v;
+                        final idx = vehiclesAsync.value
+                            .indexWhere((v) => v.id == _vehicleId);
+                        if (idx >= 0) {
+                          ref.read(selectedVehicleProvider.notifier).state =
+                              vehiclesAsync.value[idx];
+                          ref.read(homeVehicleIndexProvider.notifier).state =
+                              idx;
+                          saveHomeVehicleIndex(idx);
                         }
                       }
                     }

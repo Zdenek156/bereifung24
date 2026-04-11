@@ -9,7 +9,7 @@ export async function GET() {
     const authError = await requireAdminOrEmployee();
     if (authError) return authError;
 
-    // Fetch all customers with their tire requests
+    // Fetch all customers with their direct bookings
     const customers = await prisma.customer.findMany({
       select: {
         id: true,
@@ -27,28 +27,24 @@ export async function GET() {
             longitude: true,
           }
         },
-        tireRequests: {
+        directBookings: {
+          where: {
+            status: { in: ['CONFIRMED', 'COMPLETED', 'PAID'] }
+          },
           select: {
             id: true,
-            season: true,
-            createdAt: true,
-            offers: {
-              select: {
-                id: true,
-                status: true,
-              }
-            }
+            totalPrice: true,
+            status: true,
           }
         }
       }
     });
 
-    // Fetch all workshops with their details
+    // Fetch all workshops with their direct bookings
     const workshops = await prisma.workshop.findMany({
       select: {
         id: true,
         companyName: true,
-
         createdAt: true,
         user: {
           select: {
@@ -61,11 +57,14 @@ export async function GET() {
             longitude: true,
           }
         },
-        offers: {
+        directBookings: {
+          where: {
+            status: { in: ['CONFIRMED', 'COMPLETED', 'PAID'] }
+          },
           select: {
             id: true,
+            totalPrice: true,
             status: true,
-            price: true,
           }
         }
       }
@@ -76,9 +75,8 @@ export async function GET() {
       zipCode: string;
       customers: number;
       workshops: number;
-      requests: number;
-      offers: number;
-      acceptedOffers: number;
+      bookings: number;
+      revenue: number;
       coverage: number;
     }> = {};
 
@@ -92,20 +90,17 @@ export async function GET() {
           zipCode: zipCode,
           customers: 0,
           workshops: 0,
-          requests: 0,
-          offers: 0,
-          acceptedOffers: 0,
+          bookings: 0,
+          revenue: 0,
           coverage: 0
         };
       }
       
       postalCodeStats[zipCode].customers++;
-      postalCodeStats[zipCode].requests += customer.tireRequests.length;
-      
-      customer.tireRequests.forEach(request => {
-        postalCodeStats[zipCode].offers += request.offers.length;
-        postalCodeStats[zipCode].acceptedOffers += request.offers.filter(o => o.status === 'ACCEPTED').length;
-      });
+      postalCodeStats[zipCode].bookings += customer.directBookings.length;
+      postalCodeStats[zipCode].revenue += customer.directBookings.reduce(
+        (sum, b) => sum + Number(b.totalPrice || 0), 0
+      );
     });
 
     // Process workshops
@@ -118,9 +113,8 @@ export async function GET() {
           zipCode: zipCode,
           customers: 0,
           workshops: 0,
-          requests: 0,
-          offers: 0,
-          acceptedOffers: 0,
+          bookings: 0,
+          revenue: 0,
           coverage: 0
         };
       }
@@ -138,20 +132,10 @@ export async function GET() {
     // Overall statistics
     const totalCustomers = customers.length;
     const totalWorkshops = workshops.length;
-    const workshopsWithSepa = 0; // GoCardless removed
-    const totalRequests = customers.reduce((sum, c) => sum + c.tireRequests.length, 0);
-    const totalOffers = workshops.reduce((sum, w) => sum + w.offers.length, 0);
-    const acceptedOffers = workshops.reduce((sum, w) => 
-      sum + w.offers.filter(o => o.status === 'ACCEPTED').length, 0
+    const totalBookings = customers.reduce((sum, c) => sum + c.directBookings.length, 0);
+    const totalRevenue = workshops.reduce((sum, w) => 
+      sum + w.directBookings.reduce((s, b) => s + Number(b.totalPrice || 0), 0), 0
     );
-    
-    // Tire season distribution
-    const seasonDistribution: Record<string, number> = {};
-    customers.forEach(customer => {
-      customer.tireRequests.forEach(request => {
-        seasonDistribution[request.season] = (seasonDistribution[request.season] || 0) + 1;
-      });
-    });
 
     return NextResponse.json({
       customers: customers.map(c => ({
@@ -165,11 +149,8 @@ export async function GET() {
         latitude: c.user?.latitude || null,
         longitude: c.user?.longitude || null,
         createdAt: c.createdAt,
-        requestsCount: c.tireRequests.length,
-        offersCount: c.tireRequests.reduce((sum, r) => sum + r.offers.length, 0),
-        acceptedOffersCount: c.tireRequests.reduce((sum, r) => 
-          sum + r.offers.filter(o => o.status === 'ACCEPTED').length, 0
-        )
+        bookingsCount: c.directBookings.length,
+        totalRevenue: c.directBookings.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)
       })),
       workshops: workshops.map(w => ({
         id: w.id,
@@ -183,26 +164,18 @@ export async function GET() {
         longitude: w.user?.longitude || null,
         hasSepaMandateActive: false,
         createdAt: w.createdAt,
-        offersCount: w.offers.length,
-        acceptedOffersCount: w.offers.filter(o => o.status === 'ACCEPTED').length,
-        totalRevenue: w.offers
-          .filter(o => o.status === 'ACCEPTED')
-          .reduce((sum, o) => sum + (o.price || 0), 0)
+        bookingsCount: w.directBookings.length,
+        totalRevenue: w.directBookings.reduce((sum, b) => sum + Number(b.totalPrice || 0), 0)
       })),
       postalCodeStats: Object.values(postalCodeStats).sort((a, b) => 
-        b.requests - a.requests
+        b.bookings - a.bookings
       ),
       overallStats: {
         totalCustomers,
         totalWorkshops,
-        workshopsWithSepa,
-        totalRequests,
-        totalOffers,
-        acceptedOffers,
-        conversionRate: totalOffers > 0 ? (acceptedOffers / totalOffers * 100).toFixed(2) : '0',
-        averageOffersPerRequest: totalRequests > 0 ? (totalOffers / totalRequests).toFixed(2) : '0'
+        totalBookings,
+        totalRevenue: totalRevenue.toFixed(2),
       },
-      serviceTypeDistribution: seasonDistribution
     });
 
   } catch (error) {

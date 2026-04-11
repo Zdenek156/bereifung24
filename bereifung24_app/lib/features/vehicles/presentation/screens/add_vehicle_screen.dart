@@ -182,6 +182,18 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     setState(() {
       _scanResult = result;
 
+      // Auto-set vehicle type from document category (Feld J)
+      if (result.vehicleCategory != null) {
+        switch (result.vehicleCategory) {
+          case 'KRAFTRAD':
+            _vehicleType = 'MOTORCYCLE';
+          case 'ANHÄNGER':
+            _vehicleType = 'TRAILER';
+          case 'PKW':
+            _vehicleType = 'CAR';
+        }
+      }
+
       // Apply scanned data to form fields
       if (result.make != null) _makeCtrl.text = _matchBrand(result.make!);
       if (result.model != null) _modelCtrl.text = result.model!;
@@ -477,6 +489,15 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         onTap: () => setState(() {
                           if (_vehicleType != t.$1) {
                             _vehicleType = t.$1;
+                            // Reset vehicle selections to prevent wrong data across vehicle types
+                            _makeCtrl.clear();
+                            _modelCtrl.clear();
+                            _yearCtrl.clear();
+                            _plateCtrl.clear();
+                            _vinCtrl.clear();
+                            _fuelType = null;
+                            _scanResult = null;
+                            _showTireWarning = false;
                             // Reset tire selections to prevent wrong sizes across vehicle types
                             _summer.frontSpec = null;
                             _summer.rearSpec = null;

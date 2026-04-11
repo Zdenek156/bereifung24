@@ -359,6 +359,41 @@ export class EmailService {
   }
 
   /**
+   * Alle ungelesenen E-Mails in einem Ordner als gelesen markieren
+   */
+  async markAllAsRead(folder: string = 'INBOX'): Promise<number> {
+    const whereFilter = this.isB24Employee
+      ? { b24EmployeeId: this.userId, folder, isRead: false }
+      : { userId: this.userId, folder, isRead: false }
+
+    // Ungelesene UIDs aus DB holen
+    const unreadMessages = await prisma.emailMessage.findMany({
+      where: whereFilter,
+      select: { uid: true },
+    })
+
+    if (unreadMessages.length === 0) return 0
+
+    // IMAP-Flags setzen (bulk)
+    try {
+      const imapService = await this.getImapService()
+      const uids = unreadMessages.map((m) => m.uid)
+      await imapService.updateFlagsBulk(uids, ['\\Seen'], folder)
+    } catch (error) {
+      console.error('Error updating IMAP flags for bulk mark as read:', error)
+      // Trotzdem DB aktualisieren, IMAP-Sync korrigiert es beim nächsten Mal
+    }
+
+    // DB-Cache bulk-Update
+    const result = await prisma.emailMessage.updateMany({
+      where: whereFilter,
+      data: { isRead: true },
+    })
+
+    return result.count
+  }
+
+  /**
    * E-Mail löschen
    */
   async deleteMessage(uid: number, folder: string = 'INBOX'): Promise<void> {

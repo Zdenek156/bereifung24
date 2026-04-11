@@ -22,13 +22,14 @@ class VehicleDocResult {
   TireSize? tireSize; // Feld 15.1 (front / only tire size)
   TireSize? rearTireSize; // Second tire size if Mischbereifung
   bool hasMixedTires = false; // true when front ≠ rear
+  String? vehicleCategory; // Feld J: PKW, KRAFTRAD, ANHÄNGER, LKW
   int fieldsFound = 0;
 
   @override
   String toString() => 'VehicleDocResult(make=$make, model=$model, '
       'year=$year, vin=$vin, fuel=$fuelType, tire=$tireSize, '
       'rearTire=$rearTireSize, mixed=$hasMixedTires, '
-      'fields=$fieldsFound)';
+      'category=$vehicleCategory, fields=$fieldsFound)';
 }
 
 /// Known German car manufacturers for matching
@@ -74,6 +75,52 @@ const _manufacturers = {
   'DS': 'DS',
   'ABARTH': 'Abarth',
   'ALFA ROMEO': 'Alfa Romeo',
+  // ── Motorcycle manufacturers ──
+  'YAMAHA': 'Yamaha',
+  'KAWASAKI': 'Kawasaki',
+  'DUCATI': 'Ducati',
+  'KTM': 'KTM',
+  'HUSQVARNA': 'Husqvarna',
+  'HARLEY-DAVIDSON': 'Harley-Davidson',
+  'HARLEY': 'Harley-Davidson',
+  'INDIAN': 'Indian',
+  'TRIUMPH': 'Triumph',
+  'APRILIA': 'Aprilia',
+  'PIAGGIO': 'Piaggio',
+  'VESPA': 'Vespa',
+  'MV AGUSTA': 'MV Agusta',
+  'MOTO GUZZI': 'Moto Guzzi',
+  'BENELLI': 'Benelli',
+  'ROYAL ENFIELD': 'Royal Enfield',
+  'KYMCO': 'Kymco',
+  'SYM': 'SYM',
+  'GASGAS': 'GasGas',
+  'GAS GAS': 'GasGas',
+  'CFMOTO': 'CFMoto',
+  'CF MOTO': 'CFMoto',
+  'ZERO': 'Zero',
+  'BUELL': 'Buell',
+  // ── Trailer manufacturers ──
+  'BÖCKMANN': 'Böckmann',
+  'BOECKMANN': 'Böckmann',
+  'HUMBAUR': 'Humbaur',
+  'SARIS': 'Saris',
+  'WESTFALIA': 'Westfalia',
+  'BRENDERUP': 'Brenderup',
+  'KNOTT': 'Knott',
+  'UNSINN': 'Unsinn',
+  'STEMA': 'Stema',
+  'ANSSEMS': 'Anssems',
+  'HAPERT': 'Hapert',
+  'IFOR WILLIAMS': 'Ifor Williams',
+  'BRIAN JAMES': 'Brian James',
+  'NEPTUN': 'Neptun',
+  'PONGRATZ': 'Pongratz',
+  'WM MEYER': 'WM Meyer',
+  'BARTHAU': 'Barthau',
+  'HEINEMANN': 'Heinemann',
+  'STEDELE': 'Stedele',
+  'TPV': 'TPV',
 };
 
 /// Fuel type mappings (German → app enum)
@@ -94,6 +141,10 @@ const _fuelMappings = {
   'FLÜSSIGGAS': 'LPG',
   'ERDGAS': 'CNG',
   'CNG': 'CNG',
+  // Trailer: no fuel
+  'OHNE': null,
+  'ENTFÄLLT': null,
+  'KEIN': null,
 };
 
 /// German license plate pattern (kept for reference but not used in scanning)
@@ -186,10 +237,26 @@ VehicleDocResult parseVehicleDoc(List<String> textBlocks) {
   if (result.fuelType == null) {
     for (final entry in _fuelMappings.entries) {
       if (upper.contains(entry.key)) {
-        result.fuelType = entry.value;
-        result.fieldsFound++;
+        if (entry.value != null) {
+          result.fuelType = entry.value;
+          result.fieldsFound++;
+        }
         break;
       }
+    }
+  }
+
+  // ── Vehicle category (Feld J) fallback ──
+  if (result.vehicleCategory == null) {
+    if (upper.contains('KRAFTRAD') || upper.contains('MOTORRAD')) {
+      result.vehicleCategory = 'KRAFTRAD';
+      result.fieldsFound++;
+    } else if (upper.contains('ANHÄNGER') || upper.contains('ANHAENGER')) {
+      result.vehicleCategory = 'ANHÄNGER';
+      result.fieldsFound++;
+    } else if (upper.contains('PERSONENKRAFTWAGEN')) {
+      result.vehicleCategory = 'PKW';
+      result.fieldsFound++;
     }
   }
 
@@ -331,7 +398,7 @@ bool _isExcludedModelWord(String text) {
   ).hasMatch(t)) return true;
   // Exclude vehicle body type / usage descriptions (Feld 4/5)
   if (RegExp(
-    r'(PERS|BEF|SPL|KOMBI|LIMOUSINE|PKW|LKW|CABRIOLET|COUPE|KASTEN|SATTEL|PRITSCHE|KIPPER)',
+    r'(PERS|BEF|SPL|KOMBI|LIMOUSINE|PKW|LKW|CABRIOLET|COUPE|KASTEN|SATTEL|PRITSCHE|KIPPER|KRAFTRAD|ANHÄNGER|MOTORRAD|ROLLER|QUAD|TRIKE|MOFA)',
     caseSensitive: false,
   ).hasMatch(t)) return true;
   // Exclude manufacturer-related fragments
@@ -351,6 +418,7 @@ bool _isExcludedModelWord(String text) {
 /// The document has codes like:
 ///   A  → License plate       (top area)
 ///   B  → First registration  (top area, date)
+///   J  → Fahrzeugklasse      (top area: PKW, KRAFTRAD, ANHÄNGER)
 ///   2.1 → Manufacturer       (middle-left)
 ///   2.2 → Type/Model         (below 2.1)
 ///   E  → VIN                 (middle area)
@@ -370,8 +438,10 @@ void _parseFieldCodes(List<String> textBlocks, VehicleDocResult result) {
     'vin': RegExp(r'(?:^|\s)E\s*[:\s]\s*([A-HJ-NPR-Z0-9]{17})',
         caseSensitive: false),
     'fuel': RegExp(r'(?:^|\s)P\.?3\s*[:\s]\s*(\S+)', caseSensitive: false),
+    'category': RegExp(r'(?:^|\s)J\s*[:\s]\s*(\S+(?:\s\S+)?)',
+        caseSensitive: false),
     'tire': RegExp(
-        r'(?:^|\s)15\.?1\s*[:\s]\s*(\d{2,3}\s?[/\\]\s?\d{2,3}\s?[RBD]\s?\d{2}(?:\s?\d{2,3}\s?[A-Z])?)',
+        r'(?:^|\s)15\.?1\s*[:\s]\s*(\d{2,3}\s?[/\\]\s?\d{2,3}\s?(?:ZR|R|B|D)\s?\d{2}(?:\s?\d{2,3}\s?[A-Z])?)',
         caseSensitive: false),
   };
 
@@ -434,10 +504,26 @@ void _parseFieldCodes(List<String> textBlocks, VehicleDocResult result) {
             final fUp = value.toUpperCase();
             for (final f in _fuelMappings.entries) {
               if (fUp.contains(f.key)) {
-                result.fuelType = f.value;
-                result.fieldsFound++;
+                if (f.value != null) {
+                  result.fuelType = f.value;
+                  result.fieldsFound++;
+                }
                 break;
               }
+            }
+          }
+        case 'category':
+          if (result.vehicleCategory == null) {
+            final cUp = value.toUpperCase();
+            if (cUp.contains('KRAFTRAD') || cUp.contains('MOTORRAD')) {
+              result.vehicleCategory = 'KRAFTRAD';
+              result.fieldsFound++;
+            } else if (cUp.contains('ANHÄNGER') || cUp.contains('ANHAENGER')) {
+              result.vehicleCategory = 'ANHÄNGER';
+              result.fieldsFound++;
+            } else if (cUp.contains('PKW') || cUp.contains('PERSONENKRAFTWAGEN')) {
+              result.vehicleCategory = 'PKW';
+              result.fieldsFound++;
             }
           }
         case 'tire':

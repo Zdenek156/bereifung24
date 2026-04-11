@@ -22,9 +22,8 @@ interface Customer {
   zipCode: string | null;
   latitude: number | null;
   longitude: number | null;
-  requestsCount: number;
-  offersCount: number;
-  acceptedOffersCount: number;
+  bookingsCount: number;
+  totalRevenue: number;
 }
 
 interface Workshop {
@@ -38,8 +37,7 @@ interface Workshop {
   latitude: number | null;
   longitude: number | null;
   hasSepaMandateActive: boolean;
-  offersCount: number;
-  acceptedOffersCount: number;
+  bookingsCount: number;
   totalRevenue: number;
 }
 
@@ -47,9 +45,8 @@ interface PostalCodeStat {
   zipCode: string;
   customers: number;
   workshops: number;
-  requests: number;
-  offers: number;
-  acceptedOffers: number;
+  bookings: number;
+  revenue: number;
   coverage: number;
 }
 
@@ -167,9 +164,8 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
               ${customer.address ? `<p><strong>Adresse:</strong> ${customer.address}</p>` : ''}
               ${customer.city ? `<p><strong>Stadt:</strong> ${customer.city}, ${customer.zipCode}</p>` : ''}
               <hr style="margin: 8px 0; border-color: #E5E7EB;" />
-              <p><strong>📋 Anfragen:</strong> ${customer.requestsCount}</p>
-              <p><strong>📄 Angebote erhalten:</strong> ${customer.offersCount}</p>
-              <p><strong>✅ Angenommen:</strong> ${customer.acceptedOffersCount}</p>
+              <p><strong>� Buchungen:</strong> ${customer.bookingsCount}</p>
+              <p><strong>💰 Umsatz:</strong> ${customer.totalRevenue.toFixed(2)}€</p>
             </div>
           </div>
         `;
@@ -207,12 +203,8 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
                 </span>
               </p>
               <hr style="margin: 8px 0; border-color: #E5E7EB;" />
-              <p><strong>📄 Angebote erstellt:</strong> ${workshop.offersCount}</p>
-              <p><strong>✅ Abgeschlossen:</strong> ${workshop.acceptedOffersCount}</p>
+              <p><strong>� Buchungen:</strong> ${workshop.bookingsCount}</p>
               <p><strong>💰 Umsatz:</strong> ${workshop.totalRevenue.toFixed(2)}€</p>
-              ${workshop.offersCount > 0 ? `
-                <p><strong>📊 Conversion:</strong> ${((workshop.acceptedOffersCount / workshop.offersCount) * 100).toFixed(1)}%</p>
-              ` : ''}
             </div>
           </div>
         `;
@@ -223,7 +215,7 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
 
     // Add postal code circles for areas with high activity
     postalCodeStats
-      .filter(stat => stat.requests > 0)
+      .filter(stat => stat.bookings > 0)
       .forEach((stat) => {
         const coords = getCoordinatesForPostalCode(stat.zipCode);
         if (coords) {
@@ -232,8 +224,8 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
                        stat.workshops < stat.customers ? '#F59E0B' : // Orange - underserved
                        '#10B981'; // Green - good coverage
           
-          // Size based on request volume
-          const radius = Math.min(Math.max(stat.requests * 2000, 3000), 20000);
+          // Size based on booking volume
+          const radius = Math.min(Math.max(stat.bookings * 2000, 3000), 20000);
           
           const circle = L.circle(coords, {
             color: color,
@@ -251,12 +243,8 @@ export default function TerritoryMap({ customers, workshops, postalCodeStats }: 
               <div style="font-size: 12px; color: #4B5563; line-height: 1.5;">
                 <p><strong>👥 Kunden:</strong> ${stat.customers}</p>
                 <p><strong>🔧 Werkstätten:</strong> ${stat.workshops}</p>
-                <p><strong>📋 Anfragen:</strong> ${stat.requests}</p>
-                <p><strong>📄 Angebote:</strong> ${stat.offers}</p>
-                <p><strong>✅ Abschlüsse:</strong> ${stat.acceptedOffers}</p>
-                ${stat.offers > 0 ? `
-                  <p><strong>📊 Conversion:</strong> ${((stat.acceptedOffers / stat.offers) * 100).toFixed(1)}%</p>
-                ` : ''}
+                <p><strong>📅 Buchungen:</strong> ${stat.bookings}</p>
+                <p><strong>💰 Umsatz:</strong> ${stat.revenue.toFixed(2)}€</p>
                 <hr style="margin: 8px 0; border-color: #E5E7EB;" />
                 <p>
                   <strong>Abdeckung:</strong> 

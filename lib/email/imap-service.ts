@@ -292,6 +292,34 @@ export class ImapService {
   }
 
   /**
+   * Mehrere E-Mails gleichzeitig als gelesen markieren
+   */
+  async updateFlagsBulk(
+    uids: number[],
+    flags: string[],
+    folder: string = 'INBOX'
+  ): Promise<void> {
+    if (uids.length === 0) return
+    await this.connect()
+    await this.openBox(folder, false)
+
+    return new Promise((resolve, reject) => {
+      if (!this.imap) {
+        return reject(new Error('IMAP not connected'))
+      }
+
+      this.imap.addFlags(uids, flags, (err) => {
+        this.disconnect()
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    })
+  }
+
+  /**
    * E-Mail löschen (in Trash verschieben oder dauerhaft löschen)
    */
   async deleteMessage(uid: number, folder: string = 'INBOX'): Promise<void> {

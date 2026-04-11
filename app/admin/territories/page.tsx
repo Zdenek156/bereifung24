@@ -21,9 +21,8 @@ interface Customer {
   latitude: number | null;
   longitude: number | null;
   createdAt: string;
-  requestsCount: number;
-  offersCount: number;
-  acceptedOffersCount: number;
+  bookingsCount: number;
+  totalRevenue: number;
 }
 
 interface Workshop {
@@ -38,8 +37,7 @@ interface Workshop {
   longitude: number | null;
   hasSepaMandateActive: boolean;
   createdAt: string;
-  offersCount: number;
-  acceptedOffersCount: number;
+  bookingsCount: number;
   totalRevenue: number;
 }
 
@@ -47,9 +45,8 @@ interface PostalCodeStat {
   zipCode: string;
   customers: number;
   workshops: number;
-  requests: number;
-  offers: number;
-  acceptedOffers: number;
+  bookings: number;
+  revenue: number;
   coverage: number;
 }
 
@@ -60,15 +57,9 @@ interface TerritoriesData {
   overallStats: {
     totalCustomers: number;
     totalWorkshops: number;
-    activeWorkshops: number;
-    workshopsWithSepa: number;
-    totalRequests: number;
-    totalOffers: number;
-    acceptedOffers: number;
-    conversionRate: string;
-    averageOffersPerRequest: string;
+    totalBookings: number;
+    totalRevenue: string;
   };
-  serviceTypeDistribution: Record<string, number>;
 }
 
 export default function TerritoriesPage() {
@@ -124,13 +115,13 @@ export default function TerritoriesPage() {
   // Find postal codes with no workshops (potential expansion areas)
   const expansionAreas = data.postalCodeStats
     .filter(stat => stat.customers > 0 && stat.workshops === 0)
-    .sort((a, b) => b.requests - a.requests)
+    .sort((a, b) => b.bookings - a.bookings)
     .slice(0, 10);
 
   // Top performing postal codes
   const topPerformingAreas = data.postalCodeStats
-    .filter(stat => stat.workshops > 0 && stat.acceptedOffers > 0)
-    .sort((a, b) => b.acceptedOffers - a.acceptedOffers)
+    .filter(stat => stat.workshops > 0 && stat.bookings > 0)
+    .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 10);
 
   return (
@@ -150,7 +141,6 @@ export default function TerritoriesPage() {
               <div>
                 <p className="text-sm text-gray-600">Kunden gesamt</p>
                 <p className="text-2xl font-bold text-gray-900">{data.overallStats.totalCustomers}</p>
-                <p className="text-xs text-gray-500 mt-1">{data.overallStats.totalRequests} Anfragen</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,9 +155,6 @@ export default function TerritoriesPage() {
               <div>
                 <p className="text-sm text-gray-600">Werkstätten</p>
                 <p className="text-2xl font-bold text-gray-900">{data.overallStats.totalWorkshops}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {data.overallStats.workshopsWithSepa} mit SEPA
-                </p>
               </div>
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,15 +167,12 @@ export default function TerritoriesPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Angebote</p>
-                <p className="text-2xl font-bold text-gray-900">{data.overallStats.totalOffers}</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Ø {data.overallStats.averageOffersPerRequest} pro Anfrage
-                </p>
+                <p className="text-sm text-gray-600">Buchungen</p>
+                <p className="text-2xl font-bold text-gray-900">{data.overallStats.totalBookings}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
@@ -197,15 +181,12 @@ export default function TerritoriesPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Conversion Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{data.overallStats.conversionRate}%</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  {data.overallStats.acceptedOffers} angenommen
-                </p>
+                <p className="text-sm text-gray-600">Gesamtumsatz</p>
+                <p className="text-2xl font-bold text-gray-900">{data.overallStats.totalRevenue}€</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
@@ -308,7 +289,7 @@ export default function TerritoriesPage() {
                   </h3>
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
                     <p className="text-sm text-amber-800">
-                      Diese Postleitzahlen haben Kundenanfragen aber keine Werkstätten. 
+                      Diese Postleitzahlen haben Kunden aber keine Werkstätten. 
                       Ideale Gebiete für Neuakquise!
                     </p>
                   </div>
@@ -320,7 +301,7 @@ export default function TerritoriesPage() {
                             <div>
                               <p className="font-semibold text-gray-900">PLZ {area.zipCode}</p>
                               <p className="text-sm text-gray-600">
-                                {area.customers} Kunden · {area.requests} Anfragen
+                                {area.customers} Kunden · {area.bookings} Buchungen
                               </p>
                             </div>
                             <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
@@ -342,7 +323,7 @@ export default function TerritoriesPage() {
                   </h3>
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                     <p className="text-sm text-green-800">
-                      Diese Postleitzahlen haben die meisten erfolgreichen Abschlüsse.
+                      Diese Postleitzahlen haben den höchsten Umsatz.
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -356,25 +337,13 @@ export default function TerritoriesPage() {
                             </p>
                           </div>
                           <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                            {area.acceptedOffers} Abschlüsse
+                            {area.bookings} Buchungen
                           </span>
                         </div>
                         <div className="flex items-center gap-4 text-xs text-gray-600">
-                          <span>{area.requests} Anfragen</span>
-                          <span>·</span>
-                          <span>{area.offers} Angebote</span>
-                          <span>·</span>
                           <span className="font-medium text-green-600">
-                            {area.offers > 0 ? ((area.acceptedOffers / area.offers) * 100).toFixed(1) : 0}% Conv.
+                            💰 {area.revenue.toFixed(2)}€ Umsatz
                           </span>
-                        </div>
-                        <div className="mt-2 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-green-500 h-2 rounded-full"
-                            style={{ 
-                              width: `${area.offers > 0 ? (area.acceptedOffers / area.offers) * 100 : 0}%` 
-                            }}
-                          ></div>
                         </div>
                       </div>
                     ))}
@@ -392,10 +361,8 @@ export default function TerritoriesPage() {
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">PLZ</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunden</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Werkstätten</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Anfragen</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Angebote</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Abschlüsse</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Conv. Rate</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Buchungen</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Umsatz</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Abdeckung</th>
                       </tr>
                     </thead>
@@ -411,12 +378,8 @@ export default function TerritoriesPage() {
                               <span className="text-red-600 font-medium">0</span>
                             )}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{stat.requests}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{stat.offers}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">{stat.acceptedOffers}</td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {stat.offers > 0 ? ((stat.acceptedOffers / stat.offers) * 100).toFixed(1) : 0}%
-                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{stat.bookings}</td>
+                          <td className="px-4 py-3 text-sm text-gray-600">{stat.revenue.toFixed(2)}€</td>
                           <td className="px-4 py-3 text-sm">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               stat.workshops === 0 
@@ -441,38 +404,12 @@ export default function TerritoriesPage() {
           {selectedView === 'stats' && (
             <div className="p-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Service Type Distribution */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Service-Typen Verteilung</h3>
-                  <div className="space-y-3">
-                    {Object.entries(data.serviceTypeDistribution)
-                      .sort(([, a], [, b]) => b - a)
-                      .map(([type, count]) => {
-                        const percentage = (count / data.overallStats.totalRequests) * 100;
-                        return (
-                          <div key={type}>
-                            <div className="flex justify-between text-sm mb-1">
-                              <span className="font-medium text-gray-700">{type}</span>
-                              <span className="text-gray-600">{count} ({percentage.toFixed(1)}%)</span>
-                            </div>
-                            <div className="bg-gray-200 rounded-full h-2">
-                              <div
-                                className="bg-primary-500 h-2 rounded-full"
-                                style={{ width: `${percentage}%` }}
-                              ></div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-
                 {/* Workshop Performance */}
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Top 10 Werkstätten</h3>
                   <div className="space-y-3">
                     {data.workshops
-                      .sort((a, b) => b.acceptedOffersCount - a.acceptedOffersCount)
+                      .sort((a, b) => b.totalRevenue - a.totalRevenue)
                       .slice(0, 10)
                       .map((workshop, index) => (
                         <div key={workshop.id} className="flex items-center justify-between">
@@ -492,7 +429,7 @@ export default function TerritoriesPage() {
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-semibold text-gray-900">
-                              {workshop.acceptedOffersCount} Abschlüsse
+                              {workshop.bookingsCount} Buchungen
                             </p>
                             <p className="text-xs text-gray-500">
                               {workshop.totalRevenue.toFixed(2)}€ Umsatz
@@ -523,7 +460,7 @@ export default function TerritoriesPage() {
                               {new Date(customer.createdAt).toLocaleDateString('de-DE')}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {customer.requestsCount} Anfragen
+                              {customer.bookingsCount} Buchungen
                             </p>
                           </div>
                         </div>
@@ -572,10 +509,10 @@ export default function TerritoriesPage() {
                     <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
                       <div>
                         <p className="text-sm font-medium text-purple-900">Aktive PLZ-Gebiete</p>
-                        <p className="text-xs text-purple-700">Mit Kundenaktivität</p>
+                        <p className="text-xs text-purple-700">Mit Buchungen</p>
                       </div>
                       <p className="text-2xl font-bold text-purple-600">
-                        {data.postalCodeStats.filter(s => s.requests > 0).length}
+                        {data.postalCodeStats.filter(s => s.bookings > 0).length}
                       </p>
                     </div>
                   </div>

@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
 
         if (adminSettings && adminSettings.length > 0) {
           const registrationDate = new Date().toLocaleDateString('de-DE', {
-            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin'
           })
           for (const admin of adminSettings) {
             await sendAdminEmail({

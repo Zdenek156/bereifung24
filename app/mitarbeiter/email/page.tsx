@@ -176,6 +176,24 @@ export default function EmailPage() {
     markAsRead(message)
   }
 
+  const markAllAsRead = async () => {
+    try {
+      const res = await fetch('/api/email/messages/mark-all-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folder: currentFolder }),
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        console.log(`✅ ${data.markedAsRead} E-Mails als gelesen markiert`)
+        setMessages((prev) => prev.map((m) => ({ ...m, isRead: true })))
+      }
+    } catch (error) {
+      console.error('Error marking all as read:', error)
+    }
+  }
+
   // Loading state während Settings geprüft werden
   if (hasSettings === null) {
     return (
@@ -236,6 +254,13 @@ export default function EmailPage() {
             className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-50"
           >
             {syncing ? '🔄 Synchronisiere...' : '🔄 Aktualisieren'}
+          </button>
+
+          <button
+            onClick={markAllAsRead}
+            className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+          >
+            ✅ Alle gelesen
           </button>
 
           <Link

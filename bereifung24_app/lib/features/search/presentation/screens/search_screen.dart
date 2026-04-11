@@ -986,6 +986,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 searchState.query.isNotEmpty)
               SliverToBoxAdapter(
                   child: _FilterBar(serviceType: widget.serviceType)),
+
+            // ── Vehicle selector ──
+            if (searchState.workshops.isNotEmpty)
+              SliverToBoxAdapter(child: _VehicleSelector()),
           ],
           body: searchState.isLoading
               ? const Center(child: CircularProgressIndicator())

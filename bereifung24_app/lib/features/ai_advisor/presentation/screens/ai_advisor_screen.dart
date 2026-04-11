@@ -673,13 +673,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           _exitVoiceMode();
           if (_vehicleId != null) {
             final vehiclesAsync = ref.read(vehiclesProvider);
-            vehiclesAsync.whenData((vehicles) {
+            if (vehiclesAsync is AsyncData<List<Vehicle>>) {
               final v =
-                  vehicles.where((v) => v.id == _vehicleId).firstOrNull;
+                  vehiclesAsync.value.where((v) => v.id == _vehicleId).firstOrNull;
               if (v != null) {
                 ref.read(selectedVehicleProvider.notifier).state = v;
               }
-            });
+            }
           }
           final seasonCode = t.season.toLowerCase().startsWith('s')
               ? 's'
@@ -1026,14 +1026,14 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                     // Sync vehicle provider so workshop detail shows the correct vehicle
                     if (_vehicleId != null) {
                       final vehiclesAsync = ref.read(vehiclesProvider);
-                      vehiclesAsync.whenData((vehicles) {
-                        final v = vehicles
+                      if (vehiclesAsync is AsyncData<List<Vehicle>>) {
+                        final v = vehiclesAsync.value
                             .where((v) => v.id == _vehicleId)
                             .firstOrNull;
                         if (v != null) {
                           ref.read(selectedVehicleProvider.notifier).state = v;
                         }
-                      });
+                      }
                     }
                     // Convert season text to code: Sommer→s, Winter→w, Ganzjahr→g
                     final seasonCode = t.season.toLowerCase().startsWith('s')

@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     // Check if email already exists as influencer (customers can have same email)
     const existingInfluencer = await prisma.influencer.findUnique({
-      where: { email: application.email }
+      where: { email: application.email.toLowerCase().trim() }
     })
 
     if (existingInfluencer) {
@@ -66,15 +66,16 @@ export async function POST(req: NextRequest) {
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
 
     // Check if user already exists (might be registered as customer)
+    const normalizedEmail = application.email.toLowerCase().trim()
     let user = await prisma.user.findUnique({
-      where: { email: application.email }
+      where: { email: normalizedEmail }
     })
 
     // If user doesn't exist, create new user account
     if (!user) {
       user = await prisma.user.create({
         data: {
-          email: application.email,
+          email: normalizedEmail,
           password: hashedPassword,
           firstName,
           lastName,

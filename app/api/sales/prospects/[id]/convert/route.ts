@@ -39,8 +39,8 @@ export async function POST(
     const body = await request.json();
     const { email } = body;
 
-    // Use prospect email or provided email
-    const workshopEmail = email || prospect.email;
+    // Use prospect email or provided email, normalized to lowercase
+    const workshopEmail = (email || prospect.email)?.toLowerCase().trim();
 
     if (!workshopEmail) {
       return NextResponse.json(

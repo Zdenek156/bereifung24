@@ -84,11 +84,13 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
-  const { email, firstName, lastName, phone, region, tier, companyName } = body
+  const { email: rawEmail, firstName, lastName, phone, region, tier, companyName } = body
 
-  if (!email || !firstName || !lastName) {
+  if (!rawEmail || !firstName || !lastName) {
     return NextResponse.json({ error: 'E-Mail, Vorname und Nachname sind Pflicht' }, { status: 400 })
   }
+
+  const email = rawEmail.toLowerCase().trim()
 
   // Check if email is already in use by ANY user
   const existing = await prisma.user.findUnique({ 

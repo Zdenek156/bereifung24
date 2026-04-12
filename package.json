@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "prisma generate",
     "build": "next build",
     "postbuild": "node -e \"const fs = require('fs'); const path = require('path'); const src = 'node_modules/pdfkit/js/data'; const dest = '.next/server/chunks/data'; fs.mkdirSync(dest, { recursive: true }); fs.readdirSync(src).forEach(file => fs.copyFileSync(path.join(src, file), path.join(dest, file))); console.log('✅ PDFKit fonts copied to .next/server/chunks/data');\"",
     "start": "next start",

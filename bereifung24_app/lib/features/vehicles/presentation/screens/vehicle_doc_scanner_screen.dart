@@ -198,8 +198,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
   /// Calculate the rotation angle to keep the camera preview locked
   /// to landscapeRight regardless of physical device orientation.
   double _previewRotation() {
-    // iOS sensor is flipped in landscapeRight → base 180°
-    double angle = Platform.isIOS ? math.pi : 0;
+    double angle = 0;
 
     // Counter-rotate when device physically moves from landscapeRight
     switch (_physicalOrientation) {

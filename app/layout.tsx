@@ -63,6 +63,8 @@ export default function RootLayout({
   return (
     <html lang="de" translate="no">
       <head>
+        {/* Bing Webmaster Tools Verification - Required for ChatGPT/Bing Search visibility */}
+        <meta name="msvalidate.01" content="BING_VERIFICATION_CODE_HERE" />
         {/* Resource Hints for Performance */}
         <link rel="preload" href="/bereifung24-hero-bg.webp" as="image" type="image/webp" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />

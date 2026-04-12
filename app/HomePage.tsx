@@ -4412,10 +4412,11 @@ export default function NewHomePage({
               </ul>
             </div>
 
-            {/* Karriere */}
+            {/* Unternehmen */}
             <div>
-              <h4 className="text-lg font-bold mb-4">Karriere</h4>
+              <h4 className="text-lg font-bold mb-4">Unternehmen</h4>
               <ul className="space-y-3 text-gray-400">
+                <li><Link href="/ueber-uns" className="hover:text-white transition-colors">Über uns</Link></li>
                 <li><Link href="/karriere" className="hover:text-white transition-colors">Stellenangebote</Link></li>
               </ul>
             </div>

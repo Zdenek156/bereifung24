@@ -17,6 +17,7 @@ export async function GET() {
     { path: '/reifen-kaufen', priority: '0.8', changefreq: 'weekly' },
     { path: '/reifen-einlagern', priority: '0.7', changefreq: 'monthly' },
     { path: '/reifenservice', priority: '0.7', changefreq: 'monthly' },
+    { path: '/ueber-uns', priority: '0.7', changefreq: 'monthly' },
     { path: '/impressum', priority: '0.3', changefreq: 'yearly' },
     { path: '/datenschutz', priority: '0.3', changefreq: 'yearly' },
     { path: '/agb', priority: '0.3', changefreq: 'yearly' },

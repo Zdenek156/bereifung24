@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
         disposalFee,
         runFlatSurcharge,
         hasDisposal,
+        customerNotes,
       } = body
       
       if (!workshopId || !serviceType || !vehicleId || !date || !time || totalPrice === undefined || basePrice === undefined) {
@@ -222,6 +223,7 @@ export async function POST(request: NextRequest) {
           hasDisposal: hasDisposal || false,
           disposalFee: disposalFee ? new Decimal(disposalFee) : null,
           runFlatSurcharge: runFlatSurcharge ? new Decimal(runFlatSurcharge) : null,
+          ...(customerNotes ? { customerNotes: String(customerNotes).slice(0, 500) } : {}),
         },
         include: {
           workshop: { include: { user: true } },
@@ -396,6 +398,9 @@ export async function POST(request: NextRequest) {
             calDescription.push(`RunFlat-Zuschlag: ${Number(booking.runFlatSurcharge).toFixed(2)} €`)
           }
           calDescription.push(`Gesamtpreis: ${Number(booking.totalPrice).toFixed(2)} €`)
+          if (customerNotes) {
+            calDescription.push('', `📝 Kundennachricht: ${customerNotes}`)
+          }
           
           const calSummaryTire = tireData?.isMixedTires
             ? ` - ${tireData.front?.brand || ''} / ${tireData.rear?.brand || ''}`
@@ -492,6 +497,7 @@ export async function POST(request: NextRequest) {
           tireQuantity: tireQuantity || undefined,
           tireData: tireData || undefined,
           totalTirePurchasePrice: tireTotalPrice ? Number(tireTotalPrice) : undefined,
+          customerNotes: customerNotes || undefined,
         })
         
         await sendEmail({
@@ -567,6 +573,7 @@ export async function POST(request: NextRequest) {
             tireArticleId: tireArticleNumber || undefined,
             tireQuantity: tireQuantity || undefined,
             tireData: tireData || undefined,
+            customerNotes: customerNotes || undefined,
           })
 
           await sendEmail({

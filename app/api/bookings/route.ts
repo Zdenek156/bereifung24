@@ -255,6 +255,7 @@ export async function GET(req: NextRequest) {
         originalPrice: booking.originalPrice ? Number(booking.originalPrice) : null,
         couponCode: booking.couponCode || null,
         notes: booking.notes || null,
+        customerNotes: booking.customerNotes || null,
         workshop: {
           companyName: booking.workshop.companyName,
           street: booking.workshop.user.street || '',

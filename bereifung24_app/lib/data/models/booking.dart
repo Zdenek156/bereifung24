@@ -35,6 +35,7 @@ class Booking {
   final String? paymentMethodDetail;
   final String? paymentStatus;
   final String? notes;
+  final String? customerNotes;
   final DateTime? createdAt;
   final DateTime? cancelledAt;
 
@@ -75,6 +76,7 @@ class Booking {
     this.paymentMethodDetail,
     this.paymentStatus,
     this.notes,
+    this.customerNotes,
     this.createdAt,
     this.cancelledAt,
   });
@@ -281,6 +283,7 @@ class Booking {
       paymentMethodDetail: json['paymentMethodDetail'],
       paymentStatus: json['paymentStatus'],
       notes: json['notes'] ?? tireRequest?['additionalNotes'],
+      customerNotes: json['customerNotes'],
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
           : null,

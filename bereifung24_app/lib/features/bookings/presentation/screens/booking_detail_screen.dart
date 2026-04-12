@@ -304,6 +304,16 @@ class _BookingDetailContent extends StatelessWidget {
             ),
           ],
 
+          // Customer Notes
+          if (booking.customerNotes != null && booking.customerNotes!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _DetailCard(
+              icon: Icons.message_outlined,
+              title: 'Ihre Nachricht an die Werkstatt',
+              children: [Text(booking.customerNotes!)],
+            ),
+          ],
+
           // Review button for completed bookings
           if (booking.status == 'COMPLETED') ...[
             const SizedBox(height: 16),

@@ -68,6 +68,7 @@ interface Booking {
   // Storage
   storageLocation: string | null
   fromStorageBookingId: string | null
+  customerNotes: string | null
   review: {
     id: string
     rating: number
@@ -518,7 +519,22 @@ export default function WorkshopBookingsPage() {
                         <div className="text-xs text-gray-500">{booking.vehicle.licensePlate || 'Kein Kennzeichen'} · {booking.vehicle.year}</div>
                       </div>
                     </div>
-                    {/* Tire Information */}
+                    {/* Customer Notes */}
+                    {booking.customerNotes && (
+                      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-base mt-0.5">📝</span>
+                          <div>
+                            <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                              Nachricht vom Kunden
+                            </p>
+                            <p className="text-sm text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap">
+                              {booking.customerNotes}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {/* Info Banner: Customer has stored tires at this workshop */}
                     {booking.fromStorageBookingId && (
                       <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">

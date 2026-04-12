@@ -27,6 +27,7 @@ interface Booking {
   washingPrice: number | null
   tireRunFlat: boolean
   tireData: any | null
+  customerNotes: string | null
   durationMinutes: number
   paymentMethod: string
   createdAt: string
@@ -415,6 +416,17 @@ export default function BookingDetailsPage() {
           <div className="text-gray-500 text-xs">Baujahr: {booking.vehicle.year}</div>
         </div>
       </Card>
+
+      {/* Customer Notes */}
+      {booking.customerNotes && (
+        <Card className="p-4 mb-4 border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20">
+          <h2 className="text-base font-bold mb-2 flex items-center">
+            <span className="mr-2">📝</span>
+            Ihre Nachricht an die Werkstatt
+          </h2>
+          <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{booking.customerNotes}</p>
+        </Card>
+      )}
 
       {/* Tire Details - Only show if tires were purchased */}
       {(booking.totalTirePurchasePrice && booking.totalTirePurchasePrice > 0) || booking.tireData?.isMixedTires ? (

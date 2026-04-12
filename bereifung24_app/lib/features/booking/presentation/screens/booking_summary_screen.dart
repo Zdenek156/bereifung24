@@ -105,6 +105,7 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
 class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
   bool _isSubmitting = false;
   bool _bookingComplete = false;
+  final _customerNotesController = TextEditingController();
 
   static const _serviceLabels = {
     'TIRE_CHANGE': 'Reifenwechsel',
@@ -348,6 +349,12 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
           },
       };
 
+      // Add customer notes if provided
+      final notes = _customerNotesController.text.trim();
+      if (notes.isNotEmpty) {
+        bookingData['customerNotes'] = notes;
+      }
+
       await ApiClient().createDirectBooking(bookingData);
 
       if (mounted) {
@@ -375,6 +382,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
 
   @override
   void dispose() {
+    _customerNotesController.dispose();
     super.dispose();
   }
 
@@ -897,6 +905,106 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 const SizedBox(height: 12),
 
                 // ── AGB Consent ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      children: [
+                        const TextSpan(
+                            text: 'Mit der Buchung stimmst du unseren '),
+                        TextSpan(
+                          text: 'AGBs',
+                          style: const TextStyle(
+                            color: Color(0xFF0284C7),
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => context.push('/profile/agb'),
+                        ),
+                        const TextSpan(text: ' und der '),
+                        TextSpan(
+                          text: 'Datenschutzerklärung',
+                          style: const TextStyle(
+                            color: Color(0xFF0284C7),
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap =
+                                () => context.push('/profile/datenschutz'),
+                        ),
+                        const TextSpan(text: ' zu.'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // ── Customer Notes ──
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.shade200),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.edit_note, color: Colors.amber[700], size: 20),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Nachricht an die Werkstatt',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Colors.amber[900],
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '(optional)',
+                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _customerNotesController,
+                        maxLines: 3,
+                        maxLength: 500,
+                        decoration: InputDecoration(
+                          hintText: 'z.B. Felgenschloss liegt im Kofferraum, '
+                              'Bitte Reifendruck prüfen...',
+                          hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.amber.shade200),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.amber.shade200),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(color: Colors.amber.shade400, width: 1.5),
+                          ),
+                          contentPadding: const EdgeInsets.all(12),
+                        ),
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // ── AGB / Datenschutz ──
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: RichText(

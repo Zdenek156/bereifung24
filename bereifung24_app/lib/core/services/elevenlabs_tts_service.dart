@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:typed_data';
 import 'dart:io';
+import 'package:audio_session/audio_session.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
@@ -126,10 +127,20 @@ class ElevenLabsTtsService {
     }
   }
 
-  /// Stop current playback
+  /// Stop current playback and release audio session on iOS
   Future<void> stop() async {
     _isSpeaking = false;
     await _player.stop();
+    // On iOS: deactivate audio session so speech recognition can take over
+    if (Platform.isIOS) {
+      try {
+        final session = await AudioSession.instance;
+        await session.setActive(false);
+        debugPrint('[TTS] iOS audio session deactivated');
+      } catch (e) {
+        debugPrint('[TTS] Error deactivating iOS audio session: $e');
+      }
+    }
   }
 
   void dispose() {

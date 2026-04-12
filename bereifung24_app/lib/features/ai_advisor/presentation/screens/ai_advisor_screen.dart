@@ -190,73 +190,104 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   // ── Voice Mode ──
 
   Future<void> _enterVoiceMode() async {
-    await RemoteLogger.log('voice', 'enterVoiceMode tapped', data: {
-      'platform': Platform.operatingSystem,
-      'osVersion': Platform.operatingSystemVersion,
-    });
+    try {
+      await RemoteLogger.log('voice', 'enterVoiceMode tapped', data: {
+        'platform': Platform.operatingSystem,
+        'osVersion': Platform.operatingSystemVersion,
+      });
 
-    // Request microphone permission first
-    final micStatus = await Permission.microphone.request();
-    await RemoteLogger.log('voice', 'mic permission result: $micStatus');
-    if (!micStatus.isGranted) {
-      await RemoteLogger.error('voice', 'mic permission NOT granted: $micStatus');
-      return;
-    }
-
-    // iOS also requires speech recognition permission separately
-    if (Platform.isIOS) {
-      final speechStatus = await Permission.speech.request();
-      await RemoteLogger.log('voice', 'iOS speech permission result: $speechStatus');
-      if (!speechStatus.isGranted) {
-        await RemoteLogger.error('voice', 'iOS speech permission NOT granted: $speechStatus');
+      // Request microphone permission first
+      final micStatus = await Permission.microphone.request();
+      await RemoteLogger.log('voice', 'mic permission result: $micStatus');
+      if (!micStatus.isGranted) {
+        await RemoteLogger.error('voice', 'mic permission NOT granted: $micStatus');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Mikrofon-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
+          );
+        }
         return;
       }
-    }
 
-    // Pre-initialize speech service so it's ready when user taps mic
-    final speechReady = await SpeechService().init();
-    await RemoteLogger.log('voice', 'speechService.init() result: $speechReady');
+      // iOS also requires speech recognition permission separately
+      if (Platform.isIOS) {
+        final speechStatus = await Permission.speech.request();
+        await RemoteLogger.log('voice', 'iOS speech permission result: $speechStatus');
+        if (!speechStatus.isGranted) {
+          await RemoteLogger.error('voice', 'iOS speech permission NOT granted: $speechStatus');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Spracherkennung-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
+            );
+          }
+          return;
+        }
+      }
 
-    // Stop TTS if playing
-    if (_isSpeaking) await _stopSpeaking();
+      // Pre-initialize speech service so it's ready when user taps mic
+      final speechReady = await SpeechService().init();
+      await RemoteLogger.log('voice', 'speechService.init() result: $speechReady');
 
-    // Keep screen awake during voice mode
-    WakelockPlus.enable();
+      if (!speechReady) {
+        await RemoteLogger.error('voice', 'speechService.init() returned false');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Spracherkennung konnte nicht initialisiert werden.')),
+          );
+        }
+        return;
+      }
 
-    setState(() {
-      _isVoiceMode = true;
-      _voiceState = VoiceState.speaking;
-      _voiceStatusText = 'Rollo begrüßt dich...';
-      _partialSpeech = '';
-      _isSpeaking = true;
-    });
+      // Stop TTS if playing
+      if (_isSpeaking) await _stopSpeaking();
 
-    // Rollo greets the user first
-    const greeting = 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
-    setState(() {
-      _messages.add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
-      _lastAiText = greeting;
-    });
-    _scrollToBottom();
+      // Keep screen awake during voice mode
+      WakelockPlus.enable();
 
-    // Wait for TTS to be initialized before speaking
-    await _ttsInitFuture;
-    if (!mounted || !_isVoiceMode) return;
-
-    if (!_ttsEnabled) {
-      // TTS not available — go straight to idle listening state
       setState(() {
-        _isSpeaking = false;
-        _voiceState = VoiceState.idle;
-        _voiceStatusText = 'Tippe zum Sprechen';
+        _isVoiceMode = true;
+        _voiceState = VoiceState.speaking;
+        _voiceStatusText = 'Rollo begrüßt dich...';
+        _partialSpeech = '';
+        _isSpeaking = true;
       });
-      return;
-    }
 
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted || !_isVoiceMode) return;
-    await ElevenLabsTtsService().speak(greeting);
-    _waitForTtsFinish();
+      // Rollo greets the user first
+      const greeting = 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
+      setState(() {
+        _messages.add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
+        _lastAiText = greeting;
+      });
+      _scrollToBottom();
+
+      // Wait for TTS to be initialized before speaking
+      await _ttsInitFuture;
+      if (!mounted || !_isVoiceMode) return;
+
+      if (!_ttsEnabled) {
+        // TTS not available — go straight to idle listening state
+        setState(() {
+          _isSpeaking = false;
+          _voiceState = VoiceState.idle;
+          _voiceStatusText = 'Tippe zum Sprechen';
+        });
+        return;
+      }
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted || !_isVoiceMode) return;
+      await ElevenLabsTtsService().speak(greeting);
+      _waitForTtsFinish();
+    } catch (e, stack) {
+      await RemoteLogger.error('voice', 'enterVoiceMode EXCEPTION: $e', data: {
+        'stack': stack.toString().split('\n').take(10).join('\n'),
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Starten des Sprachmodus: $e')),
+        );
+      }
+    }
   }
 
   void _exitVoiceMode() {
@@ -288,7 +319,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     // by explicitly stopping the player and giving iOS time to switch
     if (Platform.isIOS) {
       await ElevenLabsTtsService().stop();
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 600));
+      await RemoteLogger.log('voice', 'iOS: audio session released, starting speech');
     }
 
     setState(() {

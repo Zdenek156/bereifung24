@@ -205,6 +205,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Mikrofon-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
           );
+          // Open app settings so user can grant permission manually
+          if (micStatus.isPermanentlyDenied || micStatus.isDenied) {
+            await openAppSettings();
+          }
         }
         return;
       }
@@ -219,6 +223,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Spracherkennung-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
             );
+            if (speechStatus.isPermanentlyDenied || speechStatus.isDenied) {
+              await openAppSettings();
+            }
           }
           return;
         }

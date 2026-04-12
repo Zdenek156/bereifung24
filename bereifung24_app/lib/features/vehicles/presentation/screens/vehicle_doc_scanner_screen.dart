@@ -34,10 +34,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
   @override
   void initState() {
     super.initState();
-    // Force landscape for Fahrzeugschein scanning
+    // Force landscape-left only for Fahrzeugschein scanning (no rotation allowed)
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
     ]);
     _scanLineController = AnimationController(
       vsync: this,
@@ -75,10 +74,10 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
     await _cameraController!.initialize();
     if (!mounted) return;
 
-    // Lock camera orientation to landscape for consistent scanning
+    // Lock camera capture orientation to match device orientation
     try {
       await _cameraController!.lockCaptureOrientation(
-        DeviceOrientation.landscapeRight,
+        DeviceOrientation.landscapeLeft,
       );
     } catch (_) {}
 

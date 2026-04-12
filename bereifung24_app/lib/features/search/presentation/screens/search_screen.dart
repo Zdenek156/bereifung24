@@ -508,6 +508,10 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
             'width': tireSpec.width.toString(),
             'height': tireSpec.aspectRatio?.toString() ?? '',
             'diameter': tireSpec.diameter?.toString() ?? '',
+            if (tireSpec.loadIndex != null)
+              'loadIndex': tireSpec.loadIndex.toString(),
+            if (tireSpec.speedRating != null)
+              'speedIndex': tireSpec.speedRating,
           };
           // Rear dimensions (different sizes or same)
           if (tireSpec.hasDifferentSizes && tireSpec.rearWidth != null) {
@@ -515,6 +519,10 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
               'width': tireSpec.rearWidth.toString(),
               'height': tireSpec.rearAspectRatio?.toString() ?? '',
               'diameter': tireSpec.rearDiameter?.toString() ?? '',
+              if (tireSpec.rearLoadIndex != null)
+                'loadIndex': tireSpec.rearLoadIndex.toString(),
+              if (tireSpec.rearSpeedRating != null)
+                'speedIndex': tireSpec.rearSpeedRating,
             };
           } else {
             body['tireDimensionsRear'] = body['tireDimensionsFront'];

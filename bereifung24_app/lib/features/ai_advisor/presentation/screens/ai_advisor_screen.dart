@@ -10,6 +10,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/services/speech_service.dart';
 import '../../../../core/services/elevenlabs_tts_service.dart';
+import '../../../../core/services/remote_logger.dart';
 import '../../../../data/models/models.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
@@ -189,19 +190,32 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   // ── Voice Mode ──
 
   Future<void> _enterVoiceMode() async {
+    await RemoteLogger.log('voice', 'enterVoiceMode tapped', data: {
+      'platform': Platform.operatingSystem,
+      'osVersion': Platform.operatingSystemVersion,
+    });
+
     // Request microphone permission first
     final micStatus = await Permission.microphone.request();
-    if (!micStatus.isGranted) return;
+    await RemoteLogger.log('voice', 'mic permission result: $micStatus');
+    if (!micStatus.isGranted) {
+      await RemoteLogger.error('voice', 'mic permission NOT granted: $micStatus');
+      return;
+    }
 
     // iOS also requires speech recognition permission separately
     if (Platform.isIOS) {
       final speechStatus = await Permission.speech.request();
-      if (!speechStatus.isGranted) return;
+      await RemoteLogger.log('voice', 'iOS speech permission result: $speechStatus');
+      if (!speechStatus.isGranted) {
+        await RemoteLogger.error('voice', 'iOS speech permission NOT granted: $speechStatus');
+        return;
+      }
     }
 
     // Pre-initialize speech service so it's ready when user taps mic
     final speechReady = await SpeechService().init();
-    debugPrint('[VoiceMode] Speech service ready: $speechReady');
+    await RemoteLogger.log('voice', 'speechService.init() result: $speechReady');
 
     // Stop TTS if playing
     if (_isSpeaking) await _stopSpeaking();
@@ -262,6 +276,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
   Future<void> _voiceModeStartListening() async {
     if (_isListening) return;
+    await RemoteLogger.log('voice', 'startListening called', data: {
+      'isSpeaking': _isSpeaking,
+      'platform': Platform.operatingSystem,
+    });
 
     // Stop TTS if playing
     if (_isSpeaking) await _stopSpeaking();
@@ -302,6 +320,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     );
 
     if (!success && mounted) {
+      await RemoteLogger.error('voice', 'startListening returned false', data: {
+        'platform': Platform.operatingSystem,
+      });
       setState(() {
         _isListening = false;
         _voiceState = VoiceState.idle;

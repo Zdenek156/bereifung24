@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
+import 'remote_logger.dart';
 
 class SpeechService {
   static final SpeechService _instance = SpeechService._internal();
@@ -17,22 +19,32 @@ class SpeechService {
   /// Initialize speech recognition
   Future<bool> init() async {
     if (_isInitialized) return true;
+    await RemoteLogger.log('speech', 'init() called', data: {'platform': Platform.operatingSystem});
     try {
       _isInitialized = await _speech.initialize(
         onError: (error) {
-          debugPrint('[Speech] Error: ${error.errorMsg} (permanent: ${error.permanent})');
+          RemoteLogger.error('speech', 'onError: ${error.errorMsg}', data: {
+            'permanent': error.permanent,
+            'platform': Platform.operatingSystem,
+          });
           _isListening = false;
         },
         onStatus: (status) {
-          debugPrint('[Speech] Status: $status');
+          RemoteLogger.log('speech', 'onStatus: $status');
           if (status == 'done' || status == 'notListening') {
             _isListening = false;
           }
         },
       );
-      debugPrint('[Speech] Initialized: $_isInitialized');
-    } catch (e) {
-      debugPrint('[Speech] Init exception: $e');
+      await RemoteLogger.log('speech', 'init result: $_isInitialized', data: {
+        'platform': Platform.operatingSystem,
+        'hasPermission': _speech.hasPermission,
+      });
+    } catch (e, stack) {
+      await RemoteLogger.error('speech', 'init exception: $e', data: {
+        'platform': Platform.operatingSystem,
+        'stack': '$stack',
+      });
       _isInitialized = false;
     }
     return _isInitialized;
@@ -43,10 +55,16 @@ class SpeechService {
     required void Function(SpeechRecognitionResult result) onResult,
     String localeId = 'de_DE',
   }) async {
+    await RemoteLogger.log('speech', 'startListening called', data: {
+      'isInitialized': _isInitialized,
+      'localeId': localeId,
+      'platform': Platform.operatingSystem,
+    });
+
     if (!_isInitialized) {
       final ok = await init();
       if (!ok) {
-        debugPrint('[Speech] Cannot start listening - init failed');
+        await RemoteLogger.error('speech', 'Cannot start listening - init failed');
         return false;
       }
     }
@@ -55,6 +73,11 @@ class SpeechService {
       _isListening = true;
       await _speech.listen(
         onResult: (result) {
+          RemoteLogger.log('speech', 'onResult', data: {
+            'words': result.recognizedWords,
+            'final': result.finalResult,
+            'confidence': result.confidence,
+          });
           onResult(result);
           if (result.finalResult) {
             _isListening = false;
@@ -65,10 +88,13 @@ class SpeechService {
         cancelOnError: true,
         partialResults: true,
       );
-      debugPrint('[Speech] Listening started');
+      await RemoteLogger.log('speech', 'Listening started successfully');
       return true;
-    } catch (e) {
-      debugPrint('[Speech] startListening exception: $e');
+    } catch (e, stack) {
+      await RemoteLogger.error('speech', 'startListening exception: $e', data: {
+        'platform': Platform.operatingSystem,
+        'stack': '$stack',
+      });
       _isListening = false;
       return false;
     }

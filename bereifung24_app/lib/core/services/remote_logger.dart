@@ -35,7 +35,7 @@ class RemoteLogger {
         data: {
           'device': _device,
           'platform': Platform.operatingSystem,
-          'appVersion': '1.0.1+2',
+          'appVersion': '1.0.10+11',
           'level': level,
           'tag': tag,
           'message': message,

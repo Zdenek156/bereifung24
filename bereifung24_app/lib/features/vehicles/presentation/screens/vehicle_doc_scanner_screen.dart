@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,6 +31,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
 
   // Best result we've seen during scanning
   VehicleDocResult? _bestResult;
+
+  // Track physical device orientation for camera preview counter-rotation
+  DeviceOrientation _physicalOrientation = DeviceOrientation.landscapeRight;
 
   @override
   void initState() {
@@ -86,6 +90,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       await _cameraController!.setFlashMode(FlashMode.torch);
       _torchOn = true;
     } catch (_) {}
+
+    // Listen for physical orientation changes to counter-rotate preview
+    _cameraController!.addListener(_onOrientationChanged);
 
     setState(() {});
 
@@ -181,6 +188,33 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
     } catch (_) {}
   }
 
+  void _onOrientationChanged() {
+    final o = _cameraController?.value.deviceOrientation;
+    if (o != null && o != _physicalOrientation && mounted) {
+      setState(() => _physicalOrientation = o);
+    }
+  }
+
+  /// Calculate the rotation angle to keep the camera preview locked
+  /// to landscapeRight regardless of physical device orientation.
+  double _previewRotation() {
+    // iOS sensor is flipped in landscapeRight → base 180°
+    double angle = Platform.isIOS ? math.pi : 0;
+
+    // Counter-rotate when device physically moves from landscapeRight
+    switch (_physicalOrientation) {
+      case DeviceOrientation.landscapeRight:
+        break;
+      case DeviceOrientation.portraitUp:
+        angle += math.pi / 2;
+      case DeviceOrientation.landscapeLeft:
+        angle += math.pi;
+      case DeviceOrientation.portraitDown:
+        angle -= math.pi / 2;
+    }
+    return angle;
+  }
+
   @override
   void dispose() {
     // Restore portrait orientation
@@ -189,6 +223,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
     ]);
     _scanTimer?.cancel();
     _scanLineController.dispose();
+    _cameraController?.removeListener(_onOrientationChanged);
     _cameraController?.dispose();
     _textRecognizer.close();
     super.dispose();
@@ -206,16 +241,27 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Camera preview (iOS sensor is flipped in landscapeRight → rotate 180°)
+          // Camera preview – counter-rotate to stay locked in landscapeRight
           if (_cameraController != null &&
               _cameraController!.value.isInitialized)
-            Platform.isIOS
-                ? Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.rotationZ(3.14159265),
-                    child: CameraPreview(_cameraController!),
-                  )
-                : CameraPreview(_cameraController!)
+            Builder(builder: (context) {
+              final angle = _previewRotation();
+              final isPortrait =
+                  _physicalOrientation == DeviceOrientation.portraitUp ||
+                  _physicalOrientation == DeviceOrientation.portraitDown;
+              // Scale up when rotated 90° so preview still fills the container
+              final scale = isPortrait
+                  ? MediaQuery.of(context).size.width /
+                      MediaQuery.of(context).size.height
+                  : 1.0;
+              return Transform(
+                alignment: Alignment.center,
+                transform: Matrix4.identity()
+                  ..rotateZ(angle)
+                  ..scale(scale, scale),
+                child: CameraPreview(_cameraController!),
+              );
+            })
           else
             const Center(
               child: CircularProgressIndicator(color: Colors.white),

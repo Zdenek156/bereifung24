@@ -1027,9 +1027,9 @@ export default function PaymentPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <Image src="/payment-logos/mastercard.svg" alt="Mastercard" width={40} height={28} className="h-6 w-auto" />
-                          <Image src="/payment-logos/visa.svg" alt="Visa" width={40} height={28} className="h-5 w-auto" />
-                          <Image src="/payment-logos/amex.svg" alt="Amex" width={40} height={28} className="h-5 w-auto" />
+                          <Image src="/payment-logos/mastercard-brand.svg" alt="Mastercard" width={40} height={28} className="h-7 w-auto" />
+                          <Image src="/payment-logos/visa-brand.svg" alt="Visa" width={40} height={28} className="h-5 w-auto" />
+                          <Image src="/payment-logos/amex-brand.svg" alt="Amex" width={40} height={28} className="h-5 w-auto" />
                         </div>
                         <span className="font-semibold text-gray-900">Kreditkarte</span>
                       </div>

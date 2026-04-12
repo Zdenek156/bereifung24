@@ -5860,6 +5860,9 @@ model DirectBooking {
   couponCostBearer String?  @map("coupon_cost_bearer") // PLATFORM oder WORKSHOP
   coupon           Coupon?  @relation(fields: [couponId], references: [id])
 
+  // Customer Notes
+  customerNotes String? @map("customer_notes") @db.Text
+
   // Booking
   bookingId String?  @unique @map("booking_id")
   booking   Booking? @relation(fields: [bookingId], references: [id])

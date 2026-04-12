@@ -765,7 +765,8 @@ export async function POST(req: NextRequest) {
         hasWashing: completeBooking.hasWashing || undefined,
         washingPrice: completeBooking.washingPrice ? Number(completeBooking.washingPrice) : undefined,
         hasDisposal: (completeBooking.hasDisposal && (completeBooking.serviceType === 'TIRE_CHANGE' || completeBooking.serviceType === 'MOTORCYCLE_TIRE')) || undefined,
-        additionalServicesData: (completeBooking as any).additionalServicesData || undefined
+        additionalServicesData: (completeBooking as any).additionalServicesData || undefined,
+        customerNotes: completeBooking.customerNotes || undefined
       })
 
       console.log('[DIRECT BOOKING] Customer email data prepared:', {
@@ -854,7 +855,8 @@ export async function POST(req: NextRequest) {
         autoOrderError: autoOrderResult?.error,
         additionalServicesData: (completeBooking as any).additionalServicesData || undefined,
         fromStorageBookingId: fromStorageBookingId || undefined,
-        storageLocationFromStorage: storageLocationFromStorage || undefined
+        storageLocationFromStorage: storageLocationFromStorage || undefined,
+        customerNotes: completeBooking.customerNotes || undefined
       })
 
       console.log('[DIRECT BOOKING] Workshop email data prepared:', {

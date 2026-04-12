@@ -12,7 +12,7 @@ const STATIC_ROUTES = [
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder', '/logos',
   '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/sitemap-werkstatt.xml', '/sitemap-reifen.xml', '/app-download', '/demo',
   '/smart-tire-advisor', '/invoices', '/workshop', '/services', '/freelancer', '/reifen', '/konto-loeschen',
-  '/api/mobile-auth',
+  '/api/mobile-auth', '/ueber-uns',
   '/reifenwechsel', '/winterreifen', '/sommerreifen', '/reifenmontage', '/raederwechsel',
   '/reifen-einlagern', '/reifenservice', '/achsvermessung', '/ganzjahresreifen', '/reifen-kaufen'
 ]

@@ -1,0 +1,195 @@
+============================================================
+  BEREIFUNG24 - UNTERNEHMENSPROFILE ANLEGEN
+  Firmendaten zum Kopieren + Plattform-Übersicht
+============================================================
+
+────────────────────────────────────────────────────────────
+  FIRMENDATEN (überall identisch verwenden!)
+────────────────────────────────────────────────────────────
+
+Firmenname:          Bereifung24
+Rechtsform:          Einzelunternehmen
+Inhaber:             Zdenek Kyzlink
+Gründungsjahr:       2024
+
+Adresse:             Jahnstraße 2
+PLZ / Ort:           71706 Markgröningen
+Bundesland:          Baden-Württemberg
+Land:                Deutschland
+
+Telefon:             +49 7147 9679990
+E-Mail (allgemein):  info@bereifung24.de
+E-Mail (Support):    support@bereifung24.de
+Website:             https://bereifung24.de
+Über-uns Seite:      https://bereifung24.de/ueber-uns
+
+USt-IdNr:            DE354910030
+
+────────────────────────────────────────────────────────────
+  KURZBESCHREIBUNG (für alle Profile verwenden)
+────────────────────────────────────────────────────────────
+
+Kurz (1 Satz):
+Deutschlands erste digitale Plattform für Reifenservice – transparente Festpreise, geprüfte Werkstätten, Online-Buchung.
+
+Mittel (2-3 Sätze):
+Bereifung24 ist Deutschlands erste digitale Plattform für Reifenservice. Autofahrer finden geprüfte Werkstätten in ihrer Nähe, vergleichen transparente Festpreise und buchen ihren Termin direkt online. Services: Räderwechsel, Reifenwechsel, Achsvermessung, Klimaservice, Motorradreifen und Reifenreparatur.
+
+Lang (Absatz):
+Bereifung24 wurde 2024 von Zdenek Kyzlink in Markgröningen (Baden-Württemberg) gegründet. Die Plattform digitalisiert den Reifenservice in Deutschland: Autofahrer vergleichen geprüfte Werkstätten mit transparenten Festpreisen und buchen ihren Wunschtermin in wenigen Klicks online. Werkstätten profitieren von neuen Kunden ohne Werbekosten und einer digitalen Terminverwaltung. Alle Zahlungen laufen sicher über Stripe. Bereifung24 ist DSGVO-konform und wird auf deutschen Servern betrieben.
+
+────────────────────────────────────────────────────────────
+  SOCIAL MEDIA LINKS (bereits vorhanden)
+────────────────────────────────────────────────────────────
+
+Facebook:   https://www.facebook.com/people/Bereifung24/61552512005883/
+Instagram:  https://www.instagram.com/bereifung24/
+LinkedIn:   https://www.linkedin.com/company/bereifung24
+
+────────────────────────────────────────────────────────────
+  BRANCHEN / KATEGORIEN (für Verzeichnisse)
+────────────────────────────────────────────────────────────
+
+Hauptkategorie:      Online-Plattform / Vermittlung
+Branche:             Kfz-Service, Reifenservice, Automobilbranche
+Keywords:            Reifenwechsel, Räderwechsel, Werkstatt buchen,
+                     Reifenservice, Festpreis, Online-Buchung,
+                     Achsvermessung, Klimaservice
+
+────────────────────────────────────────────────────────────
+  LOGO
+────────────────────────────────────────────────────────────
+
+Logo-Datei:          https://bereifung24.de/logos/B24_Logo.png
+                     (512x512 PNG, auch lokal: public/logos/B24_Logo.png)
+
+OG-Image:            https://bereifung24.de/og-image.jpg
+                     (1200x630, für Social-Media-Vorschau)
+
+
+============================================================
+  WO ANLEGEN? (Sortiert nach Priorität)
+============================================================
+
+────────────────────────────────────────────────────────────
+  1. BING WEBMASTER TOOLS  [PRIORITÄT: SEHR HOCH]
+     → Damit ChatGPT / Bing euch findet
+────────────────────────────────────────────────────────────
+
+URL:    https://www.bing.com/webmasters
+Schritte:
+  1. Mit Microsoft-Konto anmelden
+  2. "Website hinzufügen" → bereifung24.de eingeben
+  3. Verifizierungsmethode: "Meta-Tag" wählen
+  4. Den Code kopieren (sieht so aus: "ABC123...")
+  5. In app/layout.tsx den Platzhalter ersetzen:
+     BING_VERIFICATION_CODE_HERE → Dein Code
+  6. Deployen und in Bing "Verifizieren" klicken
+  7. Sitemap einreichen: https://bereifung24.de/sitemap.xml
+
+────────────────────────────────────────────────────────────
+  2. GOOGLE BUSINESS PROFIL  [PRIORITÄT: HOCH]
+     → Google Knowledge Panel + Google Maps
+────────────────────────────────────────────────────────────
+
+URL:    https://business.google.com
+Schritte:
+  1. Mit Google-Konto anmelden
+  2. "Unternehmen hinzufügen"
+  3. Name: Bereifung24
+  4. Kategorie: "Online-Dienstleister" oder "Kfz-Werkstatt-Vermittlung"
+  5. Adresse: Jahnstraße 2, 71706 Markgröningen
+  6. Telefon: +49 7147 9679990
+  7. Website: https://bereifung24.de
+  8. Beschreibung: (Mittlere Beschreibung von oben)
+  9. Logo hochladen
+  10. Verifizierung per Postkarte oder Telefon
+
+────────────────────────────────────────────────────────────
+  3. LINKEDIN UNTERNEHMENSSEITE  [PRIORITÄT: HOCH]
+     → AI crawlt LinkedIn sehr stark
+────────────────────────────────────────────────────────────
+
+URL:    https://www.linkedin.com/company/setup/new/
+Schritte:
+  1. Persönliches LinkedIn-Profil nutzen
+  2. "Unternehmensseite erstellen"
+  3. Name: Bereifung24
+  4. URL: linkedin.com/company/bereifung24
+  5. Branche: Internet / Automotive
+  6. Größe: 2-10 Mitarbeiter
+  7. Typ: Einzelunternehmen
+  8. Logo + Titelbild hochladen
+  9. Beschreibung: (Lange Beschreibung von oben)
+  10. Website, Telefon, Adresse eintragen
+  11. Spezialgebiete: Reifenservice, Online-Buchung,
+      Werkstatt-Vermittlung, Festpreise
+
+────────────────────────────────────────────────────────────
+  4. GELBE SEITEN  [PRIORITÄT: MITTEL]
+     → Bekanntes deutsches Branchenverzeichnis
+────────────────────────────────────────────────────────────
+
+URL:    https://www.gelbeseiten.de/eintrag
+Schritte:
+  1. "Kostenlos eintragen"
+  2. Firmendaten von oben eintragen
+  3. Branche: Reifenservice / Online-Vermittlung
+  4. Kostenloser Basiseintrag reicht
+
+────────────────────────────────────────────────────────────
+  5. NORTH DATA  [PRIORITÄT: MITTEL]
+     → Wirtschaftsdatenbank, AI crawlt diese
+────────────────────────────────────────────────────────────
+
+URL:    https://www.northdata.de
+Info:   Daten werden automatisch aus Handelsregister gezogen.
+        Falls nicht vorhanden: Eintrag manuell beantragen.
+        → Prüfe: https://www.northdata.de/bereifung24
+
+────────────────────────────────────────────────────────────
+  6. WER-ZU-WEM  [PRIORITÄT: NIEDRIG]
+     → Firmenverzeichnis
+────────────────────────────────────────────────────────────
+
+URL:    https://www.wer-zu-wem.de
+Schritte:
+  1. Firmeneintrag erstellen (kostenlos)
+  2. Firmendaten von oben verwenden
+
+────────────────────────────────────────────────────────────
+  7. YELP BUSINESS  [PRIORITÄT: NIEDRIG]
+     → International bekannt
+────────────────────────────────────────────────────────────
+
+URL:    https://biz.yelp.de
+Schritte:
+  1. "Unternehmen eintragen"
+  2. Firmendaten von oben verwenden
+  3. Kategorie: Automobil / Reifenservice
+
+────────────────────────────────────────────────────────────
+  8. GOOGLE SEARCH CONSOLE  [FALLS NOCH NICHT VORHANDEN]
+     → Google Sichtbarkeit prüfen
+────────────────────────────────────────────────────────────
+
+URL:    https://search.google.com/search-console
+Schritte:
+  1. Property hinzufügen: bereifung24.de
+  2. Sitemap einreichen: https://bereifung24.de/sitemap.xml
+  3. Indexierung prüfen
+
+
+============================================================
+  WICHTIG: KONSISTENZ
+============================================================
+
+Überall EXAKT die gleichen Daten verwenden:
+- Gleicher Firmenname (Bereifung24)
+- Gleiche Adresse (Jahnstraße 2, 71706 Markgröningen)
+- Gleiche Telefonnummer (+49 7147 9679990)
+- Gleiche Website (https://bereifung24.de)
+
+→ Inkonsistente Daten verwirren AI-Modelle und Google!
+
+============================================================

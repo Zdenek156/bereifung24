@@ -332,6 +332,7 @@ export default function PaymentPage() {
             serviceType: bookingData.service.type,
             date,
             time,
+            paymentMethodType: method === 'ideal_wero' ? 'ideal' : method,
             totalPrice: bookingData.pricing.totalPrice,
             basePrice: bookingData.pricing.basePrice || bookingData.pricing.servicePrice || bookingData.pricing.totalPrice,
             balancingPrice: bookingData.pricing.balancingPrice || 0,
@@ -1027,9 +1028,9 @@ export default function PaymentPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-2">
-                          <Image src="/payment-logos/mastercard-brand.svg" alt="Mastercard" width={40} height={28} className="h-7 w-auto" />
-                          <Image src="/payment-logos/visa-brand.svg" alt="Visa" width={40} height={28} className="h-5 w-auto" />
-                          <Image src="/payment-logos/amex-brand.svg" alt="Amex" width={40} height={28} className="h-5 w-auto" />
+                          <Image src="/logos/mastercard.png" alt="Mastercard" width={40} height={28} className="h-7 w-auto" />
+                          <Image src="/logos/visa.png" alt="Visa" width={40} height={28} className="h-5 w-auto" />
+                          <Image src="/logos/amex.png" alt="Amex" width={40} height={28} className="h-5 w-auto" />
                         </div>
                         <span className="font-semibold text-gray-900">Kreditkarte</span>
                       </div>

@@ -841,9 +841,22 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     // Clear stale results from a previous service when entering a new search screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(workshopSearchProvider.notifier).reset();
+      // Auto-select first vehicle if none selected
+      _autoSelectVehicle();
       // Auto-search with GPS when arriving from AI advisor with tire override
       if (widget.tireDimensionOverride != null) {
         _autoSearchWithLocation();
+      }
+    });
+  }
+
+  void _autoSelectVehicle() {
+    final current = ref.read(selectedVehicleProvider);
+    if (current != null) return;
+    final vehiclesAsync = ref.read(vehiclesProvider);
+    vehiclesAsync.whenData((vehicles) {
+      if (vehicles.isNotEmpty) {
+        ref.read(selectedVehicleProvider.notifier).state = vehicles.first;
       }
     });
   }
@@ -1011,9 +1024,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               SliverToBoxAdapter(
                   child: _FilterBar(serviceType: widget.serviceType)),
 
-            // ── Vehicle selector ──
-            if (searchState.workshops.isNotEmpty)
-              SliverToBoxAdapter(child: _VehicleSelector()),
+            // ── Vehicle auto-selected (no dropdown) ──
           ],
           body: searchState.isLoading
               ? const Center(child: CircularProgressIndicator())
@@ -4313,7 +4324,11 @@ class _VehicleSelector extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.directions_car,
+                  selectedVehicle?.vehicleType == 'MOTORCYCLE'
+                      ? Icons.two_wheeler
+                      : selectedVehicle?.vehicleType == 'TRAILER'
+                          ? Icons.rv_hookup
+                          : Icons.directions_car,
                   size: 20,
                   color: selectedVehicle != null
                       ? const Color(0xFF0284C7)

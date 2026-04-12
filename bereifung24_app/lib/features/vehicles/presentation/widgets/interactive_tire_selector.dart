@@ -344,9 +344,8 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   }
 
   void _skip() {
-    if (_step < 4 || _step > 5) return;
-    setState(() => _step++);
-    _notify();
+    // Load index and speed rating are required — skip disabled
+    return;
   }
 
   void _reset() {
@@ -493,13 +492,7 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
           )
         else
           const SizedBox.shrink(),
-        if (_step >= 4)
-          TextButton(
-            onPressed: _skip,
-            child: const Text('Überspringen'),
-          )
-        else
-          const SizedBox.shrink(),
+        const SizedBox.shrink(),
       ],
     );
   }

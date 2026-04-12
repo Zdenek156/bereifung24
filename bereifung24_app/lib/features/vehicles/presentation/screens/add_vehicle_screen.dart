@@ -427,8 +427,45 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     );
   }
 
+  /// Check if a tire selection has dimensions but is missing load/speed index
+  String? _validateTireSelection(_TireSelection sel, String label) {
+    final f = sel.frontSpec;
+    if (f == null || f['width'] == null) return null; // No tire data = OK
+    if (f['loadIndex'] == null || f['speedRating'] == null) {
+      return '$label: Tragfähigkeit und Geschwindigkeitsindex sind Pflichtfelder';
+    }
+    if (sel.hasDifferentSizes && sel.rearSpec != null) {
+      final r = sel.rearSpec!;
+      if (r['width'] != null && (r['loadIndex'] == null || r['speedRating'] == null)) {
+        return '$label (Hinterachse): Tragfähigkeit und Geschwindigkeitsindex sind Pflichtfelder';
+      }
+    }
+    return null;
+  }
+
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validate tire specs have load/speed index
+    final tireErrors = [
+      _validateTireSelection(_summer, 'Sommerreifen'),
+      _validateTireSelection(_winter, 'Winterreifen'),
+      _validateTireSelection(_allSeason, 'Ganzjahresreifen'),
+    ].whereType<String>().toList();
+
+    if (tireErrors.isNotEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(tireErrors.first),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     try {
@@ -1202,6 +1239,10 @@ class _TireSelection {
         spec['rearAspectRatio'] = rearSpec!['aspectRatio'];
       if (rearSpec!['diameter'] != null)
         spec['rearDiameter'] = rearSpec!['diameter'];
+      if (rearSpec!['loadIndex'] != null)
+        spec['rearLoadIndex'] = rearSpec!['loadIndex'];
+      if (rearSpec!['speedRating'] != null)
+        spec['rearSpeedRating'] = rearSpec!['speedRating'];
     }
     return spec;
   }

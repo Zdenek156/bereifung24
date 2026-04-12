@@ -33,7 +33,10 @@ export default function PaymentPage() {
   const [bookingData, setBookingData] = useState<any>(null)
   const [workshop, setWorkshop] = useState<any>(null)
   const [processing, setProcessing] = useState(false)
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments' | null>(null)
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'klarna' | 'amazon_pay' | 'eps' | 'ideal_wero' | 'paypal' | null>(null)
+  
+  // Customer notes state
+  const [customerNotes, setCustomerNotes] = useState('')
   
   // Coupon state
   const [couponCode, setCouponCode] = useState('')
@@ -183,7 +186,7 @@ export default function PaymentPage() {
     loadData()
   }, [session, workshopId, vehicleId])
 
-  const handlePayment = async (method: 'card' | 'klarna' | 'bank-transfer' | 'paypal' | 'paypal-installments') => {
+  const handlePayment = async (method: 'card' | 'klarna' | 'amazon_pay' | 'eps' | 'ideal_wero' | 'paypal') => {
     if (!workshop || !bookingData) return
 
     setProcessing(true)
@@ -300,7 +303,9 @@ export default function PaymentPage() {
             supplierTotalPurchasePriceRear: (bookingData.tireBooking.selectedRearTire.tire?.purchasePrice || bookingData.tireBooking.selectedRearTire.tire?.price || 0) * (bookingData.tireBooking.selectedRearTire.quantity || 2), // Gesamt echter EK
             tireRunFlatRear: bookingData.tireBooking.selectedRearTire.tire?.runflat || false,
             tire3PMSFRear: bookingData.tireBooking.selectedRearTire.tire?.winter || false,
-          })
+          }),
+          // Customer notes
+          ...(customerNotes.trim() && { customerNotes: customerNotes.trim().slice(0, 500) }),
         })
       })
 
@@ -404,8 +409,10 @@ export default function PaymentPage() {
               tireRunFlatRear: bookingData.tireBooking.selectedRearTire.tire?.runflat || false,
               tire3PMSFRear: bookingData.tireBooking.selectedRearTire.tire?.winter || false,
             }),
-            paymentMethodType: method, // 'card', 'sofort', 'amazon_pay', 'klarna', or 'paypal'
+            paymentMethodType: method === 'ideal_wero' ? 'ideal' : method,
             reservationId: reserveData.reservationId,
+            // Customer notes
+            ...(customerNotes.trim() && { customerNotes: customerNotes.trim().slice(0, 500) }),
             // Coupon data (if applied)
             ...(appliedCoupon && {
               couponId: appliedCoupon.id,
@@ -1018,18 +1025,80 @@ export default function PaymentPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-2 flex-1">
-                        <div className="flex items-center gap-3">
-                          <Image src="/payment-logos/58482363cef1014c0b5e49c1.png" alt="Visa" width={50} height={32} className="h-5 w-auto" />
-                          <Image src="/payment-logos/58482354cef1014c0b5e49c0.png" alt="Mastercard" width={50} height={32} className="h-6 w-auto" />
-                          <Image src="/payment-logos/620670d4d7b91b0004122618.png" alt="Amex" width={50} height={32} className="h-5 w-auto" />
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <Image src="/payment-logos/mastercard.svg" alt="Mastercard" width={40} height={28} className="h-6 w-auto" />
+                          <Image src="/payment-logos/visa.svg" alt="Visa" width={40} height={28} className="h-5 w-auto" />
+                          <Image src="/payment-logos/amex.svg" alt="Amex" width={40} height={28} className="h-5 w-auto" />
                         </div>
-                        <div className="text-left">
-                          <p className="font-semibold text-gray-900">Kreditkarte</p>
-                          <p className="text-xs text-gray-500">Visa, Mastercard, Amex</p>
-                        </div>
+                        <span className="font-semibold text-gray-900">Kreditkarte</span>
                       </div>
                       {selectedPaymentMethod === 'card' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Klarna */}
+                  {workshop.stripeEnabled && (
+                  <button
+                    onClick={() => setSelectedPaymentMethod('klarna')}
+                    disabled={processing}
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'klarna'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Image src="/payment-logos/klarna-logo.png" alt="Klarna" width={60} height={28} className="h-7 w-auto" />
+                        <span className="font-semibold text-gray-900">Klarna</span>
+                      </div>
+                      {selectedPaymentMethod === 'klarna' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
+                    </div>
+                  </button>
+                  )}
+
+                  {/* iDEAL / Wero */}
+                  <button
+                    onClick={() => setSelectedPaymentMethod('ideal_wero')}
+                    disabled={processing}
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'ideal_wero'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Image src="/payment-logos/ideal-wero.png" alt="iDEAL / Wero" width={40} height={28} className="h-6 w-auto" />
+                        <span className="font-semibold text-gray-900">iDEAL | Wero</span>
+                      </div>
+                      {selectedPaymentMethod === 'ideal_wero' && (
+                        <Check className="w-5 h-5 text-primary-600" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* EPS */}
+                  <button
+                    onClick={() => setSelectedPaymentMethod('eps')}
+                    disabled={processing}
+                    className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedPaymentMethod === 'eps'
+                        ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
+                        : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Image src="/payment-logos/eps.png" alt="EPS" width={40} height={28} className="h-6 w-auto" />
+                        <span className="font-semibold text-gray-900">EPS</span>
+                      </div>
+                      {selectedPaymentMethod === 'eps' && (
                         <Check className="w-5 h-5 text-primary-600" />
                       )}
                     </div>
@@ -1046,19 +1115,9 @@ export default function PaymentPage() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-2 flex-1">
-                        <div className="h-8 flex items-center">
-                          <Image
-                            src="/payment-logos/amazonpay-logo.png"
-                            alt="Amazon Pay"
-                            width={120}
-                            height={32}
-                            style={{ width: 'auto', height: '100%', maxHeight: '2rem' }}
-                          />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs text-gray-500">Zahlen mit Amazon-Konto</p>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <Image src="/payment-logos/amazonpay-logo.png" alt="Amazon Pay" width={60} height={28} className="h-6 w-auto" />
+                        <span className="font-semibold text-gray-900">Amazon Pay</span>
                       </div>
                       {selectedPaymentMethod === 'amazon_pay' && (
                         <Check className="w-5 h-5 text-primary-600" />
@@ -1066,65 +1125,41 @@ export default function PaymentPage() {
                     </div>
                   </button>
 
-                  {/* Klarna - Only show if workshop has Stripe fully enabled */}
-                  {workshop.stripeEnabled && (
+                  {/* Google Pay */}
                   <button
-                    onClick={() => setSelectedPaymentMethod('klarna')}
+                    onClick={() => setSelectedPaymentMethod('card')}
                     disabled={processing}
                     className={`w-full p-4 rounded-xl border-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                      selectedPaymentMethod === 'klarna'
+                      selectedPaymentMethod === 'card'
                         ? 'border-primary-500 bg-primary-50 ring-2 ring-primary-500 ring-offset-2'
                         : 'border-gray-200 hover:border-primary-300 hover:bg-primary-25'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex flex-col gap-2 flex-1">
-                        <div className="h-10 flex items-center">
-                          <Image
-                            src="/payment-logos/klarna-logo.png"
-                            alt="Klarna"
-                            width={120}
-                            height={40}
-                            style={{ width: 'auto', height: '100%', maxHeight: '2.5rem' }}
-                          />
-                        </div>
-                        <div className="text-left">
-                          <p className="text-xs text-gray-500">Jetzt kaufen, später bezahlen</p>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <Image src="/payment-logos/google-pay.png" alt="Google Pay" width={40} height={28} className="h-6 w-auto" />
+                        <span className="font-semibold text-gray-900">Google Pay</span>
                       </div>
-                      {selectedPaymentMethod === 'klarna' && (
-                        <Check className="w-5 h-5 text-primary-600" />
-                      )}
+                      <p className="text-xs text-gray-500">via Kreditkarte</p>
                     </div>
                   </button>
-                  )}
-
-                  {/* PayPal — temporarily disabled until Stripe approval */}
-                  <div className="relative">
-                    <button
-                      onClick={() => {}}
-                      disabled={true}
-                      className="w-full p-4 rounded-xl border-2 transition-all border-gray-200 opacity-50 cursor-not-allowed"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-2 flex-1">
-                          <div className="h-7 flex items-center">
-                            <Image
-                              src="/payment-logos/de-pp-logo-200px.png"
-                              alt="PayPal"
-                              width={120}
-                              height={31}
-                              style={{ width: 'auto', height: '100%', maxHeight: '1.75rem' }}
-                            />
-                          </div>
-                          <div className="text-left">
-                            <p className="text-xs text-amber-600 font-medium">⏳ Demnächst verfügbar</p>
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
                 </div>
+              </div>
+
+              {/* Customer Notes */}
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Nachricht an die Werkstatt <span className="font-normal text-gray-400">(optional)</span>
+                </label>
+                <textarea
+                  value={customerNotes}
+                  onChange={(e) => setCustomerNotes(e.target.value.slice(0, 500))}
+                  maxLength={500}
+                  rows={3}
+                  placeholder="z.B. Felgenschloss liegt im Kofferraum, Bitte Reifendruck prüfen..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
+                />
+                <p className="text-xs text-gray-400 text-right mt-1">{customerNotes.length}/500</p>
               </div>
 
               {/* Terms acceptance notice */}

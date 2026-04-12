@@ -15,6 +15,8 @@ export async function POST(request: NextRequest) {
       workshopId, date, time, serviceType, vehicleId, totalPrice, basePrice, balancingPrice, storagePrice, washingPrice, disposalFee, runFlatSurcharge,
       hasBalancing, hasStorage, hasWashing, hasDisposal,
       workshopName, serviceName, vehicleInfo, paymentMethodType, reservationId,
+      // Customer notes
+      customerNotes,
       // Tire data (for TIRE_CHANGE, TIRE_MOUNT services)
       tireBrand, tireModel, tireSize, tireLoadIndex, tireSpeedIndex, tireEAN, tireQuantity,
       tirePurchasePrice, totalTirePurchasePrice, tireRunFlat, tire3PMSF,
@@ -72,6 +74,8 @@ export async function POST(request: NextRequest) {
       'amazon_pay': ['amazon_pay'], // Amazon Pay - INSTANT: Digital wallet for Amazon customers
       'klarna': ['klarna'], // Klarna - Includes Sofortüberweisung functionality
       'paypal': ['paypal'], // PayPal via Stripe (includes installments option at PayPal checkout)
+      'eps': ['eps'], // EPS - Austrian bank transfer
+      'ideal': ['ideal'], // iDEAL / Wero - Dutch/European bank transfer
     }
 
     // Determine which payment methods to enable
@@ -160,6 +164,7 @@ export async function POST(request: NextRequest) {
         ...(discountAmount && { discountAmount: discountAmount.toString() }),
         ...(originalPrice && { originalPrice: originalPrice.toString() }),
         ...(costBearer && { costBearer }),
+        ...(customerNotes && { customerNotes: String(customerNotes).slice(0, 500) }),
       },
     }
 

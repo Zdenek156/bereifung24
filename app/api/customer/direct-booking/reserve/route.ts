@@ -100,7 +100,9 @@ export async function POST(request: NextRequest) {
       tireRunFlatRear,
       tire3PMSFRear,
       // Storage: explicit link from TireStorageCard
-      fromStorageBookingId: explicitFromStorageBookingId
+      fromStorageBookingId: explicitFromStorageBookingId,
+      // Customer notes
+      customerNotes
     } = body
 
     // Check if mixed tires
@@ -385,7 +387,8 @@ export async function POST(request: NextRequest) {
         status: 'RESERVED',
         reservedUntil: new Date(Date.now() + 10 * 60 * 1000), // 10 minutes from now
         paymentStatus: 'PENDING',
-        fromStorageBookingId
+        fromStorageBookingId,
+        customerNotes: customerNotes ? String(customerNotes).slice(0, 500) : null
       }
     })
 

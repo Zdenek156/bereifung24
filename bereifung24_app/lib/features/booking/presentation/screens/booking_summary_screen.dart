@@ -683,6 +683,42 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
 
                 const SizedBox(height: 12),
 
+                // ── Customer Notes ──
+                _SummaryCard(
+                  icon: Icons.edit_note,
+                  title: 'Nachricht an die Werkstatt (optional)',
+                  child: TextField(
+                    controller: _customerNotesController,
+                    maxLines: 3,
+                    maxLength: 500,
+                    decoration: InputDecoration(
+                      hintText: 'z.B. Felgenschloss liegt im Kofferraum, '
+                          'Bitte Reifendruck prüfen...',
+                      hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
+                      filled: true,
+                      fillColor: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF0F172A)
+                          : Colors.grey[50],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.grey.shade300),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: const BorderSide(color: Color(0xFF0284C7), width: 1.5),
+                      ),
+                      contentPadding: const EdgeInsets.all(12),
+                    ),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
                 // ── Preise ──
                 if (pricing != null || widget.searchBasePrice != null) ...[
                   _SummaryCard(
@@ -901,106 +937,6 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-
-                const SizedBox(height: 12),
-
-                // ── AGB Consent ──
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: RichText(
-                    textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      children: [
-                        const TextSpan(
-                            text: 'Mit der Buchung stimmst du unseren '),
-                        TextSpan(
-                          text: 'AGBs',
-                          style: const TextStyle(
-                            color: Color(0xFF0284C7),
-                            decoration: TextDecoration.underline,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap = () => context.push('/profile/agb'),
-                        ),
-                        const TextSpan(text: ' und der '),
-                        TextSpan(
-                          text: 'Datenschutzerklärung',
-                          style: const TextStyle(
-                            color: Color(0xFF0284C7),
-                            decoration: TextDecoration.underline,
-                          ),
-                          recognizer: TapGestureRecognizer()
-                            ..onTap =
-                                () => context.push('/profile/datenschutz'),
-                        ),
-                        const TextSpan(text: ' zu.'),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // ── Customer Notes ──
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[50],
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.amber.shade200),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.edit_note, color: Colors.amber[700], size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Nachricht an die Werkstatt',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                              color: Colors.amber[900],
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '(optional)',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _customerNotesController,
-                        maxLines: 3,
-                        maxLength: 500,
-                        decoration: InputDecoration(
-                          hintText: 'z.B. Felgenschloss liegt im Kofferraum, '
-                              'Bitte Reifendruck prüfen...',
-                          hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
-                          filled: true,
-                          fillColor: Colors.white,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.amber.shade200),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.amber.shade200),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: Colors.amber.shade400, width: 1.5),
-                          ),
-                          contentPadding: const EdgeInsets.all(12),
-                        ),
-                        style: const TextStyle(fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
 
                 const SizedBox(height: 12),
 
@@ -1223,14 +1159,10 @@ class _PaymentLogo extends StatelessWidget {
       width: 42,
       height: 28,
       decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? const Color(0xFF1E293B)
-            : Colors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF334155)
-                : Colors.grey.shade300),
+            color: Colors.grey.shade300),
       ),
       padding: const EdgeInsets.all(3),
       child: Image.asset(

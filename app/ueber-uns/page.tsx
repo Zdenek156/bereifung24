@@ -5,7 +5,7 @@ import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'Über uns - Bereifung24 | Deutschlands digitale Reifenservice-Plattform',
-  description: 'Erfahren Sie mehr über Bereifung24 – Deutschlands erste digitale Plattform für Reifenservice. Gegründet 2024 von Zdenek Kyzlink in Markgröningen. Transparente Festpreise, geprüfte Werkstätten.',
+  description: 'Erfahren Sie mehr über Bereifung24 – Deutschlands erste digitale Plattform für Reifenservice. Gegründet 2022 von Zdenek Kyzlink in Markgröningen. Transparente Festpreise, geprüfte Werkstätten.',
   keywords: 'Bereifung24, Über uns, Reifenservice Plattform, Gründer, Zdenek Kyzlink, Markgröningen, digitale Werkstattbuchung',
   alternates: { canonical: 'https://bereifung24.de/ueber-uns' },
   openGraph: {
@@ -108,7 +108,7 @@ export default function UeberUnsPage() {
             </div>
             <div className="text-lg text-gray-700 space-y-4">
               <p>
-                Bereifung24 wurde <strong>2024</strong> von <strong>Zdenek Kyzlink</strong> in Markgröningen 
+                Bereifung24 wurde <strong>2022</strong> von <strong>Zdenek Kyzlink</strong> in Markgröningen 
                 (Baden-Württemberg) gegründet. Die Idee entstand aus einer persönlichen Erfahrung: 
                 Beim Reifenwechsel war es nahezu unmöglich, schnell und transparent Preise zu vergleichen 
                 oder einen Termin online zu buchen.
@@ -253,7 +253,7 @@ export default function UeberUnsPage() {
                 <div className="space-y-2 text-gray-700">
                   <p><strong>Firma:</strong> Bereifung24</p>
                   <p><strong>Inhaber:</strong> Zdenek Kyzlink</p>
-                  <p><strong>Gründung:</strong> 2024</p>
+                  <p><strong>Gründung:</strong> 2022</p>
                   <p><strong>Sitz:</strong> Markgröningen, Baden-Württemberg</p>
                   <p><strong>USt-IdNr:</strong> DE354910030</p>
                 </div>

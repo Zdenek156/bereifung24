@@ -25,7 +25,7 @@ export default function StructuredData() {
         image: 'https://bereifung24.de/logos/B24_Logo.png',
         description: 'Deutschlands erste digitale Plattform für Reifenservice. Transparente Festpreise, geprüfte Werkstätten, Online-Buchung. Bereifung24 vermittelt zwischen Endkunden und Kfz-Werkstätten für Räderwechsel, Reifenwechsel, Achsvermessung, Klimaservice und mehr.',
         slogan: 'Reifenservice zum Festpreis – transparent, digital, geprüft.',
-        foundingDate: '2024',
+        foundingDate: '2022',
         foundingLocation: {
           '@type': 'Place',
           name: 'Markgröningen, Baden-Württemberg, Deutschland'

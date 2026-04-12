@@ -34,9 +34,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
   @override
   void initState() {
     super.initState();
-    // Force landscape-left only for Fahrzeugschein scanning (no rotation allowed)
+    // Force landscape-right only (notch left = natural iPhone hold, no rotation allowed)
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
     ]);
     _scanLineController = AnimationController(
       vsync: this,
@@ -77,7 +77,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
     // Lock camera capture orientation to match device orientation
     try {
       await _cameraController!.lockCaptureOrientation(
-        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
       );
     } catch (_) {}
 
@@ -206,16 +206,10 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Camera preview (rotated 180° on iOS to fix upside-down image in landscapeLeft)
+          // Camera preview
           if (_cameraController != null &&
               _cameraController!.value.isInitialized)
-            Platform.isIOS
-                ? Transform(
-                    alignment: Alignment.center,
-                    transform: Matrix4.rotationZ(3.14159265),
-                    child: CameraPreview(_cameraController!),
-                  )
-                : CameraPreview(_cameraController!)
+            CameraPreview(_cameraController!)
           else
             const Center(
               child: CircularProgressIndicator(color: Colors.white),

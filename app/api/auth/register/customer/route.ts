@@ -32,6 +32,9 @@ export async function POST(request: NextRequest) {
     const affiliateRef = request.cookies.get('b24_affiliate_ref')?.value
     const cookieId = request.cookies.get('b24_cookie_id')?.value
 
+    // Normalize email to lowercase
+    validatedData.email = validatedData.email.toLowerCase().trim()
+
     // Prüfen ob Email bereits existiert (in User ODER B24Employee Tabelle)
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email }

@@ -176,6 +176,8 @@ export async function GET(request: NextRequest) {
       
       // Collect all available slots from all employees (union)
       const allSlotsMap = new Map<string, boolean>()
+      let calendarApiErrors = 0
+      let calendarApiSuccesses = 0
 
       for (const employee of availableEmployees) {
         try {
@@ -221,6 +223,8 @@ export async function GET(request: NextRequest) {
             calTimeMax.toISOString()
           )
           
+          calendarApiSuccesses++
+          
           // Filter and convert busy slots
           const validBusySlots = busySlots
             .filter(slot => slot.start && slot.end)
@@ -247,6 +251,7 @@ export async function GET(request: NextRequest) {
             allSlotsMap.set(slot, true)
           })
         } catch (error) {
+          calendarApiErrors++
           console.error(`Error processing employee ${employee.id}:`, error)
           // Continue with other employees
         }
@@ -255,8 +260,8 @@ export async function GET(request: NextRequest) {
       // Convert map to sorted array
       const availableSlots = Array.from(allSlotsMap.keys()).sort()
       
-      // If no slots could be generated from any employee, indicate calendar error
-      const calendarError = availableSlots.length === 0 && availableEmployees.length > 0
+      // Only flag calendarError if ALL employees had API errors (not just fully booked)
+      const calendarError = calendarApiErrors > 0 && calendarApiSuccesses === 0
       
       return NextResponse.json({ availableSlots, calendarError })
     }

@@ -30,6 +30,9 @@ export async function POST(request: Request) {
     // Validierung
     const validatedData = workshopSchema.parse(body)
 
+    // Normalize email to lowercase
+    validatedData.email = validatedData.email.toLowerCase().trim()
+
     // Prüfen ob Email bereits existiert (in User ODER B24Employee Tabelle)
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email }

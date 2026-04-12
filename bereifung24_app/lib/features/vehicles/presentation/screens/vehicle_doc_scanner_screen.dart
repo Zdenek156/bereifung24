@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,11 +67,20 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       backCamera,
       ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.nv21,
+      imageFormatGroup: Platform.isIOS
+          ? ImageFormatGroup.bgra8888
+          : ImageFormatGroup.nv21,
     );
 
     await _cameraController!.initialize();
     if (!mounted) return;
+
+    // Lock camera orientation to landscape for consistent scanning
+    try {
+      await _cameraController!.lockCaptureOrientation(
+        DeviceOrientation.landscapeRight,
+      );
+    } catch (_) {}
 
     // Enable torch for better readability
     try {

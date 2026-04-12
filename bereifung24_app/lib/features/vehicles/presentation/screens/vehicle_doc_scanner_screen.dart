@@ -206,10 +206,16 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Camera preview
+          // Camera preview (rotated 180° on iOS to fix upside-down image in landscapeLeft)
           if (_cameraController != null &&
               _cameraController!.value.isInitialized)
-            CameraPreview(_cameraController!)
+            Platform.isIOS
+                ? Transform(
+                    alignment: Alignment.center,
+                    transform: Matrix4.rotationZ(3.14159265),
+                    child: CameraPreview(_cameraController!),
+                  )
+                : CameraPreview(_cameraController!)
           else
             const Center(
               child: CircularProgressIndicator(color: Colors.white),

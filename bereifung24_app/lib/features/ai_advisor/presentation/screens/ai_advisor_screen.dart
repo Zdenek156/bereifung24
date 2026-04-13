@@ -55,6 +55,7 @@ class _RecommendedTire {
   final String labelWetGrip;
   final int labelNoise;
   final String articleId;
+  final String? axle; // 'front' | 'rear' | null (normal tires)
 
   _RecommendedTire({
     required this.brand,
@@ -70,6 +71,7 @@ class _RecommendedTire {
     required this.labelWetGrip,
     required this.labelNoise,
     required this.articleId,
+    this.axle,
   });
 
   factory _RecommendedTire.fromJson(Map<String, dynamic> json) {
@@ -87,6 +89,7 @@ class _RecommendedTire {
       labelWetGrip: json['labelWetGrip']?.toString() ?? '-',
       labelNoise: (json['labelNoise'] as num?)?.toInt() ?? 0,
       articleId: json['articleId']?.toString() ?? '',
+      axle: json['axle'] as String?,
     );
   }
 }
@@ -113,7 +116,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   bool _isTyping = false;
   String? _vehicleId;
   _RecommendedTire? _selectedTire;
+  _RecommendedTire? _selectedFrontTire;
+  _RecommendedTire? _selectedRearTire;
   String? _pendingMessage; // stored when vehicle selection is needed first
+  bool _vehicleSelectionShown = false; // track if we already asked for vehicle
 
   // Voice
   bool _isListening = false;
@@ -259,17 +265,17 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         _isSpeaking = true;
       });
 
-      // Rollo greets the user first
+      // Wait for TTS to be initialized BEFORE greeting
+      await _ttsInitFuture;
+      if (!mounted || !_isVoiceMode) return;
+
+      // Rollo greets the user
       const greeting = 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
       setState(() {
         _messages.add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
         _lastAiText = greeting;
       });
       _scrollToBottom();
-
-      // Wait for TTS to be initialized before speaking
-      await _ttsInitFuture;
-      if (!mounted || !_isVoiceMode) return;
 
       if (!_ttsEnabled) {
         // TTS not available — go straight to idle listening state
@@ -281,6 +287,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         return;
       }
 
+      // Small delay then speak — TTS is guaranteed initialized now
       await Future.delayed(const Duration(milliseconds: 300));
       if (!mounted || !_isVoiceMode) return;
       await ElevenLabsTtsService().speak(greeting);
@@ -414,7 +421,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
     try {
       // Vehicle selection — auto-select single vehicle or use existing
-      if (_vehicleId == null) {
+      if (_vehicleId == null && !_vehicleSelectionShown) {
         final lc = text.trim().toLowerCase();
         final needsVehicle = lc.contains('reifen') ||
             lc.contains('empfehlung') ||
@@ -438,6 +445,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             saveHomeVehicleIndex(0);
           } else if (vehicleList.length > 1) {
             // Multiple vehicles — exit voice mode and show picker in chat
+            _vehicleSelectionShown = true;
             _pendingMessage = text.trim();
             _exitVoiceMode();
             setState(() {
@@ -618,7 +626,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     _controller.clear();
 
     // Check if vehicle selection is needed for tire-related queries
-    if (_vehicleId == null) {
+    if (_vehicleId == null && !_vehicleSelectionShown) {
       final lc = text.trim().toLowerCase();
       final needsVehicle = lc.contains('reifen') ||
           lc.contains('empfehlung') ||
@@ -656,6 +664,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           saveHomeVehicleIndex(0);
         } else {
           // Multiple vehicles — ask user to pick, store message for later
+          _vehicleSelectionShown = true;
           _pendingMessage = text.trim();
           setState(() {
             _messages.add(_ChatMessage(
@@ -789,53 +798,38 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         partialSpeech: _partialSpeech.isNotEmpty ? _partialSpeech : null,
         lastAiText: _lastAiText,
         recommendedTires: lastTires,
-        selectedTire: _selectedTire,
+        selectedTire: _selectedTire ?? _selectedFrontTire ?? _selectedRearTire,
         onClose: _exitVoiceMode,
         onMicTap: _voiceModeStartListening,
         onStopTap: _voiceModeStopAction,
         onTireSelected: (tire) {
           setState(() {
             final t = tire as _RecommendedTire;
-            _selectedTire = (_selectedTire != null &&
-                    _selectedTire!.brand == t.brand &&
-                    _selectedTire!.model == t.model)
-                ? null
-                : t;
+            if (t.axle == 'front') {
+              _selectedFrontTire = (_selectedFrontTire != null &&
+                      _selectedFrontTire!.brand == t.brand &&
+                      _selectedFrontTire!.model == t.model)
+                  ? null
+                  : t;
+            } else if (t.axle == 'rear') {
+              _selectedRearTire = (_selectedRearTire != null &&
+                      _selectedRearTire!.brand == t.brand &&
+                      _selectedRearTire!.model == t.model)
+                  ? null
+                  : t;
+            } else {
+              _selectedTire = (_selectedTire != null &&
+                      _selectedTire!.brand == t.brand &&
+                      _selectedTire!.model == t.model)
+                  ? null
+                  : t;
+            }
           });
         },
         onTireSearch: (tire) {
           final t = tire as _RecommendedTire;
           _exitVoiceMode();
-          if (_vehicleId != null) {
-            final vehiclesAsync = ref.read(vehiclesProvider);
-            if (vehiclesAsync is AsyncData<List<Vehicle>>) {
-              final idx =
-                  vehiclesAsync.value.indexWhere((v) => v.id == _vehicleId);
-              if (idx >= 0) {
-                ref.read(selectedVehicleProvider.notifier).state =
-                    vehiclesAsync.value[idx];
-                ref.read(homeVehicleIndexProvider.notifier).state = idx;
-                saveHomeVehicleIndex(idx);
-              }
-            }
-          }
-          final seasonCode = t.season.toLowerCase().startsWith('s')
-              ? 's'
-              : t.season.toLowerCase().startsWith('w')
-                  ? 'w'
-                  : t.season.toLowerCase().startsWith('g')
-                      ? 'g'
-                      : t.season;
-          context.go('/search?service=TIRE_CHANGE'
-              '&width=${Uri.encodeComponent(t.width)}'
-              '&height=${Uri.encodeComponent(t.height)}'
-              '&diameter=${Uri.encodeComponent(t.diameter)}'
-              '&season=${Uri.encodeComponent(seasonCode)}'
-              '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
-              '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
-              '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
-              '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
-              '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}');
+          _navigateToSearch(t);
         },
       );
     }
@@ -1149,82 +1143,205 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           if (msg.recommendedTires != null &&
               msg.recommendedTires!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            ...msg.recommendedTires!
-                .map((tire) => _buildTireCard(tire, isDark)),
-            if (_selectedTire != null &&
-                msg.recommendedTires!.any((t) =>
-                    t.brand == _selectedTire!.brand &&
-                    t.model == _selectedTire!.model)) ...[
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    final t = _selectedTire!;
-                    // Sync vehicle provider + home vehicle card
-                    if (_vehicleId != null) {
-                      final vehiclesAsync = ref.read(vehiclesProvider);
-                      if (vehiclesAsync is AsyncData<List<Vehicle>>) {
-                        final idx = vehiclesAsync.value
-                            .indexWhere((v) => v.id == _vehicleId);
-                        if (idx >= 0) {
-                          ref.read(selectedVehicleProvider.notifier).state =
-                              vehiclesAsync.value[idx];
-                          ref.read(homeVehicleIndexProvider.notifier).state =
-                              idx;
-                          saveHomeVehicleIndex(idx);
-                        }
-                      }
-                    }
-                    // Convert season text to code: Sommer→s, Winter→w, Ganzjahr→g
-                    final seasonCode = t.season.toLowerCase().startsWith('s')
-                        ? 's'
-                        : t.season.toLowerCase().startsWith('w')
-                            ? 'w'
-                            : t.season.toLowerCase().startsWith('g')
-                                ? 'g'
-                                : t.season;
-                    context.go('/search?service=TIRE_CHANGE'
-                        '&width=${Uri.encodeComponent(t.width)}'
-                        '&height=${Uri.encodeComponent(t.height)}'
-                        '&diameter=${Uri.encodeComponent(t.diameter)}'
-                        '&season=${Uri.encodeComponent(seasonCode)}'
-                        '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
-                        '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
-                        '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
-                        '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
-                        '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}');
-                  },
-                  icon: const Icon(Icons.search, size: 18),
-                  label: const Text('Werkstatt mit diesem Reifen finden'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: B24Colors.primaryBlue,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                ),
-              ),
-            ],
+            ..._buildTireRecommendations(msg.recommendedTires!, isDark),
           ],
         ],
       ),
     );
   }
 
+  // ── Tire Recommendations (grouped by axle for mixed tires) ──
+
+  List<Widget> _buildTireRecommendations(List<_RecommendedTire> tires, bool isDark) {
+    final frontTires = tires.where((t) => t.axle == 'front').toList();
+    final rearTires = tires.where((t) => t.axle == 'rear').toList();
+    final hasMixed = frontTires.isNotEmpty && rearTires.isNotEmpty;
+
+    if (hasMixed) {
+      return [
+        // Front axle section
+        Padding(
+          padding: const EdgeInsets.only(left: 40, bottom: 6),
+          child: Text(
+            'Vorderachse (${frontTires.first.size})',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+            ),
+          ),
+        ),
+        ...frontTires.map((tire) => _buildTireCard(tire, isDark)),
+        const SizedBox(height: 8),
+        // Rear axle section
+        Padding(
+          padding: const EdgeInsets.only(left: 40, bottom: 6),
+          child: Text(
+            'Hinterachse (${rearTires.first.size})',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+            ),
+          ),
+        ),
+        ...rearTires.map((tire) => _buildTireCard(tire, isDark)),
+        // Search button — needs front + rear selection
+        if (_selectedFrontTire != null || _selectedRearTire != null) ...[
+          const SizedBox(height: 8),
+          _buildMixedSearchButton(),
+        ],
+      ];
+    } else {
+      // Normal: all tires in one list
+      return [
+        ...tires.map((tire) => _buildTireCard(tire, isDark)),
+        if (_selectedTire != null &&
+            tires.any((t) => t.brand == _selectedTire!.brand && t.model == _selectedTire!.model)) ...[
+          const SizedBox(height: 8),
+          _buildSearchButton(_selectedTire!),
+        ],
+      ];
+    }
+  }
+
+  Widget _buildSearchButton(_RecommendedTire t) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _navigateToSearch(t),
+        icon: const Icon(Icons.search, size: 18),
+        label: const Text('Werkstatt mit diesem Reifen finden'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: B24Colors.primaryBlue,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMixedSearchButton() {
+    final hasFront = _selectedFrontTire != null;
+    final hasRear = _selectedRearTire != null;
+    final hasBoth = hasFront && hasRear;
+    final label = hasBoth
+        ? 'Werkstatt mit beiden Reifen finden'
+        : hasFront
+            ? 'Werkstatt mit Vorderreifen finden'
+            : 'Werkstatt mit Hinterreifen finden';
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          _syncVehicleProvider();
+          final t = _selectedFrontTire ?? _selectedRearTire!;
+          String url = '/search?service=TIRE_CHANGE'
+              '&width=${Uri.encodeComponent(t.width)}'
+              '&height=${Uri.encodeComponent(t.height)}'
+              '&diameter=${Uri.encodeComponent(t.diameter)}'
+              '&season=${Uri.encodeComponent(_seasonCode(t))}'
+              '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
+              '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
+              '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
+              '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
+              '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}';
+          if (hasBoth) {
+            final r = _selectedRearTire!;
+            url += '&rearWidth=${Uri.encodeComponent(r.width)}'
+                '&rearHeight=${Uri.encodeComponent(r.height)}'
+                '&rearDiameter=${Uri.encodeComponent(r.diameter)}'
+                '&rearLoadIndex=${Uri.encodeComponent(r.loadIndex)}'
+                '&rearSpeedIndex=${Uri.encodeComponent(r.speedIndex)}'
+                '${r.articleId.isNotEmpty ? '&rearArticleId=${Uri.encodeComponent(r.articleId)}' : ''}'
+                '${r.brand.isNotEmpty ? '&rearTireBrand=${Uri.encodeComponent(r.brand)}' : ''}'
+                '${r.model.isNotEmpty ? '&rearTireModel=${Uri.encodeComponent(r.model)}' : ''}';
+          }
+          context.go(url);
+        },
+        icon: const Icon(Icons.search, size: 18),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: B24Colors.primaryBlue,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+        ),
+      ),
+    );
+  }
+
+  void _syncVehicleProvider() {
+    if (_vehicleId != null) {
+      final vehiclesAsync = ref.read(vehiclesProvider);
+      if (vehiclesAsync is AsyncData<List<Vehicle>>) {
+        final idx = vehiclesAsync.value.indexWhere((v) => v.id == _vehicleId);
+        if (idx >= 0) {
+          ref.read(selectedVehicleProvider.notifier).state = vehiclesAsync.value[idx];
+          ref.read(homeVehicleIndexProvider.notifier).state = idx;
+          saveHomeVehicleIndex(idx);
+        }
+      }
+    }
+  }
+
+  void _navigateToSearch(_RecommendedTire t) {
+    _syncVehicleProvider();
+    final seasonCode = _seasonCode(t);
+    context.go('/search?service=TIRE_CHANGE'
+        '&width=${Uri.encodeComponent(t.width)}'
+        '&height=${Uri.encodeComponent(t.height)}'
+        '&diameter=${Uri.encodeComponent(t.diameter)}'
+        '&season=${Uri.encodeComponent(seasonCode)}'
+        '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
+        '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
+        '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
+        '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
+        '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}');
+  }
+
+  String _seasonCode(_RecommendedTire t) {
+    return t.season.toLowerCase().startsWith('s')
+        ? 's'
+        : t.season.toLowerCase().startsWith('w')
+            ? 'w'
+            : t.season.toLowerCase().startsWith('g')
+                ? 'g'
+                : t.season;
+  }
+
   // ── Tire Recommendation Card ──
 
   Widget _buildTireCard(_RecommendedTire tire, bool isDark) {
-    final isSelected = _selectedTire != null &&
-        _selectedTire!.brand == tire.brand &&
-        _selectedTire!.model == tire.model;
+    // For mixed tires: use axle-specific selection
+    final bool isSelected;
+    if (tire.axle == 'front') {
+      isSelected = _selectedFrontTire != null &&
+          _selectedFrontTire!.brand == tire.brand &&
+          _selectedFrontTire!.model == tire.model;
+    } else if (tire.axle == 'rear') {
+      isSelected = _selectedRearTire != null &&
+          _selectedRearTire!.brand == tire.brand &&
+          _selectedRearTire!.model == tire.model;
+    } else {
+      isSelected = _selectedTire != null &&
+          _selectedTire!.brand == tire.brand &&
+          _selectedTire!.model == tire.model;
+    }
     return Padding(
       padding: const EdgeInsets.only(bottom: 6, left: 40),
       child: GestureDetector(
         onTap: () {
           setState(() {
-            _selectedTire = isSelected ? null : tire;
+            if (tire.axle == 'front') {
+              _selectedFrontTire = isSelected ? null : tire;
+            } else if (tire.axle == 'rear') {
+              _selectedRearTire = isSelected ? null : tire;
+            } else {
+              _selectedTire = isSelected ? null : tire;
+            }
           });
         },
         child: Container(

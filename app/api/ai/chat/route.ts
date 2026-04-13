@@ -247,19 +247,28 @@ export async function POST(request: NextRequest) {
       context,
     )
 
-    // ── Extract recommended tires from AI response (max 3) ──
+    // ── Extract recommended tires from AI response (max 3 per axle) ──
     // Determine primary tire size(s) from the first vehicle to prefer matching sizes
     const primarySizes: Set<string> = new Set()
+    let frontTireSize = ''
+    let rearTireSize = ''
+    let hasMixedTires = false
     if (vehicleContexts.length > 0) {
       const pv = vehicleContexts[0]
-      if (pv.tireSize) primarySizes.add(pv.tireSize)
-      if (pv.rearTireSize) primarySizes.add(pv.rearTireSize)
+      if (pv.tireSize) {
+        primarySizes.add(pv.tireSize)
+        frontTireSize = pv.tireSize
+      }
+      if (pv.rearTireSize) {
+        primarySizes.add(pv.rearTireSize)
+        rearTireSize = pv.rearTireSize
+        hasMixedTires = true
+      }
     }
 
-    const recommendedTires: Array<{ brand: string; model: string; size: string; width: string; height: string; diameter: string; season: string; loadIndex: string; speedIndex: string; labelFuelEfficiency: string; labelWetGrip: string; labelNoise: number; articleId: string }> = []
+    const recommendedTires: Array<{ brand: string; model: string; size: string; width: string; height: string; diameter: string; season: string; loadIndex: string; speedIndex: string; labelFuelEfficiency: string; labelWetGrip: string; labelNoise: number; articleId: string; axle?: 'front' | 'rear' }> = []
     if (rawTiresMap.size > 0) {
-      // Filter to primary vehicle sizes, loadIndex, and speedIndex when possible
-      const candidates = Array.from(rawTiresMap.values()).filter(tire => {
+      const allCandidates = Array.from(rawTiresMap.values()).filter(tire => {
         if (primarySizes.size > 0 && !primarySizes.has(tire.size)) return false
         // Load index must be >= vehicle's requirement
         if (primaryLoadIndex && tire.loadIndex !== '-') {
@@ -274,31 +283,74 @@ export async function POST(request: NextRequest) {
         }
         return true
       })
+
       const responseLC = response.toLowerCase()
-      // First pass: strict match (brand AND full model name)
-      candidates.forEach(tire => {
-        if (recommendedTires.length >= 3) return
-        if (tire.model && responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(tire.model.toLowerCase())) {
-          recommendedTires.push(tire)
-        }
-      })
-      // Second pass: try matching brand + first word of model (for cases where AI abbreviates model names)
-      if (recommendedTires.length < 3) {
-        const matchedKeys = new Set(recommendedTires.map(t => `${t.brand}|${t.model}`))
-        candidates.forEach(tire => {
-          if (recommendedTires.length >= 3) return
-          const key = `${tire.brand}|${tire.model}`
-          if (matchedKeys.has(key)) return
-          if (!tire.model) return
-          const modelWords = tire.model.split(/\s+/)
-          if (modelWords.length >= 2) {
-            const firstTwoWords = modelWords.slice(0, 2).join(' ').toLowerCase()
-            if (responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(firstTwoWords)) {
-              recommendedTires.push(tire)
-              matchedKeys.add(key)
+
+      if (hasMixedTires) {
+        // For mixed tires: separate candidates by axle size
+        const frontCandidates = allCandidates.filter(t => t.size === frontTireSize)
+        const rearCandidates = allCandidates.filter(t => t.size === rearTireSize)
+
+        // Extract front axle tires (max 3)
+        const extractMatches = (candidates: typeof allCandidates, axle: 'front' | 'rear', max: number) => {
+          const matched: typeof recommendedTires = []
+          // First pass: strict match (brand AND full model name)
+          candidates.forEach(tire => {
+            if (matched.length >= max) return
+            if (tire.model && responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(tire.model.toLowerCase())) {
+              matched.push({ ...tire, axle })
             }
+          })
+          // Second pass: brand + first two words of model
+          if (matched.length < max) {
+            const matchedKeys = new Set(matched.map(t => `${t.brand}|${t.model}`))
+            candidates.forEach(tire => {
+              if (matched.length >= max) return
+              const key = `${tire.brand}|${tire.model}`
+              if (matchedKeys.has(key)) return
+              if (!tire.model) return
+              const modelWords = tire.model.split(/\s+/)
+              if (modelWords.length >= 2) {
+                const firstTwoWords = modelWords.slice(0, 2).join(' ').toLowerCase()
+                if (responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(firstTwoWords)) {
+                  matched.push({ ...tire, axle })
+                  matchedKeys.add(key)
+                }
+              }
+            })
+          }
+          return matched
+        }
+
+        recommendedTires.push(...extractMatches(frontCandidates, 'front', 3))
+        recommendedTires.push(...extractMatches(rearCandidates, 'rear', 3))
+      } else {
+        // Standard: max 3 tires (no axle distinction)
+        // First pass: strict match (brand AND full model name)
+        allCandidates.forEach(tire => {
+          if (recommendedTires.length >= 3) return
+          if (tire.model && responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(tire.model.toLowerCase())) {
+            recommendedTires.push(tire)
           }
         })
+        // Second pass: try matching brand + first word of model
+        if (recommendedTires.length < 3) {
+          const matchedKeys = new Set(recommendedTires.map(t => `${t.brand}|${t.model}`))
+          allCandidates.forEach(tire => {
+            if (recommendedTires.length >= 3) return
+            const key = `${tire.brand}|${tire.model}`
+            if (matchedKeys.has(key)) return
+            if (!tire.model) return
+            const modelWords = tire.model.split(/\s+/)
+            if (modelWords.length >= 2) {
+              const firstTwoWords = modelWords.slice(0, 2).join(' ').toLowerCase()
+              if (responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(firstTwoWords)) {
+                recommendedTires.push(tire)
+                matchedKeys.add(key)
+              }
+            }
+          })
+        }
       }
     }
 
@@ -306,6 +358,7 @@ export async function POST(request: NextRequest) {
       response,
       chatHistory: updatedHistory,
       ...(recommendedTires.length > 0 && { recommendedTires }),
+      ...(hasMixedTires && { hasMixedTires: true }),
     })
 
   } catch (error: any) {

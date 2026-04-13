@@ -198,16 +198,18 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
   /// Calculate the rotation angle to keep the camera preview locked
   /// to landscapeRight regardless of physical device orientation.
   double _previewRotation() {
-    double angle = 0;
+    // iOS camera sensor outputs upside-down in landscape → base 180°
+    double angle = Platform.isIOS ? math.pi : 0;
 
-    // Counter-rotate when device physically moves from landscapeRight
+    // Counter-rotate only for portrait tilt.
+    // Camera texture does NOT auto-rotate between landscape orientations,
+    // so no counter-rotation needed for landscapeLeft.
     switch (_physicalOrientation) {
       case DeviceOrientation.landscapeRight:
+      case DeviceOrientation.landscapeLeft:
         break;
       case DeviceOrientation.portraitUp:
         angle += math.pi / 2;
-      case DeviceOrientation.landscapeLeft:
-        angle += math.pi;
       case DeviceOrientation.portraitDown:
         angle -= math.pi / 2;
     }

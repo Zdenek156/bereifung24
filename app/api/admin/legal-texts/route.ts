@@ -3,10 +3,12 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 
+const ALLOWED_ROLES = ['ADMIN', 'B24_EMPLOYEE']
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !ALLOWED_ROLES.includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
@@ -29,7 +31,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || session.user.role !== 'ADMIN') {
+    if (!session || !ALLOWED_ROLES.includes(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 

@@ -256,7 +256,7 @@ export default function PricingPage() {
               {[
                 { q: 'Ist Bereifung24 wirklich kostenlos für Kunden?', a: 'Ja, zu 100%. Du zahlst nur den Festpreis für den Service – keine Plattformgebühr, keine Aufschläge.' },
                 { q: 'Wie funktioniert die Bezahlung?', a: 'Du bezahlst sicher online bei der Buchung per Kreditkarte, PayPal, Klarna oder Apple/Google Pay. Der Betrag wird erst an die Werkstatt freigegeben, wenn der Service durchgeführt wurde.' },
-                { q: 'Kann ich stornieren?', a: 'Ja, kostenlose Stornierung ist bis 24 Stunden vor dem Termin möglich. Der volle Betrag wird dir erstattet.' },
+                { q: 'Kann ich stornieren?', a: 'Ja, eine Stornierung ist bis 24 Stunden vor dem Termin über dein Kundenkonto möglich. Die Erstattung bzw. der Ausgleich wird direkt zwischen dir und der Werkstatt geregelt.' },
                 { q: 'Wie werden die Preise festgelegt?', a: 'Jede Werkstatt legt ihre eigenen Festpreise fest. Du siehst den verbindlichen Endpreis vor der Buchung – ohne versteckte Kosten.' },
                 { q: 'Was kostet es für Werkstätten?', a: 'Die Registrierung und Nutzung ist kostenlos. Wir berechnen nur eine kleine Provision pro erfolgreicher Buchung.' },
                 { q: 'Sind die Werkstätten geprüft?', a: 'Ja, alle Partner-Werkstätten werden von uns verifiziert und erhalten laufend Kundenbewertungen.' },

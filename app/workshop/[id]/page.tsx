@@ -2209,7 +2209,7 @@ export default function WorkshopDetailPage() {
 
                 {canBook && (
                   <p className="text-xs text-center text-gray-500 mt-3">
-                    ✓ Kostenlose Stornierung bis 24h vorher
+                    ✓ Stornierung bis 24h vorher möglich
                   </p>
                 )}
               </div>

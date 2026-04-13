@@ -120,6 +120,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   _RecommendedTire? _selectedRearTire;
   String? _pendingMessage; // stored when vehicle selection is needed first
   bool _vehicleSelectionShown = false; // track if we already asked for vehicle
+  String _vehicleType = 'CAR'; // CAR, MOTORCYCLE, TRAILER
 
   // Voice
   bool _isListening = false;
@@ -439,26 +440,15 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           });
           if (vehicleList.length == 1) {
             _vehicleId = vehicleList.first.id;
+            _vehicleType = vehicleList.first.vehicleType;
             ref.read(selectedVehicleProvider.notifier).state =
                 vehicleList.first;
             ref.read(homeVehicleIndexProvider.notifier).state = 0;
             saveHomeVehicleIndex(0);
           } else if (vehicleList.length > 1) {
-            // Multiple vehicles — exit voice mode and show picker in chat
+            // In voice mode: don't exit, let AI handle vehicle selection conversationally
+            // Backend loads all vehicles, AI knows about them and will ask
             _vehicleSelectionShown = true;
-            _pendingMessage = text.trim();
-            _exitVoiceMode();
-            setState(() {
-              _messages.add(_ChatMessage(
-                role: 'ai',
-                text: 'Für welches Fahrzeug brauchst du Hilfe?',
-                time: _timeStr(),
-                vehicleChoices: vehicleList,
-              ));
-              _isTyping = false;
-            });
-            _scrollToBottom();
-            return;
           }
         }
       }
@@ -567,6 +557,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   void _onVehicleSelected(Vehicle vehicle) {
     setState(() {
       _vehicleId = vehicle.id;
+      _vehicleType = vehicle.vehicleType;
       _messages.add(_ChatMessage(
         role: 'user',
         text: '${vehicle.displayName}',
@@ -659,6 +650,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           // Auto-select single vehicle silently
           final v = vehicleList.first;
           _vehicleId = v.id;
+          _vehicleType = v.vehicleType;
           ref.read(selectedVehicleProvider.notifier).state = v;
           ref.read(homeVehicleIndexProvider.notifier).state = 0;
           saveHomeVehicleIndex(0);
@@ -792,13 +784,22 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         }
       }
 
+      final isMoto = _vehicleType == 'MOTORCYCLE';
+      final hasMixed = lastTires != null &&
+          lastTires.any((t) => t.axle == 'front') &&
+          lastTires.any((t) => t.axle == 'rear');
+
       return RolloVoiceMode(
         voiceState: _voiceState,
         statusText: _voiceStatusText,
         partialSpeech: _partialSpeech.isNotEmpty ? _partialSpeech : null,
         lastAiText: _lastAiText,
         recommendedTires: lastTires,
-        selectedTire: _selectedTire ?? _selectedFrontTire ?? _selectedRearTire,
+        selectedTire: _selectedTire,
+        selectedFrontTire: _selectedFrontTire,
+        selectedRearTire: _selectedRearTire,
+        isMotorcycle: isMoto,
+        hasMixedTires: hasMixed,
         onClose: _exitVoiceMode,
         onMicTap: _voiceModeStartListening,
         onStopTap: _voiceModeStopAction,
@@ -827,9 +828,12 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           });
         },
         onTireSearch: (tire) {
-          final t = tire as _RecommendedTire;
           _exitVoiceMode();
-          _navigateToSearch(t);
+          if (tire != null) {
+            _navigateToSearch(tire as _RecommendedTire);
+          } else if (_selectedFrontTire != null || _selectedRearTire != null) {
+            _navigateToMixedSearch();
+          }
         },
       );
     }
@@ -1156,14 +1160,17 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     final frontTires = tires.where((t) => t.axle == 'front').toList();
     final rearTires = tires.where((t) => t.axle == 'rear').toList();
     final hasMixed = frontTires.isNotEmpty && rearTires.isNotEmpty;
+    final isMoto = _vehicleType == 'MOTORCYCLE';
+    final frontLabel = isMoto ? 'Vorderrad' : 'Vorderachse';
+    final rearLabel = isMoto ? 'Hinterrad' : 'Hinterachse';
 
     if (hasMixed) {
       return [
-        // Front axle section
+        // Front section
         Padding(
           padding: const EdgeInsets.only(left: 40, bottom: 6),
           child: Text(
-            'Vorderachse (${frontTires.first.size})',
+            '$frontLabel (${frontTires.first.size})',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -1173,11 +1180,11 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         ),
         ...frontTires.map((tire) => _buildTireCard(tire, isDark)),
         const SizedBox(height: 8),
-        // Rear axle section
+        // Rear section
         Padding(
           padding: const EdgeInsets.only(left: 40, bottom: 6),
           child: Text(
-            'Hinterachse (${rearTires.first.size})',
+            '$rearLabel (${rearTires.first.size})',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -1235,32 +1242,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () {
-          _syncVehicleProvider();
-          final t = _selectedFrontTire ?? _selectedRearTire!;
-          String url = '/search?service=TIRE_CHANGE'
-              '&width=${Uri.encodeComponent(t.width)}'
-              '&height=${Uri.encodeComponent(t.height)}'
-              '&diameter=${Uri.encodeComponent(t.diameter)}'
-              '&season=${Uri.encodeComponent(_seasonCode(t))}'
-              '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
-              '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
-              '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
-              '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
-              '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}';
-          if (hasBoth) {
-            final r = _selectedRearTire!;
-            url += '&rearWidth=${Uri.encodeComponent(r.width)}'
-                '&rearHeight=${Uri.encodeComponent(r.height)}'
-                '&rearDiameter=${Uri.encodeComponent(r.diameter)}'
-                '&rearLoadIndex=${Uri.encodeComponent(r.loadIndex)}'
-                '&rearSpeedIndex=${Uri.encodeComponent(r.speedIndex)}'
-                '${r.articleId.isNotEmpty ? '&rearArticleId=${Uri.encodeComponent(r.articleId)}' : ''}'
-                '${r.brand.isNotEmpty ? '&rearTireBrand=${Uri.encodeComponent(r.brand)}' : ''}'
-                '${r.model.isNotEmpty ? '&rearTireModel=${Uri.encodeComponent(r.model)}' : ''}';
-          }
-          context.go(url);
-        },
+        onPressed: () => _navigateToMixedSearch(),
         icon: const Icon(Icons.search, size: 18),
         label: Text(label),
         style: ElevatedButton.styleFrom(
@@ -1271,6 +1253,34 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         ),
       ),
     );
+  }
+
+  void _navigateToMixedSearch() {
+    _syncVehicleProvider();
+    final t = _selectedFrontTire ?? _selectedRearTire!;
+    final service = _vehicleType == 'MOTORCYCLE' ? 'MOTORCYCLE_TIRE' : 'TIRE_CHANGE';
+    String url = '/search?service=$service'
+        '&width=${Uri.encodeComponent(t.width)}'
+        '&height=${Uri.encodeComponent(t.height)}'
+        '&diameter=${Uri.encodeComponent(t.diameter)}'
+        '&season=${Uri.encodeComponent(_seasonCode(t))}'
+        '&loadIndex=${Uri.encodeComponent(t.loadIndex)}'
+        '&speedIndex=${Uri.encodeComponent(t.speedIndex)}'
+        '${t.articleId.isNotEmpty ? '&articleId=${Uri.encodeComponent(t.articleId)}' : ''}'
+        '${t.brand.isNotEmpty ? '&tireBrand=${Uri.encodeComponent(t.brand)}' : ''}'
+        '${t.model.isNotEmpty ? '&tireModel=${Uri.encodeComponent(t.model)}' : ''}';
+    if (_selectedFrontTire != null && _selectedRearTire != null) {
+      final r = _selectedRearTire!;
+      url += '&rearWidth=${Uri.encodeComponent(r.width)}'
+          '&rearHeight=${Uri.encodeComponent(r.height)}'
+          '&rearDiameter=${Uri.encodeComponent(r.diameter)}'
+          '&rearLoadIndex=${Uri.encodeComponent(r.loadIndex)}'
+          '&rearSpeedIndex=${Uri.encodeComponent(r.speedIndex)}'
+          '${r.articleId.isNotEmpty ? '&rearArticleId=${Uri.encodeComponent(r.articleId)}' : ''}'
+          '${r.brand.isNotEmpty ? '&rearTireBrand=${Uri.encodeComponent(r.brand)}' : ''}'
+          '${r.model.isNotEmpty ? '&rearTireModel=${Uri.encodeComponent(r.model)}' : ''}';
+    }
+    context.go(url);
   }
 
   void _syncVehicleProvider() {
@@ -1290,7 +1300,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   void _navigateToSearch(_RecommendedTire t) {
     _syncVehicleProvider();
     final seasonCode = _seasonCode(t);
-    context.go('/search?service=TIRE_CHANGE'
+    final service = _vehicleType == 'MOTORCYCLE' ? 'MOTORCYCLE_TIRE' : 'TIRE_CHANGE';
+    context.go('/search?service=$service'
         '&width=${Uri.encodeComponent(t.width)}'
         '&height=${Uri.encodeComponent(t.height)}'
         '&diameter=${Uri.encodeComponent(t.diameter)}'
@@ -1391,15 +1402,16 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  _euBadge('⛽', tire.labelFuelEfficiency, isDark),
-                  const SizedBox(width: 8),
-                  _euBadge('💧', tire.labelWetGrip, isDark),
-                  const SizedBox(width: 8),
-                  _euBadge('🔊', '${tire.labelNoise}dB', isDark),
-                ],
-              ),
+              if (_vehicleType != 'MOTORCYCLE')
+                Row(
+                  children: [
+                    _euBadge('⛽', tire.labelFuelEfficiency, isDark),
+                    const SizedBox(width: 8),
+                    _euBadge('💧', tire.labelWetGrip, isDark),
+                    const SizedBox(width: 8),
+                    _euBadge('🔊', '${tire.labelNoise}dB', isDark),
+                  ],
+                ),
             ],
           ),
         ),

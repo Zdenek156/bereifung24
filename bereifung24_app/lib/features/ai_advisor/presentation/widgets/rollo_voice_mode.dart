@@ -13,6 +13,10 @@ class RolloVoiceMode extends StatefulWidget {
   final String? lastAiText;
   final List<dynamic>? recommendedTires;
   final dynamic selectedTire;
+  final dynamic selectedFrontTire;
+  final dynamic selectedRearTire;
+  final bool isMotorcycle;
+  final bool hasMixedTires;
   final VoidCallback onClose;
   final VoidCallback onMicTap;
   final VoidCallback onStopTap;
@@ -27,6 +31,10 @@ class RolloVoiceMode extends StatefulWidget {
     this.lastAiText,
     this.recommendedTires,
     this.selectedTire,
+    this.selectedFrontTire,
+    this.selectedRearTire,
+    this.isMotorcycle = false,
+    this.hasMixedTires = false,
     required this.onClose,
     required this.onMicTap,
     required this.onStopTap,
@@ -424,7 +432,15 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
   }
 
   Widget _buildTireOverlay(bool isDark) {
-    final hasSelection = widget.selectedTire != null;
+    final hasMixed = widget.hasMixedTires;
+    final hasSelection = hasMixed
+        ? (widget.selectedFrontTire != null || widget.selectedRearTire != null)
+        : widget.selectedTire != null;
+
+    if (hasMixed) {
+      return _buildMixedTireOverlay(isDark, hasSelection);
+    }
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -493,10 +509,134 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
     );
   }
 
+  Widget _buildMixedTireOverlay(bool isDark, bool hasSelection) {
+    final frontTires = widget.recommendedTires!
+        .where((t) => t.axle == 'front')
+        .toList();
+    final rearTires = widget.recommendedTires!
+        .where((t) => t.axle == 'rear')
+        .toList();
+    final frontLabel = widget.isMotorcycle ? 'Vorderrad' : 'Vorderachse';
+    final rearLabel = widget.isMotorcycle ? 'Hinterrad' : 'Hinterachse';
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: const BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Row(
+              children: [
+                Icon(Icons.recommend,
+                    color: B24Colors.accentGreen, size: 18),
+                const SizedBox(width: 8),
+                const Text(
+                  'Reifen-Empfehlungen',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (frontTires.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: Text(
+                '$frontLabel (${frontTires.first.size})',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 90,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                scrollDirection: Axis.horizontal,
+                itemCount: frontTires.length,
+                itemBuilder: (context, index) =>
+                    _buildTireCardCompact(frontTires[index], isDark),
+              ),
+            ),
+          ],
+          if (rearTires.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+              child: Text(
+                '$rearLabel (${rearTires.first.size})',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.6),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 90,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                scrollDirection: Axis.horizontal,
+                itemCount: rearTires.length,
+                itemBuilder: (context, index) =>
+                    _buildTireCardCompact(rearTires[index], isDark),
+              ),
+            ),
+          ],
+          if (hasSelection)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => widget.onTireSearch?.call(null),
+                  icon: const Icon(Icons.search, size: 16),
+                  label: const Text('Werkstatt finden',
+                      style: TextStyle(fontSize: 13)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: B24Colors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTireCardCompact(dynamic tire, bool isDark) {
-    final isSelected = widget.selectedTire != null &&
-        widget.selectedTire.brand == tire.brand &&
-        widget.selectedTire.model == tire.model;
+    // Determine selection based on axle
+    bool isSelected;
+    if (tire.axle == 'front') {
+      isSelected = widget.selectedFrontTire != null &&
+          widget.selectedFrontTire.brand == tire.brand &&
+          widget.selectedFrontTire.model == tire.model;
+    } else if (tire.axle == 'rear') {
+      isSelected = widget.selectedRearTire != null &&
+          widget.selectedRearTire.brand == tire.brand &&
+          widget.selectedRearTire.model == tire.model;
+    } else {
+      isSelected = widget.selectedTire != null &&
+          widget.selectedTire.brand == tire.brand &&
+          widget.selectedTire.model == tire.model;
+    }
 
     return GestureDetector(
       onTap: () => widget.onTireSelected?.call(tire),
@@ -556,15 +696,16 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 4),
-            Row(
-              children: [
-                _miniLabel('⛽${tire.labelFuelEfficiency}'),
-                const SizedBox(width: 4),
-                _miniLabel('💧${tire.labelWetGrip}'),
-                const SizedBox(width: 4),
-                _miniLabel('🔊${tire.labelNoise}dB'),
-              ],
-            ),
+            if (!widget.isMotorcycle)
+              Row(
+                children: [
+                  _miniLabel('⛽${tire.labelFuelEfficiency}'),
+                  const SizedBox(width: 4),
+                  _miniLabel('💧${tire.labelWetGrip}'),
+                  const SizedBox(width: 4),
+                  _miniLabel('🔊${tire.labelNoise}dB'),
+                ],
+              ),
           ],
         ),
       ),

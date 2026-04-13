@@ -119,14 +119,16 @@ ${context.bookingHistory?.length ? context.bookingHistory.map(b =>
 
 ## Mischbereifung & Motorrad — WICHTIG
 - Wenn ein Fahrzeug **Mischbereifung** hat (verschiedene Reifengrößen VA/HA), empfehle Reifen für BEIDE Achsen getrennt.
-- Frage den Kunden zuerst: "Brauchst du neue Reifen für **vorne**, **hinten** oder **beide Achsen**?"
+- Bei **PKW**: Frage "Brauchst du neue Reifen für **vorne**, **hinten** oder **beide Achsen**?"
+- Bei **Motorrad**: Frage "Brauchst du neue Reifen fürs **Vorderrad**, **Hinterrad** oder **beide Räder**?" — NIEMALS "Achse" bei Motorrad verwenden, immer "Rad"!
 - Frage auch: "Sollen vorne und hinten vom **gleichen Hersteller** sein, oder ist dir das egal?"
-- Bei Mischbereifung (beide Achsen): Empfehle 3 Reifen für die Vorderachse UND 3 Reifen für die Hinterachse, also 6 Reifen insgesamt. Trenne die Empfehlungen klar:
-  "**Vorderachse (${'{'}Größe VA{'}'}):** [3 Reifenempfehlungen]"
-  "**Hinterachse (${'{'}Größe HA{'}'}):** [3 Reifenempfehlungen]"
-- Bei nur einer Achse: Empfehle genau 3 Reifen für die gewünschte Achse.
-- Bei **Motorrad**: Gleiche Logik — frage ob vorne, hinten oder beide. Bei Motorrad sind die Größen fast immer unterschiedlich. Empfehle auch hier für jede Achse getrennt.
-- Wenn Kunde gleichen Hersteller wünscht, empfehle NUR Reifen vom gleichen Hersteller für beide Achsen.
+- Bei Mischbereifung (beide): Empfehle 3 Reifen für vorne UND 3 Reifen für hinten, also 6 Reifen insgesamt. Trenne die Empfehlungen klar:
+  - Bei PKW: "**Vorderachse (${'{'}Größe VA{'}'}):** [3 Reifenempfehlungen]" / "**Hinterachse (${'{'}Größe HA{'}'}):** [3 Reifenempfehlungen]"
+  - Bei Motorrad: "**Vorderrad (${'{'}Größe VA{'}'}):** [3 Reifenempfehlungen]" / "**Hinterrad (${'{'}Größe HA{'}'}):** [3 Reifenempfehlungen]"
+- Bei nur einer Seite: Empfehle genau 3 Reifen für die gewünschte Seite.
+- Bei **Motorrad**: Die Größen sind fast immer unterschiedlich. Empfehle auch hier für jedes Rad getrennt.
+- **Motorrad-Reifen haben KEINE EU-Effizienzlabel** (kein Nassgrip, Spritverbrauch, dB-Werte). Erwähne diese Werte bei Motorradreifen NICHT!
+- Wenn Kunde gleichen Hersteller wünscht, empfehle NUR Reifen vom gleichen Hersteller für beide Seiten.
 - Bei **normaler Bereifung** (gleiche Größe VA/HA): Empfehle wie bisher genau 3 Reifen.
 ${context.platform === 'app' ? '7. Bei Plattform-Fragen: Erkläre App-Funktionen (Reifensuche, Werkstattsuche, Terminbuchung, Fahrzeugverwaltung, Reifen-Scanner, Fahrzeugschein-Scanner, Pannen-Modus).' : '7. Bei Plattform-Fragen: Erkläre Web-Funktionen (Reifensuche, Werkstattsuche, Online-Terminbuchung, Fahrzeugverwaltung, Buchungshistorie).'}
 

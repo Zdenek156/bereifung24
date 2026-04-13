@@ -109,6 +109,16 @@ class ElevenLabsTtsService {
         await file.writeAsBytes(Uint8List.fromList(bytes));
         debugPrint('[TTS] Saved to ${file.path}, playing...');
 
+        // Configure audio session for playback before playing
+        // This fixes first-play silence when speech recognition was initialized first
+        try {
+          final session = await AudioSession.instance;
+          await session.configure(const AudioSessionConfiguration.speech());
+          await session.setActive(true);
+        } catch (e) {
+          debugPrint('[TTS] Audio session config error: $e');
+        }
+
         await _player.setFilePath(file.path);
         // Cancel any previous listener to avoid leaks
         await _playerSub?.cancel();

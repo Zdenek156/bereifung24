@@ -248,34 +248,47 @@ export async function POST(request: NextRequest) {
     )
 
     // ── Extract recommended tires from AI response (max 3 per axle) ──
-    // Determine primary tire size(s) from the first vehicle to prefer matching sizes
-    const primarySizes: Set<string> = new Set()
+    // Build a map of vehicle front/rear sizes for axle detection
+    const singleVehicle = vehicles.length === 1 || !!vehicleId
+    const vehicleSizeMap: Array<{ front: string; rear?: string }> = vehicleContexts
+      .filter(vc => vc.tireSize)
+      .map(vc => ({ front: vc.tireSize!, rear: vc.rearTireSize }))
+
+    // Detect mixed tires: any vehicle has different front/rear sizes
+    let hasMixedTires = false
     let frontTireSize = ''
     let rearTireSize = ''
-    let hasMixedTires = false
-    if (vehicleContexts.length > 0) {
+    if (singleVehicle && vehicleContexts.length > 0) {
       const pv = vehicleContexts[0]
-      if (pv.tireSize) {
-        primarySizes.add(pv.tireSize)
-        frontTireSize = pv.tireSize
-      }
+      if (pv.tireSize) frontTireSize = pv.tireSize
       if (pv.rearTireSize) {
-        primarySizes.add(pv.rearTireSize)
         rearTireSize = pv.rearTireSize
         hasMixedTires = true
+      }
+    } else {
+      // Multiple vehicles: check all for mixed tires
+      for (const vc of vehicleContexts) {
+        if (vc.rearTireSize) {
+          hasMixedTires = true
+          break
+        }
       }
     }
 
     const recommendedTires: Array<{ brand: string; model: string; size: string; width: string; height: string; diameter: string; season: string; loadIndex: string; speedIndex: string; labelFuelEfficiency: string; labelWetGrip: string; labelNoise: number; articleId: string; axle?: 'front' | 'rear' }> = []
     if (rawTiresMap.size > 0) {
+      // When single/specific vehicle: filter by size + load + speed
+      // When multiple vehicles (no vehicleId): use ALL catalog tires as candidates
       const allCandidates = Array.from(rawTiresMap.values()).filter(tire => {
+        if (!singleVehicle) return true // No filtering for multi-vehicle
+        const primarySizes = new Set<string>()
+        if (frontTireSize) primarySizes.add(frontTireSize)
+        if (rearTireSize) primarySizes.add(rearTireSize)
         if (primarySizes.size > 0 && !primarySizes.has(tire.size)) return false
-        // Load index must be >= vehicle's requirement
         if (primaryLoadIndex && tire.loadIndex !== '-') {
           const tireLoad = Number(tire.loadIndex)
           if (!isNaN(tireLoad) && tireLoad < primaryLoadIndex) return false
         }
-        // Speed rating must be >= vehicle's requirement
         if (primarySpeedRating && tire.speedIndex !== '-') {
           const vehicleRank = speedRatingRank[primarySpeedRating] ?? 0
           const tireRank = speedRatingRank[tire.speedIndex.toUpperCase()] ?? 0
@@ -286,13 +299,13 @@ export async function POST(request: NextRequest) {
 
       // Normalize response: remove markdown bold, extra whitespace
       const responseLC = response.toLowerCase().replace(/\*\*/g, '').replace(/\s+/g, ' ')
-      console.log(`[AI-TIRES] candidates=${allCandidates.length}, responseLen=${responseLC.length}, hasMixed=${hasMixedTires}`)
+      console.log(`[AI-TIRES] candidates=${allCandidates.length}, rawMap=${rawTiresMap.size}, singleVehicle=${singleVehicle}, hasMixed=${hasMixedTires}`)
       if (allCandidates.length > 0) {
-        console.log(`[AI-TIRES] Sample candidates: ${allCandidates.slice(0, 5).map(t => `${t.brand} ${t.model}`).join(' | ')}`)
+        console.log(`[AI-TIRES] Sample candidates: ${allCandidates.slice(0, 5).map(t => `${t.brand} ${t.model} (${t.size})`).join(' | ')}`)
         console.log(`[AI-TIRES] Response (first 300): ${responseLC.substring(0, 300)}`)
       }
 
-      // Multi-pass matching function (shared for standard + mixed tires)
+      // Multi-pass matching function
       const extractMatches = (candidates: typeof allCandidates, axle: 'front' | 'rear' | undefined, max: number) => {
         const matched: typeof recommendedTires = []
         const matchedKeys = new Set<string>()
@@ -326,7 +339,7 @@ export async function POST(request: NextRequest) {
           console.log(`[AI-TIRES] Pass2 (2words): ${matched.length} matches`)
         }
 
-        // Pass 3: brand + first word of model (single-word model names too)
+        // Pass 3: brand + first word of model (≥4 chars)
         if (matched.length < max) {
           candidates.forEach(tire => {
             if (matched.length >= max) return
@@ -342,7 +355,7 @@ export async function POST(request: NextRequest) {
           console.log(`[AI-TIRES] Pass3 (1word): ${matched.length} matches`)
         }
 
-        // Pass 4: brand-only fallback — if brand name appears in response, pick first tire from that brand
+        // Pass 4: brand-only fallback
         if (matched.length < max) {
           const mentionedBrands = new Set<string>()
           candidates.forEach(tire => {
@@ -364,12 +377,34 @@ export async function POST(request: NextRequest) {
         return matched
       }
 
-      if (hasMixedTires) {
+      if (hasMixedTires && singleVehicle) {
+        // Single vehicle with mixed tires: split by front/rear size
         const frontCandidates = allCandidates.filter(t => t.size === frontTireSize)
         const rearCandidates = allCandidates.filter(t => t.size === rearTireSize)
-        console.log(`[AI-TIRES] Mixed: front=${frontCandidates.length}, rear=${rearCandidates.length}`)
+        console.log(`[AI-TIRES] Mixed single: front=${frontCandidates.length}, rear=${rearCandidates.length}`)
         recommendedTires.push(...extractMatches(frontCandidates, 'front', 3))
         recommendedTires.push(...extractMatches(rearCandidates, 'rear', 3))
+      } else if (hasMixedTires) {
+        // Multiple vehicles, some with mixed tires: match first, then assign axle from tire size
+        const matched = extractMatches(allCandidates, undefined, 6)
+        // Post-hoc axle assignment: check each matched tire's size against vehicle size map
+        matched.forEach(tire => {
+          for (const vs of vehicleSizeMap) {
+            if (vs.rear) {
+              if (tire.size === vs.front) { tire.axle = 'front'; return }
+              if (tire.size === vs.rear) { tire.axle = 'rear'; return }
+            }
+          }
+        })
+        // Detect if final result actually has mixed tires
+        const hasFront = matched.some(t => t.axle === 'front')
+        const hasRear = matched.some(t => t.axle === 'rear')
+        if (!hasFront || !hasRear) {
+          // Not actually mixed → clear axle assignments
+          matched.forEach(t => { delete t.axle })
+          hasMixedTires = false
+        }
+        recommendedTires.push(...matched)
       } else {
         recommendedTires.push(...extractMatches(allCandidates, undefined, 3))
       }

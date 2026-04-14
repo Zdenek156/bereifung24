@@ -284,60 +284,33 @@ export async function POST(request: NextRequest) {
         return true
       })
 
-      const responseLC = response.toLowerCase()
+      // Normalize response: remove markdown bold, extra whitespace
+      const responseLC = response.toLowerCase().replace(/\*\*/g, '').replace(/\s+/g, ' ')
+      console.log(`[AI-TIRES] candidates=${allCandidates.length}, responseLen=${responseLC.length}, hasMixed=${hasMixedTires}`)
+      if (allCandidates.length > 0) {
+        console.log(`[AI-TIRES] Sample candidates: ${allCandidates.slice(0, 5).map(t => `${t.brand} ${t.model}`).join(' | ')}`)
+        console.log(`[AI-TIRES] Response (first 300): ${responseLC.substring(0, 300)}`)
+      }
 
-      if (hasMixedTires) {
-        // For mixed tires: separate candidates by axle size
-        const frontCandidates = allCandidates.filter(t => t.size === frontTireSize)
-        const rearCandidates = allCandidates.filter(t => t.size === rearTireSize)
+      // Multi-pass matching function (shared for standard + mixed tires)
+      const extractMatches = (candidates: typeof allCandidates, axle: 'front' | 'rear' | undefined, max: number) => {
+        const matched: typeof recommendedTires = []
+        const matchedKeys = new Set<string>()
 
-        // Extract front axle tires (max 3)
-        const extractMatches = (candidates: typeof allCandidates, axle: 'front' | 'rear', max: number) => {
-          const matched: typeof recommendedTires = []
-          // First pass: strict match (brand AND full model name)
-          candidates.forEach(tire => {
-            if (matched.length >= max) return
-            if (tire.model && responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(tire.model.toLowerCase())) {
-              matched.push({ ...tire, axle })
-            }
-          })
-          // Second pass: brand + first two words of model
-          if (matched.length < max) {
-            const matchedKeys = new Set(matched.map(t => `${t.brand}|${t.model}`))
-            candidates.forEach(tire => {
-              if (matched.length >= max) return
-              const key = `${tire.brand}|${tire.model}`
-              if (matchedKeys.has(key)) return
-              if (!tire.model) return
-              const modelWords = tire.model.split(/\s+/)
-              if (modelWords.length >= 2) {
-                const firstTwoWords = modelWords.slice(0, 2).join(' ').toLowerCase()
-                if (responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(firstTwoWords)) {
-                  matched.push({ ...tire, axle })
-                  matchedKeys.add(key)
-                }
-              }
-            })
-          }
-          return matched
-        }
-
-        recommendedTires.push(...extractMatches(frontCandidates, 'front', 3))
-        recommendedTires.push(...extractMatches(rearCandidates, 'rear', 3))
-      } else {
-        // Standard: max 3 tires (no axle distinction)
-        // First pass: strict match (brand AND full model name)
-        allCandidates.forEach(tire => {
-          if (recommendedTires.length >= 3) return
+        // Pass 1: strict match (brand AND full model name in response)
+        candidates.forEach(tire => {
+          if (matched.length >= max) return
           if (tire.model && responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(tire.model.toLowerCase())) {
-            recommendedTires.push(tire)
+            matched.push({ ...tire, ...(axle ? { axle } : {}) })
+            matchedKeys.add(`${tire.brand}|${tire.model}`)
           }
         })
-        // Second pass: try matching brand + first word of model
-        if (recommendedTires.length < 3) {
-          const matchedKeys = new Set(recommendedTires.map(t => `${t.brand}|${t.model}`))
-          allCandidates.forEach(tire => {
-            if (recommendedTires.length >= 3) return
+        console.log(`[AI-TIRES] Pass1 (exact): ${matched.length} matches${axle ? ` [${axle}]` : ''}`)
+
+        // Pass 2: brand + first two words of model
+        if (matched.length < max) {
+          candidates.forEach(tire => {
+            if (matched.length >= max) return
             const key = `${tire.brand}|${tire.model}`
             if (matchedKeys.has(key)) return
             if (!tire.model) return
@@ -345,13 +318,62 @@ export async function POST(request: NextRequest) {
             if (modelWords.length >= 2) {
               const firstTwoWords = modelWords.slice(0, 2).join(' ').toLowerCase()
               if (responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(firstTwoWords)) {
-                recommendedTires.push(tire)
+                matched.push({ ...tire, ...(axle ? { axle } : {}) })
                 matchedKeys.add(key)
               }
             }
           })
+          console.log(`[AI-TIRES] Pass2 (2words): ${matched.length} matches`)
         }
+
+        // Pass 3: brand + first word of model (single-word model names too)
+        if (matched.length < max) {
+          candidates.forEach(tire => {
+            if (matched.length >= max) return
+            const key = `${tire.brand}|${tire.model}`
+            if (matchedKeys.has(key)) return
+            if (!tire.model) return
+            const firstWord = tire.model.split(/\s+/)[0].toLowerCase()
+            if (firstWord.length >= 4 && responseLC.includes(tire.brand.toLowerCase()) && responseLC.includes(firstWord)) {
+              matched.push({ ...tire, ...(axle ? { axle } : {}) })
+              matchedKeys.add(key)
+            }
+          })
+          console.log(`[AI-TIRES] Pass3 (1word): ${matched.length} matches`)
+        }
+
+        // Pass 4: brand-only fallback — if brand name appears in response, pick first tire from that brand
+        if (matched.length < max) {
+          const mentionedBrands = new Set<string>()
+          candidates.forEach(tire => {
+            if (responseLC.includes(tire.brand.toLowerCase())) {
+              mentionedBrands.add(tire.brand)
+            }
+          })
+          mentionedBrands.forEach(brand => {
+            if (matched.length >= max) return
+            const brandTire = candidates.find(t => t.brand === brand && !matchedKeys.has(`${t.brand}|${t.model}`))
+            if (brandTire) {
+              matched.push({ ...brandTire, ...(axle ? { axle } : {}) })
+              matchedKeys.add(`${brandTire.brand}|${brandTire.model}`)
+            }
+          })
+          console.log(`[AI-TIRES] Pass4 (brand): ${matched.length} matches (brands: ${[...mentionedBrands].join(', ')})`)
+        }
+
+        return matched
       }
+
+      if (hasMixedTires) {
+        const frontCandidates = allCandidates.filter(t => t.size === frontTireSize)
+        const rearCandidates = allCandidates.filter(t => t.size === rearTireSize)
+        console.log(`[AI-TIRES] Mixed: front=${frontCandidates.length}, rear=${rearCandidates.length}`)
+        recommendedTires.push(...extractMatches(frontCandidates, 'front', 3))
+        recommendedTires.push(...extractMatches(rearCandidates, 'rear', 3))
+      } else {
+        recommendedTires.push(...extractMatches(allCandidates, undefined, 3))
+      }
+      console.log(`[AI-TIRES] Final: ${recommendedTires.length} tires → ${recommendedTires.map(t => `${t.brand} ${t.model} [${t.axle || 'std'}]`).join(' | ')}`)
     }
 
     return NextResponse.json({

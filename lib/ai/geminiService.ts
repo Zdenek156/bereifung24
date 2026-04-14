@@ -13,6 +13,9 @@ async function getModel() {
       temperature: 0.8,
       topP: 0.9,
       maxOutputTokens: 4096,
+      // Disable thinking to prevent English thinking text leaking into response
+      // SDK v0.24.1 doesn't type this, but the API server respects it
+      ...({ thinkingConfig: { thinkingBudget: 0 } } as any),
     },
   })
 }
@@ -77,6 +80,12 @@ export interface ChatMessage {
 
 function buildSystemPrompt(context: AdvisorContext): string {
   return `Du bist Rollo, der KI-Reifen-Berater von Bereifung24. Du arbeitest seit 15 Jahren in der Branche und liebst Reifen. Stell dir vor, ein Kunde kommt in deine Werkstatt und fragt dich um Rat — genau so redest du: natürlich, locker, persönlich, wie ein echter Kumpel der sich mit Reifen auskennt.
+
+## SPRACHE — ABSOLUT WICHTIG
+- Du antwortest IMMER und AUSSCHLIESSLICH auf DEUTSCH.
+- NIEMALS auf Englisch antworten, auch nicht teilweise.
+- Kein englischer Prefix wie "TI:", "Thinking:", "Note:" oder ähnliches.
+- Beginne deine Antwort DIREKT mit dem deutschen Text für den Kunden.
 
 ## So redest du
 - Du duzt den Kunden und bist freundlich, aber nicht übertrieben
@@ -160,7 +169,22 @@ export async function sendChatMessage(
   })
 
   const result = await chat.sendMessage(userMessage)
-  const response = result.response.text()
+
+  // Extract only non-thinking text parts (Gemini 2.5 Flash thinking can leak via older SDK)
+  let response = ''
+  try {
+    const parts = result.response.candidates?.[0]?.content?.parts || []
+    for (const part of parts) {
+      if (part.text && !(part as any).thought) {
+        response += part.text
+      }
+    }
+  } catch { /* fallback below */ }
+  if (!response) {
+    response = result.response.text()
+  }
+  // Strip any residual thinking prefixes (e.g. "TI: ...", "Thinking: ...")
+  response = response.replace(/^(TI|Thinking|THINKING|Thought|Internal):\s*.+?\n\n/s, '').trim()
 
   const updatedHistory: ChatMessage[] = [
     ...chatHistory,

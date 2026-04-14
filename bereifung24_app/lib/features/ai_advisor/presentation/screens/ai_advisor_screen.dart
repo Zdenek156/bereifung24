@@ -134,6 +134,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   VoiceState _voiceState = VoiceState.idle;
   String _voiceStatusText = 'Tippe zum Sprechen';
   String? _lastAiText;
+  Timer? _listeningTimeout; // safety timeout for stuck listening
 
   // TTS init future (await before first speech)
   late final Future<void> _ttsInitFuture;
@@ -150,6 +151,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     _controller.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
+    _listeningTimeout?.cancel();
     super.dispose();
   }
 
@@ -307,6 +309,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
   void _exitVoiceMode() {
     _stopSpeaking();
+    _listeningTimeout?.cancel();
     if (_isListening) {
       SpeechService().stopListening();
     }
@@ -318,6 +321,16 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _voiceState = VoiceState.idle;
       _partialSpeech = '';
     });
+  }
+
+  /// Strip any English thinking/reasoning text that leaked through from Gemini 2.5 Flash
+  String _cleanAiResponse(String text) {
+    var cleaned = text;
+    // Remove "TI: ..." or "Thinking: ..." prefixed blocks (usually English)
+    cleaned = cleaned.replaceAll(RegExp(r'^(TI|Thinking|THINKING|Thought|Internal|Note):\s*.+?\n\n', dotAll: true), '');
+    // Remove lines that are clearly English thinking (e.g. "The user wants...")
+    cleaned = cleaned.replaceAll(RegExp(r'^(The user|I need to|I should|Let me|I will|Here is|Based on)\s.+?\n', multiLine: true), '');
+    return cleaned.trim();
   }
 
   Future<void> _voiceModeStartListening() async {
@@ -345,6 +358,24 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _partialSpeech = '';
     });
 
+    // Safety timeout: if no final result after 12 seconds, reset to idle
+    _listeningTimeout?.cancel();
+    _listeningTimeout = Timer(const Duration(seconds: 12), () {
+      if (!mounted || !_isListening) return;
+      debugPrint('[Voice] Listening timeout - resetting to idle');
+      SpeechService().stopListening();
+      setState(() {
+        _isListening = false;
+        _voiceState = VoiceState.idle;
+        _voiceStatusText = 'Tippe zum Sprechen';
+      });
+      // If we have partial speech, send it
+      if (_partialSpeech.trim().isNotEmpty) {
+        _voiceModeSendMessage(_partialSpeech.trim());
+        _partialSpeech = '';
+      }
+    });
+
     final success = await SpeechService().startListening(
       onResult: (result) {
         if (!mounted) return;
@@ -352,6 +383,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           _partialSpeech = result.recognizedWords;
         });
         if (result.finalResult) {
+          _listeningTimeout?.cancel();
           setState(() => _isListening = false);
           if (_partialSpeech.trim().isNotEmpty) {
             _voiceModeSendMessage(_partialSpeech.trim());
@@ -379,6 +411,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   }
 
   void _voiceModeStopAction() {
+    _listeningTimeout?.cancel();
     if (_isListening) {
       SpeechService().stopListening();
       setState(() {
@@ -473,7 +506,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       if (!mounted) return;
 
       final data = response.data;
-      final aiText = data['response'] as String? ?? 'Keine Antwort erhalten.';
+      final aiText = _cleanAiResponse(data['response'] as String? ?? 'Keine Antwort erhalten.');
       final newHistory = data['chatHistory'] as List? ?? [];
 
       // Parse recommended tires
@@ -703,7 +736,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       if (!mounted) return;
 
       final data = response.data;
-      final aiText = data['response'] as String? ?? 'Keine Antwort erhalten.';
+      final aiText = _cleanAiResponse(data['response'] as String? ?? 'Keine Antwort erhalten.');
       final newHistory = data['chatHistory'] as List? ?? [];
 
       // Parse recommended tires

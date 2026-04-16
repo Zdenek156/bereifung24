@@ -188,6 +188,15 @@ export async function publishPost(postId: string) {
   for (const platformPost of post.platforms) {
     const account = platformPost.account
 
+    // Skip already published platforms (e.g. during retry of partially failed posts)
+    if (platformPost.status === SocialMediaPostStatus.PUBLISHED) {
+      results.push({
+        accountId: account.id,
+        result: { success: true, platformPostId: platformPost.platformPostId || undefined },
+      })
+      continue
+    }
+
     if (!account.isActive) {
       results.push({
         accountId: account.id,

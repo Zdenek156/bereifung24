@@ -170,14 +170,15 @@ export async function publishPost(postId: string) {
     ? `${post.content}\n\n${post.hashtags}`
     : post.content
 
-  // Resolve image URL to absolute public URL
+  // Resolve image URL to absolute public URL (without www to avoid 301 redirect)
   let absoluteImageUrl: string | null = null
   if (post.imageUrl) {
     if (post.imageUrl.startsWith('http')) {
-      absoluteImageUrl = post.imageUrl
+      absoluteImageUrl = post.imageUrl.replace('://www.bereifung24.de', '://bereifung24.de')
     } else {
       // Relative path like /uploads/social-media/xyz.jpg → full URL
-      const baseUrl = process.env.NEXTAUTH_URL || 'https://bereifung24.de'
+      // Use canonical domain without www (nginx redirects www → non-www)
+      const baseUrl = (process.env.NEXTAUTH_URL || 'https://bereifung24.de').replace('://www.bereifung24.de', '://bereifung24.de')
       absoluteImageUrl = `${baseUrl}${post.imageUrl}`
     }
   }

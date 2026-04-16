@@ -106,6 +106,20 @@ export async function updatePost(id: string, data: {
 }) {
   const { accountIds, ...updateData } = data
 
+  // Determine status based on scheduledAt
+  const currentPost = await prisma.socialMediaPost.findUnique({ where: { id }, select: { status: true } })
+  const isEditable = currentPost?.status === 'DRAFT' || currentPost?.status === 'SCHEDULED'
+
+  if (isEditable && 'scheduledAt' in data) {
+    if (updateData.scheduledAt) {
+      (updateData as any).status = 'SCHEDULED'
+    } else {
+      (updateData as any).status = 'DRAFT'
+    }
+  }
+
+  const platformStatus = updateData.scheduledAt ? 'SCHEDULED' : 'DRAFT'
+
   // If accountIds changed, update platform links
   if (accountIds !== undefined) {
     await prisma.socialMediaPostPlatform.deleteMany({ where: { postId: id } })
@@ -113,8 +127,14 @@ export async function updatePost(id: string, data: {
       data: accountIds.map(accountId => ({
         postId: id,
         accountId,
-        status: 'DRAFT' as SocialMediaPostStatus,
+        status: platformStatus as SocialMediaPostStatus,
       }))
+    })
+  } else if (isEditable && 'scheduledAt' in data) {
+    // Update existing platform statuses to match
+    await prisma.socialMediaPostPlatform.updateMany({
+      where: { postId: id },
+      data: { status: platformStatus as SocialMediaPostStatus }
     })
   }
 

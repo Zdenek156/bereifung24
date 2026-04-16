@@ -472,7 +472,7 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
             ),
           ),
           SizedBox(
-            height: hasSelection ? 100 : 110,
+            height: hasSelection ? 120 : 130,
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               scrollDirection: Axis.horizontal,
@@ -562,7 +562,7 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
               ),
             ),
             SizedBox(
-              height: 90,
+              height: 120,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 scrollDirection: Axis.horizontal,
@@ -585,7 +585,7 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
               ),
             ),
             SizedBox(
-              height: 90,
+              height: 120,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 scrollDirection: Axis.horizontal,
@@ -695,14 +695,29 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
               ),
               overflow: TextOverflow.ellipsis,
             ),
+            // Load index / speed index
+            if (tire.loadIndex != '-' || tire.speedIndex != '-')
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  '${tire.loadIndex}${tire.speedIndex != '-' ? '/${tire.speedIndex}' : ''}',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.5),
+                    fontSize: 10,
+                  ),
+                ),
+              ),
             const SizedBox(height: 4),
-            if (!widget.isMotorcycle)
-              Row(
+            if (!widget.isMotorcycle &&
+                tire.labelFuelEfficiency != '-' &&
+                tire.labelWetGrip != '-' &&
+                tire.labelNoise > 0)
+              Wrap(
+                spacing: 4,
+                runSpacing: 2,
                 children: [
                   _miniLabel('⛽${tire.labelFuelEfficiency}'),
-                  const SizedBox(width: 4),
                   _miniLabel('💧${tire.labelWetGrip}'),
-                  const SizedBox(width: 4),
                   _miniLabel('🔊${tire.labelNoise}dB'),
                 ],
               ),

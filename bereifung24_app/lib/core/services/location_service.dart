@@ -47,7 +47,11 @@ class LocationService {
         timeLimit: const Duration(seconds: 15),
       );
     } catch (e) {
-      lastError = 'Standort konnte nicht ermittelt werden: $e';
+      if (e.toString().contains('TimeoutException')) {
+        lastError = 'GPS-Signal zu schwach. Bitte versuche es erneut oder gib eine PLZ ein.';
+      } else {
+        lastError = 'Standort konnte nicht ermittelt werden. Bitte prüfe deine GPS-Einstellungen.';
+      }
       debugPrint('Geolocator getCurrentPosition error: $e');
       return null;
     }

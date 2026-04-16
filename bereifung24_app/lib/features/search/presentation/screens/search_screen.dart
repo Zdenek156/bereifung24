@@ -53,6 +53,14 @@ class WorkshopSearchState {
   final String? tireConstruction;
   // Article ID from AI recommendation — forces display of that specific tire
   final String? aiArticleId;
+  final String? aiRearArticleId;
+  // Brand/model from AI for fallback matching when articleId doesn't match
+  final String? aiFrontBrand;
+  final String? aiFrontModel;
+  final String? aiRearBrand;
+  final String? aiRearModel;
+  // Effective service type (set by notifier after auto-switch, e.g. TIRE_CHANGE → MOTORCYCLE_TIRE)
+  final String? effectiveServiceType;
 
   // Services that use the POST API with packageTypes
   static const postApiServices = {
@@ -88,6 +96,12 @@ class WorkshopSearchState {
     this.selectedTireCategory = 'Günstigster',
     this.tireConstruction,
     this.aiArticleId,
+    this.aiRearArticleId,
+    this.aiFrontBrand,
+    this.aiFrontModel,
+    this.aiRearBrand,
+    this.aiRearModel,
+    this.effectiveServiceType,
   });
 
   WorkshopSearchState copyWith({
@@ -120,6 +134,14 @@ class WorkshopSearchState {
     bool clearTireConstruction = false,
     String? aiArticleId,
     bool clearAiArticleId = false,
+    String? aiRearArticleId,
+    bool clearAiRearArticleId = false,
+    String? aiFrontBrand,
+    String? aiFrontModel,
+    String? aiRearBrand,
+    String? aiRearModel,
+    String? effectiveServiceType,
+    bool clearEffectiveServiceType = false,
   }) =>
       WorkshopSearchState(
         workshops: workshops ?? this.workshops,
@@ -156,6 +178,16 @@ class WorkshopSearchState {
         aiArticleId: clearAiArticleId
             ? null
             : (aiArticleId ?? this.aiArticleId),
+        aiRearArticleId: clearAiRearArticleId
+            ? null
+            : (aiRearArticleId ?? this.aiRearArticleId),
+        aiFrontBrand: aiFrontBrand ?? this.aiFrontBrand,
+        aiFrontModel: aiFrontModel ?? this.aiFrontModel,
+        aiRearBrand: aiRearBrand ?? this.aiRearBrand,
+        aiRearModel: aiRearModel ?? this.aiRearModel,
+        effectiveServiceType: clearEffectiveServiceType
+            ? null
+            : (effectiveServiceType ?? this.effectiveServiceType),
       );
 }
 
@@ -173,6 +205,7 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
   WorkshopSearchNotifier() : super(const WorkshopSearchState());
 
   void reset() {
+    debugPrint('🔍 [SEARCH] reset() called');
     _lastZip = null;
     _lastCity = null;
     _lastLat = null;
@@ -180,6 +213,7 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     _lastServiceType = null;
     _lastVehicle = null;
     _tireDimOverride = null;
+    _rearTireDimOverride = null;
     state = const WorkshopSearchState();
   }
 
@@ -312,11 +346,14 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
         lng: _lastLng,
         serviceType: _lastServiceType,
         vehicle: _lastVehicle,
+        tireDimensionOverride: _tireDimOverride,
+        rearTireDimensionOverride: _rearTireDimOverride,
       );
     }
   }
 
   Map<String, String>? _tireDimOverride;
+  Map<String, String>? _rearTireDimOverride;
 
   Future<void> search(
       {String? zipCode,
@@ -325,14 +362,16 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       double? lng,
       String? serviceType,
       Vehicle? vehicle,
-      Map<String, String>? tireDimensionOverride}) async {
+      Map<String, String>? tireDimensionOverride,
+      Map<String, String>? rearTireDimensionOverride}) async {
     _lastZip = zipCode;
     _lastCity = city;
     _lastLat = lat;
     _lastLng = lng;
     _lastServiceType = serviceType;
     if (vehicle != null) _lastVehicle = vehicle;
-    if (tireDimensionOverride != null) _tireDimOverride = tireDimensionOverride;
+    _tireDimOverride = tireDimensionOverride;
+    _rearTireDimOverride = rearTireDimensionOverride;
 
     // When coming from AI recommendation with specific tire, clear category filter
     // so the AI-matched tire is shown, not just the cheapest
@@ -341,7 +380,9 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
             tireDimensionOverride.containsKey('tireBrand'));
 
     final aiArtId = tireDimensionOverride?['articleId'];
+    final aiRearArtId = rearTireDimensionOverride?['articleId'];
 
+    debugPrint('🔍 [SEARCH] setting AI fields: frontBrand=${tireDimensionOverride?['tireBrand']}, rearBrand=${rearTireDimensionOverride?['tireBrand']}, artId=$aiArtId, rearArtId=$aiRearArtId');
     state = state.copyWith(
       isLoading: true,
       error: null,
@@ -349,22 +390,27 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       clearSelectedTireCategory: hasAiTire,
       aiArticleId: aiArtId,
       clearAiArticleId: aiArtId == null,
+      aiRearArticleId: aiRearArtId,
+      clearAiRearArticleId: aiRearArtId == null,
+      aiFrontBrand: tireDimensionOverride?['tireBrand'],
+      aiFrontModel: tireDimensionOverride?['tireModel'],
+      aiRearBrand: rearTireDimensionOverride?['tireBrand'],
+      aiRearModel: rearTireDimensionOverride?['tireModel'],
+      clearEffectiveServiceType: true,
     );
+    debugPrint('🔍 [SEARCH] state after copyWith: aiFrontBrand=${state.aiFrontBrand}, aiRearBrand=${state.aiRearBrand}');
 
     try {
       // Auto-switch to MOTORCYCLE_TIRE when vehicle is a motorcycle
-      // BUT skip when explicit tire dimensions are given (e.g. from AI advisor recommending car tires)
       var effectiveServiceType = serviceType;
       if (serviceType == 'TIRE_CHANGE' &&
-          _lastVehicle?.vehicleType == 'MOTORCYCLE' &&
-          _tireDimOverride == null) {
+          _lastVehicle?.vehicleType == 'MOTORCYCLE') {
         effectiveServiceType = 'MOTORCYCLE_TIRE';
       }
 
-      // Block: motorcycle vehicle with non-motorcycle service (skip when AI override present)
+      // Block: motorcycle vehicle with non-motorcycle service
       if (_lastVehicle?.vehicleType == 'MOTORCYCLE' &&
-          effectiveServiceType != 'MOTORCYCLE_TIRE' &&
-          _tireDimOverride == null) {
+          effectiveServiceType != 'MOTORCYCLE_TIRE') {
         state = state.copyWith(
           isLoading: false,
           workshops: [],
@@ -386,6 +432,23 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
         );
         return;
       }
+
+      // Block: trailer vehicle with non-tire services
+      if (_lastVehicle?.vehicleType == 'TRAILER' &&
+          effectiveServiceType != null &&
+          effectiveServiceType != 'TIRE_CHANGE' &&
+          effectiveServiceType != 'WHEEL_CHANGE') {
+        state = state.copyWith(
+          isLoading: false,
+          workshops: [],
+          error:
+              'Für Anhänger ist nur der Reifenservice (Reifenwechsel / Räderwechsel) verfügbar.',
+        );
+        return;
+      }
+
+      // Store the effective service type so UI can use it
+      state = state.copyWith(effectiveServiceType: effectiveServiceType);
 
       // Use POST search for TIRE_CHANGE with tire purchase
       if (effectiveServiceType == 'TIRE_CHANGE' && state.includeTires) {
@@ -498,8 +561,53 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     if (serviceType == 'MOTORCYCLE_TIRE') {
       body['includeTires'] = state.includeTires;
 
-      // Add tire dimensions from vehicle if available
-      if (_lastVehicle != null) {
+      // Add tire dimensions: prefer AI override, then vehicle data
+      if (_tireDimOverride != null) {
+        body['tireDimensionsFront'] = {
+          'width': _tireDimOverride!['width'] ?? '',
+          'height': _tireDimOverride!['height'] ?? '',
+          'diameter': _tireDimOverride!['diameter'] ?? '',
+          if (_tireDimOverride!['loadIndex'] != null &&
+              _tireDimOverride!['loadIndex']!.isNotEmpty)
+            'loadIndex': _tireDimOverride!['loadIndex'],
+          if (_tireDimOverride!['speedIndex'] != null &&
+              _tireDimOverride!['speedIndex']!.isNotEmpty)
+            'speedIndex': _tireDimOverride!['speedIndex'],
+          if (_tireDimOverride!['articleId'] != null &&
+              _tireDimOverride!['articleId']!.isNotEmpty)
+            'articleId': _tireDimOverride!['articleId'],
+          if (_tireDimOverride!['tireBrand'] != null &&
+              _tireDimOverride!['tireBrand']!.isNotEmpty)
+            'tireBrand': _tireDimOverride!['tireBrand'],
+          if (_tireDimOverride!['tireModel'] != null &&
+              _tireDimOverride!['tireModel']!.isNotEmpty)
+            'tireModel': _tireDimOverride!['tireModel'],
+        };
+        if (_rearTireDimOverride != null) {
+          body['tireDimensionsRear'] = {
+            'width': _rearTireDimOverride!['width'] ?? '',
+            'height': _rearTireDimOverride!['height'] ?? '',
+            'diameter': _rearTireDimOverride!['diameter'] ?? '',
+            if (_rearTireDimOverride!['loadIndex'] != null &&
+                _rearTireDimOverride!['loadIndex']!.isNotEmpty)
+              'loadIndex': _rearTireDimOverride!['loadIndex'],
+            if (_rearTireDimOverride!['speedIndex'] != null &&
+                _rearTireDimOverride!['speedIndex']!.isNotEmpty)
+              'speedIndex': _rearTireDimOverride!['speedIndex'],
+            if (_rearTireDimOverride!['articleId'] != null &&
+                _rearTireDimOverride!['articleId']!.isNotEmpty)
+              'articleId': _rearTireDimOverride!['articleId'],
+            if (_rearTireDimOverride!['tireBrand'] != null &&
+                _rearTireDimOverride!['tireBrand']!.isNotEmpty)
+              'tireBrand': _rearTireDimOverride!['tireBrand'],
+            if (_rearTireDimOverride!['tireModel'] != null &&
+                _rearTireDimOverride!['tireModel']!.isNotEmpty)
+              'tireModel': _rearTireDimOverride!['tireModel'],
+          };
+        } else {
+          body['tireDimensionsRear'] = body['tireDimensionsFront'];
+        }
+      } else if (_lastVehicle != null) {
         final tireSpec = _lastVehicle!.summerTires ??
             _lastVehicle!.winterTires ??
             _lastVehicle!.allSeasonTires;
@@ -743,8 +851,11 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       double? lat,
       double? lng,
       required Map<String, String> dims}) async {
+    final hasMixed = _rearTireDimOverride != null;
     final packageTypes = <String>[];
-    if (state.tireCount == 4) {
+    if (hasMixed) {
+      packageTypes.add('mixed_four_tires');
+    } else if (state.tireCount == 4) {
       packageTypes.add('four_tires');
     } else {
       packageTypes.add('two_tires');
@@ -758,6 +869,27 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     if (season.toLowerCase().startsWith('s') && season.length > 1) season = 's';
     if (season.toLowerCase().startsWith('w') && season.length > 1) season = 'w';
     if (season.toLowerCase().startsWith('g') && season.length > 1) season = 'g';
+
+    final frontDims = <String, dynamic>{
+      'width': dims['width'] ?? '',
+      'height': dims['height'] ?? '',
+      'diameter': dims['diameter'] ?? '',
+      if (dims['loadIndex'] != null &&
+          dims['loadIndex']!.isNotEmpty &&
+          dims['loadIndex'] != '-')
+        'loadIndex': dims['loadIndex'],
+      if (dims['speedIndex'] != null &&
+          dims['speedIndex']!.isNotEmpty &&
+          dims['speedIndex'] != '-')
+        'speedIndex': dims['speedIndex'],
+      if (dims['articleId'] != null && dims['articleId']!.isNotEmpty)
+        'articleId': dims['articleId'],
+      if (dims['tireBrand'] != null && dims['tireBrand']!.isNotEmpty)
+        'tireBrand': dims['tireBrand'],
+      if (dims['tireModel'] != null && dims['tireModel']!.isNotEmpty)
+        'tireModel': dims['tireModel'],
+    };
+
     final body = <String, dynamic>{
       'serviceType': 'TIRE_CHANGE',
       'radiusKm': state.radius,
@@ -766,26 +898,34 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       'tireFilters': {
         'seasons': [season],
       },
-      'tireDimensions': {
-        'width': dims['width'] ?? '',
-        'height': dims['height'] ?? '',
-        'diameter': dims['diameter'] ?? '',
-        if (dims['loadIndex'] != null &&
-            dims['loadIndex']!.isNotEmpty &&
-            dims['loadIndex'] != '-')
-          'loadIndex': dims['loadIndex'],
-        if (dims['speedIndex'] != null &&
-            dims['speedIndex']!.isNotEmpty &&
-            dims['speedIndex'] != '-')
-          'speedIndex': dims['speedIndex'],
-        if (dims['articleId'] != null && dims['articleId']!.isNotEmpty)
-          'articleId': dims['articleId'],
-        if (dims['tireBrand'] != null && dims['tireBrand']!.isNotEmpty)
-          'tireBrand': dims['tireBrand'],
-        if (dims['tireModel'] != null && dims['tireModel']!.isNotEmpty)
-          'tireModel': dims['tireModel'],
-      },
     };
+
+    if (hasMixed) {
+      final rear = _rearTireDimOverride!;
+      body['tireDimensionsFront'] = frontDims;
+      body['tireDimensionsRear'] = {
+        'width': rear['width'] ?? '',
+        'height': rear['height'] ?? '',
+        'diameter': rear['diameter'] ?? '',
+        if (rear['loadIndex'] != null &&
+            rear['loadIndex']!.isNotEmpty &&
+            rear['loadIndex'] != '-')
+          'loadIndex': rear['loadIndex'],
+        if (rear['speedIndex'] != null &&
+            rear['speedIndex']!.isNotEmpty &&
+            rear['speedIndex'] != '-')
+          'speedIndex': rear['speedIndex'],
+        if (rear['articleId'] != null && rear['articleId']!.isNotEmpty)
+          'articleId': rear['articleId'],
+        if (rear['tireBrand'] != null && rear['tireBrand']!.isNotEmpty)
+          'tireBrand': rear['tireBrand'],
+        if (rear['tireModel'] != null && rear['tireModel']!.isNotEmpty)
+          'tireModel': rear['tireModel'],
+      };
+      body['tireDimensions'] = frontDims;
+    } else {
+      body['tireDimensions'] = frontDims;
+    }
 
     if (zipCode != null && zipCode.isNotEmpty) body['zipCode'] = zipCode;
     if (city != null && city.isNotEmpty) body['city'] = city;
@@ -823,7 +963,8 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
 class SearchScreen extends ConsumerStatefulWidget {
   final String? serviceType;
   final Map<String, String>? tireDimensionOverride;
-  const SearchScreen({super.key, this.serviceType, this.tireDimensionOverride});
+  final Map<String, String>? rearTireDimensionOverride;
+  const SearchScreen({super.key, this.serviceType, this.tireDimensionOverride, this.rearTireDimensionOverride});
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -882,6 +1023,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               serviceType: widget.serviceType,
               vehicle: vehicle,
               tireDimensionOverride: widget.tireDimensionOverride,
+              rearTireDimensionOverride: widget.rearTireDimensionOverride,
             );
       }
     } catch (e) {
@@ -893,7 +1035,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void didUpdateWidget(SearchScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.serviceType != oldWidget.serviceType) {
-      // Clear old results immediately when switching service type
+      debugPrint('🔍 [SEARCH] didUpdateWidget: serviceType changed ${oldWidget.serviceType} → ${widget.serviceType}, resetting');
       ref.read(workshopSearchProvider.notifier).reset();
     }
   }
@@ -920,6 +1062,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           serviceType: widget.serviceType,
           vehicle: vehicle,
           tireDimensionOverride: widget.tireDimensionOverride,
+          rearTireDimensionOverride: widget.rearTireDimensionOverride,
         );
   }
 
@@ -1030,7 +1173,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             if (searchState.workshops.isNotEmpty ||
                 searchState.query.isNotEmpty)
               SliverToBoxAdapter(
-                  child: _FilterBar(serviceType: widget.serviceType)),
+                  child: _FilterBar(serviceType: searchState.effectiveServiceType ?? widget.serviceType)),
 
             // ── Vehicle auto-selected (no dropdown) ──
           ],
@@ -1045,12 +1188,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                               vehicle: ref.read(selectedVehicleProvider),
                             )
                           : searchState.needsAxleSelection
-                              ? _AxleSelectionHintView()
+                              ? _AxleSelectionHintView(
+                                  onSelectAxle: (axle) {
+                                    final notifier = ref.read(workshopSearchProvider.notifier);
+                                    notifier.setSelectedAxle(axle);
+                                    notifier._reSearch();
+                                  },
+                                )
                               : _EmptyView(
                                   hasSearched: searchState.query.isNotEmpty))
                       : _WorkshopList(
                           workshops: searchState.workshops,
-                          serviceType: widget.serviceType),
+                          serviceType: searchState.effectiveServiceType ?? widget.serviceType),
         ),
       ),
     );
@@ -1076,6 +1225,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               serviceType: widget.serviceType,
               vehicle: vehicle,
               tireDimensionOverride: widget.tireDimensionOverride,
+              rearTireDimensionOverride: widget.rearTireDimensionOverride,
             );
       } else {
         final errorMsg =
@@ -2578,6 +2728,9 @@ class _MissingTireSeasonView extends StatelessWidget {
 }
 
 class _AxleSelectionHintView extends StatelessWidget {
+  final void Function(String axle) onSelectAxle;
+  const _AxleSelectionHintView({required this.onSelectAxle});
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -2604,6 +2757,40 @@ class _AxleSelectionHintView extends StatelessWidget {
                   color: Theme.of(context).brightness == Brightness.dark
                       ? const Color(0xFF94A3B8)
                       : Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => onSelectAxle('front'),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text('Vorderachse'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0891B2),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => onSelectAxle('rear'),
+                    icon: const Icon(Icons.arrow_forward, size: 18),
+                    label: const Text('Hinterachse'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0891B2),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -2773,6 +2960,7 @@ class _WorkshopCard extends ConsumerWidget {
         workshop.tireRecommendationsRaw.isNotEmpty) {
       final category = searchState.selectedTireCategory;
       final aiArticleId = searchState.aiArticleId;
+      final aiRearArticleId = searchState.aiRearArticleId;
       final hasFrontRear = workshop.tireRecommendationsRaw
           .any((r) => r['axle'] == 'front' || r['axle'] == 'rear');
       if (hasFrontRear) {
@@ -2785,30 +2973,72 @@ class _WorkshopCard extends ConsumerWidget {
             .where((r) => r['axle'] == 'rear')
             .map((r) => TireRecommendation.fromJson(r))
             .toList();
-        final filteredFront = filterByCategory(frontRecs, category);
-        final filteredRear = filterByCategory(rearRecs, category);
-        if (filteredFront.isNotEmpty) {
-          final f = filteredFront.first;
+
+        // Front: prefer AI-recommended tire
+        TireRecommendation? chosenFront;
+        if (aiArticleId != null && aiArticleId.isNotEmpty) {
+          final match = frontRecs.where((t) => t.articleId == aiArticleId);
+          if (match.isNotEmpty) chosenFront = match.first;
+        }
+        if (chosenFront == null && searchState.aiFrontBrand != null) {
+          final match = frontRecs.where((t) =>
+              t.brand.toLowerCase() == searchState.aiFrontBrand!.toLowerCase() &&
+              t.model.toLowerCase() == (searchState.aiFrontModel ?? '').toLowerCase());
+          if (match.isNotEmpty) chosenFront = match.first;
+        }
+        if (chosenFront == null) {
+          final filtered = filterByCategory(frontRecs, category);
+          if (filtered.isNotEmpty) chosenFront = filtered.first;
+        }
+        chosenFront ??= frontRecs.isNotEmpty ? frontRecs.first : null;
+
+        // Rear: prefer AI-recommended tire
+        TireRecommendation? chosenRear;
+        if (aiRearArticleId != null && aiRearArticleId.isNotEmpty) {
+          final match = rearRecs.where((t) => t.articleId == aiRearArticleId);
+          if (match.isNotEmpty) chosenRear = match.first;
+        }
+        if (chosenRear == null && searchState.aiRearBrand != null) {
+          final match = rearRecs.where((t) =>
+              t.brand.toLowerCase() == searchState.aiRearBrand!.toLowerCase() &&
+              t.model.toLowerCase() == (searchState.aiRearModel ?? '').toLowerCase());
+          if (match.isNotEmpty) chosenRear = match.first;
+        }
+        if (chosenRear == null) {
+          final filtered = filterByCategory(rearRecs, category);
+          if (filtered.isNotEmpty) chosenRear = filtered.first;
+        }
+        chosenRear ??= rearRecs.isNotEmpty ? rearRecs.first : null;
+
+        final bool hasFrontAi = aiArticleId != null && chosenFront?.articleId == aiArticleId;
+        final bool hasRearAi = aiRearArticleId != null && chosenRear?.articleId == aiRearArticleId;
+        final bool hasFrontBrandMatch = searchState.aiFrontBrand != null &&
+            chosenFront?.brand.toLowerCase() == searchState.aiFrontBrand?.toLowerCase();
+        final bool hasRearBrandMatch = searchState.aiRearBrand != null &&
+            chosenRear?.brand.toLowerCase() == searchState.aiRearBrand?.toLowerCase();
+
+        if (chosenFront != null) {
           selectedFrontRec = {
-            'brand': f.brand,
-            'model': f.model,
-            'pricePerTire': f.pricePerTire,
-            'totalPrice': f.totalPrice,
-            'quantity': f.quantity,
-            'label': category ?? f.label,
-            'dimensions': f.dimensions,
+            'brand': chosenFront.brand,
+            'model': chosenFront.model,
+            'articleId': chosenFront.articleId,
+            'pricePerTire': chosenFront.pricePerTire,
+            'totalPrice': chosenFront.totalPrice,
+            'quantity': chosenFront.quantity,
+            'label': (hasFrontAi || hasFrontBrandMatch) ? 'KI-Empfehlung' : (category ?? chosenFront.label),
+            'dimensions': chosenFront.dimensions,
           };
         }
-        if (filteredRear.isNotEmpty) {
-          final r = filteredRear.first;
+        if (chosenRear != null) {
           selectedRearRec = {
-            'brand': r.brand,
-            'model': r.model,
-            'pricePerTire': r.pricePerTire,
-            'totalPrice': r.totalPrice,
-            'quantity': r.quantity,
-            'label': category ?? r.label,
-            'dimensions': r.dimensions,
+            'brand': chosenRear.brand,
+            'model': chosenRear.model,
+            'articleId': chosenRear.articleId,
+            'pricePerTire': chosenRear.pricePerTire,
+            'totalPrice': chosenRear.totalPrice,
+            'quantity': chosenRear.quantity,
+            'label': (hasRearAi || hasRearBrandMatch) ? 'KI-Empfehlung' : (category ?? chosenRear.label),
+            'dimensions': chosenRear.dimensions,
           };
         }
       } else {
@@ -3131,18 +3361,42 @@ class _WorkshopCard extends ConsumerWidget {
         onTap: () {
           final qp = <String, String>{};
           if (serviceType != null) qp['service'] = serviceType!;
-          // Use selected category recommendation's brand/model
-          final recBrand =
-              selectedRec?['brand']?.toString() ?? workshop.tireBrand;
-          final recModel =
-              selectedRec?['model']?.toString() ?? workshop.tireModel;
-          if (recBrand != null) qp['tireBrand'] = recBrand;
-          if (recModel != null) qp['tireModel'] = recModel;
+          // Use selected category recommendation's brand/model/articleId
+          if (selectedFrontRec != null || selectedRearRec != null) {
+            // Mixed/motorcycle: pass front and rear tire data separately
+            if (selectedFrontRec != null) {
+              final fb = selectedFrontRec['brand']?.toString();
+              final fm = selectedFrontRec['model']?.toString();
+              final fa = selectedFrontRec['articleId']?.toString();
+              if (fb != null) qp['tireBrand'] = fb;
+              if (fm != null) qp['tireModel'] = fm;
+              if (fa != null && fa.isNotEmpty) qp['articleId'] = fa;
+            }
+            if (selectedRearRec != null) {
+              final rb = selectedRearRec['brand']?.toString();
+              final rm = selectedRearRec['model']?.toString();
+              final ra = selectedRearRec['articleId']?.toString();
+              if (rb != null) qp['rearTireBrand'] = rb;
+              if (rm != null) qp['rearTireModel'] = rm;
+              if (ra != null && ra.isNotEmpty) qp['rearArticleId'] = ra;
+            }
+          } else {
+            final recBrand =
+                selectedRec?['brand']?.toString() ?? workshop.tireBrand;
+            final recModel =
+                selectedRec?['model']?.toString() ?? workshop.tireModel;
+            final recArticleId = selectedRec?['articleId']?.toString();
+            if (recBrand != null) qp['tireBrand'] = recBrand;
+            if (recModel != null) qp['tireModel'] = recModel;
+            if (recArticleId != null && recArticleId.isNotEmpty) qp['articleId'] = recArticleId;
+          }
+          debugPrint('🔗 [WORKSHOP-NAV] passing qp: $qp');
           final uri = Uri(
             path: '/search/workshop/${workshop.id}',
             queryParameters: qp.isNotEmpty ? qp : null,
           );
-          context.push(uri.toString());
+          debugPrint('🔗 [WORKSHOP-NAV] uri: ${uri.toString()}');
+          context.push(uri.toString(), extra: qp);
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -272,8 +272,14 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       await _ttsInitFuture;
       if (!mounted || !_isVoiceMode) return;
 
-      // Rollo greets the user
-      const greeting = 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
+      // Rollo greets the user — personalize with vehicle if available
+      final selectedVehicle = ref.read(selectedVehicleProvider);
+      final vehicleName = (selectedVehicle != null)
+          ? '${selectedVehicle.make} ${selectedVehicle.model}'
+          : null;
+      final greeting = (vehicleName != null && vehicleName.trim().isNotEmpty)
+          ? 'Hallo! Ich bin Rollo, dein Reifenberater. Ich sehe, du fährst einen $vehicleName. Wie kann ich dir helfen?'
+          : 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
       setState(() {
         _messages.add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
         _lastAiText = greeting;
@@ -330,6 +336,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     cleaned = cleaned.replaceAll(RegExp(r'^(TI|Thinking|THINKING|Thought|Internal|Note):\s*.+?\n\n', dotAll: true), '');
     // Remove lines that are clearly English thinking (e.g. "The user wants...")
     cleaned = cleaned.replaceAll(RegExp(r'^(The user|I need to|I should|Let me|I will|Here is|Based on)\s.+?\n', multiLine: true), '');
+    // Remove German license plates in parentheses, e.g. "(VAI MK6)" or "(LB RR6)"
+    cleaned = cleaned.replaceAll(RegExp(r'\s*\([A-ZÄÖÜ]{1,3}[\s-][A-Z]{1,2}\s?\d{1,4}[HE]?\)'), '');
     return cleaned.trim();
   }
 
@@ -434,6 +442,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   }
 
   Future<void> _voiceModeSendMessage(String text) async {
+    debugPrint('[voice] _voiceModeSendMessage called: "$text"');
     // Explicitly stop speech recognition to release audio session
     if (_isListening) {
       SpeechService().stopListening();
@@ -495,6 +504,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         }
       } catch (_) {}
 
+      debugPrint('[voice] calling API with vehicleId=$_vehicleId');
       final response = await ApiClient().sendAIChat(
         message: text.trim(),
         chatHistory: _chatHistory,
@@ -502,12 +512,14 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         latitude: lat,
         longitude: lng,
       );
+      debugPrint('[voice] API response received, status=${response.statusCode}');
 
       if (!mounted) return;
 
       final data = response.data;
       final aiText = _cleanAiResponse(data['response'] as String? ?? 'Keine Antwort erhalten.');
       final newHistory = data['chatHistory'] as List? ?? [];
+      debugPrint('[voice] aiText (${aiText.length} chars): ${aiText.substring(0, aiText.length > 80 ? 80 : aiText.length)}...');
 
       // Parse recommended tires
       List<_RecommendedTire>? recTires;
@@ -517,6 +529,16 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             .map((e) => _RecommendedTire
                 .fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
+        debugPrint('[voice] parsed ${recTires.length} recommended tires');
+      } else {
+        debugPrint('[voice] no recommendedTires in response');
+      }
+
+      // Sync selectedVehicleId from AI response (server knows which vehicle)
+      final serverVehicleId = data['selectedVehicleId'] as String?;
+      if (serverVehicleId != null && _vehicleId == null) {
+        debugPrint('[voice] server returned selectedVehicleId=$serverVehicleId');
+        _vehicleId = serverVehicleId;
       }
 
       setState(() {
@@ -532,6 +554,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       });
 
       // Speak the response in voice mode
+      debugPrint('[voice] ttsEnabled=$_ttsEnabled, isVoiceMode=$_isVoiceMode');
       if (_ttsEnabled && _isVoiceMode) {
         setState(() {
           _voiceState = VoiceState.speaking;
@@ -541,16 +564,21 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         // Small delay to let Android release the audio session from speech recognition
         await Future.delayed(const Duration(milliseconds: 400));
         if (!mounted || !_isVoiceMode) return;
+        debugPrint('[voice] calling TTS speak...');
         await ElevenLabsTtsService().speak(aiText);
+        debugPrint('[voice] TTS speak returned, waiting for finish');
         // Wait for TTS to finish, then go back to idle
         _waitForTtsFinish();
       } else {
+        debugPrint('[voice] TTS disabled or not in voice mode, going to idle');
         setState(() {
           _voiceState = VoiceState.idle;
           _voiceStatusText = 'Tippe zum Sprechen';
         });
       }
-    } catch (e) {
+    } catch (e, stack) {
+      debugPrint('[voice] ERROR in _voiceModeSendMessage: $e');
+      debugPrint('[voice] STACK: ${stack.toString().split('\n').take(5).join('\n')}');
       if (!mounted) return;
       setState(() {
         _messages.add(_ChatMessage(
@@ -593,7 +621,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _vehicleType = vehicle.vehicleType;
       _messages.add(_ChatMessage(
         role: 'user',
-        text: '${vehicle.displayName}',
+        text: '${vehicle.make} ${vehicle.model}',
         time: _timeStr(),
       ));
       _messages.add(_ChatMessage(
@@ -747,6 +775,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             .map((e) =>
                 _RecommendedTire.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
+      }
+
+      // Sync selectedVehicleId from AI response (server knows which vehicle)
+      final serverVehicleId = data['selectedVehicleId'] as String?;
+      if (serverVehicleId != null && _vehicleId == null) {
+        debugPrint('[chat] server returned selectedVehicleId=$serverVehicleId');
+        _vehicleId = serverVehicleId;
       }
 
       setState(() {
@@ -1322,10 +1357,82 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       if (vehiclesAsync is AsyncData<List<Vehicle>>) {
         final idx = vehiclesAsync.value.indexWhere((v) => v.id == _vehicleId);
         if (idx >= 0) {
-          ref.read(selectedVehicleProvider.notifier).state = vehiclesAsync.value[idx];
+          final v = vehiclesAsync.value[idx];
+          ref.read(selectedVehicleProvider.notifier).state = v;
           ref.read(homeVehicleIndexProvider.notifier).state = idx;
           saveHomeVehicleIndex(idx);
+          _vehicleType = v.vehicleType;
         }
+      }
+    }
+    // Fallback: match selected tire dimensions against ALL vehicles to identify vehicle
+    if (_vehicleId == null) {
+      final frontTire = _selectedFrontTire ?? _selectedTire;
+      final rearTire = _selectedRearTire;
+      if (frontTire != null) {
+        final vehiclesAsync = ref.read(vehiclesProvider);
+        if (vehiclesAsync is AsyncData<List<Vehicle>>) {
+          final fw = int.tryParse(frontTire.width);
+          final fd = int.tryParse(frontTire.diameter);
+          final rw = rearTire != null ? int.tryParse(rearTire.width) : null;
+          final rd = rearTire != null ? int.tryParse(rearTire.diameter) : null;
+
+          // Pass 1: Try matching BOTH front+rear (most specific)
+          if (rw != null && rd != null) {
+            for (int i = 0; i < vehiclesAsync.value.length; i++) {
+              final v = vehiclesAsync.value[i];
+              final specs = [v.summerTires, v.winterTires, v.allSeasonTires]
+                  .whereType<TireSpec>();
+              for (final spec in specs) {
+                if (spec.hasDifferentSizes) {
+                  final frontOk = spec.width == fw && spec.diameter == fd;
+                  final rearOk = spec.rearWidth == rw && spec.rearDiameter == rd;
+                  if (frontOk && rearOk) {
+                    _vehicleId = v.id;
+                    _vehicleType = v.vehicleType;
+                    ref.read(selectedVehicleProvider.notifier).state = v;
+                    ref.read(homeVehicleIndexProvider.notifier).state = i;
+                    saveHomeVehicleIndex(i);
+                    debugPrint('[sync] Matched BOTH front ${frontTire.width}R${frontTire.diameter} + rear ${rearTire!.width}R${rearTire.diameter} to ${v.displayName} (${v.vehicleType})');
+                    break;
+                  }
+                }
+              }
+              if (_vehicleId != null) break;
+            }
+          }
+
+          // Pass 2: Fallback to front-only match
+          if (_vehicleId == null) {
+            for (int i = 0; i < vehiclesAsync.value.length; i++) {
+              final v = vehiclesAsync.value[i];
+              final specs = [v.summerTires, v.winterTires, v.allSeasonTires]
+                  .whereType<TireSpec>();
+              for (final spec in specs) {
+                final matchFront = spec.width == fw && spec.diameter == fd;
+                final matchRear = spec.hasDifferentSizes &&
+                    spec.rearWidth == fw && spec.rearDiameter == fd;
+                if (matchFront || matchRear) {
+                  _vehicleId = v.id;
+                  _vehicleType = v.vehicleType;
+                  ref.read(selectedVehicleProvider.notifier).state = v;
+                  ref.read(homeVehicleIndexProvider.notifier).state = i;
+                  saveHomeVehicleIndex(i);
+                  debugPrint('[sync] Matched front-only ${frontTire.width}/${frontTire.height}R${frontTire.diameter} to ${v.displayName} (${v.vehicleType})');
+                  break;
+                }
+              }
+              if (_vehicleId != null) break;
+            }
+          }
+        }
+      }
+    }
+    // Final fallback: sync _vehicleType from selectedVehicleProvider
+    if (_vehicleType == 'CAR' && _vehicleId == null) {
+      final selected = ref.read(selectedVehicleProvider);
+      if (selected != null) {
+        _vehicleType = selected.vehicleType;
       }
     }
   }
@@ -1435,13 +1542,16 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 ),
               ),
               const SizedBox(height: 6),
-              if (_vehicleType != 'MOTORCYCLE')
-                Row(
+              if (_vehicleType != 'MOTORCYCLE' &&
+                  tire.labelFuelEfficiency != '-' &&
+                  tire.labelWetGrip != '-' &&
+                  tire.labelNoise > 0)
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 4,
                   children: [
                     _euBadge('⛽', tire.labelFuelEfficiency, isDark),
-                    const SizedBox(width: 8),
                     _euBadge('💧', tire.labelWetGrip, isDark),
-                    const SizedBox(width: 8),
                     _euBadge('🔊', '${tire.labelNoise}dB', isDark),
                   ],
                 ),

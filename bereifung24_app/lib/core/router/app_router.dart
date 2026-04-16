@@ -147,22 +147,47 @@ final routerProvider = Provider<GoRouter>((ref) {
                     'tireModel': qp['tireModel']!,
                 };
               }
+              Map<String, String>? rearTireDimOverride;
+              if (qp['rearWidth'] != null && qp['rearWidth']!.isNotEmpty) {
+                rearTireDimOverride = {
+                  'width': qp['rearWidth']!,
+                  'height': qp['rearHeight'] ?? '',
+                  'diameter': qp['rearDiameter'] ?? '',
+                  'loadIndex': qp['rearLoadIndex'] ?? '',
+                  'speedIndex': qp['rearSpeedIndex'] ?? '',
+                  if (qp['rearArticleId'] != null && qp['rearArticleId']!.isNotEmpty)
+                    'articleId': qp['rearArticleId']!,
+                  if (qp['rearTireBrand'] != null && qp['rearTireBrand']!.isNotEmpty)
+                    'tireBrand': qp['rearTireBrand']!,
+                  if (qp['rearTireModel'] != null && qp['rearTireModel']!.isNotEmpty)
+                    'tireModel': qp['rearTireModel']!,
+                };
+              }
               return NoTransitionPage(
                 child: SearchScreen(
                     serviceType: serviceType,
-                    tireDimensionOverride: tireDimOverride),
+                    tireDimensionOverride: tireDimOverride,
+                    rearTireDimensionOverride: rearTireDimOverride),
               );
             },
             routes: [
               GoRoute(
                 path: 'workshop/:id',
                 parentNavigatorKey: _rootNavigatorKey,
-                builder: (context, state) => WorkshopDetailScreen(
-                  workshopId: state.pathParameters['id']!,
-                  serviceType: state.uri.queryParameters['service'],
-                  preferredTireBrand: state.uri.queryParameters['tireBrand'],
-                  preferredTireModel: state.uri.queryParameters['tireModel'],
-                ),
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, String?>? ?? const {};
+                  final qp = state.uri.queryParameters;
+                  return WorkshopDetailScreen(
+                    workshopId: state.pathParameters['id']!,
+                    serviceType: extra['service'] ?? qp['service'],
+                    preferredTireBrand: extra['tireBrand'] ?? qp['tireBrand'],
+                    preferredTireModel: extra['tireModel'] ?? qp['tireModel'],
+                    preferredArticleId: extra['articleId'] ?? qp['articleId'],
+                    preferredRearTireBrand: extra['rearTireBrand'] ?? qp['rearTireBrand'],
+                    preferredRearTireModel: extra['rearTireModel'] ?? qp['rearTireModel'],
+                    preferredRearArticleId: extra['rearArticleId'] ?? qp['rearArticleId'],
+                  );
+                },
               ),
             ],
           ),

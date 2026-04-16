@@ -1032,7 +1032,7 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
 // Services Grid (compact 3×2)
 // ══════════════════════════════════════
 
-class _ServicesGrid extends StatelessWidget {
+class _ServicesGrid extends ConsumerWidget {
   static const _services = [
     _ServiceItem('🔄', 'Reifen-\nwechsel', 'ab 59,90 €', 'TIRE_CHANGE', true,
         'assets/images/services/reifenwechsel.jpg'),
@@ -1048,8 +1048,14 @@ class _ServicesGrid extends StatelessWidget {
         false, 'assets/images/services/klimaservice.jpg'),
   ];
 
+  /// Services allowed for trailers (Anhänger)
+  static const _trailerAllowedServices = {'TIRE_CHANGE', 'WHEEL_CHANGE'};
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedVehicle = ref.watch(selectedVehicleProvider);
+    final isTrailer = selectedVehicle?.vehicleType == 'TRAILER';
+
     return LayoutBuilder(builder: (context, constraints) {
       final itemWidth = (constraints.maxWidth - 16) / 3; // 2 gaps × 8px
       return Wrap(
@@ -1058,7 +1064,11 @@ class _ServicesGrid extends StatelessWidget {
         children: _services
             .map((s) => SizedBox(
                   width: itemWidth,
-                  child: _ServiceTile(service: s),
+                  child: _ServiceTile(
+                    service: s,
+                    isDisabled: isTrailer && !_trailerAllowedServices.contains(s.serviceType),
+                    disabledMessage: 'Für Anhänger ist nur der Reifenservice verfügbar.',
+                  ),
                 ))
             .toList(),
       );
@@ -1081,14 +1091,28 @@ class _ServiceItem {
 
 class _ServiceTile extends StatelessWidget {
   final _ServiceItem service;
-  const _ServiceTile({required this.service});
+  final bool isDisabled;
+  final String? disabledMessage;
+  const _ServiceTile({required this.service, this.isDisabled = false, this.disabledMessage});
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
-      onTap: () => context.go('/search?service=${service.serviceType}'),
-      child: Container(
+      onTap: isDisabled
+          ? () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(disabledMessage ?? 'Service nicht verfügbar'),
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          : () => context.go('/search?service=${service.serviceType}'),
+      child: Opacity(
+        opacity: isDisabled ? 0.4 : 1.0,
+        child: Container(
         decoration: BoxDecoration(
           color: isDark ? B24Colors.darkSurface : Colors.white,
           borderRadius: BorderRadius.circular(14),
@@ -1175,6 +1199,7 @@ class _ServiceTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

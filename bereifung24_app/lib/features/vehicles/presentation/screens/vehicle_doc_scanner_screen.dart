@@ -35,12 +35,16 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
   // Track physical device orientation for camera preview counter-rotation
   DeviceOrientation _physicalOrientation = DeviceOrientation.landscapeRight;
 
+  // Android uses landscapeLeft, iOS uses landscapeRight (notch left = natural iPhone hold)
+  DeviceOrientation get _preferredLandscape =>
+      Platform.isIOS ? DeviceOrientation.landscapeRight : DeviceOrientation.landscapeLeft;
+
   @override
   void initState() {
     super.initState();
-    // Force landscape-right only (notch left = natural iPhone hold, no rotation allowed)
+    // Force landscape orientation (platform-specific direction)
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
+      _preferredLandscape,
     ]);
     _scanLineController = AnimationController(
       vsync: this,
@@ -81,7 +85,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
     // Lock camera capture orientation to match device orientation
     try {
       await _cameraController!.lockCaptureOrientation(
-        DeviceOrientation.landscapeRight,
+        _preferredLandscape,
       );
     } catch (_) {}
 
@@ -201,9 +205,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
     // iOS camera sensor outputs upside-down in landscape → base 180°
     double angle = Platform.isIOS ? math.pi : 0;
 
+    // On Android landscapeLeft the sensor output is already correct (no base rotation).
     // Counter-rotate only for portrait tilt.
-    // Camera texture does NOT auto-rotate between landscape orientations,
-    // so no counter-rotation needed for landscapeLeft.
     switch (_physicalOrientation) {
       case DeviceOrientation.landscapeRight:
       case DeviceOrientation.landscapeLeft:

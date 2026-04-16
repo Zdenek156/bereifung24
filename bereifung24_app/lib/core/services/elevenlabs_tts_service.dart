@@ -69,7 +69,32 @@ class ElevenLabsTtsService {
           .replaceAll(RegExp(r'[\u{1F300}-\u{1FAFF}]', unicode: true), '') // emojis
           .replaceAll(RegExp(r'[\u{2600}-\u{27BF}]', unicode: true), '') // symbols
           .replaceAll(RegExp(r'[\u{FE00}-\u{FEFF}]', unicode: true), '')
-          .replaceAll(RegExp(r'[\u{200B}-\u{200F}]', unicode: true), '')
+          .replaceAll(RegExp(r'[\u{200B}-\u{200F}]', unicode: true), '');
+
+      // Remove German license plates (e.g. "B-AB 1234", "M-XY 567", "(VAI MK6)")
+      // Standalone format
+      cleanText = cleanText.replaceAll(
+        RegExp(r'\b[A-ZÄÖÜ]{1,3}[\s-][A-Z]{1,2}\s?\d{1,4}[HE]?\b'),
+        '',
+      );
+      // Parenthetical format
+      cleanText = cleanText.replaceAll(
+        RegExp(r'\s*\([A-ZÄÖÜ]{1,3}[\s-][A-Z]{1,2}\s?\d{1,4}[HE]?\)'),
+        '',
+      );
+
+      // Tire size pronunciation: "245/35 R17" → "245 35 R 17"
+      cleanText = cleanText.replaceAllMapped(
+        RegExp(r'(\d{2,3})/(\d{2,3})\s*R\s*(\d{2})'),
+        (m) => '${m.group(1)} ${m.group(2)} R ${m.group(3)}',
+      );
+      // Remaining slash in tire sizes without R: "245/35" → "245 35"
+      cleanText = cleanText.replaceAllMapped(
+        RegExp(r'(\d{2,3})/(\d{2,3})'),
+        (m) => '${m.group(1)} ${m.group(2)}',
+      );
+
+      cleanText = cleanText
           .replaceAll(RegExp(r'\s+'), ' ')
           .trim();
 

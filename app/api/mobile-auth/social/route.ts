@@ -86,15 +86,8 @@ export async function POST(request: NextRequest) {
       firstName = providedFirstName || ''
       lastName = providedLastName || ''
 
-      // If the email is a private relay address and user provided a real email, use that
-      if (providedEmail && email.includes('privaterelay.appleid.com')) {
-        const realEmail = providedEmail.toLowerCase().trim()
-        // Basic server-side email validation
-        if (realEmail.includes('@') && realEmail.includes('.') && !realEmail.includes('privaterelay.appleid.com')) {
-          console.log(`[SOCIAL LOGIN] Replacing Apple relay email with provided email: ${realEmail}`)
-          email = realEmail
-        }
-      }
+      // Apple relay emails work — Apple forwards all mail to the user's real address.
+      // We no longer replace relay emails (Apple Guideline 4 compliance).
 
     } else {
       return NextResponse.json({ error: 'Unbekannter Provider. Erlaubt: google, apple' }, { status: 400 })

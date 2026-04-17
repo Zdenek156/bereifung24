@@ -411,11 +411,40 @@ export async function POST(request: NextRequest) {
       console.log(`[AI-TIRES] Final: ${recommendedTires.length} tires → ${recommendedTires.map(t => `${t.brand} ${t.model} [${t.axle || 'std'}]`).join(' | ')}`)
     }
 
+    // Determine which vehicle the AI is discussing
+    let resolvedVehicleId: string | undefined
+    if (vehicleId) {
+      resolvedVehicleId = vehicleId
+    } else if (vehicles.length === 1) {
+      resolvedVehicleId = vehicles[0].id
+    } else if (hasMixedTires && recommendedTires.length > 0) {
+      // Try to match recommended tire dimensions to a specific vehicle
+      const frontRec = recommendedTires.find(t => t.axle === 'front')
+      const rearRec = recommendedTires.find(t => t.axle === 'rear')
+      if (frontRec && rearRec) {
+        for (const v of vehicles) {
+          const specs = v.summerTires || v.winterTires || v.allSeasonTires
+          if (specs) {
+            try {
+              const p = typeof specs === 'string' ? JSON.parse(specs) : specs
+              if (p.hasDifferentSizes &&
+                  String(p.width) === frontRec.width && String(p.diameter) === frontRec.diameter &&
+                  String(p.rearWidth) === rearRec.width && String(p.rearDiameter) === rearRec.diameter) {
+                resolvedVehicleId = v.id
+                break
+              }
+            } catch { /* ignore */ }
+          }
+        }
+      }
+    }
+
     return NextResponse.json({
       response,
       chatHistory: updatedHistory,
       ...(recommendedTires.length > 0 && { recommendedTires }),
       ...(hasMixedTires && { hasMixedTires: true }),
+      ...(resolvedVehicleId && { selectedVehicleId: resolvedVehicleId }),
     })
 
   } catch (error: any) {

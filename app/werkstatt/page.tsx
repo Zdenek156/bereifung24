@@ -76,16 +76,16 @@ export default function WerkstattInfoPage() {
         <div className="relative border-b border-white/10 backdrop-blur-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between py-4">
-              <Link href="/" className="flex items-center gap-3">
-                <img src="/logos/B24_Logo_blau_gray.png" alt="Bereifung24" className="h-10 w-auto" />
+              <Link href="/" className="flex items-center gap-2 sm:gap-3">
+                <img src="/logos/B24_Logo_blau_gray.png" alt="Bereifung24" className="h-8 sm:h-10 w-auto shrink-0" />
                 <div>
-                  <h1 className="text-2xl font-bold">Bereifung24</h1>
-                  <p className="text-xs text-gray-400">Für Werkstätten</p>
+                  <h1 className="text-lg sm:text-2xl font-bold">Bereifung24</h1>
+                  <p className="text-[10px] sm:text-xs text-gray-400">Für Werkstätten</p>
                 </div>
               </Link>
               <Link
                 href="/login"
-                className="px-5 py-2.5 text-sm font-medium hover:bg-white/10 rounded-lg transition-colors"
+                className="shrink-0 ml-3 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium hover:bg-white/10 rounded-lg transition-colors whitespace-nowrap"
               >
                 Werkstatt-Login
               </Link>

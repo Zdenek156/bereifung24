@@ -233,6 +233,8 @@ export async function POST(request: NextRequest) {
 
     // Determine RunFlat requirement early (needed for workshop filtering)
     const requireRunFlat = packageTypes.includes('runflat')
+    // Determine Disposal requirement early (needed for workshop filtering)
+    const requireDisposal = packageTypes.includes('with_disposal')
 
     // Calculate distance and filter by radius
     const workshopsWithDistance = workshops
@@ -243,13 +245,19 @@ export async function POST(request: NextRequest) {
         
         // Filter: If customer searches "Nur Montage" (no tire purchase), skip workshops that don't accept mounting-only
         if (!includeTires && serviceType === 'TIRE_CHANGE' && service.acceptsMountingOnly === false) {
-          console.log(`\u{1F6AB} [${workshop.companyName}] Skipped: does not accept mounting-only (Nur Montage)`)
+          console.log(`🚫 [${workshop.companyName}] Skipped: does not accept mounting-only (Nur Montage)`)
           return null
         }
         
         // Filter: If RunFlat is required, skip workshops without RunFlat surcharge
         if (requireRunFlat && serviceType === 'TIRE_CHANGE' && (!service.runFlatSurcharge || Number(service.runFlatSurcharge) <= 0)) {
-          console.log(`\u{1F6AB} [${workshop.companyName}] Skipped: no RunFlat surcharge configured`)
+          console.log(`🚫 [${workshop.companyName}] Skipped: no RunFlat surcharge configured`)
+          return null
+        }
+        
+        // Filter: If Disposal is required, skip workshops without disposal fee
+        if (requireDisposal && serviceType === 'TIRE_CHANGE' && (!service.disposalFee || Number(service.disposalFee) <= 0)) {
+          console.log(`🚫 [${workshop.companyName}] Skipped: no disposal fee configured (Entsorgung)`)
           return null
         }
         
@@ -1224,6 +1232,21 @@ export async function POST(request: NextRequest) {
           tirePrice: 0
         }
       })
+    }
+
+    // Filter: If customer wants tires ("Mit Reifen"), exclude workshops that have no tires available
+    if (includeTires) {
+      const beforeCount = workshopsWithTires.length
+      workshopsWithTires = workshopsWithTires.filter(w => {
+        if (w.tireAvailable === false) {
+          console.log(`🚫 [${w.name}] Skipped: no tires available (customer selected "Mit Reifen")`)
+          return false
+        }
+        return true
+      })
+      if (beforeCount !== workshopsWithTires.length) {
+        console.log(`📦 Filtered ${beforeCount - workshopsWithTires.length} workshops without tire availability`)
+      }
     }
 
     return NextResponse.json({

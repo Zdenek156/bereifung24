@@ -126,7 +126,7 @@ export default function AIChatWidget() {
             <Bot className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h3 className="text-white font-semibold text-sm">KI Reifen-Berater</h3>
+            <h3 className="text-white font-semibold text-sm">Rollo – Dein Reifen-Berater</h3>
             <p className="text-blue-100 text-xs">Persönliche Empfehlungen aus 125.000+ Reifen</p>
           </div>
         </div>
@@ -149,10 +149,10 @@ export default function AIChatWidget() {
               <Sparkles className="h-7 w-7 text-blue-600 dark:text-blue-400" />
             </div>
             <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-              Ihr persönlicher Reifen-Berater
+              Hi, ich bin Rollo! 👋
             </h4>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Fragen Sie mich alles rund um Reifen, Empfehlungen, Werkstätten oder die Bereifung24 Plattform.
+              Frag mich alles rund um Reifen, Empfehlungen, Werkstätten oder die Bereifung24 Plattform.
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {[

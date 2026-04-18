@@ -54,12 +54,12 @@ export async function POST(request: NextRequest) {
     let latitude: number | null = null
     let longitude: number | null = null
     
-    if (street && city) {
+    if (street && zipCode && city) {
       try {
-        const coords = await geocodeAddress(`${street}, ${zipCode} ${city}, Germany`)
+        const coords = await geocodeAddress(street, zipCode, city)
         if (coords) {
-          latitude = coords.lat
-          longitude = coords.lng
+          latitude = coords.latitude
+          longitude = coords.longitude
         }
       } catch (error) {
         console.error('Geocoding error:', error)

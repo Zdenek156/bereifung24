@@ -363,8 +363,20 @@ class ProfileScreen extends ConsumerWidget {
             onPressed: () async {
               Navigator.pop(ctx);
               try {
+                await ApiClient().deleteAccount();
                 await ref.read(authStateProvider.notifier).logout();
-              } catch (_) {}
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Konto wurde gelöscht')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Löschen fehlgeschlagen. Bitte versuche es erneut.')),
+                  );
+                }
+              }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Endgültig löschen'),

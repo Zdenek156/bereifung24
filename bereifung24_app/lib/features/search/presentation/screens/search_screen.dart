@@ -525,7 +525,7 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       packageTypes.add(state.includeTires
           ? 'motorcycle_with_tire_purchase'
           : 'motorcycle_tire_installation_only');
-      if (state.withDisposal) packageTypes.add('with_disposal');
+      // Note: disposal is sent as body['includeDisposal'] below, NOT in packageTypes
     }
     if (serviceType == 'TIRE_CHANGE' && !state.includeTires) {
       // Nur Montage — send tire count + disposal/runflat
@@ -545,6 +545,11 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       if (state.withStorage) packageTypes.add('with_storage');
       if (state.withWashing) packageTypes.add('with_washing');
     }
+    if (serviceType == 'CLIMATE_SERVICE') {
+      // Send empty packageTypes to match all workshops with any climate package
+      // (Web sends [] — API returns workshops with any active climate tier)
+      packageTypes.clear();
+    }
 
     final body = <String, dynamic>{
       'serviceType': serviceType,
@@ -557,9 +562,27 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     if (lat != null) body['customerLat'] = lat;
     if (lng != null) body['customerLon'] = lng;
 
+    // ALWAYS send tireDimensions for TIRE_CHANGE (needed for rim-size pricing even for Nur Montage)
+    if (serviceType == 'TIRE_CHANGE' && _lastVehicle != null) {
+      final tireSpec = _lastVehicle!.summerTires ??
+          _lastVehicle!.winterTires ??
+          _lastVehicle!.allSeasonTires;
+      if (tireSpec != null && tireSpec.diameter != null) {
+        body['tireDimensions'] = {
+          'width': tireSpec.width?.toString() ?? '',
+          'height': tireSpec.aspectRatio?.toString() ?? '',
+          'diameter': tireSpec.diameter?.toString() ?? '',
+          if (tireSpec.loadIndex != null)
+            'loadIndex': tireSpec.loadIndex.toString(),
+          if (tireSpec.speedRating != null) 'speedIndex': tireSpec.speedRating,
+        };
+      }
+    }
+
     // Motorcycle with tire purchase → use dedicated motorcycle API
     if (serviceType == 'MOTORCYCLE_TIRE') {
       body['includeTires'] = state.includeTires;
+      body['includeDisposal'] = state.withDisposal;
 
       // Add tire dimensions: prefer AI override, then vehicle data
       if (_tireDimOverride != null) {
@@ -638,13 +661,15 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
         }
       }
 
-      // Add construction filter (Radial/Diagonal) if set
+      // Build tireFilters: always include seasons, optionally construction
+      final motorcycleTireFilters = <String, dynamic>{
+        'seasons': [state.tireSeason],
+      };
       if (state.tireConstruction != null &&
           state.tireConstruction!.isNotEmpty) {
-        body['tireFilters'] = {
-          'construction': state.tireConstruction,
-        };
+        motorcycleTireFilters['construction'] = state.tireConstruction;
       }
+      body['tireFilters'] = motorcycleTireFilters;
 
       debugPrint('🏍️ Motorcycle search body: $body');
       final response = await _api.searchMotorcycleTires(body);
@@ -781,7 +806,6 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     }
     if (state.withDisposal) packageTypes.add('with_disposal');
     if (state.withRunFlat) packageTypes.add('runflat');
-    if (state.withThreePMSF) packageTypes.add('three_pmsf');
 
     final body = <String, dynamic>{
       'serviceType': 'TIRE_CHANGE',
@@ -790,6 +814,7 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       'packageTypes': packageTypes,
       'tireFilters': {
         'seasons': [state.tireSeason],
+        if (state.withThreePMSF) 'threePMSF': true,
       },
     };
 
@@ -862,7 +887,6 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     }
     if (state.withDisposal) packageTypes.add('with_disposal');
     if (state.withRunFlat) packageTypes.add('runflat');
-    if (state.withThreePMSF) packageTypes.add('three_pmsf');
 
     // Normalize season: Sommer→s, Winter→w, Ganzjahr→g
     var season = dims['season'] ?? 's';
@@ -897,6 +921,7 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       'packageTypes': packageTypes,
       'tireFilters': {
         'seasons': [season],
+        if (state.withThreePMSF) 'threePMSF': true,
       },
     };
 

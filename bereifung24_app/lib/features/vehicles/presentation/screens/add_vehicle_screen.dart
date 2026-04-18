@@ -1263,22 +1263,17 @@ class _TireTabContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMoto = vehicleType == 'MOTORCYCLE';
+    final frontLabel = isMoto ? 'Vorderrad' : 'Vorderachse';
+    final rearLabel = isMoto ? 'Hinterrad' : 'Hinterachse';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InteractiveTireSelector(
-          vehicleType: vehicleType,
-          initialSpec: selection.frontSpec,
-          onChanged: (spec) {
-            selection.frontSpec = spec;
-            onChanged();
-          },
-        ),
-        const SizedBox(height: 8),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(
-            vehicleType == 'MOTORCYCLE'
+            isMoto
                 ? 'Unterschiedliche Vorder-/Hinterreifen'
                 : 'Mischbereifung (unterschiedliche Größen)',
             style: const TextStyle(fontSize: 13),
@@ -1289,9 +1284,26 @@ class _TireTabContent extends StatelessWidget {
             onChanged();
           },
         ),
+        if (selection.hasDifferentSizes)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(frontLabel,
+                style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[700],
+                    fontSize: 13)),
+          ),
+        InteractiveTireSelector(
+          vehicleType: vehicleType,
+          initialSpec: selection.frontSpec,
+          onChanged: (spec) {
+            selection.frontSpec = spec;
+            onChanged();
+          },
+        ),
         if (selection.hasDifferentSizes) ...[
           const Divider(),
-          Text('Hinterachse',
+          Text(rearLabel,
               style: TextStyle(
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],

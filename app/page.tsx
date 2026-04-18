@@ -39,7 +39,7 @@ async function getHomePageData() {
       return hashA - hashB
     })
     const reviews = shuffled.slice(0, 15).map(review => {
-      const firstName = review.customer.user.firstName?.split(' ')[0] || 'Kunde'
+      const firstName = review.customer?.user?.firstName?.split(' ')[0] || 'Kunde'
       return {
         id: review.id,
         rating: review.rating,

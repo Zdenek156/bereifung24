@@ -383,13 +383,13 @@ export default function WorkshopReviews() {
                 {/* Card Header: Avatar + Name + Date + Rating */}
                 <div className="px-4 py-3 flex items-center gap-3">
                   {/* Avatar */}
-                  <div className={`w-9 h-9 rounded-full ${getAvatarColor(review.customer.user.firstName)} flex items-center justify-center flex-shrink-0`}>
-                    <span className="text-white text-sm font-bold">{getInitials(review.customer.user.firstName)}</span>
+                  <div className={`w-9 h-9 rounded-full ${getAvatarColor(review.customer?.user?.firstName || 'Kunde')} flex items-center justify-center flex-shrink-0`}>
+                    <span className="text-white text-sm font-bold">{getInitials(review.customer?.user?.firstName || 'Kunde')}</span>
                   </div>
                   {/* Name + Date */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">{review.customer.user.firstName}</span>
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">{review.customer?.user?.firstName || 'Ehem. Kunde'}</span>
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 flex-shrink-0">
                         {getServiceIcon(review)} {getServiceName(review)}
                       </span>

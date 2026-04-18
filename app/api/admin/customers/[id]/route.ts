@@ -78,14 +78,14 @@ export async function DELETE(
     }
 
     // Lösche alle abhängigen Daten manuell in der richtigen Reihenfolge
+    // Reviews, DirectBookings, Bookings und TireRatings bleiben erhalten (customerId wird auf NULL gesetzt via onDelete: SetNull)
     
-    // 1. Hole alle Bookings des Kunden
+    // 1. Hole alle Bookings des Kunden und lösche deren Commissions
     const customerBookings = await prisma.booking.findMany({
       where: { customerId: customer.id },
       select: { id: true }
     })
 
-    // 2. Lösche alle Commissions zu diesen Bookings (haben FK zu Bookings)
     if (customerBookings.length > 0) {
       await prisma.commission.deleteMany({
         where: {
@@ -96,11 +96,6 @@ export async function DELETE(
       })
     }
 
-    // 3. Lösche alle Bookings
-    await prisma.booking.deleteMany({
-      where: { customerId: customer.id }
-    })
-
     // 2. Lösche alle Angebote zu den TireRequests des Kunden
     await prisma.offer.deleteMany({
       where: {
@@ -110,22 +105,7 @@ export async function DELETE(
       }
     })
 
-    // 3. Lösche alle TireRequests
-    await prisma.tireRequest.deleteMany({
-      where: { customerId: customer.id }
-    })
-
-    // 4. Lösche alle Reviews
-    await prisma.review.deleteMany({
-      where: { customerId: customer.id }
-    })
-
-    // 5. Lösche alle TireRatings
-    await prisma.tireRating.deleteMany({
-      where: { customerId: customer.id }
-    })
-
-    // 6. Lösche TireHistory Einträge (über Vehicle)
+    // 3. Lösche TireHistory Einträge (über Vehicle)
     const customerVehicles = await prisma.vehicle.findMany({
       where: { customerId: customer.id },
       select: { id: true }
@@ -141,24 +121,23 @@ export async function DELETE(
       })
     }
 
-    // 7. Lösche alle Vehicles
+    // 4. Lösche alle Vehicles (DirectBookings.vehicleId wird via onDelete: SetNull auf NULL gesetzt)
     await prisma.vehicle.deleteMany({
       where: { customerId: customer.id }
     })
 
-    // 8. Anonymisiere Affiliate Conversions statt sie zu löschen
-    // Wichtig: Influencer behält die Provision, aber Customer-Verknüpfung wird entfernt
+    // 6. Anonymisiere Affiliate Conversions
     await prisma.affiliateConversion.updateMany({
       where: { customerId: customer.id },
       data: { customerId: null }
     })
 
-    // 9. Lösche den Customer
+    // 7. Lösche den Customer (Reviews, DirectBookings, Bookings, TireRequests, TireRatings bleiben mit customerId=NULL)
     await prisma.customer.delete({
       where: { id: customer.id }
     })
 
-    // 10. Lösche den User
+    // 8. Lösche den User
     await prisma.user.delete({
       where: { id: params.id }
     })

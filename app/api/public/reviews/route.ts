@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       success: true,
       reviews: reviews.map(review => {
         // Extract only first name (split by space and take first part)
-        const firstName = review.customer.user.firstName?.split(' ')[0] || 'Kunde'
+        const firstName = review.customer?.user?.firstName?.split(' ')[0] || 'Kunde'
         
         return {
           id: review.id,

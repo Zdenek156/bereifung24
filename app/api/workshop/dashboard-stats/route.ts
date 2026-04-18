@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
 
     // Bewertungen
     for (const review of recentReviews) {
-      const customerName = `${review.customer.user.firstName} ${review.customer.user.lastName}`
+      const customerName = review.customer?.user ? `${review.customer.user.firstName} ${review.customer.user.lastName}` : 'Ehem. Kunde'
       recentActivities.push({
         id: `review-${review.id}`,
         type: 'review',

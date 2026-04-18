@@ -545,7 +545,7 @@ export default async function WorkshopLandingPage({ params }: PageProps) {
                           <div>
                             <div className="flex items-center justify-between mb-2">
                               <span className="font-semibold text-gray-900 text-sm">
-                                {review.customer.user?.firstName || 'Kunde'} {review.customer.user?.lastName ? review.customer.user.lastName[0] + '.' : ''}
+                                {review.customer?.user?.firstName || 'Kunde'} {review.customer?.user?.lastName ? review.customer.user.lastName[0] + '.' : ''}
                               </span>
                             </div>
                             <div className="text-yellow-400 text-sm mb-2">

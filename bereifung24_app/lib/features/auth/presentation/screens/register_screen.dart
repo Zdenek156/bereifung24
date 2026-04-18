@@ -181,37 +181,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
       String? appleFirstName = credential.givenName;
       String? appleLastName = credential.familyName;
-      String? realEmail;
 
-      // Check if Apple provided a private relay email
-      final appleEmail = credential.email ?? '';
-      final isRelayEmail = appleEmail.contains('privaterelay.appleid.com');
-
-      // Apple only provides name on first sign-in. If missing, ask for name & email BEFORE login
-      if (appleFirstName == null || appleFirstName.isEmpty ||
-          appleLastName == null || appleLastName.isEmpty ||
-          isRelayEmail) {
-        final result = await _showProfileDialog(
-          firstName: appleFirstName,
-          lastName: appleLastName,
-          askForEmail: isRelayEmail,
-          addressOptional: true,
-        );
-        if (result == null) return; // User cancelled
-        appleFirstName = result['firstName'];
-        appleLastName = result['lastName'];
-        if (isRelayEmail && result['email'] != null && result['email']!.isNotEmpty) {
-          realEmail = result['email'];
-        }
-      }
-
-      // Login first — server returns existing user data including address
+      // Login first — server returns existing user data
       final success = await ref.read(authStateProvider.notifier).socialLogin(
             'apple',
             idToken,
             firstName: appleFirstName,
             lastName: appleLastName,
-            email: realEmail,
           );
 
       if (!success) {
@@ -225,25 +201,39 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         return;
       }
 
-      // Check if user already has a complete address
+      // Check server user data — only ask for name if server has no real name
       final user = ref.read(authStateProvider).user;
-      if (user != null &&
-          (user.street == null || user.street!.isEmpty ||
-           user.zipCode == null || user.zipCode!.isEmpty ||
-           user.city == null || user.city!.isEmpty)) {
+      final serverFirstName = user?.firstName ?? '';
+      final serverHasName = serverFirstName.isNotEmpty &&
+          !serverFirstName.contains('@') &&
+          serverFirstName != 'Apple';
+      final serverHasAddress = user != null &&
+          user.street != null && user.street!.isNotEmpty &&
+          user.zipCode != null && user.zipCode!.isNotEmpty &&
+          user.city != null && user.city!.isNotEmpty;
+
+      if (!serverHasName || !serverHasAddress) {
         final result = await _showProfileDialog(
-          firstName: appleFirstName,
-          lastName: appleLastName,
-          nameProvided: true,
+          firstName: serverHasName ? serverFirstName : (appleFirstName ?? ''),
+          lastName: serverHasName ? (user?.lastName ?? '') : (appleLastName ?? ''),
+          nameProvided: serverHasName,
+          askForEmail: false,
+          addressOptional: serverHasAddress,
         );
         if (result != null) {
           try {
             await ApiClient().updateProfile({
+              if (!serverHasName) ...{
+                'firstName': result['firstName'],
+                'lastName': result['lastName'],
+              },
               if (result['phone'] != null && result['phone']!.isNotEmpty)
                 'phone': result['phone'],
-              'street': result['street'],
-              'zipCode': result['zipCode'],
-              'city': result['city'],
+              if (!serverHasAddress) ...{
+                'street': result['street'],
+                'zipCode': result['zipCode'],
+                'city': result['city'],
+              },
             });
           } catch (e) {
             debugPrint('Profile update failed: $e');

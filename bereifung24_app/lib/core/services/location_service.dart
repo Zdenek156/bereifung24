@@ -41,13 +41,28 @@ class LocationService {
       return null;
     }
 
-    // Get position with timeout
+    // Get position with timeout – try current position first, then fall back
+    // to last known position (avoids false "GPS too weak" errors when
+    // returning to the search screen after the location provider was idle).
     try {
       return await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 15),
+        timeLimit: const Duration(seconds: 25),
       );
     } catch (e) {
+      debugPrint('Geolocator getCurrentPosition error: $e');
+      // Before giving up, try getLastKnownPosition (instant, no GPS needed)
+      try {
+        final lastKnown = await Geolocator.getLastKnownPosition();
+        if (lastKnown != null) {
+          debugPrint(
+              'Using last known position: ${lastKnown.latitude}, ${lastKnown.longitude}');
+          return lastKnown;
+        }
+      } catch (e2) {
+        debugPrint('getLastKnownPosition also failed: $e2');
+      }
+
       if (e.toString().contains('TimeoutException')) {
         lastError =
             'GPS-Signal zu schwach. Bitte versuche es erneut oder gib eine PLZ ein.';
@@ -55,7 +70,6 @@ class LocationService {
         lastError =
             'Standort konnte nicht ermittelt werden. Bitte prüfe deine GPS-Einstellungen.';
       }
-      debugPrint('Geolocator getCurrentPosition error: $e');
       return null;
     }
   }

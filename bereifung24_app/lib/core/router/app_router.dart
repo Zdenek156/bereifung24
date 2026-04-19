@@ -22,6 +22,7 @@ import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/profile/presentation/screens/notification_settings_screen.dart';
 import '../../features/profile/presentation/screens/legal_screen.dart';
 import '../../features/profile/presentation/screens/feedback_screen.dart';
+import '../../features/profile/presentation/screens/about_screen.dart';
 import '../../features/reviews/presentation/screens/review_screen.dart';
 import '../../features/emergency/presentation/screens/emergency_screen.dart';
 import '../../features/ai_advisor/presentation/screens/ai_advisor_screen.dart';
@@ -268,6 +269,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'feedback',
                 parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => const FeedbackScreen(),
+              ),
+              GoRoute(
+                path: 'about',
+                parentNavigatorKey: _rootNavigatorKey,
+                builder: (context, state) => const AboutScreen(),
               ),
             ],
           ),

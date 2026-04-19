@@ -1052,15 +1052,19 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                             prefBrand != null && prefBrand.isNotEmpty;
                         final bool hasRearPref =
                             prefRearBrand != null && prefRearBrand.isNotEmpty;
+                        // Only show Rollo card when AI recommendation is active (from Rollo advisor),
+                        // NOT when tire brand comes from normal search navigation
+                        final bool hasAiRecommendation =
+                            (currentSearch.aiFrontBrand != null && currentSearch.aiFrontBrand!.isNotEmpty) ||
+                            (currentSearch.aiRearBrand != null && currentSearch.aiRearBrand!.isNotEmpty) ||
+                            (currentSearch.aiArticleId != null && currentSearch.aiArticleId!.isNotEmpty);
                         debugPrint(
-                            '🤖 [ROLLO-CARD] hasFrontPref=$hasFrontPref ($prefBrand), hasRearPref=$hasRearPref ($prefRearBrand), ws=${ws != null}');
+                            '🤖 [ROLLO-CARD] hasFrontPref=$hasFrontPref ($prefBrand), hasRearPref=$hasRearPref ($prefRearBrand), hasAiRecommendation=$hasAiRecommendation, ws=${ws != null}');
                         debugPrint(
                             '🤖 [ROLLO-CARD] widget.preferredTireBrand=${widget.preferredTireBrand}, widget.preferredRearTireBrand=${widget.preferredRearTireBrand}');
                         debugPrint(
-                            '🤖 [ROLLO-CARD] currentSearch.aiFrontBrand=${currentSearch.aiFrontBrand}, currentSearch.aiRearBrand=${currentSearch.aiRearBrand}');
-                        debugPrint(
-                            '🤖 [ROLLO-CARD] workshops.length=${currentSearch.workshops.length}, isLoading=${currentSearch.isLoading}');
-                        if ((hasFrontPref || hasRearPref) && ws != null) {
+                            '🤖 [ROLLO-CARD] currentSearch.aiFrontBrand=${currentSearch.aiFrontBrand}, currentSearch.aiRearBrand=${currentSearch.aiRearBrand}, aiArticleId=${currentSearch.aiArticleId}');
+                        if (hasAiRecommendation && (hasFrontPref || hasRearPref) && ws != null) {
                           final allRecs = ws.tireRecommendationsRaw
                               .map((r) => TireRecommendation.fromJson(r))
                               .toList();

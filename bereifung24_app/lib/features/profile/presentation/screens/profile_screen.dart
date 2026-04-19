@@ -95,10 +95,7 @@ class ProfileScreen extends ConsumerWidget {
                   _SettingsTile(
                     icon: Icons.info_outline,
                     title: 'Über Bereifung24',
-                    onTap: () => launchUrl(
-                      Uri.parse('https://bereifung24.de'),
-                      mode: LaunchMode.externalApplication,
-                    ),
+                    onTap: () => context.push('/profile/about'),
                   ),
                   _SettingsTile(
                     icon: Icons.feedback_outlined,

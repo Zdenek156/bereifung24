@@ -105,19 +105,19 @@ class _DynamicLegalScreenState extends State<DynamicLegalScreen> {
               : ListView(
                   padding: const EdgeInsets.all(16),
                   children: [
+                    HtmlWidget(
+                      _html,
+                      textStyle: const TextStyle(fontSize: 14, height: 1.5),
+                    ),
                     if (_updatedAt != null)
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.only(top: 24),
                         child: Text(
                           'Stand: $_updatedAt',
                           style:
                               TextStyle(fontSize: 12, color: Colors.grey[500]),
                         ),
                       ),
-                    HtmlWidget(
-                      _html,
-                      textStyle: const TextStyle(fontSize: 14, height: 1.5),
-                    ),
                     const SizedBox(height: 32),
                   ],
                 ),

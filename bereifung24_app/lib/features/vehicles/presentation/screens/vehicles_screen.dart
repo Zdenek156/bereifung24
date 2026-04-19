@@ -193,7 +193,7 @@ class _VehicleCard extends ConsumerWidget {
     final year = int.tryParse(parts[0]);
     final month = int.tryParse(parts[1]);
     if (year == null || month == null) return null;
-    final tuevDate = DateTime(year, month + 1, 0); // last day of month
+    final tuevDate = DateTime(year, month, 1); // first day of TÜV month
     return tuevDate.difference(DateTime.now()).inDays;
   }
 

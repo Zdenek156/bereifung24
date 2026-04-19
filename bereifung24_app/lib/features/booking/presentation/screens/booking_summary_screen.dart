@@ -14,6 +14,8 @@ import '../../../search/presentation/screens/workshop_detail_screen.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 import '../../../bookings/presentation/screens/bookings_screen.dart';
 
+import '../../../auth/providers/auth_provider.dart';
+
 class BookingSummaryScreen extends ConsumerStatefulWidget {
   final String workshopId;
   final String? serviceType;
@@ -233,6 +235,25 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     pricing?.tireChangePricePKW ??
                     0.0)
                 : (pricing?.basePrice ?? pricing?.tireChangePricePKW ?? 0.0));
+      }
+
+      // Check user address before payment
+      final user = ref.read(authStateProvider).user;
+      if (user == null ||
+          user.street == null || user.street!.trim().isEmpty ||
+          user.zipCode == null || user.zipCode!.trim().isEmpty ||
+          user.city == null || user.city!.trim().isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Bitte hinterlege deine Adresse in deinem Profil, bevor du buchst.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() => _isSubmitting = false);
+        }
+        return;
       }
 
       // Process Stripe payment first

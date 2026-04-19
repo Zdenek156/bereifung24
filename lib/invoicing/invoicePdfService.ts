@@ -598,7 +598,8 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any, logoBase64?: s
     <div class="header">
       <div class="header-left">
         ${logoBase64
-          ? `<img src="${logoBase64}" alt="${settings.companyName}" class="company-name-img">`
+          ? `<img src="${logoBase64}" alt="${settings.companyName}" class="company-name-img">
+             <div class="company-name" style="font-size: 14pt; margin-top: 2pt;">${settings.companyName || 'Bereifung24'}</div>`
           : `<div class="company-name">${settings.companyName || 'Bereifung24'}</div>`
         }
         <div class="sender-line">
@@ -709,13 +710,15 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any, logoBase64?: s
     <div class="footer">
       <div class="footer-columns">
         <div class="footer-column">
-          <h4>Kontakt</h4>
-          ${settings.phone || ''}<br>
+          <h4>${settings.companyName || 'Bereifung24'}</h4>
+          ${settings.companyStreet || settings.street || ''}<br>
+          ${settings.companyZip || settings.zip || ''} ${settings.companyCity || settings.city || ''}<br>
+          Tel: ${settings.phone || ''}<br>
           ${settings.email || ''}<br>
           ${settings.website || ''}
         </div>
         <div class="footer-column">
-          <h4>Steuern</h4>
+          <h4>Steuern &amp; Rechtliches</h4>
           ${settings.taxId ? `USt-IdNr: ${settings.taxId}<br>` : ''}
           ${settings.managingDirector ? `Geschäftsführung: ${settings.managingDirector}` : ''}
         </div>

@@ -3416,7 +3416,9 @@ class _WorkshopCard extends ConsumerWidget {
     final hasBreakdown = breakdown.length > 1;
     final hasAnyBreakdown =
         breakdown.isNotEmpty; // for post-API services show even single entry
-    final img = workshop.displayImage;
+    // For search cards, prefer reliable images (card/logo) over heroImage
+    // which may reference deleted files from landing pages
+    final img = workshop.cardImageUrl ?? workshop.profileImage ?? workshop.heroImage;
     final hasImage = img != null && img.isNotEmpty;
 
     return Card(

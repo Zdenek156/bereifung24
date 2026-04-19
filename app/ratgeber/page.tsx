@@ -22,7 +22,7 @@ async function getRatgeberData() {
     const featuredPost = await prisma.blogPost.findFirst({
       where: { 
         status: 'PUBLISHED',
-        targetAudience: { in: ['CUSTOMER', 'BOTH'] }
+        targetAudience: { in: ['CUSTOMER', 'BOTH', 'WORKSHOP'] }
       },
       orderBy: { publishedAt: 'desc' },
       include: {
@@ -47,7 +47,7 @@ async function getRatgeberData() {
     const posts = await prisma.blogPost.findMany({
       where: {
         status: 'PUBLISHED',
-        targetAudience: { in: ['CUSTOMER', 'BOTH'] }
+        targetAudience: { in: ['CUSTOMER', 'BOTH', 'WORKSHOP'] }
       },
       orderBy: { publishedAt: 'desc' },
       take: 12,
@@ -76,7 +76,7 @@ async function getRatgeberData() {
         posts: {
           some: {
             status: 'PUBLISHED',
-            targetAudience: { in: ['CUSTOMER', 'BOTH'] }
+            targetAudience: { in: ['CUSTOMER', 'BOTH', 'WORKSHOP'] }
           }
         }
       },
@@ -86,7 +86,7 @@ async function getRatgeberData() {
             posts: {
               where: {
                 status: 'PUBLISHED',
-                targetAudience: { in: ['CUSTOMER', 'BOTH'] }
+                targetAudience: { in: ['CUSTOMER', 'BOTH', 'WORKSHOP'] }
               }
             }
           }
@@ -101,7 +101,7 @@ async function getRatgeberData() {
         posts: {
           some: {
             status: 'PUBLISHED',
-            targetAudience: { in: ['CUSTOMER', 'BOTH'] }
+            targetAudience: { in: ['CUSTOMER', 'BOTH', 'WORKSHOP'] }
           }
         }
       },

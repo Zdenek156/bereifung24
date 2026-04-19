@@ -66,7 +66,7 @@ async function getArticleData(slug: string) {
       where: {
         slug,
         status: 'PUBLISHED',
-        targetAudience: { in: ['CUSTOMER', 'BOTH'] }
+        targetAudience: { in: ['CUSTOMER', 'BOTH', 'WORKSHOP'] }
       },
       include: {
         category: {
@@ -102,7 +102,7 @@ async function getArticleData(slug: string) {
     const relatedPosts = await prisma.blogPost.findMany({
       where: {
         status: 'PUBLISHED',
-        targetAudience: { in: ['CUSTOMER', 'BOTH'] },
+        targetAudience: { in: ['CUSTOMER', 'BOTH', 'WORKSHOP'] },
         categoryId: post.categoryId,
         id: { not: post.id }
       },

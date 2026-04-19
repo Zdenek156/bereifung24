@@ -48,12 +48,12 @@ export async function GET(request: NextRequest) {
     // 4. DirectBookings pro Monat (letzte 12 Monate)
     const monthlyBookings: any[] = await prisma.$queryRawUnsafe(`
       SELECT 
-        TO_CHAR(DATE_TRUNC('month', "createdAt"), 'YYYY-MM') as month,
+        TO_CHAR(DATE_TRUNC('month', created_at), 'YYYY-MM') as month,
         COUNT(*) as bookings
       FROM direct_bookings
       WHERE status IN ('COMPLETED', 'CONFIRMED', 'RESERVED')
-        AND "createdAt" >= NOW() - INTERVAL '12 months'
-      GROUP BY DATE_TRUNC('month', "createdAt")
+        AND created_at >= NOW() - INTERVAL '12 months'
+      GROUP BY DATE_TRUNC('month', created_at)
       ORDER BY month ASC
     `);
 

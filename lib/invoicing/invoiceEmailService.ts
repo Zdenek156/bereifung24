@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { getInvoiceFilePath } from '@/lib/invoicing/invoicePdfService'
 import nodemailer from 'nodemailer'
 import fs from 'fs'
 import path from 'path'
@@ -129,8 +130,8 @@ export async function sendInvoiceEmail(invoiceId: string): Promise<EmailResult> 
       }
     })
 
-    // Get PDF file path
-    const pdfPath = path.join(process.cwd(), 'public', invoice.pdfUrl)
+    // Get PDF file path from persistent data directory
+    const pdfPath = getInvoiceFilePath(invoice.pdfUrl)
     
     if (!fs.existsSync(pdfPath)) {
       return { success: false, error: 'PDF file not found' }

@@ -12,7 +12,23 @@ import PDFDocument from 'pdfkit'
  * ZUGFeRD 2.2 compliant (E-Rechnung Deutschland)
  * 
  * Design: "Blue Sidebar" (Variante B)
+ * Storage: Persistent data directory outside project (survives deployments)
  */
+
+/** Get persistent storage directory for invoice PDFs */
+export function getInvoiceDataDir(): string {
+  if (process.env.NODE_ENV === 'production') {
+    return '/var/www/bereifung24-data/invoices'
+  }
+  return path.join(process.cwd(), 'data', 'invoices')
+}
+
+/** Get full file path for a pdfUrl like /invoices/2026/03/B24-INV-2026-0029.pdf */
+export function getInvoiceFilePath(pdfUrl: string): string {
+  // pdfUrl is like /invoices/2026/03/filename.pdf - strip leading /invoices/
+  const relativePath = pdfUrl.replace(/^\/invoices\//, '')
+  return path.join(getInvoiceDataDir(), relativePath)
+}
 
 export interface InvoiceData extends CommissionInvoice {
   workshop: {
@@ -70,13 +86,25 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
       throw new Error('Invoice settings not found')
     }
 
-    // Generate HTML
-    const html = generateInvoiceHtml(invoice as InvoiceData, settings)
+    // Load logo as base64 for embedding in HTML
+    let logoBase64 = ''
+    try {
+      const logoPath = path.join(process.cwd(), 'public', 'B24 Logo transparent.png')
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath)
+        logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`
+      }
+    } catch (e) {
+      // Logo not available
+    }
 
-    // Create output directory
+    // Generate HTML
+    const html = generateInvoiceHtml(invoice as InvoiceData, settings, logoBase64)
+
+    // Create output directory in persistent data dir
     const year = invoice.periodEnd.getFullYear()
     const month = String(invoice.periodEnd.getMonth() + 1).padStart(2, '0')
-    const outputDir = path.join(process.cwd(), 'public', 'invoices', String(year), month)
+    const outputDir = path.join(getInvoiceDataDir(), String(year), month)
     
     // Ensure directory exists (recursive creates parent dirs if needed)
     fs.mkdirSync(outputDir, { recursive: true })
@@ -180,7 +208,7 @@ export async function generateInvoicePdf(invoiceId: string): Promise<string> {
  * Generate invoice HTML from template
  * Design: "Blue Sidebar" (Variante B)
  */
-function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
+function generateInvoiceHtml(invoice: InvoiceData, settings: any, logoBase64?: string): string {
   const lineItems = invoice.lineItems as any[]
   
   // Format dates
@@ -569,8 +597,8 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
     <!-- ═══ HEADER ═══ -->
     <div class="header">
       <div class="header-left">
-        ${settings.logoUrl 
-          ? `<img src="https://www.bereifung24.de${settings.logoUrl}" alt="${settings.companyName}" class="company-name-img" onerror="this.outerHTML='<div class=\\'company-name\\'>${settings.companyName || 'Bereifung24'}</div>'">`
+        ${logoBase64
+          ? `<img src="${logoBase64}" alt="${settings.companyName}" class="company-name-img">`
           : `<div class="company-name">${settings.companyName || 'Bereifung24'}</div>`
         }
         <div class="sender-line">
@@ -704,7 +732,7 @@ function generateInvoiceHtml(invoice: InvoiceData, settings: any): string {
  */
 export async function deleteInvoicePdf(pdfUrl: string): Promise<void> {
   try {
-    const filePath = path.join(process.cwd(), 'public', pdfUrl)
+    const filePath = getInvoiceFilePath(pdfUrl)
     
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath)

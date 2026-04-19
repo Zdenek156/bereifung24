@@ -162,19 +162,19 @@ export default function InvoiceDetailPage() {
           {getStatusBadge(invoice.status)}
         </div>
         <div className="flex gap-3">
-          {!invoice.pdfUrl && (
+          {!generating && (
             <Button
               onClick={handleGeneratePdf}
               disabled={generating}
               variant="outline"
             >
               <FileText className="h-4 w-4 mr-2" />
-              {generating ? 'Generiere...' : 'PDF generieren'}
+              {invoice.pdfUrl ? 'PDF neu generieren' : 'PDF generieren'}
             </Button>
           )}
           {invoice.pdfUrl && (
             <Button variant="outline" asChild>
-              <a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer">
+              <a href={`/api/admin/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
                 <Download className="h-4 w-4 mr-2" />
                 PDF herunterladen
               </a>
@@ -342,7 +342,7 @@ export default function InvoiceDetailPage() {
               <h2 className="text-lg font-bold mb-4">PDF-Vorschau</h2>
               <div className="aspect-[3/4] bg-gray-100 rounded border flex items-center justify-center">
                 <iframe
-                  src={`${invoice.pdfUrl}?t=${pdfTimestamp}`}
+                  src={`/api/admin/invoices/${invoice.id}/pdf?t=${pdfTimestamp}`}
                   className="w-full h-full rounded"
                   title="PDF Preview"
                 />

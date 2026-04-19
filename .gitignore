@@ -20,6 +20,10 @@
 # User uploads (workshop logos, images etc.)
 /public/uploads/
 
+# Generated invoice PDFs (stored in persistent data dir in production)
+/public/invoices/
+/data/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

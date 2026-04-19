@@ -307,7 +307,7 @@ export default function InvoicesPage() {
                           </DropdownMenuItem>
                           {invoice.pdfUrl && (
                             <DropdownMenuItem asChild>
-                              <a href={invoice.pdfUrl} target="_blank" rel="noopener noreferrer">
+                              <a href={`/api/admin/invoices/${invoice.id}/pdf`} target="_blank" rel="noopener noreferrer">
                                 <Download className="h-4 w-4 mr-2" />
                                 PDF herunterladen
                               </a>

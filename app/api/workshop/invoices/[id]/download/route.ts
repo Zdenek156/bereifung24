@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getInvoiceFilePath, generateInvoicePdf } from '@/lib/invoicing/invoicePdfService'
 import fs from 'fs'
-import path from 'path'
 
 // GET /api/workshop/invoices/[id]/download - Download invoice PDF
 export async function GET(
@@ -59,8 +59,21 @@ export async function GET(
       )
     }
 
-    // Read PDF file from disk
-    const pdfPath = path.join(process.cwd(), 'public', invoice.pdfUrl)
+    // Read PDF file from persistent data directory
+    let pdfPath = getInvoiceFilePath(invoice.pdfUrl)
+
+    if (!fs.existsSync(pdfPath)) {
+      // Auto-regenerate if missing
+      try {
+        await generateInvoicePdf(invoice.id)
+        pdfPath = getInvoiceFilePath(invoice.pdfUrl)
+      } catch (e) {
+        return NextResponse.json(
+          { error: 'PDF-Datei nicht gefunden und konnte nicht regeneriert werden' },
+          { status: 404 }
+        )
+      }
+    }
 
     if (!fs.existsSync(pdfPath)) {
       return NextResponse.json(

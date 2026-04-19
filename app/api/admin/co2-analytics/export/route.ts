@@ -415,11 +415,25 @@ export async function GET(request: NextRequest) {
         {
           title: '5. Digitalisierungseffekt',
           text: 'Die Plattform digitalisiert den Preisvergleich und die Terminbuchung f\u00FCr Reifenservices. ' +
-            'Dies reduziert nicht nur CO2-Emissionen, sondern auch:\n' +
-            '- Zeitaufwand f\u00FCr Endverbraucher (ca. 2-3 Stunden Ersparnis pro Service)\n' +
-            '- Verwaltungsaufwand f\u00FCr Werkst\u00E4tten (automatisierte Angebotserstellung)\n' +
-            '- Papierverbrauch (digitale Kommunikation statt Papierangebote)\n' +
-            'Bereifung24 leistet damit einen messbaren Beitrag zur Verkehrswende und Digitalisierung im Handwerk.',
+            'Dies erzeugt messbare Effizienzgewinne auf mehreren Ebenen:\n\n' +
+            'Zeitersparnis f\u00FCr Endverbraucher:\n' +
+            'Statt 2-3 Werkst\u00E4tten pers\u00F6nlich aufzusuchen (je 30-45 Min. Anfahrt + Wartezeit) erm\u00F6glicht ' +
+            'Bereifung24 eine Online-Buchung in unter 5 Minuten. Gesch\u00E4tzte Ersparnis: ca. 2-3 Stunden pro Servicebuchung.\n\n' +
+            'Werkstatt-Effizienz:\n' +
+            'Automatische Terminverwaltung, digitale Angebotserstellung und Kundenkommunikation. ' +
+            'Reduzierung des Verwaltungsaufwands um ca. 60-70% pro Auftrag.\n\n' +
+            'Papierlose Prozesse:\n' +
+            'Digitale Angebote, Buchungsbest\u00E4tigungen und Rechnungen ersetzen Papier-Angebote, ' +
+            'Telefon-Anfragen und manuelle Datenerfassung.\n\n' +
+            'Transparenz & Wettbewerb:\n' +
+            'Preistransparenz f\u00FCr Verbraucher f\u00F6rdert fairen Wettbewerb unter Werkst\u00E4tten ' +
+            'und h\u00E4lt Servicepreise marktgerecht.\n\n' +
+            'Regionale Wirtschaftsf\u00F6rderung:\n' +
+            'Lokale Werkst\u00E4tten erhalten digitalen Zugang zu Neukunden, die sie \u00FCber klassisches ' +
+            'Marketing nicht erreichen w\u00FCrden.\n\n' +
+            'Datengest\u00FCtzte Infrastruktur:\n' +
+            'Anonymisierte Buchungsdaten erm\u00F6glichen Analyse der Reifenservice-Nachfrage ' +
+            'nach Region, Saison und Fahrzeugtyp.',
         },
       ]
 

@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
     const generatedBy = session.user.name || session.user.email || 'System'
 
     return new Promise<NextResponse>((resolve, reject) => {
-      const doc = new PDFDocument({ margin: 50, size: 'A4' })
+      const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true })
       const chunks: Buffer[] = []
 
       doc.on('data', (chunk) => chunks.push(chunk))

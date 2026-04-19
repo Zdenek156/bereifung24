@@ -177,9 +177,9 @@ export async function GET(request: NextRequest) {
       // Thin separator line under letterhead
       const sepY = headerY + 55
       doc.moveTo(50, sepY).lineTo(545, sepY).strokeColor('#e5e7eb').lineWidth(0.5).stroke()
-      doc.y = sepY + 12
+      doc.y = sepY + 30
 
-      // Title Block
+      // Title Block (centered with spacing)
       doc.fontSize(24).font('Helvetica-Bold').fillColor(GREEN)
         .text('CO2-Nachhaltigkeitsbericht', { align: 'center' })
       doc.moveDown(0.2)
@@ -189,9 +189,9 @@ export async function GET(request: NextRequest) {
       doc.fontSize(10).fillColor(GRAY)
         .text('Erstellt am ' + dateStr, { align: 'center' })
 
-      doc.moveDown(1.2)
+      doc.moveDown(0.8)
       doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(GREEN).lineWidth(2).stroke()
-      doc.moveDown(1.5)
+      doc.moveDown(1.2)
 
       // ── Executive Summary Box ──
       const summaryY = doc.y

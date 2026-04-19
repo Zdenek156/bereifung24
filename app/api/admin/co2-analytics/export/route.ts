@@ -8,8 +8,8 @@ import fs from 'fs'
 
 /**
  * GET /api/admin/co2-analytics/export
- * Generates a professional CO₂ Sustainability Report PDF
- * For: Förderstellen, IHK, Wirtschaftsförderung, Banken, Partner
+ * Generates a professional CO2 Sustainability Report PDF
+ * For: Foerderstellen, IHK, Wirtschaftsfoerderung, Banken, Partner
  */
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
 
-    // ─── Fetch all analytics data (same logic as co2-analytics route) ───
+    // ─── Fetch all analytics data ───
 
     const tireRequestStats: any[] = await prisma.$queryRawUnsafe(`
       SELECT 
@@ -90,8 +90,6 @@ export async function GET(request: NextRequest) {
 
     const overview = {
       totalCO2Kg: Math.round(totalCO2Kg * 100) / 100,
-      totalCO2FromRequestsKg: Math.round(totalCO2FromRequests / 1000 * 100) / 100,
-      totalCO2FromBookingsKg: Math.round(co2SavedBookingsGrams / 1000 * 100) / 100,
       totalKmSaved: Math.round(totalKmSaved),
       totalTripsAvoided: tripsAvoided + Number(tireRequestStats[0]?.calculated_count ?? 0),
       fuelSavedLiters: Math.round(fuelSavedLiters * 10) / 10,
@@ -102,7 +100,6 @@ export async function GET(request: NextRequest) {
       equivalentTrees: Math.round(totalCO2Kg / 22 * 10) / 10,
       equivalentCarKm: Math.round(totalCO2Grams / FALLBACK_CO2_PER_KM),
       equivalentFlights: Math.round(totalCO2Kg / 230 * 10) / 10,
-      equivalentPhoneCharges: Math.round(totalCO2Grams / 8),
     }
 
     const counts = {
@@ -133,13 +130,12 @@ export async function GET(request: NextRequest) {
 
     const now = new Date()
     const dateStr = now.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    const generatedBy = session.user.name || session.user.email || 'System'
 
     return new Promise<NextResponse>((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50, size: 'A4', bufferPages: true })
       const chunks: Buffer[] = []
 
-      doc.on('data', (chunk) => chunks.push(chunk))
+      doc.on('data', (chunk: any) => chunks.push(chunk))
       doc.on('end', () => {
         const buffer = Buffer.concat(chunks)
         resolve(
@@ -157,7 +153,6 @@ export async function GET(request: NextRequest) {
       const GREEN = '#16a34a'
       const DARK = '#111827'
       const GRAY = '#6b7280'
-      const LIGHT_GREEN = '#f0fdf4'
 
       // ── Try to load logo ──
       let logoBuffer: Buffer | null = null
@@ -176,59 +171,58 @@ export async function GET(request: NextRequest) {
 
       // Logo
       if (logoBuffer) {
-        doc.image(logoBuffer, 50, 40, { width: 150 })
-        doc.moveDown(4)
+        doc.image(logoBuffer, 50, 40, { width: 160 })
+        doc.y = 130
       } else {
-        doc.moveDown(1)
+        doc.y = 80
       }
 
       // Title Block
-      doc.y = 130
-      doc.fontSize(28).font('Helvetica-Bold').fillColor(GREEN)
-        .text('CO₂-Nachhaltigkeitsbericht', { align: 'center' })
+      doc.fontSize(26).font('Helvetica-Bold').fillColor(GREEN)
+        .text('CO2-Nachhaltigkeitsbericht', { align: 'center' })
       doc.moveDown(0.3)
-      doc.fontSize(14).font('Helvetica').fillColor(GRAY)
-        .text('Bereifung24 GmbH – Digitale Plattform für Reifenservices', { align: 'center' })
-      doc.moveDown(0.5)
+      doc.fontSize(13).font('Helvetica').fillColor(GRAY)
+        .text('Bereifung24 - Digitale Plattform fuer Reifenservices', { align: 'center' })
+      doc.moveDown(0.3)
       doc.fontSize(11).fillColor(GRAY)
-        .text(`Erstellt am ${dateStr}`, { align: 'center' })
+        .text('Erstellt am ' + dateStr, { align: 'center' })
 
       // Horizontal Line
-      doc.moveDown(1.5)
+      doc.moveDown(1.2)
       doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(GREEN).lineWidth(2).stroke()
-      doc.moveDown(2)
+      doc.moveDown(1.5)
 
       // ── Executive Summary Box ──
       const summaryY = doc.y
-      doc.rect(50, summaryY, PAGE_WIDTH, 100).fill('#ecfdf5')
+      doc.rect(50, summaryY, PAGE_WIDTH, 95).fill('#ecfdf5')
       doc.fillColor(DARK)
-      doc.fontSize(14).font('Helvetica-Bold')
-        .text('Zusammenfassung', 70, summaryY + 15)
-      doc.fontSize(10).font('Helvetica').fillColor('#374151')
+      doc.fontSize(13).font('Helvetica-Bold')
+        .text('Zusammenfassung', 70, summaryY + 12)
+      doc.fontSize(9.5).font('Helvetica').fillColor('#374151')
         .text(
-          `Durch die Nutzung der Bereifung24-Plattform wurden bisher insgesamt ${formatCO2(overview.totalCO2Kg)} CO₂ eingespart. ` +
-          `Das entspricht der jährlichen CO₂-Absorption von ${comparisons.equivalentTrees} Bäumen oder ${comparisons.equivalentCarKm.toLocaleString('de-DE')} km Autofahrt. ` +
-          `Insgesamt wurden ${overview.totalTripsAvoided.toLocaleString('de-DE')} unnötige Fahrten zu Werkstätten vermieden und ` +
-          `${overview.fuelSavedLiters.toLocaleString('de-DE')} Liter Kraftstoff eingespart.`,
-          70, summaryY + 38,
+          'Durch die Nutzung der Bereifung24-Plattform wurden bisher insgesamt ' + formatCO2(overview.totalCO2Kg) + ' CO2 eingespart. ' +
+          'Das entspricht der jaehrlichen CO2-Absorption von ' + comparisons.equivalentTrees + ' Baeumen oder ' + comparisons.equivalentCarKm.toLocaleString('de-DE') + ' km Autofahrt. ' +
+          'Insgesamt wurden ' + overview.totalTripsAvoided.toLocaleString('de-DE') + ' unnoetige Fahrten zu Werkstaetten vermieden und ' +
+          overview.fuelSavedLiters.toLocaleString('de-DE') + ' Liter Kraftstoff eingespart. ' +
+          'Die Berechnung basiert auf echten Fahrzeugdaten und GPS-Entfernungen der Nutzer.',
+          70, summaryY + 30,
           { width: PAGE_WIDTH - 40, lineGap: 3 }
         )
-      doc.y = summaryY + 115
+      doc.y = summaryY + 108
 
       // ── 4 KPI Cards ──
-      doc.moveDown(1)
-      doc.fontSize(16).font('Helvetica-Bold').fillColor(DARK)
+      doc.fontSize(15).font('Helvetica-Bold').fillColor(DARK)
         .text('Kernindikatoren (KPIs)', 50)
-      doc.moveDown(0.8)
+      doc.moveDown(0.6)
 
       const kpiStartY = doc.y
       const kpiWidth = (PAGE_WIDTH - 30) / 2
-      const kpiHeight = 70
+      const kpiHeight = 65
       const kpis = [
-        { label: 'CO₂ eingespart', value: formatCO2(overview.totalCO2Kg), sub: `Ø ${counts.avgCO2PerRequest} g/Anfrage` },
-        { label: 'Kilometer eingespart', value: `${overview.totalKmSaved.toLocaleString('de-DE')} km`, sub: `${overview.totalTripsAvoided.toLocaleString('de-DE')} Fahrten vermieden` },
-        { label: 'Kraftstoff eingespart', value: `${overview.fuelSavedLiters.toLocaleString('de-DE')} Liter`, sub: `${overview.moneySaved.toLocaleString('de-DE', { minimumFractionDigits: 2 })} € Ersparnis` },
-        { label: 'Plattform-Nutzung', value: `${counts.tireRequestsTotal.toLocaleString('de-DE')} Anfragen`, sub: `${counts.directBookingsActive.toLocaleString('de-DE')} Direktbuchungen` },
+        { label: 'CO2 eingespart', value: formatCO2(overview.totalCO2Kg), sub: 'ca. ' + counts.avgCO2PerRequest + ' g/Anfrage' },
+        { label: 'Kilometer eingespart', value: overview.totalKmSaved.toLocaleString('de-DE') + ' km', sub: overview.totalTripsAvoided.toLocaleString('de-DE') + ' Fahrten vermieden' },
+        { label: 'Kraftstoff eingespart', value: overview.fuelSavedLiters.toLocaleString('de-DE') + ' Liter', sub: overview.moneySaved.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + ' EUR Ersparnis' },
+        { label: 'Plattform-Nutzung', value: counts.tireRequestsTotal.toLocaleString('de-DE') + ' Anfragen', sub: counts.directBookingsActive.toLocaleString('de-DE') + ' Direktbuchungen' },
       ]
 
       kpis.forEach((kpi, i) => {
@@ -239,50 +233,52 @@ export async function GET(request: NextRequest) {
 
         doc.rect(x, y, kpiWidth, kpiHeight).fill('#f0fdf4')
         doc.fillColor(GREEN).fontSize(9).font('Helvetica')
-          .text(kpi.label, x + 15, y + 12, { width: kpiWidth - 30 })
-        doc.fillColor(DARK).fontSize(18).font('Helvetica-Bold')
-          .text(kpi.value, x + 15, y + 26, { width: kpiWidth - 30 })
+          .text(kpi.label, x + 15, y + 10, { width: kpiWidth - 30 })
+        doc.fillColor(DARK).fontSize(17).font('Helvetica-Bold')
+          .text(kpi.value, x + 15, y + 24, { width: kpiWidth - 30 })
         doc.fillColor(GRAY).fontSize(8).font('Helvetica')
-          .text(kpi.sub, x + 15, y + 50, { width: kpiWidth - 30 })
+          .text(kpi.sub, x + 15, y + 47, { width: kpiWidth - 30 })
       })
 
-      doc.y = kpiStartY + 2 * (kpiHeight + 10) + 20
+      doc.y = kpiStartY + 2 * (kpiHeight + 10) + 15
 
       // ── Umwelt-Vergleiche ──
-      doc.fontSize(16).font('Helvetica-Bold').fillColor(DARK)
-        .text('Umwelt-Äquivalenzen', 50)
-      doc.moveDown(0.5)
+      doc.fontSize(15).font('Helvetica-Bold').fillColor(DARK)
+        .text('Umwelt-Aequivalenzen', 50)
+      doc.moveDown(0.4)
       doc.fontSize(10).font('Helvetica').fillColor(GRAY)
-        .text('Die eingesparten CO₂-Emissionen entsprechen:')
+        .text('Die eingesparten CO2-Emissionen entsprechen:')
       doc.moveDown(0.5)
 
       const eqItems = [
-        { icon: '🌳', text: `${comparisons.equivalentTrees} Bäume`, desc: 'jährliche CO₂-Absorption (1 Baum ≈ 22 kg CO₂/Jahr)' },
-        { icon: '🚗', text: `${comparisons.equivalentCarKm.toLocaleString('de-DE')} km`, desc: 'Autofahrt (Ø 150 g CO₂/km)' },
-        { icon: '✈️', text: `${comparisons.equivalentFlights} Flüge`, desc: 'Frankfurt – Mallorca (≈ 230 kg CO₂)' },
-        { icon: '💰', text: `${overview.moneySaved.toLocaleString('de-DE', { minimumFractionDigits: 2 })} €`, desc: 'eingesparte Kraftstoffkosten für Verbraucher' },
+        { label: 'Baum', color: '#16a34a', text: comparisons.equivalentTrees + ' Baeume', desc: 'Jaehrliche CO2-Absorption (1 Baum = ca. 22 kg CO2/Jahr)' },
+        { label: 'Auto', color: '#2563eb', text: comparisons.equivalentCarKm.toLocaleString('de-DE') + ' km', desc: 'Vermiedene Autofahrt (ca. 150 g CO2/km)' },
+        { label: 'Flug', color: '#7c3aed', text: comparisons.equivalentFlights + ' Fluege', desc: 'Frankfurt - Mallorca (ca. 230 kg CO2 pro Passagier)' },
+        { label: 'Geld', color: '#ca8a04', text: overview.moneySaved.toLocaleString('de-DE', { minimumFractionDigits: 2 }) + ' EUR', desc: 'Eingesparte Kraftstoffkosten fuer Verbraucher' },
       ]
 
       eqItems.forEach(item => {
         const y = doc.y
-        doc.fontSize(11).font('Helvetica-Bold').fillColor(DARK)
-          .text(`${item.icon}  ${item.text}`, 70, y)
+        // Colored bullet
+        doc.circle(68, y + 5, 5).fill(item.color)
+        doc.fillColor(DARK).fontSize(11).font('Helvetica-Bold')
+          .text(item.text, 82, y)
         doc.fontSize(9).font('Helvetica').fillColor(GRAY)
-          .text(item.desc, 70, y + 14)
+          .text(item.desc, 82, y + 14)
         doc.y = y + 30
       })
 
       // ════════════════════════════════════════════════════
-      // PAGE 2: TRENDS & METHODOLOGY
+      // PAGE 2: TRENDS & DATA
       // ════════════════════════════════════════════════════
       doc.addPage()
 
       // ── Monatlicher Trend (Tabelle) ──
-      doc.fontSize(16).font('Helvetica-Bold').fillColor(DARK)
-        .text('Monatliche Entwicklung (CO₂-Einsparungen)', 50)
+      doc.fontSize(15).font('Helvetica-Bold').fillColor(DARK)
+        .text('Monatliche Entwicklung (CO2-Einsparungen)', 50)
       doc.moveDown(0.3)
       doc.fontSize(9).font('Helvetica').fillColor(GRAY)
-        .text('Letzte 12 Monate – basierend auf Reifenservice-Anfragen und Direktbuchungen')
+        .text('Letzte 12 Monate - basierend auf Reifenservice-Anfragen und Direktbuchungen')
       doc.moveDown(0.8)
 
       // Merge monthly data
@@ -301,7 +297,7 @@ export async function GET(request: NextRequest) {
       // Table Header
       const tableX = 50
       const colWidths = [100, 100, 120, 120]
-      const headers = ['Monat', 'CO₂ (kg)', 'Anfragen', 'Buchungen']
+      const headers = ['Monat', 'CO2 (kg)', 'Anfragen', 'Buchungen']
       let tableY = doc.y
 
       doc.rect(tableX, tableY, PAGE_WIDTH, 22).fill('#166534')
@@ -349,11 +345,11 @@ export async function GET(request: NextRequest) {
       tableY += 30
       doc.y = tableY
 
-      // ── Bar Chart Visualization (simplified) ──
+      // ── Bar Chart Visualization ──
       if (sortedMonths.length > 0) {
         doc.moveDown(0.5)
         doc.fontSize(12).font('Helvetica-Bold').fillColor(DARK)
-          .text('CO₂-Einsparungen pro Monat (kg)', 50)
+          .text('CO2-Einsparungen pro Monat (kg)', 50)
         doc.moveDown(0.5)
 
         const chartX = 80
@@ -414,59 +410,57 @@ export async function GET(request: NextRequest) {
             .text(label, 70, y, { width: 120 })
           doc.rect(195, y + 2, barW, 10).fill(GREEN)
           doc.fontSize(8).fillColor(GRAY)
-            .text(`${f.count} (${pct}%)`, 200 + barW + 5, y + 1)
+            .text(f.count + ' (' + pct + '%)', 200 + barW + 5, y + 1)
           doc.y = y + 18
         })
       }
 
       // ════════════════════════════════════════════════════
-      // PAGE 3: METHODOLOGY & FOOTER
+      // PAGE 3: METHODOLOGY
       // ════════════════════════════════════════════════════
       doc.addPage()
 
-      doc.fontSize(16).font('Helvetica-Bold').fillColor(DARK)
+      doc.fontSize(15).font('Helvetica-Bold').fillColor(DARK)
         .text('Berechnungsmethodik', 50)
       doc.moveDown(0.5)
 
-      doc.fontSize(10).font('Helvetica').fillColor('#374151')
-
       const methodSections = [
         {
-          title: '1. CO₂-Einsparung durch digitale Werkstattsuche',
-          text: `Bereifung24 ist eine digitale Plattform, die Kunden mit zertifizierten Reifenservice-Werkstätten verbindet. ` +
-            `Ohne die Plattform müssten Kunden durchschnittlich ${workshopsToCompare} Werkstätten persönlich aufsuchen, ` +
-            `um Preise und Verfügbarkeit zu vergleichen. Durch die Online-Suche werden diese Fahrten überflüssig.`,
+          title: '1. CO2-Einsparung durch digitale Werkstattsuche',
+          text: 'Bereifung24 ist eine digitale Plattform, die Kunden mit zertifizierten Reifenservice-Werkstaetten verbindet. ' +
+            'Ohne die Plattform muessten Kunden durchschnittlich ' + workshopsToCompare + ' Werkstaetten persoenlich aufsuchen, ' +
+            'um Preise und Verfuegbarkeit zu vergleichen. Durch die Online-Suche werden diese Fahrten ueberfluessig.',
         },
         {
-          title: '2. Berechnungsgrundlagen',
-          text: `• Durchschnittliche Entfernung zur Werkstatt: ${AVG_WORKSHOP_DISTANCE_KM} km (einfache Strecke)\n` +
-            `• Durchschnittliche CO₂-Emission: ${FALLBACK_CO2_PER_KM} g/km (PKW-Durchschnitt Deutschland)\n` +
-            `• Vermiedene Fahrten pro Anfrage: ${workshopsToCompare - 1} (von ${workshopsToCompare} auf 1 Werkstattbesuch)\n` +
-            `• Durchschnittlicher Kraftstoffverbrauch: ${avgFuelPer100km} L/100km\n` +
-            `• Durchschnittlicher Kraftstoffpreis: ${avgFuelPrice.toFixed(2)} €/L`,
+          title: '2. Berechnungsgrundlagen (echte Fahrzeugdaten)',
+          text: 'Die CO2-Berechnung basiert auf echten, individuellen Fahrzeugdaten der Nutzer:\n' +
+            '- Tatsaechlicher Kraftstofftyp des registrierten Fahrzeugs (Benzin, Diesel, Elektro, Hybrid, LPG, CNG)\n' +
+            '- Realer Kraftstoffverbrauch des Fahrzeugs (L/100km bzw. kWh/100km)\n' +
+            '- Echte Entfernung zwischen Kundenstandort und Werkstatt (via GPS/Geocoding)\n' +
+            '- Anzahl der kontaktierten Werkstaetten pro Anfrage\n' +
+            '- Nur bei fehlenden Fahrzeugdaten wird ein Fallback-Wert von ' + FALLBACK_CO2_PER_KM + ' g CO2/km verwendet (PKW-Durchschnitt Deutschland)',
         },
         {
           title: '3. Datenquellen',
-          text: `• Reifenservice-Anfragen mit individueller CO₂-Berechnung (fahrzeugspezifisch)\n` +
-            `• Direktbuchungen über die Plattform (vermiedene Vergleichsfahrten)\n` +
-            `• Fahrzeugdaten der registrierten Nutzer (Kraftstofftyp, Verbrauch)\n` +
-            `• Konfigurierbare Systemparameter (verifiziert durch Administrationsteam)`,
+          text: '- Reifenservice-Anfragen mit individueller CO2-Berechnung (fahrzeugspezifisch)\n' +
+            '- Direktbuchungen ueber die Plattform (vermiedene Vergleichsfahrten)\n' +
+            '- Fahrzeugdaten der registrierten Nutzer (Kraftstofftyp, Verbrauch)\n' +
+            '- GPS-basierte Entfernungsberechnung zu den jeweiligen Werkstaetten',
         },
         {
           title: '4. Vergleichswerte (Quellen)',
-          text: `• CO₂-Absorption eines Baumes: ~22 kg CO₂/Jahr (Umweltbundesamt)\n` +
-            `• CO₂ pro PKW-km: ~150 g (Kraftfahrt-Bundesamt, Durchschnitt Neuzulassungen)\n` +
-            `• Flug Frankfurt–Mallorca: ~230 kg CO₂ pro Passagier (atmosfair)\n` +
-            `• Smartphone-Ladung: ~8 g CO₂ (durchschnittlicher Strommix Deutschland)`,
+          text: '- CO2-Absorption eines Baumes: ca. 22 kg CO2/Jahr (Umweltbundesamt)\n' +
+            '- CO2 pro PKW-km: ca. 150 g (Kraftfahrt-Bundesamt, Durchschnitt Neuzulassungen)\n' +
+            '- Flug Frankfurt-Mallorca: ca. 230 kg CO2 pro Passagier (atmosfair)',
         },
         {
           title: '5. Digitalisierungseffekt',
-          text: `Die Plattform digitalisiert den Preisvergleich und die Terminbuchung für Reifenservices. ` +
-            `Dies reduziert nicht nur CO₂-Emissionen, sondern auch:\n` +
-            `• Zeitaufwand für Endverbraucher (Ø 2-3 Stunden Ersparnis pro Service)\n` +
-            `• Verwaltungsaufwand für Werkstätten (automatisierte Angebotserstellung)\n` +
-            `• Papierverbrauch (digitale Kommunikation statt Papierangebote)\n` +
-            `Bereifung24 GmbH leistet damit einen messbaren Beitrag zur Verkehrswende und Digitalisierung im Handwerk.`,
+          text: 'Die Plattform digitalisiert den Preisvergleich und die Terminbuchung fuer Reifenservices. ' +
+            'Dies reduziert nicht nur CO2-Emissionen, sondern auch:\n' +
+            '- Zeitaufwand fuer Endverbraucher (ca. 2-3 Stunden Ersparnis pro Service)\n' +
+            '- Verwaltungsaufwand fuer Werkstaetten (automatisierte Angebotserstellung)\n' +
+            '- Papierverbrauch (digitale Kommunikation statt Papierangebote)\n' +
+            'Bereifung24 leistet damit einen messbaren Beitrag zur Verkehrswende und Digitalisierung im Handwerk.',
         },
       ]
 
@@ -480,30 +474,38 @@ export async function GET(request: NextRequest) {
       })
 
       // ── Disclaimer ──
-      doc.moveDown(1)
+      if (doc.y > 650) {
+        doc.addPage()
+      }
+      doc.moveDown(0.5)
       const disclaimerY = doc.y
       doc.rect(50, disclaimerY, PAGE_WIDTH, 50).fill('#fefce8')
       doc.fillColor('#92400e').fontSize(8).font('Helvetica-Bold')
         .text('Hinweis', 65, disclaimerY + 10)
       doc.fillColor('#92400e').fontSize(7.5).font('Helvetica')
         .text(
-          'Die CO₂-Berechnungen basieren auf Durchschnittswerten und wissenschaftlich anerkannten Quellen. ' +
-          'Individuelle Einsparungen können je nach Fahrzeug, Entfernung und Fahrverhalten variieren. ' +
-          'Dieser Bericht dient zur Information und Dokumentation der ökologischen Wirkung der Plattform.',
+          'Die CO2-Berechnungen basieren auf echten Fahrzeugdaten und GPS-basierten Entfernungen der Nutzer. ' +
+          'Nur bei fehlenden Fahrzeugdaten werden wissenschaftlich anerkannte Durchschnittswerte als Fallback verwendet. ' +
+          'Dieser Bericht dient zur Information und Dokumentation der oekologischen Wirkung der Plattform.',
           65, disclaimerY + 22,
           { width: PAGE_WIDTH - 30, lineGap: 2 }
         )
+      doc.y = disclaimerY + 60
 
       // ── Signature Block ──
-      doc.moveDown(4)
-      const sigY = Math.max(doc.y, 650) // Ensure enough space at bottom
+      if (doc.y > 700) {
+        doc.addPage()
+        doc.y = 80
+      }
+      doc.moveDown(2)
+      const sigY = doc.y
 
       doc.moveTo(50, sigY).lineTo(250, sigY).strokeColor('#d1d5db').lineWidth(0.5).stroke()
       doc.moveTo(300, sigY).lineTo(500, sigY).stroke()
 
       doc.fillColor(GRAY).fontSize(8).font('Helvetica')
         .text('Ort, Datum', 50, sigY + 5)
-        .text('Unterschrift Geschäftsführung', 300, sigY + 5)
+        .text('Unterschrift Geschaeftsfuehrung', 300, sigY + 5)
 
       // ── Footer on all pages ──
       const pages = doc.bufferedPageRange()
@@ -515,12 +517,12 @@ export async function GET(request: NextRequest) {
 
         // Company info
         doc.fillColor(GRAY).fontSize(7).font('Helvetica')
-          .text('Bereifung24 GmbH | Digitale Plattform für Reifenservices', 50, 785)
-          .text(`Seite ${i + 1} von ${pages.count}`, 50, 785, { align: 'right', width: PAGE_WIDTH })
+          .text('Bereifung24 | Digitale Plattform fuer Reifenservices', 50, 785)
+          .text('Seite ' + (i + 1) + ' von ' + pages.count, 50, 785, { align: 'right', width: PAGE_WIDTH })
 
         // Confidentiality
         doc.fillColor('#9ca3af').fontSize(6)
-          .text('Vertraulich – Nur für den internen Gebrauch und autorisierte Dritte bestimmt.', 50, 798, { align: 'center', width: PAGE_WIDTH })
+          .text('Vertraulich - Nur fuer den internen Gebrauch und autorisierte Dritte bestimmt.', 50, 798, { align: 'center', width: PAGE_WIDTH })
       }
 
       doc.end()
@@ -532,12 +534,12 @@ export async function GET(request: NextRequest) {
 }
 
 function formatCO2(kg: number): string {
-  if (kg >= 1000) return `${(kg / 1000).toFixed(2)} Tonnen`
-  return `${kg.toFixed(2)} kg`
+  if (kg >= 1000) return (kg / 1000).toFixed(2) + ' Tonnen'
+  return kg.toFixed(2) + ' kg'
 }
 
 function formatMonth(month: string): string {
   const [year, m] = month.split('-')
-  const months = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
-  return `${months[parseInt(m) - 1]} ${year}`
+  const months = ['Jan', 'Feb', 'Maer', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez']
+  return months[parseInt(m) - 1] + ' ' + year
 }

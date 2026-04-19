@@ -56,6 +56,11 @@ export async function GET(request: NextRequest) {
 
     const settings = await prisma.cO2Settings.findFirst()
 
+    // Get company info for letterhead
+    const companySettings = await prisma.invoiceSettings.findUnique({
+      where: { id: 'default-settings' }
+    })
+
     // ─── Calculate values ───
 
     const AVG_WORKSHOP_DISTANCE_KM = 8
@@ -155,18 +160,27 @@ export async function GET(request: NextRequest) {
       // PAGE 1: COVER & KEY METRICS
       // ════════════════════════════════════════════════════
 
+      // Letterhead: Logo + Company Info
       if (logoBuffer) {
-        doc.image(logoBuffer, 50, 40, { width: 160 })
-        doc.y = 130
-      } else {
-        doc.y = 80
+        doc.image(logoBuffer, 50, 40, { width: 140 })
       }
+      doc.fontSize(16).font('Helvetica-Bold').fillColor(DARK)
+        .text('Bereifung24', logoBuffer ? 200 : 50, 45)
+      doc.fontSize(8).font('Helvetica').fillColor(GRAY)
+      const addr = companySettings
+        ? `${companySettings.companyStreet || ''} | ${companySettings.companyZip || ''} ${companySettings.companyCity || ''} | Tel: ${companySettings.phone || ''} | ${companySettings.email || ''}`
+        : 'Jahnstra\u00DFe 2 | 71706 Markgr\u00F6ningen | Tel: 07147 - 9679990 | info@bereifung24.de'
+      doc.text(addr, logoBuffer ? 200 : 50, 65, { width: 350 })
+      doc.y = logoBuffer ? 110 : 95
+
+      // Title Block
+      doc.moveDown(0.5)
 
       doc.fontSize(26).font('Helvetica-Bold').fillColor(GREEN)
         .text('CO2-Nachhaltigkeitsbericht', { align: 'center' })
       doc.moveDown(0.3)
       doc.fontSize(13).font('Helvetica').fillColor(GRAY)
-        .text('Bereifung24 - Digitale Plattform f\u00FCr Reifenservices', { align: 'center' })
+        .text('Digitale Plattform f\u00FCr Reifenservices', { align: 'center' })
       doc.moveDown(0.3)
       doc.fontSize(11).fillColor(GRAY)
         .text('Erstellt am ' + dateStr, { align: 'center' })

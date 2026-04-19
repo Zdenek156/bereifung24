@@ -177,17 +177,17 @@ export async function GET(request: NextRequest) {
       // Thin separator line under letterhead
       const sepY = headerY + 55
       doc.moveTo(50, sepY).lineTo(545, sepY).strokeColor('#e5e7eb').lineWidth(0.5).stroke()
-      doc.y = sepY + 30
 
-      // Title Block (centered with spacing)
+      // Title Block (reset x to margin for proper centering)
+      const titleY = sepY + 25
       doc.fontSize(24).font('Helvetica-Bold').fillColor(GREEN)
-        .text('CO2-Nachhaltigkeitsbericht', { align: 'center' })
+        .text('CO2-Nachhaltigkeitsbericht', 50, titleY, { align: 'center', width: PAGE_WIDTH })
       doc.moveDown(0.2)
       doc.fontSize(11).font('Helvetica').fillColor(GRAY)
-        .text('Digitale Plattform f\u00FCr Reifenservices', { align: 'center' })
+        .text('Digitale Plattform f\u00FCr Reifenservices', 50, doc.y, { align: 'center', width: PAGE_WIDTH })
       doc.moveDown(0.15)
       doc.fontSize(10).fillColor(GRAY)
-        .text('Erstellt am ' + dateStr, { align: 'center' })
+        .text('Erstellt am ' + dateStr, 50, doc.y, { align: 'center', width: PAGE_WIDTH })
 
       doc.moveDown(0.8)
       doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(GREEN).lineWidth(2).stroke()

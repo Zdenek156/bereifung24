@@ -30,6 +30,23 @@ interface GSCData {
   dailyData: Array<{ date: string; clicks: number; impressions: number }>
 }
 
+interface AppAnalyticsData {
+  overview: {
+    activeUsers: number
+    newUsers: number
+    sessions: number
+    screenViews: number
+    engagedSessions: number
+    avgSessionDuration: number
+    crashFreeRate: number
+  }
+  dailyData: Array<{ date: string; activeUsers: number; sessions: number; screenViews: number }>
+  topScreens: Array<{ screen: string; views: number; users: number }>
+  topEvents: Array<{ event: string; count: number; users: number }>
+  platforms: Array<{ platform: string; users: number; sessions: number }>
+  timeRange: string
+}
+
 export default function AdminAnalyticsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -42,6 +59,10 @@ export default function AdminAnalyticsPage() {
   const [gscConfigured, setGscConfigured] = useState(true)
   const [gscFilter, setGscFilter] = useState('')
   const [gscTimeRange, setGscTimeRange] = useState('7d')
+  const [appData, setAppData] = useState<AppAnalyticsData | null>(null)
+  const [appLoading, setAppLoading] = useState(false)
+  const [appError, setAppError] = useState<string | null>(null)
+  const [appTimeRange, setAppTimeRange] = useState('30d')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -53,6 +74,7 @@ export default function AdminAnalyticsPage() {
 
     fetchAnalytics()
     fetchGSCData()
+    fetchAppData()
   }, [session, status, router, timeRange])
 
   const fetchAnalytics = async () => {
@@ -111,6 +133,38 @@ export default function AdminAnalyticsPage() {
     fetchGSCData(undefined, filter)
   }
 
+  const fetchAppData = async (tr?: string) => {
+    try {
+      setAppLoading(true)
+      setAppError(null)
+      const range = tr || appTimeRange
+      const response = await fetch(`/api/admin/analytics/app?timeRange=${range}`)
+      const data = await response.json()
+
+      if (response.ok) {
+        setAppData(data)
+      } else {
+        setAppError(data.error || 'Fehler beim Laden')
+      }
+    } catch (error) {
+      console.error('Error fetching app analytics:', error)
+      setAppError('Verbindungsfehler')
+    } finally {
+      setAppLoading(false)
+    }
+  }
+
+  const handleAppTimeRangeChange = (range: string) => {
+    setAppTimeRange(range)
+    fetchAppData(range)
+  }
+
+  const formatDuration = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+    const s = Math.round(seconds % 60)
+    return m > 0 ? `${m}m ${s}s` : `${s}s`
+  }
+
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -129,7 +183,7 @@ export default function AdminAnalyticsPage() {
             <div>
               <h1 className="text-3xl font-bold text-gray-900">📊 Analytics & Besucherstatistik</h1>
               <p className="mt-1 text-sm text-gray-600">
-                Seitenaufrufe, Besucher-Tracking und Google Search Console
+                Seitenaufrufe, Besucher-Tracking, Google Search Console und App-Statistiken
               </p>
             </div>
           </div>
@@ -380,7 +434,201 @@ export default function AdminAnalyticsPage() {
           </div>
         )}
 
-        {/* Website Analytics Section */}
+        {/* ===== APP ANALYTICS SECTION ===== */}
+        <div className="border-t my-8"></div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-gray-900">📱 App-Statistiken (Firebase)</h2>
+          <div className="flex gap-2">
+            {[
+              { value: '7d', label: '7 Tage' },
+              { value: '30d', label: '30 Tage' },
+              { value: '90d', label: '90 Tage' },
+              { value: 'year', label: '1 Jahr' },
+            ].map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleAppTimeRangeChange(option.value)}
+                className={`px-3 py-1.5 rounded-lg text-sm ${appTimeRange === option.value ? 'bg-emerald-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {appLoading && !appData && (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+          </div>
+        )}
+
+        {appError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-red-700">❌ {appError}</p>
+          </div>
+        )}
+
+        {appData && (
+          <>
+            {/* App Overview Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 mb-6">
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Aktive Nutzer</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{appData.overview.activeUsers.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Neue Nutzer</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{appData.overview.newUsers.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Sessions</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{appData.overview.sessions.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Bildschirmaufrufe</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{appData.overview.screenViews.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Aktive Sessions</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{appData.overview.engagedSessions.toLocaleString()}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Ø Session-Dauer</p>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{formatDuration(appData.overview.avgSessionDuration)}</p>
+              </div>
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <p className="text-xs font-medium text-gray-500">Absturzfrei</p>
+                </div>
+                <p className="text-2xl font-bold text-green-600">{(appData.overview.crashFreeRate * 100).toFixed(1)}%</p>
+              </div>
+            </div>
+
+            {/* App Platform Breakdown */}
+            {appData.platforms.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {appData.platforms.map((p, i) => (
+                  <div key={i} className="bg-white rounded-lg shadow p-4 flex items-center gap-4">
+                    <div className="text-3xl">
+                      {p.platform.toLowerCase().includes('android') ? '🤖' : p.platform.toLowerCase().includes('ios') ? '🍎' : '💻'}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{p.platform}</p>
+                      <p className="text-sm text-gray-600">{p.users} Nutzer · {p.sessions} Sessions</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* App Daily Active Users Chart */}
+            {appData.dailyData.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">📈 Aktive Nutzer pro Tag</h3>
+                <div className="overflow-x-auto">
+                  <div className="flex items-end gap-1 min-w-max" style={{ height: '200px' }}>
+                    {appData.dailyData.map((day, index) => {
+                      const maxUsers = Math.max(...appData.dailyData.map(d => d.activeUsers))
+                      const height = maxUsers > 0 ? (day.activeUsers / maxUsers) * 160 : 0
+                      const dateStr = day.date.length === 8
+                        ? `${day.date.slice(0, 4)}-${day.date.slice(4, 6)}-${day.date.slice(6, 8)}`
+                        : day.date
+                      return (
+                        <div key={index} className="flex flex-col items-center relative group" style={{ minWidth: '28px' }}>
+                          <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                            {day.activeUsers} Nutzer · {day.sessions} Sessions
+                          </div>
+                          <div
+                            className="w-5 bg-emerald-500 rounded-t hover:bg-emerald-600 transition-colors"
+                            style={{ height: `${height}px` }}
+                          />
+                          <p className="text-[9px] text-gray-500 mt-1 rotate-45 origin-top-left w-12">
+                            {new Date(dateStr).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* App Top Screens */}
+            {appData.topScreens.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">📱 Top Bildschirme</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bildschirm</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aufrufe</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Nutzer</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {appData.topScreens.map((s, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm text-gray-900 font-mono">{s.screen}</td>
+                          <td className="px-4 py-3 text-sm text-right font-semibold text-emerald-600">{s.views.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-sm text-right text-gray-600">{s.users.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* App Top Events */}
+            {appData.topEvents.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">⚡ Top Ereignisse</h3>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Anzahl</th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Nutzer</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {appData.topEvents.map((e, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm text-gray-900 font-mono">{e.event}</td>
+                          <td className="px-4 py-3 text-sm text-right font-semibold text-purple-600">{e.count.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-sm text-right text-gray-600">{e.users.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ===== WEBSITE ANALYTICS SECTION ===== */}
         {analytics && (
           <>
             {/* Divider */}

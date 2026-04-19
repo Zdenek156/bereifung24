@@ -105,6 +105,7 @@ function getDescriptionForKey(key: string): string {
     'YOUTUBE_CLIENT_SECRET': 'YouTube/Google OAuth Client Secret für YouTube Data API v3',
     'ELEVENLABS_API_KEY': 'ElevenLabs API Key für KI-Sprachausgabe (Text-to-Speech) im App KI-Berater "Rollo" (elevenlabs.io)',
     'ELEVENLABS_VOICE_ID': 'ElevenLabs Voice ID für die Stimme von "Rollo" (z.B. pNInz6obpgDQGcFmaJgB für Adam)',
+    'FIREBASE_ANALYTICS_PROPERTY_ID': 'Firebase/Google Analytics 4 Property-ID für App-Statistiken (aus Firebase Console → Projekteinstellungen → Integrationen → Google Analytics, z.B. 123456789)',
   }
   return descriptions[key] || ''
 }

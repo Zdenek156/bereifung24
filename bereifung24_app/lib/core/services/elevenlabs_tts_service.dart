@@ -28,13 +28,15 @@ class ElevenLabsTtsService {
   Future<void> init({required String apiKey, String? voiceId}) async {
     _apiKey = apiKey;
     if (voiceId != null) _voiceId = voiceId;
-    debugPrint('[TTS] Initialized with voiceId=$_voiceId, apiKey length=${apiKey.length}');
+    debugPrint(
+        '[TTS] Initialized with voiceId=$_voiceId, apiKey length=${apiKey.length}');
   }
 
   /// Speak text using ElevenLabs TTS
   Future<void> speak(String text) async {
     if (_apiKey == null || _apiKey!.isEmpty || text.trim().isEmpty) {
-      debugPrint('[TTS] speak() aborted: apiKey=${_apiKey == null ? "null" : "len=${_apiKey!.length}"}, text empty=${text.trim().isEmpty}');
+      debugPrint(
+          '[TTS] speak() aborted: apiKey=${_apiKey == null ? "null" : "len=${_apiKey!.length}"}, text empty=${text.trim().isEmpty}');
       return;
     }
     debugPrint('[TTS] Speaking text (${text.length} chars)...');
@@ -66,8 +68,10 @@ class ElevenLabsTtsService {
             RegExp(r'\[([^\]]+)\]\([^)]+\)'),
             (m) => m.group(1) ?? '',
           ) // links
-          .replaceAll(RegExp(r'[\u{1F300}-\u{1FAFF}]', unicode: true), '') // emojis
-          .replaceAll(RegExp(r'[\u{2600}-\u{27BF}]', unicode: true), '') // symbols
+          .replaceAll(
+              RegExp(r'[\u{1F300}-\u{1FAFF}]', unicode: true), '') // emojis
+          .replaceAll(
+              RegExp(r'[\u{2600}-\u{27BF}]', unicode: true), '') // symbols
           .replaceAll(RegExp(r'[\u{FE00}-\u{FEFF}]', unicode: true), '')
           .replaceAll(RegExp(r'[\u{200B}-\u{200F}]', unicode: true), '');
 
@@ -94,9 +98,7 @@ class ElevenLabsTtsService {
         (m) => '${m.group(1)} ${m.group(2)}',
       );
 
-      cleanText = cleanText
-          .replaceAll(RegExp(r'\s+'), ' ')
-          .trim();
+      cleanText = cleanText.replaceAll(RegExp(r'\s+'), ' ').trim();
 
       if (cleanText.isEmpty) {
         _isSpeaking = false;
@@ -125,7 +127,8 @@ class ElevenLabsTtsService {
         },
       );
 
-      debugPrint('[TTS] ElevenLabs response: ${response.statusCode}, data size: ${(response.data as List<int>).length} bytes');
+      debugPrint(
+          '[TTS] ElevenLabs response: ${response.statusCode}, data size: ${(response.data as List<int>).length} bytes');
       if (response.statusCode == 200) {
         final bytes = response.data as List<int>;
         final tempDir = await getTemporaryDirectory();

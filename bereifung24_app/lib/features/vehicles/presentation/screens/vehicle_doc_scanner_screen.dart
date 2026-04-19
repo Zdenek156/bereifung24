@@ -36,8 +36,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
   DeviceOrientation _physicalOrientation = DeviceOrientation.landscapeRight;
 
   // Android uses landscapeLeft, iOS uses landscapeRight (notch left = natural iPhone hold)
-  DeviceOrientation get _preferredLandscape =>
-      Platform.isIOS ? DeviceOrientation.landscapeRight : DeviceOrientation.landscapeLeft;
+  DeviceOrientation get _preferredLandscape => Platform.isIOS
+      ? DeviceOrientation.landscapeRight
+      : DeviceOrientation.landscapeLeft;
 
   @override
   void initState() {
@@ -74,9 +75,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       backCamera,
       ResolutionPreset.high,
       enableAudio: false,
-      imageFormatGroup: Platform.isIOS
-          ? ImageFormatGroup.bgra8888
-          : ImageFormatGroup.nv21,
+      imageFormatGroup:
+          Platform.isIOS ? ImageFormatGroup.bgra8888 : ImageFormatGroup.nv21,
     );
 
     await _cameraController!.initialize();
@@ -135,7 +135,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       final result = parseVehicleDoc(lines);
 
       // Keep best result (most fields found)
-      if (_bestResult == null || result.fieldsFound > _bestResult!.fieldsFound) {
+      if (_bestResult == null ||
+          result.fieldsFound > _bestResult!.fieldsFound) {
         _bestResult = result;
       }
 
@@ -252,7 +253,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
               final angle = _previewRotation();
               final isPortrait =
                   _physicalOrientation == DeviceOrientation.portraitUp ||
-                  _physicalOrientation == DeviceOrientation.portraitDown;
+                      _physicalOrientation == DeviceOrientation.portraitDown;
               // Scale up when rotated 90° so preview still fills the container
               final scale = isPortrait
                   ? MediaQuery.of(context).size.width /
@@ -286,8 +287,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
               builder: (context, _) {
                 final frameHeight = size.height * 0.65;
                 final frameTop = (size.height - frameHeight) / 2;
-                final lineY =
-                    frameTop + 16 + (_scanLineController.value * (frameHeight - 32));
+                final lineY = frameTop +
+                    16 +
+                    (_scanLineController.value * (frameHeight - 32));
                 final frameWidth = size.width * 0.7;
                 final frameLeft = (size.width - frameWidth) / 2;
                 return Positioned(
@@ -353,8 +355,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                       ),
                       const Spacer(),
                       // Field badges inline
-                      if (_fieldsFound > 0 || isDone)
-                        ..._buildFieldBadges(),
+                      if (_fieldsFound > 0 || isDone) ..._buildFieldBadges(),
                       const SizedBox(width: 8),
                       _CircleButton(
                         icon: _torchOn ? Icons.flash_on : Icons.flash_off,
@@ -368,7 +369,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
 
                 // Bottom bar with progress + buttons
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
@@ -390,7 +392,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                               borderRadius: BorderRadius.circular(2),
                               child: LinearProgressIndicator(
                                 value: _fieldsFound / 7,
-                                backgroundColor: Colors.white.withValues(alpha: 0.1),
+                                backgroundColor:
+                                    Colors.white.withValues(alpha: 0.1),
                                 valueColor: AlwaysStoppedAnimation(
                                     isDone ? successColor : accentColor),
                                 minHeight: 3,
@@ -413,8 +416,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                       const SizedBox(height: 6),
 
                       // Result card (compact for landscape)
-                      if (isDone)
-                        _buildResultCardCompact(),
+                      if (isDone) _buildResultCardCompact(),
 
                       // Buttons
                       if (isDone)
@@ -423,24 +425,29 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                           children: [
                             TextButton.icon(
                               onPressed: _rescan,
-                              icon: const Icon(Icons.camera_alt, color: accentColor, size: 16),
+                              icon: const Icon(Icons.camera_alt,
+                                  color: accentColor, size: 16),
                               label: const Text(
                                 'Erneut',
-                                style: TextStyle(color: accentColor, fontSize: 12),
+                                style:
+                                    TextStyle(color: accentColor, fontSize: 12),
                               ),
                             ),
                             const SizedBox(width: 16),
                             ElevatedButton.icon(
                               onPressed: _confirm,
-                              icon: const Icon(Icons.check, color: Colors.white, size: 16),
+                              icon: const Icon(Icons.check,
+                                  color: Colors.white, size: 16),
                               label: const Text(
                                 'Daten übernehmen',
-                                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                                style: TextStyle(
+                                    fontWeight: FontWeight.w800, fontSize: 13),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: successColor,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 8),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(10),
                                 ),
@@ -454,7 +461,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                           children: [
                             Text(
                               '💡 Fahrzeugschein flach hinlegen',
-                              style: TextStyle(color: Colors.grey[500], fontSize: 11),
+                              style: TextStyle(
+                                  color: Colors.grey[500], fontSize: 11),
                             ),
                             const SizedBox(width: 12),
                             if (_fieldsFound > 0)
@@ -467,10 +475,12 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                                   _scanTimer?.cancel();
                                   _scanLineController.stop();
                                 },
-                                icon: const Icon(Icons.check, color: accentColor, size: 14),
+                                icon: const Icon(Icons.check,
+                                    color: accentColor, size: 14),
                                 label: Text(
                                   'Übernehmen ($_fieldsFound/7)',
-                                  style: const TextStyle(color: accentColor, fontSize: 12),
+                                  style: const TextStyle(
+                                      color: accentColor, fontSize: 12),
                                 ),
                               )
                             else
@@ -598,8 +608,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
       decoration: BoxDecoration(
         color: Colors.black87,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-            color: const Color(0xFF10B981).withValues(alpha: 0.5)),
+        border:
+            Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -617,7 +627,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
           if (r.year != null) ...[
             const SizedBox(width: 8),
             Text('${r.year}',
-              style: TextStyle(color: Colors.grey[400], fontSize: 11)),
+                style: TextStyle(color: Colors.grey[400], fontSize: 11)),
           ],
         ],
       ),

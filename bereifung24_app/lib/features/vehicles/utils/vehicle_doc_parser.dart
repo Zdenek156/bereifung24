@@ -438,8 +438,8 @@ void _parseFieldCodes(List<String> textBlocks, VehicleDocResult result) {
     'vin': RegExp(r'(?:^|\s)E\s*[:\s]\s*([A-HJ-NPR-Z0-9]{17})',
         caseSensitive: false),
     'fuel': RegExp(r'(?:^|\s)P\.?3\s*[:\s]\s*(\S+)', caseSensitive: false),
-    'category': RegExp(r'(?:^|\s)J\s*[:\s]\s*(\S+(?:\s\S+)?)',
-        caseSensitive: false),
+    'category':
+        RegExp(r'(?:^|\s)J\s*[:\s]\s*(\S+(?:\s\S+)?)', caseSensitive: false),
     'tire': RegExp(
         r'(?:^|\s)15\.?1\s*[:\s]\s*(\d{2,3}\s?[/\\]\s?\d{2,3}\s?(?:ZR|R|B|D)\s?\d{2}(?:\s?\d{2,3}\s?[A-Z])?)',
         caseSensitive: false),
@@ -521,7 +521,8 @@ void _parseFieldCodes(List<String> textBlocks, VehicleDocResult result) {
             } else if (cUp.contains('ANHÄNGER') || cUp.contains('ANHAENGER')) {
               result.vehicleCategory = 'ANHÄNGER';
               result.fieldsFound++;
-            } else if (cUp.contains('PKW') || cUp.contains('PERSONENKRAFTWAGEN')) {
+            } else if (cUp.contains('PKW') ||
+                cUp.contains('PERSONENKRAFTWAGEN')) {
               result.vehicleCategory = 'PKW';
               result.fieldsFound++;
             }

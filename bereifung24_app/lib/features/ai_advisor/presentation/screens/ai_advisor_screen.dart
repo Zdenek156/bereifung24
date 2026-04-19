@@ -209,10 +209,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       final micStatus = await Permission.microphone.request();
       await RemoteLogger.log('voice', 'mic permission result: $micStatus');
       if (!micStatus.isGranted) {
-        await RemoteLogger.error('voice', 'mic permission NOT granted: $micStatus');
+        await RemoteLogger.error(
+            'voice', 'mic permission NOT granted: $micStatus');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Mikrofon-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
+            const SnackBar(
+                content: Text(
+                    'Mikrofon-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
           );
           // Open app settings so user can grant permission manually
           if (micStatus.isPermanentlyDenied || micStatus.isDenied) {
@@ -225,12 +228,16 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       // iOS also requires speech recognition permission separately
       if (Platform.isIOS) {
         final speechStatus = await Permission.speech.request();
-        await RemoteLogger.log('voice', 'iOS speech permission result: $speechStatus');
+        await RemoteLogger.log(
+            'voice', 'iOS speech permission result: $speechStatus');
         if (!speechStatus.isGranted) {
-          await RemoteLogger.error('voice', 'iOS speech permission NOT granted: $speechStatus');
+          await RemoteLogger.error(
+              'voice', 'iOS speech permission NOT granted: $speechStatus');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Spracherkennung-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
+              const SnackBar(
+                  content: Text(
+                      'Spracherkennung-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
             );
             if (speechStatus.isPermanentlyDenied || speechStatus.isDenied) {
               await openAppSettings();
@@ -242,13 +249,17 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
       // Pre-initialize speech service so it's ready when user taps mic
       final speechReady = await SpeechService().init();
-      await RemoteLogger.log('voice', 'speechService.init() result: $speechReady');
+      await RemoteLogger.log(
+          'voice', 'speechService.init() result: $speechReady');
 
       if (!speechReady) {
-        await RemoteLogger.error('voice', 'speechService.init() returned false');
+        await RemoteLogger.error(
+            'voice', 'speechService.init() returned false');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Spracherkennung konnte nicht initialisiert werden.')),
+            const SnackBar(
+                content:
+                    Text('Spracherkennung konnte nicht initialisiert werden.')),
           );
         }
         return;
@@ -281,7 +292,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           ? 'Hallo! Ich bin Rollo, dein Reifenberater. Ich sehe, du fährst einen $vehicleName. Wie kann ich dir helfen?'
           : 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
       setState(() {
-        _messages.add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
+        _messages
+            .add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
         _lastAiText = greeting;
       });
       _scrollToBottom();
@@ -333,11 +345,19 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   String _cleanAiResponse(String text) {
     var cleaned = text;
     // Remove "TI: ..." or "Thinking: ..." prefixed blocks (usually English)
-    cleaned = cleaned.replaceAll(RegExp(r'^(TI|Thinking|THINKING|Thought|Internal|Note):\s*.+?\n\n', dotAll: true), '');
+    cleaned = cleaned.replaceAll(
+        RegExp(r'^(TI|Thinking|THINKING|Thought|Internal|Note):\s*.+?\n\n',
+            dotAll: true),
+        '');
     // Remove lines that are clearly English thinking (e.g. "The user wants...")
-    cleaned = cleaned.replaceAll(RegExp(r'^(The user|I need to|I should|Let me|I will|Here is|Based on)\s.+?\n', multiLine: true), '');
+    cleaned = cleaned.replaceAll(
+        RegExp(
+            r'^(The user|I need to|I should|Let me|I will|Here is|Based on)\s.+?\n',
+            multiLine: true),
+        '');
     // Remove German license plates in parentheses, e.g. "(VAI MK6)" or "(LB RR6)"
-    cleaned = cleaned.replaceAll(RegExp(r'\s*\([A-ZÄÖÜ]{1,3}[\s-][A-Z]{1,2}\s?\d{1,4}[HE]?\)'), '');
+    cleaned = cleaned.replaceAll(
+        RegExp(r'\s*\([A-ZÄÖÜ]{1,3}[\s-][A-Z]{1,2}\s?\d{1,4}[HE]?\)'), '');
     return cleaned.trim();
   }
 
@@ -356,7 +376,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     if (Platform.isIOS) {
       await ElevenLabsTtsService().stop();
       await Future.delayed(const Duration(milliseconds: 600));
-      await RemoteLogger.log('voice', 'iOS: audio session released, starting speech');
+      await RemoteLogger.log(
+          'voice', 'iOS: audio session released, starting speech');
     }
 
     setState(() {
@@ -456,8 +477,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
     // Add user message to chat history
     setState(() {
-      _messages.add(
-          _ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
+      _messages
+          .add(_ChatMessage(role: 'user', text: text.trim(), time: _timeStr()));
       _isTyping = true;
     });
     _scrollToBottom();
@@ -512,22 +533,25 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         latitude: lat,
         longitude: lng,
       );
-      debugPrint('[voice] API response received, status=${response.statusCode}');
+      debugPrint(
+          '[voice] API response received, status=${response.statusCode}');
 
       if (!mounted) return;
 
       final data = response.data;
-      final aiText = _cleanAiResponse(data['response'] as String? ?? 'Keine Antwort erhalten.');
+      final aiText = _cleanAiResponse(
+          data['response'] as String? ?? 'Keine Antwort erhalten.');
       final newHistory = data['chatHistory'] as List? ?? [];
-      debugPrint('[voice] aiText (${aiText.length} chars): ${aiText.substring(0, aiText.length > 80 ? 80 : aiText.length)}...');
+      debugPrint(
+          '[voice] aiText (${aiText.length} chars): ${aiText.substring(0, aiText.length > 80 ? 80 : aiText.length)}...');
 
       // Parse recommended tires
       List<_RecommendedTire>? recTires;
       final rawTires = data['recommendedTires'] as List?;
       if (rawTires != null && rawTires.isNotEmpty) {
         recTires = rawTires
-            .map((e) => _RecommendedTire
-                .fromJson(Map<String, dynamic>.from(e as Map)))
+            .map((e) =>
+                _RecommendedTire.fromJson(Map<String, dynamic>.from(e as Map)))
             .toList();
         debugPrint('[voice] parsed ${recTires.length} recommended tires');
       } else {
@@ -537,7 +561,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       // Sync selectedVehicleId from AI response (server knows which vehicle)
       final serverVehicleId = data['selectedVehicleId'] as String?;
       if (serverVehicleId != null && _vehicleId == null) {
-        debugPrint('[voice] server returned selectedVehicleId=$serverVehicleId');
+        debugPrint(
+            '[voice] server returned selectedVehicleId=$serverVehicleId');
         _vehicleId = serverVehicleId;
       }
 
@@ -578,7 +603,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       }
     } catch (e, stack) {
       debugPrint('[voice] ERROR in _voiceModeSendMessage: $e');
-      debugPrint('[voice] STACK: ${stack.toString().split('\n').take(5).join('\n')}');
+      debugPrint(
+          '[voice] STACK: ${stack.toString().split('\n').take(5).join('\n')}');
       if (!mounted) return;
       setState(() {
         _messages.add(_ChatMessage(
@@ -609,8 +635,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       if (_isVoiceMode) {
         // iOS needs more time for audio session to switch from playback to recording
         final delay = Platform.isIOS ? 800 : 500;
-        Future.delayed(
-            Duration(milliseconds: delay), _voiceModeStartListening);
+        Future.delayed(Duration(milliseconds: delay), _voiceModeStartListening);
       }
     }
   }
@@ -764,7 +789,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       if (!mounted) return;
 
       final data = response.data;
-      final aiText = _cleanAiResponse(data['response'] as String? ?? 'Keine Antwort erhalten.');
+      final aiText = _cleanAiResponse(
+          data['response'] as String? ?? 'Keine Antwort erhalten.');
       final newHistory = data['chatHistory'] as List? ?? [];
 
       // Parse recommended tires
@@ -1099,7 +1125,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                       }
                     },
                     child: Icon(
-                      _isSpeaking ? Icons.stop_circle_outlined : Icons.play_circle_outline,
+                      _isSpeaking
+                          ? Icons.stop_circle_outlined
+                          : Icons.play_circle_outline,
                       size: 16,
                       color: _isSpeaking
                           ? Colors.red
@@ -1224,7 +1252,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
   // ── Tire Recommendations (grouped by axle for mixed tires) ──
 
-  List<Widget> _buildTireRecommendations(List<_RecommendedTire> tires, bool isDark) {
+  List<Widget> _buildTireRecommendations(
+      List<_RecommendedTire> tires, bool isDark) {
     final frontTires = tires.where((t) => t.axle == 'front').toList();
     final rearTires = tires.where((t) => t.axle == 'rear').toList();
     final hasMixed = frontTires.isNotEmpty && rearTires.isNotEmpty;
@@ -1242,7 +1271,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+              color:
+                  isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
             ),
           ),
         ),
@@ -1256,7 +1286,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+              color:
+                  isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
             ),
           ),
         ),
@@ -1272,7 +1303,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       return [
         ...tires.map((tire) => _buildTireCard(tire, isDark)),
         if (_selectedTire != null &&
-            tires.any((t) => t.brand == _selectedTire!.brand && t.model == _selectedTire!.model)) ...[
+            tires.any((t) =>
+                t.brand == _selectedTire!.brand &&
+                t.model == _selectedTire!.model)) ...[
           const SizedBox(height: 8),
           _buildSearchButton(_selectedTire!),
         ],
@@ -1290,7 +1323,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: B24Colors.primaryBlue,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(vertical: 12),
         ),
       ),
@@ -1316,7 +1350,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: B24Colors.primaryBlue,
           foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           padding: const EdgeInsets.symmetric(vertical: 12),
         ),
       ),
@@ -1326,7 +1361,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   void _navigateToMixedSearch() {
     _syncVehicleProvider();
     final t = _selectedFrontTire ?? _selectedRearTire!;
-    final service = _vehicleType == 'MOTORCYCLE' ? 'MOTORCYCLE_TIRE' : 'TIRE_CHANGE';
+    final service =
+        _vehicleType == 'MOTORCYCLE' ? 'MOTORCYCLE_TIRE' : 'TIRE_CHANGE';
     String url = '/search?service=$service'
         '&width=${Uri.encodeComponent(t.width)}'
         '&height=${Uri.encodeComponent(t.height)}'
@@ -1386,14 +1422,16 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               for (final spec in specs) {
                 if (spec.hasDifferentSizes) {
                   final frontOk = spec.width == fw && spec.diameter == fd;
-                  final rearOk = spec.rearWidth == rw && spec.rearDiameter == rd;
+                  final rearOk =
+                      spec.rearWidth == rw && spec.rearDiameter == rd;
                   if (frontOk && rearOk) {
                     _vehicleId = v.id;
                     _vehicleType = v.vehicleType;
                     ref.read(selectedVehicleProvider.notifier).state = v;
                     ref.read(homeVehicleIndexProvider.notifier).state = i;
                     saveHomeVehicleIndex(i);
-                    debugPrint('[sync] Matched BOTH front ${frontTire.width}R${frontTire.diameter} + rear ${rearTire!.width}R${rearTire.diameter} to ${v.displayName} (${v.vehicleType})');
+                    debugPrint(
+                        '[sync] Matched BOTH front ${frontTire.width}R${frontTire.diameter} + rear ${rearTire!.width}R${rearTire.diameter} to ${v.displayName} (${v.vehicleType})');
                     break;
                   }
                 }
@@ -1411,14 +1449,16 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               for (final spec in specs) {
                 final matchFront = spec.width == fw && spec.diameter == fd;
                 final matchRear = spec.hasDifferentSizes &&
-                    spec.rearWidth == fw && spec.rearDiameter == fd;
+                    spec.rearWidth == fw &&
+                    spec.rearDiameter == fd;
                 if (matchFront || matchRear) {
                   _vehicleId = v.id;
                   _vehicleType = v.vehicleType;
                   ref.read(selectedVehicleProvider.notifier).state = v;
                   ref.read(homeVehicleIndexProvider.notifier).state = i;
                   saveHomeVehicleIndex(i);
-                  debugPrint('[sync] Matched front-only ${frontTire.width}/${frontTire.height}R${frontTire.diameter} to ${v.displayName} (${v.vehicleType})');
+                  debugPrint(
+                      '[sync] Matched front-only ${frontTire.width}/${frontTire.height}R${frontTire.diameter} to ${v.displayName} (${v.vehicleType})');
                   break;
                 }
               }
@@ -1440,7 +1480,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   void _navigateToSearch(_RecommendedTire t) {
     _syncVehicleProvider();
     final seasonCode = _seasonCode(t);
-    final service = _vehicleType == 'MOTORCYCLE' ? 'MOTORCYCLE_TIRE' : 'TIRE_CHANGE';
+    final service =
+        _vehicleType == 'MOTORCYCLE' ? 'MOTORCYCLE_TIRE' : 'TIRE_CHANGE';
     context.go('/search?service=$service'
         '&width=${Uri.encodeComponent(t.width)}'
         '&height=${Uri.encodeComponent(t.height)}'
@@ -1688,8 +1729,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                   hintText: 'Frag mich etwas...',
                   hintStyle: TextStyle(
                     color: isDark
-                            ? B24Colors.darkTextSecondary
-                            : B24Colors.textTertiary,
+                        ? B24Colors.darkTextSecondary
+                        : B24Colors.textTertiary,
                     fontSize: 14,
                   ),
                   border: InputBorder.none,

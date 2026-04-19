@@ -147,13 +147,12 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final size = MediaQuery.of(context).size;
-    final hasTires = widget.recommendedTires != null &&
-        widget.recommendedTires!.isNotEmpty;
+    final hasTires =
+        widget.recommendedTires != null && widget.recommendedTires!.isNotEmpty;
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0A0E1A)
-          : const Color(0xFF0F172A),
+      backgroundColor:
+          isDark ? const Color(0xFF0A0E1A) : const Color(0xFF0F172A),
       body: Stack(
         children: [
           // Background gradient
@@ -167,8 +166,8 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
                       center: const Alignment(0, -0.2),
                       radius: 1.2,
                       colors: [
-                        _stateColor().withValues(
-                            alpha: 0.08 * _glowAnimation.value),
+                        _stateColor()
+                            .withValues(alpha: 0.08 * _glowAnimation.value),
                         Colors.transparent,
                       ],
                     ),
@@ -301,8 +300,7 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: color.withValues(
-                          alpha: 0.3 + (0.3 * glowValue)),
+                      color: color.withValues(alpha: 0.3 + (0.3 * glowValue)),
                       blurRadius: 20 + (10 * pulseValue),
                       spreadRadius: 2 + (4 * pulseValue),
                     ),
@@ -320,8 +318,7 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
                 decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   image: DecorationImage(
-                    image:
-                        AssetImage('assets/images/services/ki_berater.jpg'),
+                    image: AssetImage('assets/images/services/ki_berater.jpg'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -457,8 +454,7 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: Row(
               children: [
-                Icon(Icons.recommend,
-                    color: B24Colors.accentGreen, size: 18),
+                Icon(Icons.recommend, color: B24Colors.accentGreen, size: 18),
                 const SizedBox(width: 8),
                 const Text(
                   'Reifen-Empfehlungen',
@@ -485,37 +481,36 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
           ),
           if (hasSelection)
             Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () => widget.onTireSearch?.call(widget.selectedTire),
-                    icon: const Icon(Icons.search, size: 16),
-                    label: const Text('Werkstatt finden',
-                        style: TextStyle(fontSize: 13)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: B24Colors.primaryBlue,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () =>
+                      widget.onTireSearch?.call(widget.selectedTire),
+                  icon: const Icon(Icons.search, size: 16),
+                  label: const Text('Werkstatt finden',
+                      style: TextStyle(fontSize: 13)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: B24Colors.primaryBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
+      ),
     );
   }
 
   Widget _buildMixedTireOverlay(bool isDark, bool hasSelection) {
-    final frontTires = widget.recommendedTires!
-        .where((t) => t.axle == 'front')
-        .toList();
-    final rearTires = widget.recommendedTires!
-        .where((t) => t.axle == 'rear')
-        .toList();
+    final frontTires =
+        widget.recommendedTires!.where((t) => t.axle == 'front').toList();
+    final rearTires =
+        widget.recommendedTires!.where((t) => t.axle == 'rear').toList();
     final frontLabel = widget.isMotorcycle ? 'Vorderrad' : 'Vorderachse';
     final rearLabel = widget.isMotorcycle ? 'Hinterrad' : 'Hinterachse';
 
@@ -535,8 +530,7 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             child: Row(
               children: [
-                Icon(Icons.recommend,
-                    color: B24Colors.accentGreen, size: 18),
+                Icon(Icons.recommend, color: B24Colors.accentGreen, size: 18),
                 const SizedBox(width: 8),
                 const Text(
                   'Reifen-Empfehlungen',
@@ -823,8 +817,7 @@ class _WaveformPainter extends CustomPainter {
 
       // Create wave pattern
       final wave1 = sin((normalizedPos * 4 * pi) + (progress * 2 * pi));
-      final wave2 =
-          sin((normalizedPos * 6 * pi) + (progress * 2 * pi * 1.5));
+      final wave2 = sin((normalizedPos * 6 * pi) + (progress * 2 * pi * 1.5));
       final combined = (wave1 * 0.6 + wave2 * 0.4);
 
       // Fade edges
@@ -832,8 +825,8 @@ class _WaveformPainter extends CustomPainter {
 
       final amplitude =
           isActive ? (size.height * 0.35 * intensity) : (size.height * 0.08);
-      final barHeight = (combined.abs() * amplitude * edgeFade)
-          .clamp(2.0, size.height * 0.5);
+      final barHeight =
+          (combined.abs() * amplitude * edgeFade).clamp(2.0, size.height * 0.5);
 
       final opacity = isActive ? (0.3 + 0.5 * combined.abs()) : 0.2;
       paint.color = color.withValues(alpha: opacity);

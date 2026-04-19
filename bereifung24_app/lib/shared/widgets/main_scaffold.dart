@@ -6,11 +6,31 @@ class MainScaffold extends StatelessWidget {
   const MainScaffold({super.key, required this.child});
 
   static const _tabs = [
-    _TabItem(label: 'Home', path: '/home', icon: Icons.home_outlined, activeIcon: Icons.home),
-    _TabItem(label: 'Suche', path: '/search', icon: Icons.search, activeIcon: Icons.search),
-    _TabItem(label: 'Buchungen', path: '/bookings', icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today),
-    _TabItem(label: 'Fahrzeuge', path: '/vehicles', icon: Icons.directions_car_outlined, activeIcon: Icons.directions_car),
-    _TabItem(label: 'Profil', path: '/profile', icon: Icons.person_outline, activeIcon: Icons.person),
+    _TabItem(
+        label: 'Home',
+        path: '/home',
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home),
+    _TabItem(
+        label: 'Suche',
+        path: '/search',
+        icon: Icons.search,
+        activeIcon: Icons.search),
+    _TabItem(
+        label: 'Buchungen',
+        path: '/bookings',
+        icon: Icons.calendar_today_outlined,
+        activeIcon: Icons.calendar_today),
+    _TabItem(
+        label: 'Fahrzeuge',
+        path: '/vehicles',
+        icon: Icons.directions_car_outlined,
+        activeIcon: Icons.directions_car),
+    _TabItem(
+        label: 'Profil',
+        path: '/profile',
+        icon: Icons.person_outline,
+        activeIcon: Icons.person),
   ];
 
   int _currentIndex(BuildContext context) {
@@ -96,7 +116,8 @@ class MainScaffold extends StatelessWidget {
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onTap: () {
-                    Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
+                    Navigator.of(context, rootNavigator: true)
+                        .popUntil((route) => route.isFirst);
                     context.go(tab.path);
                   },
                   child: SizedBox(
@@ -111,8 +132,10 @@ class MainScaffold extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isActive
                                 ? (isDark
-                                    ? const Color(0xFF0284C7).withValues(alpha: 0.15)
-                                    : const Color(0xFF0284C7).withValues(alpha: 0.10))
+                                    ? const Color(0xFF0284C7)
+                                        .withValues(alpha: 0.15)
+                                    : const Color(0xFF0284C7)
+                                        .withValues(alpha: 0.10))
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -132,7 +155,9 @@ class MainScaffold extends StatelessWidget {
                           width: isActive ? 20 : 0,
                           height: 3,
                           decoration: BoxDecoration(
-                            color: isActive ? const Color(0xFF0284C7) : Colors.transparent,
+                            color: isActive
+                                ? const Color(0xFF0284C7)
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),

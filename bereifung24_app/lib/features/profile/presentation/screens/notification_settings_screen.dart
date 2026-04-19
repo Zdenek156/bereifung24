@@ -96,7 +96,6 @@ class _NotificationSettingsScreenState
                   style: TextStyle(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 16),
-
                 _NotificationTile(
                   icon: Icons.alarm,
                   title: 'Terminerinnerung',
@@ -107,8 +106,7 @@ class _NotificationSettingsScreenState
                 _NotificationTile(
                   icon: Icons.ac_unit,
                   title: 'Saison-Hinweis',
-                  subtitle:
-                      'Hinweis zum Reifenwechsel bei Saisonbeginn',
+                  subtitle: 'Hinweis zum Reifenwechsel bei Saisonbeginn',
                   value: _season,
                   onChanged: (v) => setState(() => _season = v),
                 ),
@@ -117,12 +115,9 @@ class _NotificationSettingsScreenState
                   title: 'Buchungs-Updates',
                   subtitle: 'Statusänderungen deiner Buchungen',
                   value: _bookingUpdate,
-                  onChanged: (v) =>
-                      setState(() => _bookingUpdate = v),
+                  onChanged: (v) => setState(() => _bookingUpdate = v),
                 ),
-
                 const SizedBox(height: 32),
-
                 FilledButton(
                   onPressed: _isSaving ? null : _save,
                   style: FilledButton.styleFrom(
@@ -138,8 +133,7 @@ class _NotificationSettingsScreenState
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Speichern',
-                          style: TextStyle(fontSize: 16)),
+                      : const Text('Speichern', style: TextStyle(fontSize: 16)),
                 ),
               ],
             ),

@@ -373,7 +373,9 @@ class ProfileScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Löschen fehlgeschlagen. Bitte versuche es erneut.')),
+                    const SnackBar(
+                        content: Text(
+                            'Löschen fehlgeschlagen. Bitte versuche es erneut.')),
                   );
                 }
               }

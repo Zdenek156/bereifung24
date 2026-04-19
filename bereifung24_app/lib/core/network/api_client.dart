@@ -67,7 +67,13 @@ class ApiClient {
   }
 
   Future<Response> socialLogin(String provider, String idToken,
-      {String? firstName, String? lastName, String? phone, String? street, String? zipCode, String? city, String? email}) {
+      {String? firstName,
+      String? lastName,
+      String? phone,
+      String? street,
+      String? zipCode,
+      String? city,
+      String? email}) {
     return _dio.post('/mobile-auth/social', data: {
       'provider': provider,
       'idToken': idToken,
@@ -269,7 +275,8 @@ class _AuthInterceptor extends Interceptor {
   _AuthInterceptor(this._client);
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  void onRequest(
+      RequestOptions options, RequestInterceptorHandler handler) async {
     // Don't add token to auth endpoints
     final noTokenPaths = [
       '/mobile-auth/login',
@@ -312,7 +319,8 @@ class _AuthInterceptor extends Interceptor {
         await SecureStorage.setRefreshToken(data['refreshToken']);
 
         // Retry original request with new token
-        err.requestOptions.headers['Authorization'] = 'Bearer ${data['accessToken']}';
+        err.requestOptions.headers['Authorization'] =
+            'Bearer ${data['accessToken']}';
         final retryResponse = await _client.dio.fetch(err.requestOptions);
         return handler.resolve(retryResponse);
       } catch (_) {
@@ -332,7 +340,8 @@ class _AuthInterceptor extends Interceptor {
       CrashReportingService().reportError(
         err,
         err.stackTrace,
-        context: 'API ${err.requestOptions.method} ${err.requestOptions.path} → $statusCode',
+        context:
+            'API ${err.requestOptions.method} ${err.requestOptions.path} → $statusCode',
       );
     }
   }

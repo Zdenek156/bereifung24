@@ -81,8 +81,7 @@ class Booking {
     this.cancelledAt,
   });
 
-  bool get isCancellable =>
-      status == 'PENDING' || status == 'CONFIRMED';
+  bool get isCancellable => status == 'PENDING' || status == 'CONFIRMED';
 
   bool get isUpcoming =>
       isCancellable && appointmentDate.isAfter(DateTime.now());
@@ -203,7 +202,8 @@ class Booking {
   }
 
   bool get isTireChangeService =>
-      serviceType == 'TIRE_CHANGE' || serviceType == 'WHEEL_CHANGE' ||
+      serviceType == 'TIRE_CHANGE' ||
+      serviceType == 'WHEEL_CHANGE' ||
       serviceType == 'MOTORCYCLE_TIRE';
 
   /// Additional services as list of strings
@@ -220,8 +220,8 @@ class Booking {
     final workshop = json['workshop'] as Map<String, dynamic>?;
     final tireRequest = json['tireRequest'] as Map<String, dynamic>?;
     // Vehicle can be top-level (new API) or nested in tireRequest
-    final vehicle = json['vehicle'] as Map<String, dynamic>?
-        ?? tireRequest?['vehicle'] as Map<String, dynamic>?;
+    final vehicle = json['vehicle'] as Map<String, dynamic>? ??
+        tireRequest?['vehicle'] as Map<String, dynamic>?;
 
     // Workshop address from flat workshop object (API returns street/zipCode/city directly)
     String? address;
@@ -248,16 +248,20 @@ class Booking {
     return Booking(
       id: json['id']?.toString() ?? '',
       status: json['status'] ?? 'PENDING',
-      appointmentDate: DateTime.parse(
-          json['appointmentDate'] ?? json['date'] ?? DateTime.now().toIso8601String()),
+      appointmentDate: DateTime.parse(json['appointmentDate'] ??
+          json['date'] ??
+          DateTime.now().toIso8601String()),
       appointmentTime: json['appointmentTime'] ?? json['time'],
-      durationMinutes: json['durationMinutes'] ?? json['estimatedDuration'] as int?,
+      durationMinutes:
+          json['durationMinutes'] ?? json['estimatedDuration'] as int?,
       workshopId: json['workshopId']?.toString() ?? '',
-      workshopName: workshop?['companyName'] ?? workshop?['name'] ?? json['workshopName'],
+      workshopName:
+          workshop?['companyName'] ?? workshop?['name'] ?? json['workshopName'],
       workshopAddress: address,
       workshopPhone: workshop?['phone'] ?? json['workshopPhone'],
       workshopEmail: workshop?['email'] ?? json['workshopEmail'],
-      vehicleBrand: vehicle?['make'] ?? vehicle?['brand'] ?? json['vehicleBrand'],
+      vehicleBrand:
+          vehicle?['make'] ?? vehicle?['brand'] ?? json['vehicleBrand'],
       vehicleModel: vehicle?['model'] ?? json['vehicleModel'],
       licensePlate: vehicle?['licensePlate'] ?? json['licensePlate'],
       serviceType: json['serviceType'] ?? 'TIRE_CHANGE',
@@ -265,7 +269,8 @@ class Booking {
       tireSize: tireSize,
       tireBrand: json['tireBrand'],
       tireModel: json['tireModel'],
-      tireQuantity: json['tireQuantity'] as int? ?? tireRequest?['quantity'] as int?,
+      tireQuantity:
+          json['tireQuantity'] as int? ?? tireRequest?['quantity'] as int?,
       hasBalancing: json['hasBalancing'] ?? false,
       hasStorage: json['hasStorage'] ?? false,
       hasWashing: json['hasWashing'] ?? false,

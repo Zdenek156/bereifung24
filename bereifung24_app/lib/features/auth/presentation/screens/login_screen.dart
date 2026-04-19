@@ -180,7 +180,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Bitte Passwort eingeben';
+                    if (v == null || v.isEmpty)
+                      return 'Bitte Passwort eingeben';
                     return null;
                   },
                 ),
@@ -239,7 +240,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Social buttons (platform-specific)
                 if (Platform.isAndroid)
                   OutlinedButton(
-                    onPressed: authState.isLoading ? null : () => _googleSignIn(),
+                    onPressed:
+                        authState.isLoading ? null : () => _googleSignIn(),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -249,7 +251,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SvgPicture.asset('assets/images/google_logo.svg', height: 20, width: 20),
+                        SvgPicture.asset('assets/images/google_logo.svg',
+                            height: 20, width: 20),
                         const SizedBox(width: 12),
                         const Text('Mit Google anmelden'),
                       ],
@@ -258,7 +261,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                 if (Platform.isIOS) ...[
                   OutlinedButton(
-                    onPressed: authState.isLoading ? null : () => _appleSignIn(),
+                    onPressed:
+                        authState.isLoading ? null : () => _appleSignIn(),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -268,7 +272,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SvgPicture.asset('assets/images/apple_logo.svg', height: 20, width: 20),
+                        SvgPicture.asset('assets/images/apple_logo.svg',
+                            height: 20, width: 20),
                         const SizedBox(width: 12),
                         const Text('Mit Apple anmelden'),
                       ],
@@ -276,7 +281,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: authState.isLoading ? null : () => _googleSignIn(),
+                    onPressed:
+                        authState.isLoading ? null : () => _googleSignIn(),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -286,7 +292,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SvgPicture.asset('assets/images/google_logo.svg', height: 20, width: 20),
+                        SvgPicture.asset('assets/images/google_logo.svg',
+                            height: 20, width: 20),
                         const SizedBox(width: 12),
                         const Text('Mit Google anmelden'),
                       ],
@@ -297,7 +304,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 32),
 
                 // Biometric login
-                if (_biometricAvailable) ...[                  
+                if (_biometricAvailable) ...[
                   OutlinedButton.icon(
                     onPressed: _biometricLogin,
                     icon: const Icon(Icons.fingerprint, size: 24),
@@ -337,7 +344,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     try {
       final googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
       // disconnect() revokes all tokens and forces fresh account picker
-      try { await googleSignIn.disconnect(); } catch (_) {}
+      try {
+        await googleSignIn.disconnect();
+      } catch (_) {}
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) return; // User cancelled
 
@@ -347,22 +356,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         debugPrint('Google Sign-In: idToken is null');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Google-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+            const SnackBar(
+                content: Text(
+                    'Google-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
           );
         }
         return;
       }
 
       final googleFirstName = googleUser.displayName?.split(' ').first;
-      final googleLastName = googleUser.displayName?.split(' ').skip(1).join(' ');
+      final googleLastName =
+          googleUser.displayName?.split(' ').skip(1).join(' ');
 
       // Login first without address — server returns existing user data
       final success = await ref.read(authStateProvider.notifier).socialLogin(
-        'google',
-        idToken,
-        firstName: googleFirstName,
-        lastName: googleLastName,
-      );
+            'google',
+            idToken,
+            firstName: googleFirstName,
+            lastName: googleLastName,
+          );
 
       if (!success) {
         if (mounted) {
@@ -377,9 +389,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // Check if user already has a complete address
       final user = ref.read(authStateProvider).user;
       if (user != null &&
-          (user.street == null || user.street!.isEmpty ||
-           user.zipCode == null || user.zipCode!.isEmpty ||
-           user.city == null || user.city!.isEmpty)) {
+          (user.street == null ||
+              user.street!.isEmpty ||
+              user.zipCode == null ||
+              user.zipCode!.isEmpty ||
+              user.city == null ||
+              user.city!.isEmpty)) {
         // Address missing — ask user
         final result = await _showProfileDialog(
           firstName: googleFirstName,
@@ -407,7 +422,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       debugPrint('Google Sign-In error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google-Anmeldung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+          SnackBar(
+              content: Text(
+                  'Google-Anmeldung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
         );
       }
     }
@@ -427,7 +444,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         debugPrint('Apple Sign-In: identityToken is null');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Apple-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+            const SnackBar(
+                content: Text(
+                    'Apple-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
           );
         }
         return;
@@ -443,11 +462,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       // Login — server returns existing user data including stored name/address
       final success = await ref.read(authStateProvider.notifier).socialLogin(
-        'apple',
-        idToken,
-        firstName: appleFirstName,
-        lastName: appleLastName,
-      );
+            'apple',
+            idToken,
+            firstName: appleFirstName,
+            lastName: appleLastName,
+          );
 
       if (!success) {
         if (mounted) {
@@ -462,14 +481,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       // After login, check what the server has stored for this user
       final user = ref.read(authStateProvider).user;
       final serverHasName = user != null &&
-          user.firstName != null && user.firstName!.isNotEmpty &&
-          user.lastName != null && user.lastName!.isNotEmpty &&
-          !user.firstName!.contains('@'); // email prefix used as fallback = no real name
+          user.firstName != null &&
+          user.firstName!.isNotEmpty &&
+          user.lastName != null &&
+          user.lastName!.isNotEmpty &&
+          !user.firstName!
+              .contains('@'); // email prefix used as fallback = no real name
 
       final serverHasAddress = user != null &&
-          user.street != null && user.street!.isNotEmpty &&
-          user.zipCode != null && user.zipCode!.isNotEmpty &&
-          user.city != null && user.city!.isNotEmpty;
+          user.street != null &&
+          user.street!.isNotEmpty &&
+          user.zipCode != null &&
+          user.zipCode!.isNotEmpty &&
+          user.city != null &&
+          user.city!.isNotEmpty;
 
       // Only ask for missing info AFTER login (server-verified).
       // Name: only if server doesn't have a real name stored.
@@ -485,10 +510,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           try {
             final updateData = <String, dynamic>{};
             if (!serverHasName) {
-              if (result['firstName'] != null && result['firstName']!.isNotEmpty) {
+              if (result['firstName'] != null &&
+                  result['firstName']!.isNotEmpty) {
                 updateData['firstName'] = result['firstName'];
               }
-              if (result['lastName'] != null && result['lastName']!.isNotEmpty) {
+              if (result['lastName'] != null &&
+                  result['lastName']!.isNotEmpty) {
                 updateData['lastName'] = result['lastName'];
               }
             }
@@ -520,7 +547,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       debugPrint('Apple Sign-In error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Apple-Anmeldung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+          SnackBar(
+              content: Text(
+                  'Apple-Anmeldung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
         );
       }
     }
@@ -548,7 +577,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text(nameProvided ? 'Adresse vervollständigen' : 'Profil vervollständigen'),
+        title: Text(nameProvided
+            ? 'Adresse vervollständigen'
+            : 'Profil vervollständigen'),
         content: SingleChildScrollView(
           child: Form(
             key: formKey,
@@ -564,7 +595,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
-                if (askForEmail) ...[                  TextFormField(
+                if (askForEmail) ...[
+                  TextFormField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
@@ -573,8 +605,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                      if (!v.contains('@') || !v.contains('.')) return 'Ungültige E-Mail';
-                      if (v.contains('privaterelay.appleid.com')) return 'Bitte echte E-Mail angeben';
+                      if (!v.contains('@') || !v.contains('.'))
+                        return 'Ungültige E-Mail';
+                      if (v.contains('privaterelay.appleid.com'))
+                        return 'Bitte echte E-Mail angeben';
                       return null;
                     },
                   ),
@@ -585,14 +619,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     controller: firstNameCtrl,
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(labelText: 'Vorname *'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: lastNameCtrl,
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(labelText: 'Nachname *'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -605,43 +641,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
                 if (!addressOptional) ...[
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: streetCtrl,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Straße & Hausnummer *',
-                    prefixIcon: Icon(Icons.home_outlined),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: streetCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      labelText: 'Straße & Hausnummer *',
+                      prefixIcon: Icon(Icons.home_outlined),
+                    ),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      child: TextFormField(
-                        controller: zipCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'PLZ *'),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Pflicht';
-                          if (v.trim().length != 5) return '5 Ziffern';
-                          return null;
-                        },
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: TextFormField(
+                          controller: zipCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: 'PLZ *'),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Pflicht';
+                            if (v.trim().length != 5) return '5 Ziffern';
+                            return null;
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: cityCtrl,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(labelText: 'Stadt *'),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: cityCtrl,
+                          textCapitalization: TextCapitalization.words,
+                          decoration:
+                              const InputDecoration(labelText: 'Stadt *'),
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? 'Pflichtfeld'
+                              : null,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 ],
               ],
             ),

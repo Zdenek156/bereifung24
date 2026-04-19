@@ -222,7 +222,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       final total = _calculateTotal(pricing);
       // For WHEEL_CHANGE: send actual base (without add-ons) to server
       final double basePrice;
-      if (widget.serviceType == 'WHEEL_CHANGE' && widget.searchBasePrice != null) {
+      if (widget.serviceType == 'WHEEL_CHANGE' &&
+          widget.searchBasePrice != null) {
         basePrice = _wheelChangeBasePrice(pricing);
       } else {
         basePrice = widget.searchBasePrice ??
@@ -368,9 +369,11 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     } catch (e) {
       if (mounted) {
         String message = 'Buchung fehlgeschlagen. Bitte versuche es erneut.';
-        if (e is DioException && e.response?.statusCode == 409) {
-          message = e.response?.data?['error'] ??
-              'Dieser Termin ist leider nicht mehr verfügbar. Bitte wähle einen anderen Zeitslot.';
+        if (e is DioException && e.response?.data != null) {
+          final serverError = e.response?.data?['error'];
+          if (serverError != null && serverError.toString().isNotEmpty) {
+            message = serverError.toString();
+          }
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -694,7 +697,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     decoration: InputDecoration(
                       hintText: 'z.B. Felgenschloss liegt im Kofferraum, '
                           'Bitte Reifendruck prüfen...',
-                      hintStyle: TextStyle(fontSize: 13, color: Colors.grey[400]),
+                      hintStyle:
+                          TextStyle(fontSize: 13, color: Colors.grey[400]),
                       filled: true,
                       fillColor: Theme.of(context).brightness == Brightness.dark
                           ? const Color(0xFF0F172A)
@@ -709,7 +713,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFF0284C7), width: 1.5),
+                        borderSide: const BorderSide(
+                            color: Color(0xFF0284C7), width: 1.5),
                       ),
                       contentPadding: const EdgeInsets.all(12),
                     ),
@@ -802,8 +807,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           ),
                           if (widget.withBalancing &&
                               pricing?.balancingPrice != null)
-                            _PriceLine(
-                                'Auswuchten (×4)',
+                            _PriceLine('Auswuchten (×4)',
                                 pricing!.balancingPrice! * 4),
                           if (widget.withStorage &&
                               pricing?.storagePrice != null)
@@ -828,8 +832,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           ),
                           if (widget.withBalancing &&
                               pricing?.balancingPrice != null)
-                            _PriceLine(
-                                'Auswuchten (×4)',
+                            _PriceLine('Auswuchten (×4)',
                                 pricing!.balancingPrice! * 4),
                           if (widget.withStorage &&
                               pricing?.storagePrice != null)
@@ -982,8 +985,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                   width: double.infinity,
                   child: FilledButton.icon(
                     onPressed: _isSubmitting
-                            ? null
-                            : () => _submitBooking(workshop, selectedVehicle),
+                        ? null
+                        : () => _submitBooking(workshop, selectedVehicle),
                     icon: _isSubmitting
                         ? const SizedBox(
                             width: 18,
@@ -1161,8 +1164,7 @@ class _PaymentLogo extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-            color: Colors.grey.shade300),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       padding: const EdgeInsets.all(3),
       child: Image.asset(

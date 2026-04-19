@@ -42,15 +42,59 @@ const _validWidths = [
 ];
 
 const _validAspects = [
-  20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100,
+  20,
+  25,
+  30,
+  35,
+  40,
+  45,
+  50,
+  55,
+  60,
+  65,
+  70,
+  75,
+  80,
+  85,
+  90,
+  100,
 ];
 
 const _validDiameters = [
-  8, 10, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
+  8,
+  10,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
 ];
 
 const _validSpeedRatings = [
-  'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'U', 'H', 'V', 'W', 'Y', 'Z',
+  'J',
+  'K',
+  'L',
+  'M',
+  'N',
+  'P',
+  'Q',
+  'R',
+  'S',
+  'T',
+  'U',
+  'H',
+  'V',
+  'W',
+  'Y',
+  'Z',
 ];
 
 /// Regex: [P]?[width]/[ratio] [ZR|R|B|D][diameter] [loadIndex]?[speedRating]?
@@ -64,11 +108,11 @@ final _tireSizeRegex = RegExp(
 TireSize? parseTireSize(String text) {
   // Pre-process: fix common OCR errors
   var cleaned = text
-      .replaceAll(RegExp(r'[oO](?=\d)'), '0')     // O before digit → 0
-      .replaceAll(RegExp(r'(?<=\d)[oO]'), '0')     // O after digit → 0
-      .replaceAll(RegExp(r'[lI|](?=\d)'), '1')     // l, I, | before digit → 1
-      .replaceAll(RegExp(r'(?<=\d)[lI|]'), '1')    // l, I, | after digit → 1
-      .replaceAll(RegExp(r'\s+'), ' ')              // normalize whitespace
+      .replaceAll(RegExp(r'[oO](?=\d)'), '0') // O before digit → 0
+      .replaceAll(RegExp(r'(?<=\d)[oO]'), '0') // O after digit → 0
+      .replaceAll(RegExp(r'[lI|](?=\d)'), '1') // l, I, | before digit → 1
+      .replaceAll(RegExp(r'(?<=\d)[lI|]'), '1') // l, I, | after digit → 1
+      .replaceAll(RegExp(r'\s+'), ' ') // normalize whitespace
       .trim();
 
   final match = _tireSizeRegex.firstMatch(cleaned);
@@ -91,7 +135,8 @@ TireSize? parseTireSize(String text) {
   final isValidWidth = _validWidths.contains(width);
   final isValidRatio = _validAspects.contains(ratio);
   final isValidDiameter = _validDiameters.contains(diameter);
-  final isValidSpeed = speedRating != null && _validSpeedRatings.contains(speedRating);
+  final isValidSpeed =
+      speedRating != null && _validSpeedRatings.contains(speedRating);
 
   // Must have valid width, diameter, AND aspect ratio
   if (!isValidWidth || !isValidDiameter || !isValidRatio) return null;
@@ -160,15 +205,18 @@ List<TireSize> findAllTireSizes(List<String> textBlocks) {
         final loadIndex = loadIndexStr != null ? int.parse(loadIndexStr) : null;
         final speedRating = speedRatingStr?.toUpperCase();
 
-        if (!_validWidths.contains(width) || !_validDiameters.contains(diameter)) continue;
+        if (!_validWidths.contains(width) ||
+            !_validDiameters.contains(diameter)) continue;
 
         final key = '$width/$ratio$construction$diameter';
         if (seen.contains(key)) continue;
         seen.add(key);
 
         final isValidRatio = _validAspects.contains(ratio);
-        final isValidSpeed = speedRating != null && _validSpeedRatings.contains(speedRating);
-        var confidence = 0.3 + (isValidRatio ? 0.25 : 0) + 0.25 + (isValidSpeed ? 0.2 : 0);
+        final isValidSpeed =
+            speedRating != null && _validSpeedRatings.contains(speedRating);
+        var confidence =
+            0.3 + (isValidRatio ? 0.25 : 0) + 0.25 + (isValidSpeed ? 0.2 : 0);
 
         sizes.add(TireSize(
           width: width,

@@ -204,7 +204,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
           padding: _wp,
         );
       case 'MOTORCYCLE_TIRE':
-        return MotorcycleTireFilters(state: state, notifier: notifier, padding: _wp);
+        return MotorcycleTireFilters(
+            state: state, notifier: notifier, padding: _wp);
       case 'TIRE_REPAIR':
         return ServiceToggleFilter(
           state: state,
@@ -313,9 +314,12 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
     final _aiBrand = widget.preferredTireBrand ?? searchState.aiFrontBrand;
     final _aiModel = widget.preferredTireModel ?? searchState.aiFrontModel;
     final _aiArticle = widget.preferredArticleId ?? searchState.aiArticleId;
-    final _aiRearBrand = widget.preferredRearTireBrand ?? searchState.aiRearBrand;
-    final _aiRearModel = widget.preferredRearTireModel ?? searchState.aiRearModel;
-    final _aiRearArticle = widget.preferredRearArticleId ?? searchState.aiRearArticleId;
+    final _aiRearBrand =
+        widget.preferredRearTireBrand ?? searchState.aiRearBrand;
+    final _aiRearModel =
+        widget.preferredRearTireModel ?? searchState.aiRearModel;
+    final _aiRearArticle =
+        widget.preferredRearArticleId ?? searchState.aiRearArticleId;
     if (!_tireAutoSelected &&
         (_aiArticle != null ||
             (_aiBrand != null && _aiModel != null) ||
@@ -333,9 +337,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
         // Match front/single tire
         TireRecommendation? match;
         if (_aiArticle != null && _aiArticle.isNotEmpty) {
-          match = recs
-              .where((t) => t.articleId == _aiArticle)
-              .firstOrNull;
+          match = recs.where((t) => t.articleId == _aiArticle).firstOrNull;
         }
         if (match == null && _aiBrand != null && _aiModel != null) {
           match = recs
@@ -346,17 +348,15 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
         }
         if (match == null && _aiBrand != null) {
           match = recs
-              .where((t) =>
-                  t.brand.toLowerCase() == _aiBrand.toLowerCase())
+              .where((t) => t.brand.toLowerCase() == _aiBrand.toLowerCase())
               .firstOrNull;
         }
 
         // Match rear tire (for mixed/motorcycle)
         TireRecommendation? rearMatch;
         if (_aiRearArticle != null && _aiRearArticle.isNotEmpty) {
-          rearMatch = recs
-              .where((t) => t.articleId == _aiRearArticle)
-              .firstOrNull;
+          rearMatch =
+              recs.where((t) => t.articleId == _aiRearArticle).firstOrNull;
         }
         if (rearMatch == null && _aiRearBrand != null && _aiRearModel != null) {
           rearMatch = recs
@@ -367,8 +367,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
         }
         if (rearMatch == null && _aiRearBrand != null) {
           rearMatch = recs
-              .where((t) =>
-                  t.brand.toLowerCase() == _aiRearBrand.toLowerCase())
+              .where((t) => t.brand.toLowerCase() == _aiRearBrand.toLowerCase())
               .firstOrNull;
         }
 
@@ -445,7 +444,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     backgroundColor: Colors.black45,
                     radius: 18,
                     child: IconButton(
-                      icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                      icon: const Icon(Icons.arrow_back,
+                          color: Colors.white, size: 20),
                       padding: EdgeInsets.zero,
                       onPressed: () => Navigator.of(context).pop(),
                     ),
@@ -553,33 +553,33 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           GestureDetector(
                             onTap: () => _scrollToReviews(),
                             child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF0284C7)
-                                  .withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                  color: const Color(0xFF0284C7)
-                                      .withValues(alpha: 0.3)),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.fiber_new,
-                                    size: 18, color: Color(0xFF0284C7)),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Neu',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                    color: Color(0xFF0284C7),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    color: const Color(0xFF0284C7)
+                                        .withValues(alpha: 0.3)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.fiber_new,
+                                      size: 18, color: Color(0xFF0284C7)),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Neu',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Color(0xFF0284C7),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
                           ),
                           const SizedBox(width: 12),
                         ],
@@ -719,14 +719,16 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                         ? const Color(0xFF1E293B)
                                         : Colors.white),
                                 borderRadius: BorderRadius.circular(14),
-                                border: isSelected
-                                    ? null
-                                    : null,
+                                border: isSelected ? null : null,
                                 boxShadow: isSelected
                                     ? null
                                     : [
                                         BoxShadow(
-                                          color: (isDark ? Colors.black : Colors.black).withValues(alpha: isDark ? 0.3 : 0.08),
+                                          color: (isDark
+                                                  ? Colors.black
+                                                  : Colors.black)
+                                              .withValues(
+                                                  alpha: isDark ? 0.3 : 0.08),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
@@ -1034,18 +1036,30 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         // ── Rollo AI Empfehlung card ──
                         Widget? rolloCard;
                         // Read AI preferences: widget params (from URL) → search state (from Riverpod provider)
-                        final prefBrand = widget.preferredTireBrand ?? currentSearch.aiFrontBrand;
-                        final prefModel = widget.preferredTireModel ?? currentSearch.aiFrontModel;
-                        final prefArticle = widget.preferredArticleId ?? currentSearch.aiArticleId;
-                        final prefRearBrand = widget.preferredRearTireBrand ?? currentSearch.aiRearBrand;
-                        final prefRearModel = widget.preferredRearTireModel ?? currentSearch.aiRearModel;
-                        final prefRearArticle = widget.preferredRearArticleId ?? currentSearch.aiRearArticleId;
-                        final bool hasFrontPref = prefBrand != null && prefBrand.isNotEmpty;
-                        final bool hasRearPref = prefRearBrand != null && prefRearBrand.isNotEmpty;
-                        debugPrint('🤖 [ROLLO-CARD] hasFrontPref=$hasFrontPref ($prefBrand), hasRearPref=$hasRearPref ($prefRearBrand), ws=${ws != null}');
-                        debugPrint('🤖 [ROLLO-CARD] widget.preferredTireBrand=${widget.preferredTireBrand}, widget.preferredRearTireBrand=${widget.preferredRearTireBrand}');
-                        debugPrint('🤖 [ROLLO-CARD] currentSearch.aiFrontBrand=${currentSearch.aiFrontBrand}, currentSearch.aiRearBrand=${currentSearch.aiRearBrand}');
-                        debugPrint('🤖 [ROLLO-CARD] workshops.length=${currentSearch.workshops.length}, isLoading=${currentSearch.isLoading}');
+                        final prefBrand = widget.preferredTireBrand ??
+                            currentSearch.aiFrontBrand;
+                        final prefModel = widget.preferredTireModel ??
+                            currentSearch.aiFrontModel;
+                        final prefArticle = widget.preferredArticleId ??
+                            currentSearch.aiArticleId;
+                        final prefRearBrand = widget.preferredRearTireBrand ??
+                            currentSearch.aiRearBrand;
+                        final prefRearModel = widget.preferredRearTireModel ??
+                            currentSearch.aiRearModel;
+                        final prefRearArticle = widget.preferredRearArticleId ??
+                            currentSearch.aiRearArticleId;
+                        final bool hasFrontPref =
+                            prefBrand != null && prefBrand.isNotEmpty;
+                        final bool hasRearPref =
+                            prefRearBrand != null && prefRearBrand.isNotEmpty;
+                        debugPrint(
+                            '🤖 [ROLLO-CARD] hasFrontPref=$hasFrontPref ($prefBrand), hasRearPref=$hasRearPref ($prefRearBrand), ws=${ws != null}');
+                        debugPrint(
+                            '🤖 [ROLLO-CARD] widget.preferredTireBrand=${widget.preferredTireBrand}, widget.preferredRearTireBrand=${widget.preferredRearTireBrand}');
+                        debugPrint(
+                            '🤖 [ROLLO-CARD] currentSearch.aiFrontBrand=${currentSearch.aiFrontBrand}, currentSearch.aiRearBrand=${currentSearch.aiRearBrand}');
+                        debugPrint(
+                            '🤖 [ROLLO-CARD] workshops.length=${currentSearch.workshops.length}, isLoading=${currentSearch.isLoading}');
                         if ((hasFrontPref || hasRearPref) && ws != null) {
                           final allRecs = ws.tireRecommendationsRaw
                               .map((r) => TireRecommendation.fromJson(r))
@@ -1054,23 +1068,18 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           // Match front tire
                           TireRecommendation? rolloFrontMatch;
                           if (hasFrontPref) {
-                            if (prefArticle != null &&
-                                prefArticle.isNotEmpty) {
+                            if (prefArticle != null && prefArticle.isNotEmpty) {
                               rolloFrontMatch = allRecs
-                                  .where((t) =>
-                                      t.articleId == prefArticle)
+                                  .where((t) => t.articleId == prefArticle)
                                   .firstOrNull;
                             }
-                            if (rolloFrontMatch == null &&
-                                prefModel != null) {
+                            if (rolloFrontMatch == null && prefModel != null) {
                               rolloFrontMatch = allRecs
                                   .where((t) =>
                                       t.brand.toLowerCase() ==
-                                          prefBrand!
-                                              .toLowerCase() &&
+                                          prefBrand!.toLowerCase() &&
                                       t.model.toLowerCase() ==
-                                          prefModel
-                                              .toLowerCase())
+                                          prefModel.toLowerCase())
                                   .firstOrNull;
                             }
                           }
@@ -1081,8 +1090,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                             if (prefRearArticle != null &&
                                 prefRearArticle.isNotEmpty) {
                               rolloRearMatch = allRecs
-                                  .where((t) =>
-                                      t.articleId == prefRearArticle)
+                                  .where((t) => t.articleId == prefRearArticle)
                                   .firstOrNull;
                             }
                             if (rolloRearMatch == null &&
@@ -1090,11 +1098,9 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                               rolloRearMatch = allRecs
                                   .where((t) =>
                                       t.brand.toLowerCase() ==
-                                          prefRearBrand!
-                                              .toLowerCase() &&
+                                          prefRearBrand!.toLowerCase() &&
                                       t.model.toLowerCase() ==
-                                          prefRearModel
-                                              .toLowerCase())
+                                          prefRearModel.toLowerCase())
                                   .firstOrNull;
                             }
                           }
@@ -1103,10 +1109,11 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           final isMixed = hasRearPref;
                           final rolloMatch = isMixed ? null : rolloFrontMatch;
 
-                          final isDark = Theme.of(context).brightness ==
-                              Brightness.dark;
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
 
-                          Widget buildTireRow(TireRecommendation? match, String? brand, String? model, String? axleLabel) {
+                          Widget buildTireRow(TireRecommendation? match,
+                              String? brand, String? model, String? axleLabel) {
                             if (match != null) {
                               return Container(
                                 padding: const EdgeInsets.all(10),
@@ -1135,7 +1142,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                                 style: TextStyle(
                                                     fontSize: 10,
                                                     fontWeight: FontWeight.w700,
-                                                    color: const Color(0xFF0284C7))),
+                                                    color: const Color(
+                                                        0xFF0284C7))),
                                           Text(
                                             '${match.brand} ${match.model}',
                                             style: TextStyle(
@@ -1235,8 +1243,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF0284C7)
                                             .withValues(alpha: 0.15),
-                                        borderRadius:
-                                            BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Text('🤖',
                                           style: TextStyle(fontSize: 18)),
@@ -1275,23 +1282,27 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 if (isMixed) ...[
                                   // Mixed tires: show front and rear separately
                                   if (hasFrontPref)
-                                    buildTireRow(rolloFrontMatch,
+                                    buildTireRow(
+                                        rolloFrontMatch,
                                         prefBrand,
                                         prefModel,
-                                        effectiveService == 'MOTORCYCLE_TIRE' ? 'Vorderrad' : 'Vorderachse'),
+                                        effectiveService == 'MOTORCYCLE_TIRE'
+                                            ? 'Vorderrad'
+                                            : 'Vorderachse'),
                                   if (hasFrontPref && hasRearPref)
                                     const SizedBox(height: 8),
                                   if (hasRearPref)
-                                    buildTireRow(rolloRearMatch,
+                                    buildTireRow(
+                                        rolloRearMatch,
                                         prefRearBrand,
                                         prefRearModel,
-                                        effectiveService == 'MOTORCYCLE_TIRE' ? 'Hinterrad' : 'Hinterachse'),
+                                        effectiveService == 'MOTORCYCLE_TIRE'
+                                            ? 'Hinterrad'
+                                            : 'Hinterachse'),
                                 ] else ...[
                                   // Single tire
-                                  buildTireRow(rolloMatch,
-                                      prefBrand,
-                                      prefModel,
-                                      null),
+                                  buildTireRow(
+                                      rolloMatch, prefBrand, prefModel, null),
                                 ],
                               ],
                             ),
@@ -1321,7 +1332,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     ? 'Vorderrad'
                                     : 'Vorderachse (VA)',
                                 preselected: _tireAutoSelected,
-                                isMotorcycle: effectiveService == 'MOTORCYCLE_TIRE',
+                                isMotorcycle:
+                                    effectiveService == 'MOTORCYCLE_TIRE',
                               ),
                               const SizedBox(height: 16),
                               _TireRecommendationsSection(
@@ -1331,7 +1343,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     ? 'Hinterrad'
                                     : 'Hinterachse (HA)',
                                 preselected: _tireAutoSelected,
-                                isMotorcycle: effectiveService == 'MOTORCYCLE_TIRE',
+                                isMotorcycle:
+                                    effectiveService == 'MOTORCYCLE_TIRE',
                               ),
                               // Combined Preisübersicht for Mischbereifung
                               if (hasAnySelected &&
@@ -1420,7 +1433,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                             _TireRecommendationsSection(
                               workshopId: widget.workshopId,
                               preselected: _tireAutoSelected,
-                              isMotorcycle: effectiveService == 'MOTORCYCLE_TIRE',
+                              isMotorcycle:
+                                  effectiveService == 'MOTORCYCLE_TIRE',
                             ),
                           ],
                         );
@@ -2096,21 +2110,18 @@ class _TireRecommendationsSectionState
                 underline: const SizedBox.shrink(),
                 icon: Icon(Icons.filter_list,
                     size: 18,
-                    color:
-                        isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
+                    color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
                 hint: Text('Alle Hersteller',
                     style: TextStyle(
                         fontSize: 13,
                         color: isDark
                             ? const Color(0xFFF9FAFB)
                             : Colors.grey[800])),
-                dropdownColor:
-                    isDark ? const Color(0xFF1E293B) : Colors.white,
+                dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
                 items: [
                   DropdownMenuItem<String?>(
                     value: null,
-                    child: Text(
-                        'Alle Hersteller (${categoryFiltered.length})',
+                    child: Text('Alle Hersteller (${categoryFiltered.length})',
                         style: TextStyle(
                             fontSize: 13,
                             color: isDark
@@ -2118,9 +2129,8 @@ class _TireRecommendationsSectionState
                                 : Colors.grey[800])),
                   ),
                   ...brands.map((brand) {
-                    final count = categoryFiltered
-                        .where((t) => t.brand == brand)
-                        .length;
+                    final count =
+                        categoryFiltered.where((t) => t.brand == brand).length;
                     return DropdownMenuItem<String?>(
                       value: brand,
                       child: Text('$brand ($count)',
@@ -2323,8 +2333,8 @@ class _TireRecommendationsSectionState
             child: TextButton.icon(
               onPressed: () => setState(() => _visibleCount += _pageSize),
               icon: const Icon(Icons.expand_more, size: 18),
-              label: Text(
-                  'Weitere anzeigen (${filtered.length - _visibleCount})'),
+              label:
+                  Text('Weitere anzeigen (${filtered.length - _visibleCount})'),
             ),
           ),
         ],
@@ -2438,9 +2448,10 @@ class _TireRecommendationCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Use categoryOverride if provided, else fall back to tire.label
     // For motorcycle: only show badge when category is explicitly selected (no tire.label data)
-    final effectiveLabel = (categoryOverride != null && categoryOverride!.isNotEmpty)
-        ? categoryOverride!
-        : (isMotorcycle ? '' : tire.label);
+    final effectiveLabel =
+        (categoryOverride != null && categoryOverride!.isNotEmpty)
+            ? categoryOverride!
+            : (isMotorcycle ? '' : tire.label);
     final hasLabel = effectiveLabel.isNotEmpty;
     Color? labelColor;
     IconData? labelIcon;
@@ -2534,7 +2545,8 @@ class _TireRecommendationCard extends StatelessWidget {
                                 fontSize: 13),
                           ),
                           // Tire dimensions (e.g. 120/70 R17 73W)
-                          if (tire.dimensions != null && tire.dimensions!.isNotEmpty)
+                          if (tire.dimensions != null &&
+                              tire.dimensions!.isNotEmpty)
                             Text(
                               tire.dimensions!,
                               style: TextStyle(
@@ -2574,74 +2586,75 @@ class _TireRecommendationCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 // EU Label row (hide for motorcycle - no label data available)
                 if (!isMotorcycle)
-                Row(
-                  children: [
-                    _euLabelChip('⛽', tire.labelFuelEfficiency ?? '-',
-                        _fuelColor(tire.labelFuelEfficiency)),
-                    const SizedBox(width: 6),
-                    _euLabelChip('💧', tire.labelWetGrip ?? '-',
-                        _wetGripColor(tire.labelWetGrip)),
-                    const SizedBox(width: 6),
-                    _euLabelChip(
-                        '🔊', '${tire.labelNoise ?? "–"} dB', Colors.grey),
-                    if (tire.threePMSF) ...[
+                  Row(
+                    children: [
+                      _euLabelChip('⛽', tire.labelFuelEfficiency ?? '-',
+                          _fuelColor(tire.labelFuelEfficiency)),
                       const SizedBox(width: 6),
-                      Builder(builder: (context) {
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.blue.shade900.withValues(alpha: 0.5)
-                                : Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: isDark
-                                    ? Colors.blue.shade700
-                                    : Colors.blue.shade200),
-                          ),
-                          child: Text('❄️ 3PMSF',
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: isDark
-                                      ? Colors.blue.shade200
-                                      : Colors.blue.shade900)),
-                        );
-                      }),
-                    ],
-                    if (tire.runFlat) ...[
+                      _euLabelChip('💧', tire.labelWetGrip ?? '-',
+                          _wetGripColor(tire.labelWetGrip)),
                       const SizedBox(width: 6),
-                      Builder(builder: (context) {
-                        final isDark =
-                            Theme.of(context).brightness == Brightness.dark;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.orange.shade900.withValues(alpha: 0.5)
-                                : Colors.orange.shade50,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                                color: isDark
-                                    ? Colors.orange.shade700
-                                    : Colors.orange.shade200),
-                          ),
-                          child: Text('RF',
-                              style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
+                      _euLabelChip(
+                          '🔊', '${tire.labelNoise ?? "–"} dB', Colors.grey),
+                      if (tire.threePMSF) ...[
+                        const SizedBox(width: 6),
+                        Builder(builder: (context) {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.blue.shade900.withValues(alpha: 0.5)
+                                  : Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
                                   color: isDark
-                                      ? Colors.orange.shade200
-                                      : Colors.orange.shade900)),
-                        );
-                      }),
+                                      ? Colors.blue.shade700
+                                      : Colors.blue.shade200),
+                            ),
+                            child: Text('❄️ 3PMSF',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? Colors.blue.shade200
+                                        : Colors.blue.shade900)),
+                          );
+                        }),
+                      ],
+                      if (tire.runFlat) ...[
+                        const SizedBox(width: 6),
+                        Builder(builder: (context) {
+                          final isDark =
+                              Theme.of(context).brightness == Brightness.dark;
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? Colors.orange.shade900
+                                      .withValues(alpha: 0.5)
+                                  : Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                  color: isDark
+                                      ? Colors.orange.shade700
+                                      : Colors.orange.shade200),
+                            ),
+                            child: Text('RF',
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    color: isDark
+                                        ? Colors.orange.shade200
+                                        : Colors.orange.shade900)),
+                          );
+                        }),
+                      ],
                     ],
-                  ],
-                ),
+                  ),
                 // Selection indicator
                 if (isSelected) ...[
                   const SizedBox(height: 8),
@@ -2798,10 +2811,14 @@ class _PriceBreakdownSection extends StatelessWidget {
       case 'WHEEL_CHANGE':
         // Use wheelChangeBreakdown if available (searchBasePrice includes add-ons)
         if (wheelChangeBreakdown != null && searchBasePrice != null) {
-          final wcbBase = (wheelChangeBreakdown!['basePrice'] as num?)?.toDouble();
-          final balSurcharge = (wheelChangeBreakdown!['balancingSurcharge'] as num?)?.toDouble();
-          final stoSurcharge = (wheelChangeBreakdown!['storageSurcharge'] as num?)?.toDouble();
-          final washSurcharge = (wheelChangeBreakdown!['washingSurcharge'] as num?)?.toDouble();
+          final wcbBase =
+              (wheelChangeBreakdown!['basePrice'] as num?)?.toDouble();
+          final balSurcharge =
+              (wheelChangeBreakdown!['balancingSurcharge'] as num?)?.toDouble();
+          final stoSurcharge =
+              (wheelChangeBreakdown!['storageSurcharge'] as num?)?.toDouble();
+          final washSurcharge =
+              (wheelChangeBreakdown!['washingSurcharge'] as num?)?.toDouble();
           if (wcbBase != null) {
             total += wcbBase;
             rows.add(_PriceRow('Räderwechsel', wcbBase));
@@ -3017,9 +3034,8 @@ class _CollapsibleInfoCardState extends State<_CollapsibleInfoCard> {
                   duration: const Duration(milliseconds: 200),
                   child: Icon(Icons.keyboard_arrow_down,
                       size: 22,
-                      color: isDark
-                          ? const Color(0xFF94A3B8)
-                          : Colors.grey[500]),
+                      color:
+                          isDark ? const Color(0xFF94A3B8) : Colors.grey[500]),
                 ),
               ],
             ),
@@ -3047,7 +3063,10 @@ class _InfoCard extends StatelessWidget {
   final Widget child;
   final bool compact;
   const _InfoCard(
-      {required this.icon, required this.title, required this.child, this.compact = false});
+      {required this.icon,
+      required this.title,
+      required this.child,
+      this.compact = false});
 
   @override
   Widget build(BuildContext context) {

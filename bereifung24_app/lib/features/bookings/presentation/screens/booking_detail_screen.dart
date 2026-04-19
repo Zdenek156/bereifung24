@@ -88,7 +88,8 @@ class _BookingDetailContent extends StatelessWidget {
             children: [
               Text(
                 booking.serviceTypeDisplay,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
               const SizedBox(height: 4),
               Text(
@@ -107,7 +108,8 @@ class _BookingDetailContent extends StatelessWidget {
             children: [
               Text(
                 _formatDate(booking.appointmentDate),
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                style:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
               if (booking.appointmentTime != null) ...[
                 const SizedBox(height: 4),
@@ -136,13 +138,15 @@ class _BookingDetailContent extends StatelessWidget {
                 Text(booking.workshopAddress!,
                     style: TextStyle(color: Colors.grey[600])),
               ],
-              if (booking.workshopPhone != null && booking.workshopPhone!.isNotEmpty) ...[
+              if (booking.workshopPhone != null &&
+                  booking.workshopPhone!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 InkWell(
                   onTap: () => _launchUrl('tel:${booking.workshopPhone}'),
                   child: Row(
                     children: [
-                      const Icon(Icons.phone, size: 16, color: B24Colors.primaryBlue),
+                      const Icon(Icons.phone,
+                          size: 16, color: B24Colors.primaryBlue),
                       const SizedBox(width: 6),
                       Text(
                         booking.workshopPhone!,
@@ -152,13 +156,15 @@ class _BookingDetailContent extends StatelessWidget {
                   ),
                 ),
               ],
-              if (booking.workshopEmail != null && booking.workshopEmail!.isNotEmpty) ...[
+              if (booking.workshopEmail != null &&
+                  booking.workshopEmail!.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 InkWell(
                   onTap: () => _launchUrl('mailto:${booking.workshopEmail}'),
                   child: Row(
                     children: [
-                      const Icon(Icons.email, size: 16, color: B24Colors.primaryBlue),
+                      const Icon(Icons.email,
+                          size: 16, color: B24Colors.primaryBlue),
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
@@ -183,7 +189,8 @@ class _BookingDetailContent extends StatelessWidget {
             children: [
               Text(booking.vehicleDisplay,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
-              if (booking.licensePlate != null && booking.licensePlate!.isNotEmpty) ...[
+              if (booking.licensePlate != null &&
+                  booking.licensePlate!.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text('Kennzeichen: ${booking.licensePlate}',
                     style: TextStyle(color: Colors.grey[600])),
@@ -229,9 +236,11 @@ class _BookingDetailContent extends StatelessWidget {
                   runSpacing: 6,
                   children: booking.additionalServices
                       .map((s) => Chip(
-                            label: Text(s, style: const TextStyle(fontSize: 13)),
+                            label:
+                                Text(s, style: const TextStyle(fontSize: 13)),
                             visualDensity: VisualDensity.compact,
-                            backgroundColor: B24Colors.primaryBlue.withValues(alpha: 0.1),
+                            backgroundColor:
+                                B24Colors.primaryBlue.withValues(alpha: 0.1),
                             side: BorderSide.none,
                           ))
                       .toList(),
@@ -256,16 +265,23 @@ class _BookingDetailContent extends StatelessWidget {
                   const Divider(height: 16),
                 ],
                 if (booking.basePrice != null)
-                  _PriceRow('Grundpreis', '${booking.basePrice!.toStringAsFixed(2)} €'),
-                if (booking.balancingPrice != null && booking.balancingPrice! > 0)
-                  _PriceRow('Wuchten', '${booking.balancingPrice!.toStringAsFixed(2)} €'),
+                  _PriceRow('Grundpreis',
+                      '${booking.basePrice!.toStringAsFixed(2)} €'),
+                if (booking.balancingPrice != null &&
+                    booking.balancingPrice! > 0)
+                  _PriceRow('Wuchten',
+                      '${booking.balancingPrice!.toStringAsFixed(2)} €'),
                 if (booking.storagePrice != null && booking.storagePrice! > 0)
-                  _PriceRow('Einlagerung', '${booking.storagePrice!.toStringAsFixed(2)} €'),
+                  _PriceRow('Einlagerung',
+                      '${booking.storagePrice!.toStringAsFixed(2)} €'),
                 if (booking.washingPrice != null && booking.washingPrice! > 0)
-                  _PriceRow('Räder waschen', '${booking.washingPrice!.toStringAsFixed(2)} €'),
+                  _PriceRow('Räder waschen',
+                      '${booking.washingPrice!.toStringAsFixed(2)} €'),
                 if (booking.disposalFee != null && booking.disposalFee! > 0)
-                  _PriceRow('Entsorgung', '${booking.disposalFee!.toStringAsFixed(2)} €'),
-                if (booking.discountAmount != null && booking.discountAmount! > 0) ...[
+                  _PriceRow('Entsorgung',
+                      '${booking.disposalFee!.toStringAsFixed(2)} €'),
+                if (booking.discountAmount != null &&
+                    booking.discountAmount! > 0) ...[
                   _PriceRow(
                     booking.couponCode != null
                         ? 'Gutschein (${booking.couponCode})'
@@ -279,7 +295,8 @@ class _BookingDetailContent extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text('Gesamtpreis',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(
                       '${booking.totalPrice!.toStringAsFixed(2)} €',
                       style: const TextStyle(
@@ -305,7 +322,8 @@ class _BookingDetailContent extends StatelessWidget {
           ],
 
           // Customer Notes
-          if (booking.customerNotes != null && booking.customerNotes!.isNotEmpty) ...[
+          if (booking.customerNotes != null &&
+              booking.customerNotes!.isNotEmpty) ...[
             const SizedBox(height: 12),
             _DetailCard(
               icon: Icons.message_outlined,
@@ -353,8 +371,18 @@ class _BookingDetailContent extends StatelessWidget {
   String _formatDate(DateTime date) {
     const weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     const months = [
-      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+      'Januar',
+      'Februar',
+      'März',
+      'April',
+      'Mai',
+      'Juni',
+      'Juli',
+      'August',
+      'September',
+      'Oktober',
+      'November',
+      'Dezember'
     ];
     return '${weekdays[date.weekday - 1]}, ${date.day}. ${months[date.month - 1]} ${date.year}';
   }
@@ -435,7 +463,9 @@ class _PriceRow extends StatelessWidget {
           Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
           Text(value,
               style: TextStyle(
-                  fontSize: 14, color: valueColor, fontWeight: FontWeight.w500)),
+                  fontSize: 14,
+                  color: valueColor,
+                  fontWeight: FontWeight.w500)),
         ],
       ),
     );

@@ -5,12 +5,23 @@ import 'package:bereifung24_app/data/models/tire_recommendation.dart';
 
 /// Premium car tire brands
 const premiumBrandsPKW = [
-  'Michelin', 'Continental', 'Goodyear', 'Bridgestone', 'Pirelli', 'Dunlop'
+  'Michelin',
+  'Continental',
+  'Goodyear',
+  'Bridgestone',
+  'Pirelli',
+  'Dunlop'
 ];
 
 /// Premium motorcycle tire brands
 const premiumBrandsMotorrad = [
-  'Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Dunlop', 'Metzeler', 'Heidenau'
+  'Michelin',
+  'Continental',
+  'Pirelli',
+  'Bridgestone',
+  'Dunlop',
+  'Metzeler',
+  'Heidenau'
 ];
 
 /// Check if a brand is premium
@@ -57,10 +68,7 @@ bool hasBesteEigenschaften(TireRecommendation tire) {
 
 /// Calculate the price threshold for "günstig" (bottom 33%).
 double getCheapThreshold(List<TireRecommendation> tires) {
-  final prices = tires
-      .map((t) => t.totalPrice)
-      .where((p) => p > 0)
-      .toList()
+  final prices = tires.map((t) => t.totalPrice).where((p) => p > 0).toList()
     ..sort();
   if (prices.isEmpty) return 0;
   return prices[(prices.length * 0.33).floor()];

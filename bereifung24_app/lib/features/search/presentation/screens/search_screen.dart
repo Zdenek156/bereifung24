@@ -175,9 +175,8 @@ class WorkshopSearchState {
         tireConstruction: clearTireConstruction
             ? null
             : (tireConstruction ?? this.tireConstruction),
-        aiArticleId: clearAiArticleId
-            ? null
-            : (aiArticleId ?? this.aiArticleId),
+        aiArticleId:
+            clearAiArticleId ? null : (aiArticleId ?? this.aiArticleId),
         aiRearArticleId: clearAiRearArticleId
             ? null
             : (aiRearArticleId ?? this.aiRearArticleId),
@@ -382,7 +381,8 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     final aiArtId = tireDimensionOverride?['articleId'];
     final aiRearArtId = rearTireDimensionOverride?['articleId'];
 
-    debugPrint('🔍 [SEARCH] setting AI fields: frontBrand=${tireDimensionOverride?['tireBrand']}, rearBrand=${rearTireDimensionOverride?['tireBrand']}, artId=$aiArtId, rearArtId=$aiRearArtId');
+    debugPrint(
+        '🔍 [SEARCH] setting AI fields: frontBrand=${tireDimensionOverride?['tireBrand']}, rearBrand=${rearTireDimensionOverride?['tireBrand']}, artId=$aiArtId, rearArtId=$aiRearArtId');
     state = state.copyWith(
       isLoading: true,
       error: null,
@@ -398,7 +398,8 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       aiRearModel: rearTireDimensionOverride?['tireModel'],
       clearEffectiveServiceType: true,
     );
-    debugPrint('🔍 [SEARCH] state after copyWith: aiFrontBrand=${state.aiFrontBrand}, aiRearBrand=${state.aiRearBrand}');
+    debugPrint(
+        '🔍 [SEARCH] state after copyWith: aiFrontBrand=${state.aiFrontBrand}, aiRearBrand=${state.aiRearBrand}');
 
     try {
       // Auto-switch to MOTORCYCLE_TIRE when vehicle is a motorcycle
@@ -989,7 +990,11 @@ class SearchScreen extends ConsumerStatefulWidget {
   final String? serviceType;
   final Map<String, String>? tireDimensionOverride;
   final Map<String, String>? rearTireDimensionOverride;
-  const SearchScreen({super.key, this.serviceType, this.tireDimensionOverride, this.rearTireDimensionOverride});
+  const SearchScreen(
+      {super.key,
+      this.serviceType,
+      this.tireDimensionOverride,
+      this.rearTireDimensionOverride});
 
   @override
   ConsumerState<SearchScreen> createState() => _SearchScreenState();
@@ -1060,7 +1065,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   void didUpdateWidget(SearchScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.serviceType != oldWidget.serviceType) {
-      debugPrint('🔍 [SEARCH] didUpdateWidget: serviceType changed ${oldWidget.serviceType} → ${widget.serviceType}, resetting');
+      debugPrint(
+          '🔍 [SEARCH] didUpdateWidget: serviceType changed ${oldWidget.serviceType} → ${widget.serviceType}, resetting');
       ref.read(workshopSearchProvider.notifier).reset();
     }
   }
@@ -1198,7 +1204,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             if (searchState.workshops.isNotEmpty ||
                 searchState.query.isNotEmpty)
               SliverToBoxAdapter(
-                  child: _FilterBar(serviceType: searchState.effectiveServiceType ?? widget.serviceType)),
+                  child: _FilterBar(
+                      serviceType: searchState.effectiveServiceType ??
+                          widget.serviceType)),
 
             // ── Vehicle auto-selected (no dropdown) ──
           ],
@@ -1215,7 +1223,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                           : searchState.needsAxleSelection
                               ? _AxleSelectionHintView(
                                   onSelectAxle: (axle) {
-                                    final notifier = ref.read(workshopSearchProvider.notifier);
+                                    final notifier = ref
+                                        .read(workshopSearchProvider.notifier);
                                     notifier.setSelectedAxle(axle);
                                     notifier._reSearch();
                                   },
@@ -1224,7 +1233,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   hasSearched: searchState.query.isNotEmpty))
                       : _WorkshopList(
                           workshops: searchState.workshops,
-                          serviceType: searchState.effectiveServiceType ?? widget.serviceType),
+                          serviceType: searchState.effectiveServiceType ??
+                              widget.serviceType),
         ),
       ),
     );
@@ -1566,7 +1576,10 @@ class TireChangeFilters extends StatelessWidget {
   final Vehicle? vehicle;
   final EdgeInsetsGeometry? padding;
   const TireChangeFilters(
-      {required this.state, required this.notifier, this.vehicle, this.padding});
+      {required this.state,
+      required this.notifier,
+      this.vehicle,
+      this.padding});
 
   bool get _vehicleHasMixedTires {
     if (vehicle == null) return false;
@@ -2258,7 +2271,8 @@ class MotorcycleTireFilters extends StatelessWidget {
   final WorkshopSearchNotifier notifier;
   final EdgeInsetsGeometry? padding;
 
-  const MotorcycleTireFilters({required this.state, required this.notifier, this.padding});
+  const MotorcycleTireFilters(
+      {required this.state, required this.notifier, this.padding});
 
   @override
   Widget build(BuildContext context) {
@@ -2549,7 +2563,10 @@ class WheelChangeFilters extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
 
   const WheelChangeFilters(
-      {required this.state, required this.notifier, this.serviceDetail, this.padding});
+      {required this.state,
+      required this.notifier,
+      this.serviceDetail,
+      this.padding});
 
   @override
   Widget build(BuildContext context) {
@@ -2566,20 +2583,20 @@ class WheelChangeFilters extends StatelessWidget {
       Expanded(
           child: _badge(context, isDark, '⚖️', 'Auswuchten',
               state.withBalancing, supportsBalancing, () {
-                if (supportsBalancing) notifier.toggleBalancing();
-              })),
+        if (supportsBalancing) notifier.toggleBalancing();
+      })),
       const SizedBox(width: 6),
       Expanded(
-          child: _badge(context, isDark, '📦', 'Einlagerung',
-              state.withStorage, supportsStorage, () {
-                if (supportsStorage) notifier.toggleStorage();
-              })),
+          child: _badge(context, isDark, '📦', 'Einlagerung', state.withStorage,
+              supportsStorage, () {
+        if (supportsStorage) notifier.toggleStorage();
+      })),
       const SizedBox(width: 6),
       Expanded(
-          child: _badge(context, isDark, '🧼', 'Waschen',
-              state.withWashing, supportsWashing, () {
-                if (supportsWashing) notifier.toggleWashing();
-              })),
+          child: _badge(context, isDark, '🧼', 'Waschen', state.withWashing,
+              supportsWashing, () {
+        if (supportsWashing) notifier.toggleWashing();
+      })),
     ];
 
     return Container(
@@ -2608,14 +2625,17 @@ class WheelChangeFilters extends StatelessWidget {
   Widget _badge(BuildContext context, bool isDark, String emoji, String label,
       bool selected, bool supported, VoidCallback onTap) {
     return GestureDetector(
-      onTap: supported ? onTap : () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$label wird von dieser Werkstatt nicht angeboten'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-      },
+      onTap: supported
+          ? onTap
+          : () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content:
+                      Text('$label wird von dieser Werkstatt nicht angeboten'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
       child: Opacity(
         opacity: supported ? 1.0 : 0.4,
         child: Container(
@@ -2641,7 +2661,9 @@ class WheelChangeFilters extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                         color: selected && supported
                             ? Colors.white
-                            : (isDark ? const Color(0xFFF9FAFB) : Colors.grey[800]),
+                            : (isDark
+                                ? const Color(0xFFF9FAFB)
+                                : Colors.grey[800]),
                       )),
                 ],
               ),
@@ -2650,7 +2672,8 @@ class WheelChangeFilters extends StatelessWidget {
                 Text('Nicht verfügbar',
                     style: TextStyle(
                       fontSize: 9,
-                      color: isDark ? const Color(0xFF94A3B8) : Colors.grey[500],
+                      color:
+                          isDark ? const Color(0xFF94A3B8) : Colors.grey[500],
                     )),
               ],
             ],
@@ -3007,8 +3030,10 @@ class _WorkshopCard extends ConsumerWidget {
         }
         if (chosenFront == null && searchState.aiFrontBrand != null) {
           final match = frontRecs.where((t) =>
-              t.brand.toLowerCase() == searchState.aiFrontBrand!.toLowerCase() &&
-              t.model.toLowerCase() == (searchState.aiFrontModel ?? '').toLowerCase());
+              t.brand.toLowerCase() ==
+                  searchState.aiFrontBrand!.toLowerCase() &&
+              t.model.toLowerCase() ==
+                  (searchState.aiFrontModel ?? '').toLowerCase());
           if (match.isNotEmpty) chosenFront = match.first;
         }
         if (chosenFront == null) {
@@ -3026,7 +3051,8 @@ class _WorkshopCard extends ConsumerWidget {
         if (chosenRear == null && searchState.aiRearBrand != null) {
           final match = rearRecs.where((t) =>
               t.brand.toLowerCase() == searchState.aiRearBrand!.toLowerCase() &&
-              t.model.toLowerCase() == (searchState.aiRearModel ?? '').toLowerCase());
+              t.model.toLowerCase() ==
+                  (searchState.aiRearModel ?? '').toLowerCase());
           if (match.isNotEmpty) chosenRear = match.first;
         }
         if (chosenRear == null) {
@@ -3035,12 +3061,16 @@ class _WorkshopCard extends ConsumerWidget {
         }
         chosenRear ??= rearRecs.isNotEmpty ? rearRecs.first : null;
 
-        final bool hasFrontAi = aiArticleId != null && chosenFront?.articleId == aiArticleId;
-        final bool hasRearAi = aiRearArticleId != null && chosenRear?.articleId == aiRearArticleId;
+        final bool hasFrontAi =
+            aiArticleId != null && chosenFront?.articleId == aiArticleId;
+        final bool hasRearAi =
+            aiRearArticleId != null && chosenRear?.articleId == aiRearArticleId;
         final bool hasFrontBrandMatch = searchState.aiFrontBrand != null &&
-            chosenFront?.brand.toLowerCase() == searchState.aiFrontBrand?.toLowerCase();
+            chosenFront?.brand.toLowerCase() ==
+                searchState.aiFrontBrand?.toLowerCase();
         final bool hasRearBrandMatch = searchState.aiRearBrand != null &&
-            chosenRear?.brand.toLowerCase() == searchState.aiRearBrand?.toLowerCase();
+            chosenRear?.brand.toLowerCase() ==
+                searchState.aiRearBrand?.toLowerCase();
 
         if (chosenFront != null) {
           selectedFrontRec = {
@@ -3050,7 +3080,9 @@ class _WorkshopCard extends ConsumerWidget {
             'pricePerTire': chosenFront.pricePerTire,
             'totalPrice': chosenFront.totalPrice,
             'quantity': chosenFront.quantity,
-            'label': (hasFrontAi || hasFrontBrandMatch) ? 'KI-Empfehlung' : (category ?? chosenFront.label),
+            'label': (hasFrontAi || hasFrontBrandMatch)
+                ? 'KI-Empfehlung'
+                : (category ?? chosenFront.label),
             'dimensions': chosenFront.dimensions,
           };
         }
@@ -3062,7 +3094,9 @@ class _WorkshopCard extends ConsumerWidget {
             'pricePerTire': chosenRear.pricePerTire,
             'totalPrice': chosenRear.totalPrice,
             'quantity': chosenRear.quantity,
-            'label': (hasRearAi || hasRearBrandMatch) ? 'KI-Empfehlung' : (category ?? chosenRear.label),
+            'label': (hasRearAi || hasRearBrandMatch)
+                ? 'KI-Empfehlung'
+                : (category ?? chosenRear.label),
             'dimensions': chosenRear.dimensions,
           };
         }
@@ -3413,7 +3447,8 @@ class _WorkshopCard extends ConsumerWidget {
             final recArticleId = selectedRec?['articleId']?.toString();
             if (recBrand != null) qp['tireBrand'] = recBrand;
             if (recModel != null) qp['tireModel'] = recModel;
-            if (recArticleId != null && recArticleId.isNotEmpty) qp['articleId'] = recArticleId;
+            if (recArticleId != null && recArticleId.isNotEmpty)
+              qp['articleId'] = recArticleId;
           }
           debugPrint('🔗 [WORKSHOP-NAV] passing qp: $qp');
           final uri = Uri(
@@ -3602,8 +3637,7 @@ class _WorkshopCard extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0284C7)
-                              .withValues(alpha: 0.1),
+                          color: const Color(0xFF0284C7).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                               color: const Color(0xFF0284C7)

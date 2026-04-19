@@ -91,11 +91,12 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
 
       final data = response.data;
       final list = (data is List ? data : data['workshops'] ?? []) as List;
-      final workshops =
-          list.map((e) => Workshop.fromJson(e as Map<String, dynamic>)).toList();
+      final workshops = list
+          .map((e) => Workshop.fromJson(e as Map<String, dynamic>))
+          .toList();
       // Sort by distance (nearest first)
-      workshops.sort((a, b) =>
-          (a.distance ?? 999).compareTo(b.distance ?? 999));
+      workshops
+          .sort((a, b) => (a.distance ?? 999).compareTo(b.distance ?? 999));
 
       await Future.delayed(const Duration(milliseconds: 1200));
       if (!mounted) return;
@@ -117,7 +118,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: isDark ? B24Colors.darkBackground : const Color(0xFFFEF2F2),
+      backgroundColor:
+          isDark ? B24Colors.darkBackground : const Color(0xFFFEF2F2),
       appBar: AppBar(
         backgroundColor: B24Colors.accentRed,
         foregroundColor: Colors.white,
@@ -235,7 +237,11 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: isFound ? B24Colors.accentGreen : (isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary),
+              color: isFound
+                  ? B24Colors.accentGreen
+                  : (isDark
+                      ? B24Colors.darkTextPrimary
+                      : B24Colors.textPrimary),
             ),
           ),
           if (isFound && _locationText.isNotEmpty) ...[
@@ -254,7 +260,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
               'Wir suchen Werkstätten in deiner Nähe...',
               style: TextStyle(
                 fontSize: 13,
-                color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                color: isDark
+                    ? B24Colors.darkTextSecondary
+                    : B24Colors.textSecondary,
               ),
             ),
           ],
@@ -272,7 +280,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.location_off, size: 64, color: B24Colors.accentRed),
+            const Icon(Icons.location_off,
+                size: 64, color: B24Colors.accentRed),
             const SizedBox(height: 16),
             Text(
               _errorMessage ?? 'Ein Fehler ist aufgetreten.',
@@ -280,7 +289,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                color:
+                    isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
             const SizedBox(height: 24),
@@ -313,10 +323,13 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          color: isDark ? B24Colors.accentRed.withValues(alpha: 0.15) : B24Colors.accentRed.withValues(alpha: 0.08),
+          color: isDark
+              ? B24Colors.accentRed.withValues(alpha: 0.15)
+              : B24Colors.accentRed.withValues(alpha: 0.08),
           child: Row(
             children: [
-              const Icon(Icons.my_location, size: 16, color: B24Colors.accentRed),
+              const Icon(Icons.my_location,
+                  size: 16, color: B24Colors.accentRed),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -326,13 +339,16 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                    color: isDark
+                        ? B24Colors.darkTextPrimary
+                        : B24Colors.textPrimary,
                   ),
                 ),
               ),
               GestureDetector(
                 onTap: _startLocating,
-                child: const Icon(Icons.refresh, size: 18, color: B24Colors.accentRed),
+                child: const Icon(Icons.refresh,
+                    size: 18, color: B24Colors.accentRed),
               ),
             ],
           ),
@@ -375,7 +391,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
-              color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+              color: isDark
+                  ? B24Colors.darkTextSecondary
+                  : B24Colors.textSecondary,
               height: 1.4,
             ),
           ),
@@ -392,21 +410,30 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.search_off, size: 56, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary),
+            Icon(Icons.search_off,
+                size: 56,
+                color: isDark
+                    ? B24Colors.darkTextSecondary
+                    : B24Colors.textTertiary),
             const SizedBox(height: 16),
             Text(
               'Keine Werkstätten gefunden',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                color:
+                    isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               'Leider gibt es keine Werkstätten in 25 km Umkreis.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary),
+              style: TextStyle(
+                  fontSize: 13,
+                  color: isDark
+                      ? B24Colors.darkTextSecondary
+                      : B24Colors.textSecondary),
             ),
             const SizedBox(height: 20),
             _buildEmergencyHint(),
@@ -424,7 +451,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF422006) : const Color(0xFFFEF9C3),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: isDark ? const Color(0xFF854D0E) : const Color(0xFFFDE68A)),
+        border: Border.all(
+            color: isDark ? const Color(0xFF854D0E) : const Color(0xFFFDE68A)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +466,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                  color: isDark
+                      ? B24Colors.darkTextPrimary
+                      : B24Colors.textPrimary,
                 ),
               ),
             ],
@@ -481,7 +511,11 @@ class _EmergencyPhoneRow extends StatelessWidget {
       onTap: () => _callNumber(number),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary),
+          Icon(icon,
+              size: 16,
+              color: isDark
+                  ? B24Colors.darkTextSecondary
+                  : B24Colors.textSecondary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -489,7 +523,8 @@ class _EmergencyPhoneRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                color:
+                    isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
               ),
             ),
           ),
@@ -554,7 +589,9 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                        color: isDark
+                            ? B24Colors.darkTextPrimary
+                            : B24Colors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -564,7 +601,9 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                           workshop.city,
                           style: TextStyle(
                             fontSize: 13,
-                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
+                            color: isDark
+                                ? B24Colors.darkTextSecondary
+                                : B24Colors.textSecondary,
                           ),
                         ),
                         if (workshop.distance != null) ...[
@@ -601,8 +640,7 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color:
-                        isOpen ? B24Colors.accentGreen : B24Colors.accentRed,
+                    color: isOpen ? B24Colors.accentGreen : B24Colors.accentRed,
                   ),
                 ),
               ),
@@ -622,25 +660,31 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
+                    color: isDark
+                        ? B24Colors.darkTextPrimary
+                        : B24Colors.textPrimary,
                   ),
                 ),
-                        Text(
-                          ' (${workshop.reviewCount})',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      Expanded(
-                        child: Text(
-                          _getHoursText(workshop),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isDark ? B24Colors.darkTextSecondary : B24Colors.textSecondary,
-                          ),
+                Text(
+                  ' (${workshop.reviewCount})',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark
+                        ? B24Colors.darkTextSecondary
+                        : B24Colors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                child: Text(
+                  _getHoursText(workshop),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark
+                        ? B24Colors.darkTextSecondary
+                        : B24Colors.textSecondary,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -684,7 +728,7 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                     ),
             )
           else
-              Container(
+            Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
@@ -696,7 +740,9 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
-                  color: isDark ? B24Colors.darkTextSecondary : B24Colors.textTertiary,
+                  color: isDark
+                      ? B24Colors.darkTextSecondary
+                      : B24Colors.textTertiary,
                 ),
               ),
             ),
@@ -722,8 +768,7 @@ bool _isCurrentlyOpen(Workshop workshop) {
     final closeParts = h.closeTime.split(':');
     if (openParts.length < 2 || closeParts.length < 2) continue;
 
-    final openMinutes =
-        int.parse(openParts[0]) * 60 + int.parse(openParts[1]);
+    final openMinutes = int.parse(openParts[0]) * 60 + int.parse(openParts[1]);
     final closeMinutes =
         int.parse(closeParts[0]) * 60 + int.parse(closeParts[1]);
     final nowMinutes = now.hour * 60 + now.minute;
@@ -736,9 +781,8 @@ bool _isCurrentlyOpen(Workshop workshop) {
 String _getHoursText(Workshop workshop) {
   if (workshop.openingHours.isEmpty) return '';
   final now = DateTime.now();
-  final todayHours = workshop.openingHours
-      .where((h) => h.dayOfWeek == now.weekday)
-      .toList();
+  final todayHours =
+      workshop.openingHours.where((h) => h.dayOfWeek == now.weekday).toList();
 
   if (todayHours.isEmpty || todayHours.every((h) => h.isClosed)) {
     // Find next open day
@@ -754,8 +798,8 @@ String _getHoursText(Workshop workshop) {
     return 'Geschlossen';
   }
 
-  final open = todayHours.firstWhere((h) => !h.isClosed,
-      orElse: () => todayHours.first);
+  final open =
+      todayHours.firstWhere((h) => !h.isClosed, orElse: () => todayHours.first);
   if (open.isClosed) return 'Heute geschlossen';
 
   if (_isCurrentlyOpen(workshop)) {

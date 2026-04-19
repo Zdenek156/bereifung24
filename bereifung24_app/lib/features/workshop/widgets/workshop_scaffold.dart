@@ -6,11 +6,31 @@ class WorkshopScaffold extends StatelessWidget {
   const WorkshopScaffold({super.key, required this.child});
 
   static const _tabs = [
-    _TabItem(label: 'Dashboard', path: '/workshop', icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard),
-    _TabItem(label: 'Kalender', path: '/workshop/calendar', icon: Icons.calendar_today_outlined, activeIcon: Icons.calendar_today),
-    _TabItem(label: 'Buchungen', path: '/workshop/bookings', icon: Icons.assignment_outlined, activeIcon: Icons.assignment),
-    _TabItem(label: 'Bewertungen', path: '/workshop/reviews', icon: Icons.star_outline, activeIcon: Icons.star),
-    _TabItem(label: 'Profil', path: '/workshop/profile', icon: Icons.person_outline, activeIcon: Icons.person),
+    _TabItem(
+        label: 'Dashboard',
+        path: '/workshop',
+        icon: Icons.dashboard_outlined,
+        activeIcon: Icons.dashboard),
+    _TabItem(
+        label: 'Kalender',
+        path: '/workshop/calendar',
+        icon: Icons.calendar_today_outlined,
+        activeIcon: Icons.calendar_today),
+    _TabItem(
+        label: 'Buchungen',
+        path: '/workshop/bookings',
+        icon: Icons.assignment_outlined,
+        activeIcon: Icons.assignment),
+    _TabItem(
+        label: 'Bewertungen',
+        path: '/workshop/reviews',
+        icon: Icons.star_outline,
+        activeIcon: Icons.star),
+    _TabItem(
+        label: 'Profil',
+        path: '/workshop/profile',
+        icon: Icons.person_outline,
+        activeIcon: Icons.person),
   ];
 
   int _currentIndex(BuildContext context) {
@@ -78,8 +98,10 @@ class WorkshopScaffold extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isActive
                                 ? (isDark
-                                    ? const Color(0xFF0284C7).withValues(alpha: 0.15)
-                                    : const Color(0xFF0284C7).withValues(alpha: 0.10))
+                                    ? const Color(0xFF0284C7)
+                                        .withValues(alpha: 0.15)
+                                    : const Color(0xFF0284C7)
+                                        .withValues(alpha: 0.10))
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(16),
                           ),
@@ -99,7 +121,9 @@ class WorkshopScaffold extends StatelessWidget {
                           width: isActive ? 20 : 0,
                           height: 3,
                           decoration: BoxDecoration(
-                            color: isActive ? const Color(0xFF0284C7) : Colors.transparent,
+                            color: isActive
+                                ? const Color(0xFF0284C7)
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),

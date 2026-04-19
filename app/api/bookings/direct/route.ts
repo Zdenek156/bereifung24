@@ -64,6 +64,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Fehlende Pflichtfelder' }, { status: 400 })
     }
 
+    // Validate user has complete profile (address required for booking)
+    const bookingUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { street: true, zipCode: true, city: true }
+    })
+    if (!bookingUser || !bookingUser.street?.trim() || !bookingUser.zipCode?.trim() || !bookingUser.city?.trim()) {
+      console.log('[DIRECT BOOKING] ❌ Incomplete profile - missing address')
+      return NextResponse.json(
+        { error: 'Bitte vervollständigen Sie Ihr Profil (Adresse) bevor Sie buchen können.' },
+        { status: 400 }
+      )
+    }
+
     // Get customer
     const customer = await prisma.customer.findUnique({
       where: { userId: session.user.id },

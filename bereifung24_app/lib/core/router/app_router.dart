@@ -155,11 +155,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                   'diameter': qp['rearDiameter'] ?? '',
                   'loadIndex': qp['rearLoadIndex'] ?? '',
                   'speedIndex': qp['rearSpeedIndex'] ?? '',
-                  if (qp['rearArticleId'] != null && qp['rearArticleId']!.isNotEmpty)
+                  if (qp['rearArticleId'] != null &&
+                      qp['rearArticleId']!.isNotEmpty)
                     'articleId': qp['rearArticleId']!,
-                  if (qp['rearTireBrand'] != null && qp['rearTireBrand']!.isNotEmpty)
+                  if (qp['rearTireBrand'] != null &&
+                      qp['rearTireBrand']!.isNotEmpty)
                     'tireBrand': qp['rearTireBrand']!,
-                  if (qp['rearTireModel'] != null && qp['rearTireModel']!.isNotEmpty)
+                  if (qp['rearTireModel'] != null &&
+                      qp['rearTireModel']!.isNotEmpty)
                     'tireModel': qp['rearTireModel']!,
                 };
               }
@@ -175,7 +178,8 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: 'workshop/:id',
                 parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) {
-                  final extra = state.extra as Map<String, String?>? ?? const {};
+                  final extra =
+                      state.extra as Map<String, String?>? ?? const {};
                   final qp = state.uri.queryParameters;
                   return WorkshopDetailScreen(
                     workshopId: state.pathParameters['id']!,
@@ -183,9 +187,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                     preferredTireBrand: extra['tireBrand'] ?? qp['tireBrand'],
                     preferredTireModel: extra['tireModel'] ?? qp['tireModel'],
                     preferredArticleId: extra['articleId'] ?? qp['articleId'],
-                    preferredRearTireBrand: extra['rearTireBrand'] ?? qp['rearTireBrand'],
-                    preferredRearTireModel: extra['rearTireModel'] ?? qp['rearTireModel'],
-                    preferredRearArticleId: extra['rearArticleId'] ?? qp['rearArticleId'],
+                    preferredRearTireBrand:
+                        extra['rearTireBrand'] ?? qp['rearTireBrand'],
+                    preferredRearTireModel:
+                        extra['rearTireModel'] ?? qp['rearTireModel'],
+                    preferredRearArticleId:
+                        extra['rearArticleId'] ?? qp['rearArticleId'],
                   );
                 },
               ),

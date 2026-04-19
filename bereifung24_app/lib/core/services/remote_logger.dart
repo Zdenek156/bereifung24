@@ -27,7 +27,8 @@ class RemoteLogger {
     debugPrint('[$tag] $message${data != null ? ' $data' : ''}');
 
     try {
-      _device ??= '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
+      _device ??=
+          '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
 
       // Fire and forget — don't await to avoid blocking the app flow
       _dio.post(
@@ -49,7 +50,8 @@ class RemoteLogger {
   }
 
   /// Shorthand for error-level logs
-  static Future<void> error(String tag, String message, {Map<String, dynamic>? data}) {
+  static Future<void> error(String tag, String message,
+      {Map<String, dynamic>? data}) {
     return log(tag, message, level: 'error', data: data);
   }
 }

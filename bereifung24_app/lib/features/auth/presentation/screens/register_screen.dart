@@ -98,7 +98,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
 
       final googleFirstName = googleUser.displayName?.split(' ').first;
-      final googleLastName = googleUser.displayName?.split(' ').skip(1).join(' ');
+      final googleLastName =
+          googleUser.displayName?.split(' ').skip(1).join(' ');
 
       // Login first without address — server returns existing user data
       final success = await ref.read(authStateProvider.notifier).socialLogin(
@@ -122,9 +123,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       // Check if user already has a complete address
       final user = ref.read(authStateProvider).user;
       if (user != null &&
-          (user.street == null || user.street!.isEmpty ||
-           user.zipCode == null || user.zipCode!.isEmpty ||
-           user.city == null || user.city!.isEmpty)) {
+          (user.street == null ||
+              user.street!.isEmpty ||
+              user.zipCode == null ||
+              user.zipCode!.isEmpty ||
+              user.city == null ||
+              user.city!.isEmpty)) {
         final result = await _showProfileDialog(
           firstName: googleFirstName,
           lastName: googleLastName,
@@ -208,14 +212,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           !serverFirstName.contains('@') &&
           serverFirstName != 'Apple';
       final serverHasAddress = user != null &&
-          user.street != null && user.street!.isNotEmpty &&
-          user.zipCode != null && user.zipCode!.isNotEmpty &&
-          user.city != null && user.city!.isNotEmpty;
+          user.street != null &&
+          user.street!.isNotEmpty &&
+          user.zipCode != null &&
+          user.zipCode!.isNotEmpty &&
+          user.city != null &&
+          user.city!.isNotEmpty;
 
       if (!serverHasName || !serverHasAddress) {
         final result = await _showProfileDialog(
           firstName: serverHasName ? serverFirstName : (appleFirstName ?? ''),
-          lastName: serverHasName ? (user?.lastName ?? '') : (appleLastName ?? ''),
+          lastName:
+              serverHasName ? (user?.lastName ?? '') : (appleLastName ?? ''),
           nameProvided: serverHasName,
           askForEmail: false,
           addressOptional: serverHasAddress,
@@ -276,7 +284,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text(nameProvided ? 'Adresse vervollständigen' : 'Profil vervollständigen'),
+        title: Text(nameProvided
+            ? 'Adresse vervollständigen'
+            : 'Profil vervollständigen'),
         content: SingleChildScrollView(
           child: Form(
             key: formKey,
@@ -292,7 +302,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
-                if (askForEmail) ...[                  TextFormField(
+                if (askForEmail) ...[
+                  TextFormField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
@@ -301,8 +312,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                      if (!v.contains('@') || !v.contains('.')) return 'Ungültige E-Mail';
-                      if (v.contains('privaterelay.appleid.com')) return 'Bitte echte E-Mail angeben';
+                      if (!v.contains('@') || !v.contains('.'))
+                        return 'Ungültige E-Mail';
+                      if (v.contains('privaterelay.appleid.com'))
+                        return 'Bitte echte E-Mail angeben';
                       return null;
                     },
                   ),
@@ -313,14 +326,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     controller: firstNameCtrl,
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(labelText: 'Vorname *'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: lastNameCtrl,
                     textCapitalization: TextCapitalization.words,
                     decoration: const InputDecoration(labelText: 'Nachname *'),
-                    validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -333,43 +348,47 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
                 if (!addressOptional) ...[
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: streetCtrl,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Straße & Hausnummer *',
-                    prefixIcon: Icon(Icons.home_outlined),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: streetCtrl,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: const InputDecoration(
+                      labelText: 'Straße & Hausnummer *',
+                      prefixIcon: Icon(Icons.home_outlined),
+                    ),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 100,
-                      child: TextFormField(
-                        controller: zipCtrl,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(labelText: 'PLZ *'),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'Pflicht';
-                          if (v.trim().length != 5) return '5 Ziffern';
-                          return null;
-                        },
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 100,
+                        child: TextFormField(
+                          controller: zipCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(labelText: 'PLZ *'),
+                          validator: (v) {
+                            if (v == null || v.trim().isEmpty) return 'Pflicht';
+                            if (v.trim().length != 5) return '5 Ziffern';
+                            return null;
+                          },
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: cityCtrl,
-                        textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(labelText: 'Stadt *'),
-                        validator: (v) => v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: cityCtrl,
+                          textCapitalization: TextCapitalization.words,
+                          decoration:
+                              const InputDecoration(labelText: 'Stadt *'),
+                          validator: (v) => v == null || v.trim().isEmpty
+                              ? 'Pflichtfeld'
+                              : null,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
                 ],
               ],
             ),

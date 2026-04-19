@@ -78,6 +78,8 @@ export async function GET(req: NextRequest) {
           year: vehicle.year || new Date().getFullYear(),
           licensePlate: vehicle.licensePlate || null,
           vin: null, // Will be set below if actual VIN
+          fuelType: vehicle.fuelType || null,
+          fuelConsumption: vehicle.fuelConsumption || null,
           nextInspectionDate: null,
           inspectionReminder: false,
           inspectionReminderDays: 30,

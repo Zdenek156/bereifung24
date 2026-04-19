@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcrypt'
 import { issueTokenPair } from '@/lib/mobile-auth'
 import { checkLoginRateLimit, getClientIp } from '@/lib/auth-rate-limiter'
+import { geocodeAddress } from '@/lib/geocoding'
 
 const GOOGLE_TOKEN_INFO_URL = 'https://oauth2.googleapis.com/tokeninfo'
 const APPLE_KEYS_URL = 'https://appleid.apple.com/auth/keys'
@@ -139,6 +140,23 @@ export async function POST(request: NextRequest) {
         updateData.lastName = providedLastName
       }
 
+      // Geocode if address was just added and user has no coordinates
+      if (!user.latitude && (updateData.street || user.street) && (updateData.zipCode || user.zipCode) && (updateData.city || user.city)) {
+        try {
+          const coords = await geocodeAddress(
+            (updateData.street as string) || user.street || '',
+            (updateData.zipCode as string) || user.zipCode || '',
+            (updateData.city as string) || user.city || ''
+          )
+          if (coords) {
+            updateData.latitude = coords.latitude
+            updateData.longitude = coords.longitude
+          }
+        } catch (error) {
+          console.error('[SOCIAL LOGIN] Geocoding error:', error)
+        }
+      }
+
       if (Object.keys(updateData).length > 0) {
         user = await prisma.user.update({
           where: { id: user.id },
@@ -147,6 +165,21 @@ export async function POST(request: NextRequest) {
         })
       }
     } else {
+      // Geocode address if provided
+      let latitude: number | null = null
+      let longitude: number | null = null
+      if (providedStreet && providedZipCode && providedCity) {
+        try {
+          const coords = await geocodeAddress(providedStreet, providedZipCode, providedCity)
+          if (coords) {
+            latitude = coords.latitude
+            longitude = coords.longitude
+          }
+        } catch (error) {
+          console.error('[SOCIAL LOGIN] Geocoding error:', error)
+        }
+      }
+
       // New user - create CUSTOMER account
       user = await prisma.user.create({
         data: {
@@ -164,6 +197,8 @@ export async function POST(request: NextRequest) {
           street: providedStreet || '',
           zipCode: providedZipCode || '',
           city: providedCity || '',
+          latitude,
+          longitude,
           customer: { create: {} },
         },
         include: { customer: true, workshop: true },

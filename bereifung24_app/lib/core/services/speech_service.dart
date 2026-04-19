@@ -19,7 +19,8 @@ class SpeechService {
   /// Initialize speech recognition
   Future<bool> init() async {
     if (_isInitialized) return true;
-    await RemoteLogger.log('speech', 'init() called', data: {'platform': Platform.operatingSystem});
+    await RemoteLogger.log('speech', 'init() called',
+        data: {'platform': Platform.operatingSystem});
     try {
       _isInitialized = await _speech.initialize(
         onError: (error) {
@@ -64,7 +65,8 @@ class SpeechService {
     if (!_isInitialized) {
       final ok = await init();
       if (!ok) {
-        await RemoteLogger.error('speech', 'Cannot start listening - init failed');
+        await RemoteLogger.error(
+            'speech', 'Cannot start listening - init failed');
         return false;
       }
     }

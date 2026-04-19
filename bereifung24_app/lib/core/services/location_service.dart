@@ -35,7 +35,8 @@ class LocationService {
     }
 
     if (permission == LocationPermission.deniedForever) {
-      lastError = 'Standort-Berechtigung dauerhaft abgelehnt. Bitte in den Einstellungen aktivieren.';
+      lastError =
+          'Standort-Berechtigung dauerhaft abgelehnt. Bitte in den Einstellungen aktivieren.';
       debugPrint('Location permission permanently denied');
       return null;
     }
@@ -48,9 +49,11 @@ class LocationService {
       );
     } catch (e) {
       if (e.toString().contains('TimeoutException')) {
-        lastError = 'GPS-Signal zu schwach. Bitte versuche es erneut oder gib eine PLZ ein.';
+        lastError =
+            'GPS-Signal zu schwach. Bitte versuche es erneut oder gib eine PLZ ein.';
       } else {
-        lastError = 'Standort konnte nicht ermittelt werden. Bitte prüfe deine GPS-Einstellungen.';
+        lastError =
+            'Standort konnte nicht ermittelt werden. Bitte prüfe deine GPS-Einstellungen.';
       }
       debugPrint('Geolocator getCurrentPosition error: $e');
       return null;
@@ -58,8 +61,7 @@ class LocationService {
   }
 
   /// Calculate distance between two points in km
-  double distanceBetween(
-      double lat1, double lon1, double lat2, double lon2) {
+  double distanceBetween(double lat1, double lon1, double lat2, double lon2) {
     return Geolocator.distanceBetween(lat1, lon1, lat2, lon2) / 1000;
   }
 

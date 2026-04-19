@@ -222,8 +222,57 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   bool _isValidScannedTire(TireSize ts) {
     final isMoto = _vehicleType == 'MOTORCYCLE';
     final widths = isMoto
-        ? const [70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220]
-        : const [125, 135, 145, 155, 165, 175, 185, 195, 205, 215, 225, 235, 245, 255, 265, 275, 285, 295, 305, 315, 325, 335, 345, 355, 365, 375, 385, 395, 405, 415, 425];
+        ? const [
+            70,
+            80,
+            90,
+            100,
+            110,
+            120,
+            130,
+            140,
+            150,
+            160,
+            170,
+            180,
+            190,
+            200,
+            210,
+            220
+          ]
+        : const [
+            125,
+            135,
+            145,
+            155,
+            165,
+            175,
+            185,
+            195,
+            205,
+            215,
+            225,
+            235,
+            245,
+            255,
+            265,
+            275,
+            285,
+            295,
+            305,
+            315,
+            325,
+            335,
+            345,
+            355,
+            365,
+            375,
+            385,
+            395,
+            405,
+            415,
+            425
+          ];
     final aspects = isMoto
         ? const [45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 100]
         : const [20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90];
@@ -380,8 +429,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onChanged: (v) =>
-                            setSheetState(() => searchQuery = v),
+                        onChanged: (v) => setSheetState(() => searchQuery = v),
                       ),
                     ),
                     const Divider(height: 1),
@@ -400,9 +448,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.normal,
-                                color: isSelected
-                                    ? B24Colors.primaryBlue
-                                    : null,
+                                color:
+                                    isSelected ? B24Colors.primaryBlue : null,
                               ),
                             ),
                             trailing: isSelected
@@ -436,7 +483,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     }
     if (sel.hasDifferentSizes && sel.rearSpec != null) {
       final r = sel.rearSpec!;
-      if (r['width'] != null && (r['loadIndex'] == null || r['speedRating'] == null)) {
+      if (r['width'] != null &&
+          (r['loadIndex'] == null || r['speedRating'] == null)) {
         return '$label (Hinterachse): Tragfähigkeit und Geschwindigkeitsindex sind Pflichtfelder';
       }
     }
@@ -656,7 +704,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     brands.insert(0, _makeCtrl.text);
                   }
                   return FormField<String>(
-                    initialValue: brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
+                    initialValue:
+                        brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
                     validator: (v) =>
                         (v == null || v.isEmpty) ? 'Pflichtfeld' : null,
                     builder: (fieldState) {

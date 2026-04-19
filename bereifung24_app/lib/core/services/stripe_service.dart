@@ -27,7 +27,8 @@ class StripeService {
         headers: {'Accept': 'application/json'},
       ));
       final response = await dio.get(url);
-      await RemoteLogger.log('stripe', 'init: response status=${response.statusCode}');
+      await RemoteLogger.log(
+          'stripe', 'init: response status=${response.statusCode}');
 
       final data = response.data;
       String? key;
@@ -39,15 +40,18 @@ class StripeService {
         Stripe.publishableKey = key;
         Stripe.merchantIdentifier = 'merchant.de.bereifung24.bereifung24App';
         Stripe.urlScheme = 'bereifung24';
-        await RemoteLogger.log('stripe', 'init: key set, calling applySettings...');
+        await RemoteLogger.log(
+            'stripe', 'init: key set, calling applySettings...');
         await Stripe.instance.applySettings();
         _initialized = true;
         await RemoteLogger.log('stripe', 'init: SUCCESS — initialized');
       } else {
-        await RemoteLogger.error('stripe', 'init: invalid key received: ${key?.substring(0, 10)}...');
+        await RemoteLogger.error('stripe',
+            'init: invalid key received: ${key?.substring(0, 10)}...');
       }
     } catch (e, stack) {
-      await RemoteLogger.error('stripe', 'init FAILED: $e', data: {'stack': '$stack'});
+      await RemoteLogger.error('stripe', 'init FAILED: $e',
+          data: {'stack': '$stack'});
     }
   }
 
@@ -63,10 +67,12 @@ class StripeService {
   }) async {
     if (!_initialized) {
       // Try to init one more time (force re-fetch to ensure correct key)
-      await RemoteLogger.log('stripe', 'processPayment: not initialized, forcing init...');
+      await RemoteLogger.log(
+          'stripe', 'processPayment: not initialized, forcing init...');
       await init(force: true);
       if (!_initialized) {
-        await RemoteLogger.error('stripe', 'processPayment: STILL not initialized after force init');
+        await RemoteLogger.error(
+            'stripe', 'processPayment: STILL not initialized after force init');
         throw Exception(
             'Stripe ist nicht konfiguriert. Bitte versuche es später erneut.');
       }
@@ -110,12 +116,13 @@ class StripeService {
         methodOrder = [selected, ...allMethods.where((m) => m != selected)];
       }
 
-      await RemoteLogger.log('stripe', 'step 2: Calling initPaymentSheet...', data: {
-        'methodOrder': methodOrder,
-        'hasApplePay': Platform.isIOS,
-        'hasGooglePay': Platform.isAndroid,
-        'returnURL': 'bereifung24://stripe-redirect',
-      });
+      await RemoteLogger.log('stripe', 'step 2: Calling initPaymentSheet...',
+          data: {
+            'methodOrder': methodOrder,
+            'hasApplePay': Platform.isIOS,
+            'hasGooglePay': Platform.isAndroid,
+            'returnURL': 'bereifung24://stripe-redirect',
+          });
       // 2. Initialize payment sheet
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
@@ -154,27 +161,34 @@ class StripeService {
       await RemoteLogger.log('stripe', 'step 2: initPaymentSheet DONE');
 
       // 3. Present payment sheet (with timeout to prevent infinite spinner)
-      await RemoteLogger.log('stripe', 'step 3: Calling presentPaymentSheet...');
-      await Stripe.instance.presentPaymentSheet()
+      await RemoteLogger.log(
+          'stripe', 'step 3: Calling presentPaymentSheet...');
+      await Stripe.instance
+          .presentPaymentSheet()
           .timeout(const Duration(seconds: 120), onTimeout: () {
         RemoteLogger.error('stripe', 'step 3: TIMEOUT after 120s');
-        throw Exception('Zahlung hat zu lange gedauert. Bitte versuche es erneut.');
+        throw Exception(
+            'Zahlung hat zu lange gedauert. Bitte versuche es erneut.');
       });
-      await RemoteLogger.log('stripe', 'step 3: presentPaymentSheet DONE — payment succeeded');
+      await RemoteLogger.log(
+          'stripe', 'step 3: presentPaymentSheet DONE — payment succeeded');
 
       return paymentIntentId ?? 'stripe_completed'; // payment succeeded
     } on StripeException catch (e) {
-      await RemoteLogger.error('stripe', 'StripeException: ${e.error.code} - ${e.error.message}', data: {
-        'code': e.error.code.toString(),
-        'message': e.error.message,
-        'localizedMessage': e.error.localizedMessage,
-      });
+      await RemoteLogger.error(
+          'stripe', 'StripeException: ${e.error.code} - ${e.error.message}',
+          data: {
+            'code': e.error.code.toString(),
+            'message': e.error.message,
+            'localizedMessage': e.error.localizedMessage,
+          });
       if (e.error.code == FailureCode.Canceled) {
         return null; // user cancelled
       }
       rethrow;
     } catch (e, stack) {
-      await RemoteLogger.error('stripe', 'General error: $e', data: {'stack': '$stack'});
+      await RemoteLogger.error('stripe', 'General error: $e',
+          data: {'stack': '$stack'});
       rethrow;
     }
   }

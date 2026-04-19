@@ -135,12 +135,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ),
                       Image.asset(
-                          isDark
-                              ? 'assets/images/b24_logo_dark.png'
-                              : 'assets/images/b24_logo_light.png',
-                          width: 64,
-                          height: 64,
-                        ),
+                        isDark
+                            ? 'assets/images/b24_logo_dark.png'
+                            : 'assets/images/b24_logo_light.png',
+                        width: 64,
+                        height: 64,
+                      ),
                     ],
                   ),
                 ),
@@ -540,7 +540,8 @@ class _NextAppointmentCard extends ConsumerWidget {
           DateFormat('EEE, d. MMM yyyy', 'de_DE').format(next.appointmentDate);
       final timeStr = next.appointmentTime ?? '';
       final today = DateTime(now.year, now.month, now.day);
-      final apptDay = DateTime(next.appointmentDate.year, next.appointmentDate.month, next.appointmentDate.day);
+      final apptDay = DateTime(next.appointmentDate.year,
+          next.appointmentDate.month, next.appointmentDate.day);
       final daysUntil = apptDay.difference(today).inDays;
       final daysLabel = daysUntil == 0
           ? 'Heute'
@@ -827,8 +828,7 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                       final isSelected = i == currentIdx;
                       return GestureDetector(
                         onTap: () {
-                          ref.read(homeVehicleIndexProvider.notifier).state =
-                              i;
+                          ref.read(homeVehicleIndexProvider.notifier).state = i;
                           ref.read(selectedVehicleProvider.notifier).state =
                               vehicles[i];
                           saveHomeVehicleIndex(i);
@@ -1066,8 +1066,10 @@ class _ServicesGrid extends ConsumerWidget {
                   width: itemWidth,
                   child: _ServiceTile(
                     service: s,
-                    isDisabled: isTrailer && !_trailerAllowedServices.contains(s.serviceType),
-                    disabledMessage: 'Für Anhänger ist nur der Reifenservice verfügbar.',
+                    isDisabled: isTrailer &&
+                        !_trailerAllowedServices.contains(s.serviceType),
+                    disabledMessage:
+                        'Für Anhänger ist nur der Reifenservice verfügbar.',
                   ),
                 ))
             .toList(),
@@ -1093,7 +1095,8 @@ class _ServiceTile extends StatelessWidget {
   final _ServiceItem service;
   final bool isDisabled;
   final String? disabledMessage;
-  const _ServiceTile({required this.service, this.isDisabled = false, this.disabledMessage});
+  const _ServiceTile(
+      {required this.service, this.isDisabled = false, this.disabledMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -1113,93 +1116,93 @@ class _ServiceTile extends StatelessWidget {
       child: Opacity(
         opacity: isDisabled ? 0.4 : 1.0,
         child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? B24Colors.darkSurface : Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [_cardShadowLight(isDark: isDark)],
-        ),
-        child: Stack(
-          children: [
-            if (service.popular)
-              Positioned(
-                top: 6,
-                right: 6,
-                child: Container(
-                  width: 6,
-                  height: 6,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: B24Colors.primaryBlue,
+          decoration: BoxDecoration(
+            color: isDark ? B24Colors.darkSurface : Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [_cardShadowLight(isDark: isDark)],
+          ),
+          child: Stack(
+            children: [
+              if (service.popular)
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: B24Colors.primaryBlue,
+                    ),
                   ),
                 ),
-              ),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                if (service.imagePath != null)
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(14),
-                      topRight: Radius.circular(14),
-                    ),
-                    child: SizedBox(
-                      width: double.infinity,
-                      height: 80,
-                      child: service.zoomOut
-                          ? Transform.scale(
-                              scale: 1.15,
-                              child: Image.asset(
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: [
+                  if (service.imagePath != null)
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(14),
+                        topRight: Radius.circular(14),
+                      ),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 80,
+                        child: service.zoomOut
+                            ? Transform.scale(
+                                scale: 1.15,
+                                child: Image.asset(
+                                  service.imagePath!,
+                                  width: double.infinity,
+                                  height: 80,
+                                  fit: BoxFit.cover,
+                                ),
+                              )
+                            : Image.asset(
                                 service.imagePath!,
                                 width: double.infinity,
                                 height: 80,
                                 fit: BoxFit.cover,
                               ),
-                            )
-                          : Image.asset(
-                              service.imagePath!,
-                              width: double.infinity,
-                              height: 80,
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? const Color(0xFF0284C7).withValues(alpha: 0.15)
-                            : B24Colors.primaryPale,
-                        borderRadius: BorderRadius.circular(10),
                       ),
-                      alignment: Alignment.center,
-                      child: Text(service.icon,
-                          style: const TextStyle(fontSize: 18)),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.only(top: 14),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: isDark
+                              ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                              : B24Colors.primaryPale,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(service.icon,
+                            style: const TextStyle(fontSize: 18)),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Text(
+                    service.name,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isDark
+                          ? B24Colors.darkTextPrimary
+                          : B24Colors.textPrimary,
+                      height: 1.3,
                     ),
                   ),
-                const SizedBox(height: 8),
-                Text(
-                  service.name,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isDark
-                        ? B24Colors.darkTextPrimary
-                        : B24Colors.textPrimary,
-                    height: 1.3,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const SizedBox(height: 4),
-              ],
-            ),
-          ],
+                  const SizedBox(height: 4),
+                  const SizedBox(height: 4),
+                ],
+              ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -1395,8 +1398,8 @@ class _CO2BilanzCard extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.eco,
-                    size: 20, color: Color(0xFF10B981)),
+                child:
+                    const Icon(Icons.eco, size: 20, color: Color(0xFF10B981)),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1481,9 +1484,7 @@ class _CO2Stat extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: isDark
-                  ? B24Colors.darkTextPrimary
-                  : B24Colors.textPrimary,
+              color: isDark ? B24Colors.darkTextPrimary : B24Colors.textPrimary,
             ),
           ),
           const SizedBox(height: 2),

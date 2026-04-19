@@ -40,7 +40,8 @@ class BookingsScreen extends ConsumerStatefulWidget {
   ConsumerState<BookingsScreen> createState() => _BookingsScreenState();
 }
 
-class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTickerProviderStateMixin {
+class _BookingsScreenState extends ConsumerState<BookingsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
   BookingSortOption _sortBy = BookingSortOption.upcoming;
   bool _ascending = true;
@@ -69,7 +70,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
           cmp = (a.totalPrice ?? 0).compareTo(b.totalPrice ?? 0);
           break;
         case BookingSortOption.bookedDate:
-          cmp = (a.createdAt ?? DateTime(2000)).compareTo(b.createdAt ?? DateTime(2000));
+          cmp = (a.createdAt ?? DateTime(2000))
+              .compareTo(b.createdAt ?? DateTime(2000));
           break;
       }
       return _ascending ? cmp : -cmp;
@@ -97,11 +99,14 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                       label: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(option.label, style: const TextStyle(fontSize: 11)),
+                          Text(option.label,
+                              style: const TextStyle(fontSize: 11)),
                           if (isSelected) ...[
                             const SizedBox(width: 3),
                             Icon(
-                              _ascending ? Icons.arrow_upward : Icons.arrow_downward,
+                              _ascending
+                                  ? Icons.arrow_upward
+                                  : Icons.arrow_downward,
                               size: 12,
                             ),
                           ],
@@ -117,13 +122,18 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                           }
                         });
                       },
-                      selectedColor: const Color(0xFF0284C7).withValues(alpha: 0.12),
+                      selectedColor:
+                          const Color(0xFF0284C7).withValues(alpha: 0.12),
                       checkmarkColor: const Color(0xFF0284C7),
                       labelStyle: TextStyle(
-                        color: isSelected ? const Color(0xFF0284C7) : Colors.grey[700],
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                        color: isSelected
+                            ? const Color(0xFF0284C7)
+                            : Colors.grey[700],
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
                       ),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
                       visualDensity: VisualDensity.compact,
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -147,7 +157,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
             children: [
               Icon(Icons.event_busy, size: 48, color: Colors.grey[300]),
               const SizedBox(height: 12),
-              Text('Keine Buchungen', style: TextStyle(color: Colors.grey[500])),
+              Text('Keine Buchungen',
+                  style: TextStyle(color: Colors.grey[500])),
             ],
           ),
         ),
@@ -190,7 +201,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
               unselectedLabelColor: Colors.grey[600],
               indicatorColor: const Color(0xFF0284C7),
               indicatorWeight: 3,
-              labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+              labelStyle:
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
               tabs: [
                 Tab(
                   child: Row(
@@ -200,22 +212,26 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                       const SizedBox(width: 6),
                       const Text('Kommende'),
                       bookingsAsync.whenOrNull(
-                        data: (b) {
-                          final count = b.where((x) => x.isUpcoming).length;
-                          if (count == 0) return null;
-                          return Padding(
-                            padding: const EdgeInsets.only(left: 6),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF0284C7),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text('$count', style: const TextStyle(color: Colors.white, fontSize: 11)),
-                            ),
-                          );
-                        },
-                      ) ?? const SizedBox.shrink(),
+                            data: (b) {
+                              final count = b.where((x) => x.isUpcoming).length;
+                              if (count == 0) return null;
+                              return Padding(
+                                padding: const EdgeInsets.only(left: 6),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 1),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0284C7),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text('$count',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 11)),
+                                ),
+                              );
+                            },
+                          ) ??
+                          const SizedBox.shrink(),
                     ],
                   ),
                 ),
@@ -237,8 +253,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
 
             Expanded(
               child: bookingsAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -258,13 +273,17 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen> with SingleTick
                 data: (bookings) {
                   if (bookings.isEmpty) return _EmptyBookings();
                   final now = DateTime.now();
-                  final upcoming = bookings.where((b) =>
-                      b.appointmentDate.isAfter(now) ||
-                      (b.appointmentDate.year == now.year &&
-                          b.appointmentDate.month == now.month &&
-                          b.appointmentDate.day == now.day)).toList();
-                  final past = bookings.where((b) =>
-                      b.appointmentDate.isBefore(DateTime(now.year, now.month, now.day))).toList();
+                  final upcoming = bookings
+                      .where((b) =>
+                          b.appointmentDate.isAfter(now) ||
+                          (b.appointmentDate.year == now.year &&
+                              b.appointmentDate.month == now.month &&
+                              b.appointmentDate.day == now.day))
+                      .toList();
+                  final past = bookings
+                      .where((b) => b.appointmentDate
+                          .isBefore(DateTime(now.year, now.month, now.day)))
+                      .toList();
 
                   return RefreshIndicator(
                     onRefresh: () async => ref.invalidate(bookingsProvider),
@@ -371,8 +390,19 @@ class _BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const months = [
-      '', 'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'
+      '',
+      'Jan',
+      'Feb',
+      'Mär',
+      'Apr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Dez'
     ];
     const weekdays = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     final d = booking.appointmentDate;
@@ -415,8 +445,8 @@ class _BookingCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: _statusColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
@@ -479,8 +509,7 @@ class _BookingCard extends StatelessWidget {
                       padding: const EdgeInsets.only(left: 22),
                       child: Text(
                         '${booking.durationMinutes} Minuten',
-                        style: TextStyle(
-                            color: Colors.grey[500], fontSize: 12),
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
                       ),
                     ),
                   ],
@@ -516,8 +545,7 @@ class _BookingCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                  if (booking.workshopName != null)
-                    const SizedBox(height: 10),
+                  if (booking.workshopName != null) const SizedBox(height: 10),
 
                   // ── Vehicle ──
                   Row(
@@ -532,8 +560,7 @@ class _BookingCard extends StatelessWidget {
                               TextSpan(
                                 text: booking.vehicleDisplay,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 13),
+                                    fontWeight: FontWeight.w500, fontSize: 13),
                               ),
                               if (booking.licensePlate != null) ...[
                                 const TextSpan(text: '  '),
@@ -561,10 +588,15 @@ class _BookingCard extends StatelessWidget {
                       width: double.infinity,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade50,
+                        color: isDark
+                            ? const Color(0xFF1E293B)
+                            : Colors.grey.shade50,
                         borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: isDark ? const Color(0xFF334155) : Colors.grey.shade200, width: 0.5),
+                        border: Border.all(
+                            color: isDark
+                                ? const Color(0xFF334155)
+                                : Colors.grey.shade200,
+                            width: 0.5),
                       ),
                       child: Row(
                         children: [
@@ -579,7 +611,7 @@ class _BookingCard extends StatelessWidget {
                                     booking.tireModel != null)
                                   Text(
                                     '${booking.tireQuantity != null ? '${booking.tireQuantity}× ' : ''}'
-                                    '${booking.tireBrand ?? ''} ${booking.tireModel ?? ''}'
+                                            '${booking.tireBrand ?? ''} ${booking.tireModel ?? ''}'
                                         .trim(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
@@ -590,8 +622,7 @@ class _BookingCard extends StatelessWidget {
                                   Text(
                                     booking.tireSize!,
                                     style: TextStyle(
-                                        color: Colors.grey[600],
-                                        fontSize: 12),
+                                        color: Colors.grey[600], fontSize: 12),
                                   ),
                               ],
                             ),
@@ -612,8 +643,8 @@ class _BookingCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF0284C7)
-                                .withValues(alpha: 0.08),
+                            color:
+                                const Color(0xFF0284C7).withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
@@ -709,7 +740,8 @@ class _BookingCard extends StatelessWidget {
                   ),
 
                   // ── Footer: booking ID + date ──
-                  if (booking.createdAt != null || booking.couponCode != null) ...[
+                  if (booking.createdAt != null ||
+                      booking.couponCode != null) ...[
                     const SizedBox(height: 8),
                     Row(
                       children: [

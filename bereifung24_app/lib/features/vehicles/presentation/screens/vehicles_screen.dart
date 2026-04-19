@@ -61,8 +61,7 @@ class VehiclesScreen extends ConsumerWidget {
             ),
             Expanded(
               child: vehiclesAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, __) => Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -82,8 +81,7 @@ class VehiclesScreen extends ConsumerWidget {
                 data: (vehicles) => vehicles.isEmpty
                     ? _EmptyVehicles()
                     : RefreshIndicator(
-                        onRefresh: () async =>
-                            ref.invalidate(vehiclesProvider),
+                        onRefresh: () async => ref.invalidate(vehiclesProvider),
                         child: ListView.separated(
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                           itemCount: vehicles.length,
@@ -154,8 +152,7 @@ class _VehicleCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Fahrzeug löschen'),
-        content: Text(
-            '„${vehicle.brand} ${vehicle.model}" wirklich löschen?'),
+        content: Text('„${vehicle.brand} ${vehicle.model}" wirklich löschen?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -205,8 +202,19 @@ class _VehicleCard extends ConsumerWidget {
     final parts = vehicle.nextInspectionDate!.split('-');
     if (parts.length < 2) return null;
     const months = [
-      '', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'
+      '',
+      'Januar',
+      'Februar',
+      'März',
+      'April',
+      'Mai',
+      'Juni',
+      'Juli',
+      'August',
+      'September',
+      'Oktober',
+      'November',
+      'Dezember'
     ];
     final m = int.tryParse(parts[1]);
     return m != null && m >= 1 && m <= 12 ? '${months[m]} ${parts[0]}' : null;
@@ -257,7 +265,8 @@ class _VehicleCard extends ConsumerWidget {
                           Text(
                             '${vehicle.brand} ${vehicle.model}',
                             style: TextStyle(
-                              color: isDark ? Colors.white : B24Colors.textPrimary,
+                              color:
+                                  isDark ? Colors.white : B24Colors.textPrimary,
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                             ),
@@ -265,12 +274,15 @@ class _VehicleCard extends ConsumerWidget {
                           const SizedBox(height: 2),
                           Text(
                             [
-                              if (vehicle.licensePlate != null && vehicle.licensePlate!.isNotEmpty)
+                              if (vehicle.licensePlate != null &&
+                                  vehicle.licensePlate!.isNotEmpty)
                                 vehicle.licensePlate!,
                               if (vehicle.year != null) 'Bj. ${vehicle.year}',
                             ].join(' · '),
                             style: TextStyle(
-                              color: isDark ? Colors.white70 : B24Colors.textSecondary,
+                              color: isDark
+                                  ? Colors.white70
+                                  : B24Colors.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -279,8 +291,8 @@ class _VehicleCard extends ConsumerWidget {
                     ),
                     _iconBtn(Icons.edit_outlined, () {
                       context.push('/vehicles/edit', extra: vehicle).then(
-                        (_) => ref.invalidate(vehiclesProvider),
-                      );
+                            (_) => ref.invalidate(vehiclesProvider),
+                          );
                     }, isDark),
                     const SizedBox(width: 6),
                     _iconBtn(Icons.delete_outline,
@@ -316,8 +328,8 @@ class _VehicleCard extends ConsumerWidget {
                 if (tuevStr != null) ...[
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.06)
@@ -335,7 +347,9 @@ class _VehicleCard extends ConsumerWidget {
                           child: Text(
                             'TÜV: $tuevStr',
                             style: TextStyle(
-                              color: isDark ? Colors.white70 : B24Colors.textPrimary,
+                              color: isDark
+                                  ? Colors.white70
+                                  : B24Colors.textPrimary,
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -383,8 +397,7 @@ class _VehicleCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(icon,
-            color: isDark ? Colors.white70 : B24Colors.textSecondary,
-            size: 18),
+            color: isDark ? Colors.white70 : B24Colors.textSecondary, size: 18),
       ),
     );
   }

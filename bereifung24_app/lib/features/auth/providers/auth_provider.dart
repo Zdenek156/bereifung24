@@ -19,8 +19,7 @@ class AuthState {
 
   bool get isAuthenticated => user != null;
 
-  AuthState copyWith({User? user, bool? isLoading, String? error}) =>
-      AuthState(
+  AuthState copyWith({User? user, bool? isLoading, String? error}) => AuthState(
         user: user ?? this.user,
         isLoading: isLoading ?? this.isLoading,
         error: error,
@@ -111,11 +110,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<bool> socialLogin(String provider, String idToken,
-      {String? firstName, String? lastName, String? phone, String? street, String? zipCode, String? city, String? email}) async {
+      {String? firstName,
+      String? lastName,
+      String? phone,
+      String? street,
+      String? zipCode,
+      String? city,
+      String? email}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final response = await _api.socialLogin(provider, idToken,
-          firstName: firstName, lastName: lastName, phone: phone, street: street, zipCode: zipCode, city: city, email: email);
+          firstName: firstName,
+          lastName: lastName,
+          phone: phone,
+          street: street,
+          zipCode: zipCode,
+          city: city,
+          email: email);
       final data = response.data;
 
       await _saveTokens(data);
@@ -199,13 +210,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final response = dioError.response;
         if (response != null) {
           final data = response.data;
-          if (data is Map && data['error'] != null) return data['error'].toString();
-          if (data is String && data.isNotEmpty && data.length < 200) return data;
+          if (data is Map && data['error'] != null)
+            return data['error'].toString();
+          if (data is String && data.isNotEmpty && data.length < 200)
+            return data;
           return 'Server-Fehler (${response.statusCode})';
         }
         // Connection / timeout errors
         final msg = dioError.message?.toString() ?? '';
-        if (msg.contains('SocketException') || msg.contains('Connection refused')) {
+        if (msg.contains('SocketException') ||
+            msg.contains('Connection refused')) {
           return 'Keine Verbindung zum Server';
         }
         if (msg.contains('timeout') || msg.contains('Timeout')) {

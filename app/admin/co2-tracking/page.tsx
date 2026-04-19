@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Leaf, Save, Info, CheckCircle, XCircle, TrendingUp, Car, TreePine, Fuel, Euro, BarChart3, Plane } from 'lucide-react';
+import { Leaf, Save, Info, CheckCircle, XCircle, TrendingUp, Car, TreePine, Fuel, Euro, BarChart3, Plane, FileDown } from 'lucide-react';
 import BackButton from '@/components/BackButton';
 
 interface CO2Settings {
@@ -141,16 +141,30 @@ export default function CO2TrackingPage() {
         </div>
 
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-green-100 p-3 rounded-lg">
-            <Leaf className="h-8 w-8 text-green-600" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="bg-green-100 p-3 rounded-lg">
+              <Leaf className="h-8 w-8 text-green-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">CO₂-Tracking System</h1>
+              <p className="text-gray-600">
+                Konfigurieren Sie die Berechnungsparameter für CO₂-Einsparungen
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">CO₂-Tracking System</h1>
-            <p className="text-gray-600">
-              Konfigurieren Sie die Berechnungsparameter für CO₂-Einsparungen
-            </p>
-          </div>
+          {analytics && (
+            <Button
+              variant="outline"
+              className="border-green-300 text-green-700 hover:bg-green-50"
+              onClick={() => {
+                window.open('/api/admin/co2-analytics/export', '_blank');
+              }}
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Nachhaltigkeitsbericht (PDF)
+            </Button>
+          )}
         </div>
 
         {/* Success/Error Message */}

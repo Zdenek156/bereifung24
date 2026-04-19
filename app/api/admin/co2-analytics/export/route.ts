@@ -96,10 +96,16 @@ export async function GET(request: NextRequest) {
       directBookingsTotal: Number(bookingStats[0]?.total_bookings ?? 0),
     }
 
-    const monthlyBook = monthlyBookings.map(m => ({
-      month: m.month,
-      bookings: Number(m.bookings),
-    }))
+    const co2PerBooking = (workshopsToCompare - 1) * AVG_WORKSHOP_DISTANCE_KM * 2 * FALLBACK_CO2_PER_KM / 1000
+
+    const monthlyBook = monthlyBookings.map(m => {
+      const bookings = Number(m.bookings)
+      return {
+        month: m.month,
+        bookings,
+        co2Kg: Math.round(bookings * co2PerBooking * 100) / 100,
+      }
+    })
 
     const fuelDist = fuelTypeDistribution.map(f => ({
       fuelType: f.fuelType,
@@ -258,10 +264,10 @@ export async function GET(request: NextRequest) {
 
       const sortedMonths = monthlyBook.sort((a, b) => a.month.localeCompare(b.month))
 
-      // Table (2 columns: Monat, Buchungen)
+      // Table (3 columns: Monat, CO2, Buchungen)
       const tableX = 50
-      const colWidths = [220, 225]
-      const headers = ['Monat', 'Buchungen']
+      const colWidths = [150, 150, 145]
+      const headers = ['Monat', 'CO2 (kg)', 'Buchungen']
       let tableY = doc.y
 
       doc.rect(tableX, tableY, PAGE_WIDTH, 22).fill('#166534')
@@ -273,6 +279,7 @@ export async function GET(request: NextRequest) {
       tableY += 22
 
       let totalMonthBookings = 0
+      let totalMonthCO2 = 0
 
       sortedMonths.forEach((entry, idx) => {
         if (idx % 2 === 0) {
@@ -280,7 +287,7 @@ export async function GET(request: NextRequest) {
         }
 
         const monthLabel = formatMonth(entry.month)
-        const vals = [monthLabel, entry.bookings.toString()]
+        const vals = [monthLabel, entry.co2Kg.toFixed(2), entry.bookings.toString()]
         vals.forEach((v, i) => {
           const x = tableX + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
           doc.fillColor(DARK).fontSize(9).font('Helvetica')
@@ -288,12 +295,13 @@ export async function GET(request: NextRequest) {
         })
 
         totalMonthBookings += entry.bookings
+        totalMonthCO2 += entry.co2Kg
         tableY += 20
       })
 
       // Total Row
       doc.rect(tableX, tableY, PAGE_WIDTH, 22).fill('#ecfdf5')
-      const totals = ['Gesamt', totalMonthBookings.toString()]
+      const totals = ['Gesamt', totalMonthCO2.toFixed(2), totalMonthBookings.toString()]
       totals.forEach((v, i) => {
         const x = tableX + colWidths.slice(0, i).reduce((a, b) => a + b, 0)
         doc.fillColor(GREEN).fontSize(9).font('Helvetica-Bold')
@@ -460,6 +468,8 @@ export async function GET(request: NextRequest) {
       const pages = doc.bufferedPageRange()
       for (let i = 0; i < pages.count; i++) {
         doc.switchToPage(i)
+        // Disable margins so footer text at y=785+ doesn't trigger new pages
+        ;(doc as any).page.margins = { top: 0, bottom: 0, left: 0, right: 0 }
 
         doc.moveTo(50, 780).lineTo(545, 780).strokeColor('#e5e7eb').lineWidth(0.5).stroke()
 

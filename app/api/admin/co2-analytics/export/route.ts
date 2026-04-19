@@ -160,29 +160,33 @@ export async function GET(request: NextRequest) {
       // PAGE 1: COVER & KEY METRICS
       // ════════════════════════════════════════════════════
 
-      // Letterhead: Logo + Company Info
+      // Letterhead: Logo left, Company info right-aligned
+      const headerY = 35
       if (logoBuffer) {
-        doc.image(logoBuffer, 50, 40, { width: 140 })
+        doc.image(logoBuffer, 50, headerY, { width: 90 })
       }
-      doc.fontSize(16).font('Helvetica-Bold').fillColor(DARK)
-        .text('Bereifung24', logoBuffer ? 200 : 50, 45)
-      doc.fontSize(8).font('Helvetica').fillColor(GRAY)
+      const infoX = logoBuffer ? 150 : 50
+      doc.fontSize(14).font('Helvetica-Bold').fillColor(DARK)
+        .text('Bereifung24', infoX, headerY + 5)
+      doc.fontSize(7.5).font('Helvetica').fillColor(GRAY)
       const addr = companySettings
         ? `${companySettings.companyStreet || ''} | ${companySettings.companyZip || ''} ${companySettings.companyCity || ''} | Tel: ${companySettings.phone || ''} | ${companySettings.email || ''}`
         : 'Jahnstra\u00DFe 2 | 71706 Markgr\u00F6ningen | Tel: 07147 - 9679990 | info@bereifung24.de'
-      doc.text(addr, logoBuffer ? 200 : 50, 65, { width: 350 })
-      doc.y = logoBuffer ? 110 : 95
+      doc.text(addr, infoX, headerY + 22, { width: 400 })
+
+      // Thin separator line under letterhead
+      const sepY = headerY + 55
+      doc.moveTo(50, sepY).lineTo(545, sepY).strokeColor('#e5e7eb').lineWidth(0.5).stroke()
+      doc.y = sepY + 12
 
       // Title Block
-      doc.moveDown(0.5)
-
-      doc.fontSize(26).font('Helvetica-Bold').fillColor(GREEN)
+      doc.fontSize(24).font('Helvetica-Bold').fillColor(GREEN)
         .text('CO2-Nachhaltigkeitsbericht', { align: 'center' })
-      doc.moveDown(0.3)
-      doc.fontSize(13).font('Helvetica').fillColor(GRAY)
+      doc.moveDown(0.2)
+      doc.fontSize(11).font('Helvetica').fillColor(GRAY)
         .text('Digitale Plattform f\u00FCr Reifenservices', { align: 'center' })
-      doc.moveDown(0.3)
-      doc.fontSize(11).fillColor(GRAY)
+      doc.moveDown(0.15)
+      doc.fontSize(10).fillColor(GRAY)
         .text('Erstellt am ' + dateStr, { align: 'center' })
 
       doc.moveDown(1.2)

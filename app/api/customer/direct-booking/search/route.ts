@@ -202,6 +202,11 @@ export async function POST(request: NextRequest) {
             rating: true
           }
         },
+        landingPage: {
+          select: {
+            heroImage: true,
+          },
+        },
         bookings: {
           // Load ALL bookings, filter in code (Prisma nullable field limitations)
           select: {
@@ -579,9 +584,10 @@ export async function POST(request: NextRequest) {
           postalCode: workshop.user?.zipCode || null,
           distance: Math.round(distance * 10) / 10, // Round to 1 decimal
           
-          // Logo
+          // Logo / Images
           logoUrl: workshop.logoUrl || null,
           cardImageUrl: workshop.cardImageUrl || null,
+          heroImage: workshop.landingPage?.heroImage || null,
           
           // Pricing
           basePrice,

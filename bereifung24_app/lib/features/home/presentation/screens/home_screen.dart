@@ -1057,7 +1057,9 @@ class _ServicesGrid extends ConsumerWidget {
     final isTrailer = selectedVehicle?.vehicleType == 'TRAILER';
 
     return LayoutBuilder(builder: (context, constraints) {
-      final itemWidth = (constraints.maxWidth - 16) / 3; // 2 gaps × 8px
+      final screenWidth = constraints.maxWidth;
+      final isTablet = screenWidth > 500;
+      final itemWidth = (screenWidth - 16) / 3; // 2 gaps × 8px
       return Wrap(
         spacing: 8,
         runSpacing: 8,
@@ -1065,6 +1067,7 @@ class _ServicesGrid extends ConsumerWidget {
             .map((s) => SizedBox(
                   width: itemWidth,
                   child: _ServiceTile(
+                    isTablet: isTablet,
                     service: s,
                     isDisabled: isTrailer &&
                         !_trailerAllowedServices.contains(s.serviceType),
@@ -1094,9 +1097,10 @@ class _ServiceItem {
 class _ServiceTile extends StatelessWidget {
   final _ServiceItem service;
   final bool isDisabled;
+  final bool isTablet;
   final String? disabledMessage;
   const _ServiceTile(
-      {required this.service, this.isDisabled = false, this.disabledMessage});
+      {required this.service, this.isDisabled = false, this.isTablet = false, this.disabledMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -1147,21 +1151,21 @@ class _ServiceTile extends StatelessWidget {
                       ),
                       child: SizedBox(
                         width: double.infinity,
-                        height: 80,
+                        height: isTablet ? 120 : 80,
                         child: service.zoomOut
                             ? Transform.scale(
                                 scale: 1.15,
                                 child: Image.asset(
                                   service.imagePath!,
                                   width: double.infinity,
-                                  height: 80,
+                                  height: isTablet ? 120 : 80,
                                   fit: BoxFit.cover,
                                 ),
                               )
                             : Image.asset(
                                 service.imagePath!,
                                 width: double.infinity,
-                                height: 80,
+                                height: isTablet ? 120 : 80,
                                 fit: BoxFit.cover,
                               ),
                       ),

@@ -229,7 +229,12 @@ export async function POST(request: NextRequest) {
             city: true,
             zipCode: true
           }
-        }
+        },
+        landingPage: {
+          select: {
+            heroImage: true,
+          },
+        },
       }
     })
 
@@ -360,6 +365,8 @@ export async function POST(request: NextRequest) {
           id: workshop.id,
           name: workshop.companyName || 'Unbekannte Werkstatt',
           logoUrl: workshop.logoUrl || null,
+          cardImageUrl: workshop.cardImageUrl || null,
+          heroImage: workshop.landingPage?.heroImage || null,
           address: workshop.user.street || '',
           city: workshop.user.city || '',
           zipCode: workshop.user.zipCode || '',

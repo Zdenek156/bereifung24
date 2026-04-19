@@ -137,9 +137,13 @@ class WorkshopSearchState {
     String? aiRearArticleId,
     bool clearAiRearArticleId = false,
     String? aiFrontBrand,
+    bool clearAiFrontBrand = false,
     String? aiFrontModel,
+    bool clearAiFrontModel = false,
     String? aiRearBrand,
+    bool clearAiRearBrand = false,
     String? aiRearModel,
+    bool clearAiRearModel = false,
     String? effectiveServiceType,
     bool clearEffectiveServiceType = false,
   }) =>
@@ -180,10 +184,10 @@ class WorkshopSearchState {
         aiRearArticleId: clearAiRearArticleId
             ? null
             : (aiRearArticleId ?? this.aiRearArticleId),
-        aiFrontBrand: aiFrontBrand ?? this.aiFrontBrand,
-        aiFrontModel: aiFrontModel ?? this.aiFrontModel,
-        aiRearBrand: aiRearBrand ?? this.aiRearBrand,
-        aiRearModel: aiRearModel ?? this.aiRearModel,
+        aiFrontBrand: clearAiFrontBrand ? null : (aiFrontBrand ?? this.aiFrontBrand),
+        aiFrontModel: clearAiFrontModel ? null : (aiFrontModel ?? this.aiFrontModel),
+        aiRearBrand: clearAiRearBrand ? null : (aiRearBrand ?? this.aiRearBrand),
+        aiRearModel: clearAiRearModel ? null : (aiRearModel ?? this.aiRearModel),
         effectiveServiceType: clearEffectiveServiceType
             ? null
             : (effectiveServiceType ?? this.effectiveServiceType),
@@ -393,9 +397,13 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       aiRearArticleId: aiRearArtId,
       clearAiRearArticleId: aiRearArtId == null,
       aiFrontBrand: tireDimensionOverride?['tireBrand'],
+      clearAiFrontBrand: tireDimensionOverride == null,
       aiFrontModel: tireDimensionOverride?['tireModel'],
+      clearAiFrontModel: tireDimensionOverride == null,
       aiRearBrand: rearTireDimensionOverride?['tireBrand'],
+      clearAiRearBrand: rearTireDimensionOverride == null,
       aiRearModel: rearTireDimensionOverride?['tireModel'],
+      clearAiRearModel: rearTireDimensionOverride == null,
       clearEffectiveServiceType: true,
     );
     debugPrint(
@@ -3463,7 +3471,7 @@ class _WorkshopCard extends ConsumerWidget {
           children: [
             // ── Image section ──
             SizedBox(
-              height: 160,
+              height: MediaQuery.of(context).size.width > 500 ? 220 : 160,
               width: double.infinity,
               child: Stack(
                 fit: StackFit.expand,

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
 import 'add_vehicle_screen.dart';
 
@@ -41,7 +42,7 @@ class VehiclesScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Meine Fahrzeuge',
+                    S.of(context)!.myVehicles,
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
@@ -50,7 +51,7 @@ class VehiclesScreen extends ConsumerWidget {
                   FilledButton.icon(
                     onPressed: () => context.push('/vehicles/add'),
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Hinzufügen'),
+                    label: Text(S.of(context)!.addVehicleButton),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
@@ -69,11 +70,11 @@ class VehiclesScreen extends ConsumerWidget {
                       const Icon(Icons.error_outline,
                           size: 48, color: Colors.red),
                       const SizedBox(height: 16),
-                      const Text('Fahrzeuge konnten nicht geladen werden'),
+                      Text(S.of(context)!.vehiclesLoadError),
                       const SizedBox(height: 8),
                       FilledButton(
                         onPressed: () => ref.invalidate(vehiclesProvider),
-                        child: const Text('Erneut versuchen'),
+                        child: Text(S.of(context)!.retry),
                       ),
                     ],
                   ),
@@ -111,11 +112,11 @@ class _EmptyVehicles extends StatelessWidget {
           children: [
             Icon(Icons.directions_car, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
-            Text('Keine Fahrzeuge',
+            Text(S.of(context)!.noVehicles,
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
-              'Füge dein erstes Fahrzeug hinzu, um schneller buchen zu können.',
+              S.of(context)!.noVehiclesDesc,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600]),
             ),
@@ -123,7 +124,7 @@ class _EmptyVehicles extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.push('/vehicles/add'),
               icon: const Icon(Icons.add),
-              label: const Text('Fahrzeug hinzufügen'),
+              label: Text(S.of(context)!.addVehicle),
             ),
           ],
         ),
@@ -151,17 +152,17 @@ class _VehicleCard extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Fahrzeug löschen'),
-        content: Text('„${vehicle.brand} ${vehicle.model}" wirklich löschen?'),
+        title: Text(S.of(context)!.deleteVehicle),
+        content: Text(S.of(context)!.deleteVehicleConfirm(vehicle.brand ?? '', vehicle.model ?? '')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Abbrechen'),
+            child: Text(S.of(context)!.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Löschen'),
+            child: Text(S.of(context)!.delete),
           ),
         ],
       ),
@@ -172,13 +173,13 @@ class _VehicleCard extends ConsumerWidget {
         ref.invalidate(vehiclesProvider);
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Fahrzeug gelöscht')),
+            SnackBar(content: Text(S.of(context)!.vehicleDeleted)),
           );
         }
       } catch (_) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Löschen fehlgeschlagen')),
+            SnackBar(content: Text(S.of(context)!.deleteFailed)),
           );
         }
       }
@@ -277,7 +278,7 @@ class _VehicleCard extends ConsumerWidget {
                               if (vehicle.licensePlate != null &&
                                   vehicle.licensePlate!.isNotEmpty)
                                 vehicle.licensePlate!,
-                              if (vehicle.year != null) 'Bj. ${vehicle.year}',
+                              if (vehicle.year != null) S.of(context)!.buildYear('${vehicle.year}'),
                             ].join(' · '),
                             style: TextStyle(
                               color: isDark
@@ -303,14 +304,14 @@ class _VehicleCard extends ConsumerWidget {
                 // ── Tire sections (compact) ──
                 if (vehicle.summerTires != null &&
                     !vehicle.summerTires!.isEmpty)
-                  _tireSection('☀️', 'Sommer', vehicle.summerTires!, isDark),
+                  _tireSection('☀️', S.of(context)!.tireSummer, vehicle.summerTires!, isDark),
                 if (vehicle.winterTires != null &&
                     !vehicle.winterTires!.isEmpty)
-                  _tireSection('❄️', 'Winter', vehicle.winterTires!, isDark),
+                  _tireSection('❄️', S.of(context)!.tireWinter, vehicle.winterTires!, isDark),
                 if (vehicle.allSeasonTires != null &&
                     !vehicle.allSeasonTires!.isEmpty)
                   _tireSection(
-                      '🌦️', 'Ganzjahr', vehicle.allSeasonTires!, isDark),
+                      '🌦️', S.of(context)!.tireAllSeason, vehicle.allSeasonTires!, isDark),
 
                 // ── VIN ──
                 if (vehicle.vin != null && vehicle.vin!.isNotEmpty) ...[
@@ -364,7 +365,7 @@ class _VehicleCard extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              '${tuevDays.abs()} Tage',
+                              '${tuevDays.abs()} ${S.of(context)!.daysCount('')}'.trim(),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,

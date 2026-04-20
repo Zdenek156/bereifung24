@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../profile/presentation/screens/legal_screen.dart';
 import '../../providers/auth_provider.dart';
 
@@ -285,8 +286,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: Text(nameProvided
-            ? 'Adresse vervollständigen'
-            : 'Profil vervollständigen'),
+            ? S.of(context)!.completeAddress
+            : S.of(context)!.completeProfile),
         content: SingleChildScrollView(
           child: Form(
             key: formKey,
@@ -295,10 +296,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               children: [
                 Text(
                   askForEmail
-                      ? 'Apple hat deine E-Mail-Adresse verborgen. Bitte gib deine echte E-Mail-Adresse und deine Daten an.'
+                      ? S.of(context)!.appleNameNotProvided
                       : nameProvided
-                          ? 'Bitte gib noch deine Adresse an, damit wir Werkstätten in deiner Nähe finden können.'
-                          : 'Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.',
+                          ? S.of(context)!.addressNeeded
+                          : S.of(context)!.appleNameNotProvided,
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -436,7 +437,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registrieren'),
+        title: Text(S.of(context)!.register),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/login'),
@@ -541,7 +542,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('oder',
+                      child: Text(S.of(context)!.or,
                           style: TextStyle(color: Colors.grey[600])),
                     ),
                     const Expanded(child: Divider()),
@@ -572,7 +573,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: TextFormField(
                         controller: _firstNameCtrl,
                         textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(labelText: 'Vorname'),
+                        decoration: InputDecoration(labelText: S.of(context)!.firstName),
                         validator: (v) => v == null || v.trim().isEmpty
                             ? 'Pflichtfeld'
                             : null,
@@ -584,7 +585,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         controller: _lastNameCtrl,
                         textCapitalization: TextCapitalization.words,
                         decoration:
-                            const InputDecoration(labelText: 'Nachname'),
+                            InputDecoration(labelText: S.of(context)!.lastName),
                         validator: (v) => v == null || v.trim().isEmpty
                             ? 'Pflichtfeld'
                             : null,
@@ -598,9 +599,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'E-Mail',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: S.of(context)!.email,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
@@ -665,9 +666,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _streetCtrl,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Straße & Hausnummer *',
-                    prefixIcon: Icon(Icons.home_outlined),
+                  decoration: InputDecoration(
+                    labelText: S.of(context)!.street,
+                    prefixIcon: const Icon(Icons.home_outlined),
                   ),
                   validator: (v) =>
                       v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
@@ -715,7 +716,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _passwordCtrl,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    labelText: 'Passwort',
+                    labelText: S.of(context)!.password,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword
@@ -738,7 +739,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   controller: _confirmPasswordCtrl,
                   obscureText: _obscureConfirm,
                   decoration: InputDecoration(
-                    labelText: 'Passwort bestätigen',
+                    labelText: S.of(context)!.confirmPassword,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(_obscureConfirm
@@ -750,7 +751,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                   validator: (v) {
                     if (v != _passwordCtrl.text) {
-                      return 'Passwörter stimmen nicht überein';
+                      return S.of(context)!.passwordsNoMatch;
                     }
                     return null;
                   },
@@ -836,8 +837,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Registrieren',
-                          style: TextStyle(fontSize: 16)),
+                      : Text(S.of(context)!.register,
+                          style: const TextStyle(fontSize: 16)),
                 ),
 
                 const SizedBox(height: 24),
@@ -845,11 +846,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Bereits ein Konto?',
+                    Text(S.of(context)!.hasAccount,
                         style: TextStyle(color: Colors.grey[600])),
                     TextButton(
                       onPressed: () => context.go('/login'),
-                      child: const Text('Anmelden'),
+                      child: Text(S.of(context)!.login),
                     ),
                   ],
                 ),

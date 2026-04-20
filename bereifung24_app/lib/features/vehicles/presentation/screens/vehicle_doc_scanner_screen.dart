@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import '../../utils/vehicle_doc_parser.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Full-screen camera scanner for German vehicle registration documents
 /// (Zulassungsbescheinigung Teil I / Fahrzeugschein).
@@ -59,7 +60,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
     if (cameras.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Keine Kamera verfügbar')),
+          SnackBar(content: Text(S.of(context)!.noCameraAvailable)),
         );
         Navigator.of(context).pop();
       }
@@ -346,7 +347,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        isDone ? 'Fahrzeug erkannt!' : 'Fahrzeugschein scannen',
+                        isDone ? S.of(context)!.vehicleRecognized : S.of(context)!.scanDocument,
                         style: TextStyle(
                           color: isDone ? successColor : Colors.white,
                           fontSize: 14,
@@ -427,10 +428,10 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                               onPressed: _rescan,
                               icon: const Icon(Icons.camera_alt,
                                   color: accentColor, size: 16),
-                              label: const Text(
-                                'Erneut',
+                              label: Text(
+                                S.of(context)!.scanAgain,
                                 style:
-                                    TextStyle(color: accentColor, fontSize: 12),
+                                    const TextStyle(color: accentColor, fontSize: 12),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -438,9 +439,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                               onPressed: _confirm,
                               icon: const Icon(Icons.check,
                                   color: Colors.white, size: 16),
-                              label: const Text(
-                                'Daten übernehmen',
-                                style: TextStyle(
+                              label: Text(
+                                S.of(context)!.acceptData,
+                                style: const TextStyle(
                                     fontWeight: FontWeight.w800, fontSize: 13),
                               ),
                               style: ElevatedButton.styleFrom(
@@ -487,7 +488,7 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                               TextButton(
                                 onPressed: () => Navigator.of(context).pop(),
                                 child: Text(
-                                  'Manuell eingeben →',
+                                  S.of(context)!.manualEntry,
                                   style: TextStyle(
                                     color: Colors.grey[400],
                                     fontSize: 12,

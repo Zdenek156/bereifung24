@@ -8,6 +8,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../../utils/tire_category_utils.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
 import 'search_screen.dart';
@@ -596,7 +597,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                       const SizedBox(height: 16),
                       _CollapsibleInfoCard(
                         icon: Icons.info_outline,
-                        title: 'Über die Werkstatt',
+                        title: S.of(context)!.aboutWorkshop,
                         child: Text(workshop.description!),
                       ),
                     ],
@@ -605,7 +606,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     const SizedBox(height: 12),
                     _InfoCard(
                       icon: Icons.location_on_outlined,
-                      title: 'Adresse',
+                      title: S.of(context)!.addressLabel,
                       compact: true,
                       child: Row(
                         children: [
@@ -1356,7 +1357,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 const SizedBox(height: 12),
                                 _InfoCard(
                                   icon: Icons.euro,
-                                  title: 'Preisübersicht',
+                                  title: S.of(context)!.priceOverview,
                                   child: Column(
                                     children: [
                                       if (frontTire != null) ...[
@@ -1395,22 +1396,22 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                             ),
                                           ),
                                       ],
-                                      _PriceRow('Montage', ws.searchBasePrice!),
+                                      _PriceRow(S.of(context)!.montageLabel, ws.searchBasePrice!),
                                       if (ws.disposalFeeApplied != null &&
                                           ws.disposalFeeApplied! > 0)
-                                        _PriceRow('Entsorgung',
+                                        _PriceRow(S.of(context)!.disposal,
                                             ws.disposalFeeApplied!),
                                       if (ws.runFlatSurchargeApplied != null &&
                                           ws.runFlatSurchargeApplied! > 0)
-                                        _PriceRow('RunFlat-Zuschlag',
+                                        _PriceRow(S.of(context)!.runflatSurcharge,
                                             ws.runFlatSurchargeApplied!),
                                       const Divider(height: 16),
                                       Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Text('Gesamtpreis',
-                                              style: TextStyle(
+                                          Text(S.of(context)!.totalPrice,
+                                              style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 16)),
                                           Text(
@@ -1450,7 +1451,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                       const SizedBox(height: 12),
                       _InfoCard(
                         icon: Icons.access_time,
-                        title: 'Öffnungszeiten',
+                        title: S.of(context)!.openingHours,
                         child: Column(
                           children: workshop.openingHours.map((h) {
                             return Padding(
@@ -1477,7 +1478,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     if (effectiveService != null) ...[
                       const SizedBox(height: 24),
                       Text(
-                        'Termin wählen',
+                        S.of(context)!.selectDate,
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
@@ -1513,7 +1514,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     const SizedBox(height: 24),
                     Text(
                       key: _reviewsKey,
-                      'Bewertungen',
+                      S.of(context)!.reviews,
                       style: Theme.of(context)
                           .textTheme
                           .titleMedium
@@ -1523,10 +1524,10 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     reviewsAsync.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (_, __) => const Text(
-                          'Bewertungen konnten nicht geladen werden'),
+                      error: (_, __) => Text(
+                          S.of(context)!.reviewsLoadError),
                       data: (reviews) => reviews.isEmpty
-                          ? const Text('Noch keine Bewertungen vorhanden.')
+                          ? Text(S.of(context)!.noReviewsYet)
                           : Column(
                               children: reviews
                                   .take(5)
@@ -1581,21 +1582,21 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
 
           String buttonLabel;
           if (effectiveService == null) {
-            buttonLabel = 'Bitte Service wählen';
+            buttonLabel = S.of(context)!.pleaseSelectService;
           } else if (isTireWithPurchase && needsTire) {
             buttonLabel = hasAxleData
-                ? 'Bitte VA + HA Reifen wählen'
-                : 'Bitte Reifen wählen';
+                ? S.of(context)!.pleaseSelectBothTires
+                : S.of(context)!.pleaseSelectTires;
           } else if (selectedVehicle == null) {
-            buttonLabel = 'Bitte Fahrzeug hinzufügen';
+            buttonLabel = S.of(context)!.pleaseAddVehicle;
           } else if (selectedDate == null) {
-            buttonLabel = 'Bitte Datum wählen';
+            buttonLabel = S.of(context)!.pleaseSelectDate;
           } else if (_selectedSlot == null) {
-            buttonLabel = 'Bitte Uhrzeit wählen';
+            buttonLabel = S.of(context)!.pleaseSelectTime;
           } else if (isTireChange) {
-            buttonLabel = 'Reifen & Montage buchen – $_selectedSlot Uhr';
+            buttonLabel = S.of(context)!.bookTireAndMontageAt('$_selectedSlot ${S.of(context)!.clockSuffix}');
           } else {
-            buttonLabel = 'Termin buchen – $_selectedSlot Uhr';
+            buttonLabel = S.of(context)!.bookAppointmentAt('$_selectedSlot ${S.of(context)!.clockSuffix}');
           }
 
           return SafeArea(
@@ -1892,7 +1893,7 @@ class _TimeSlotsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Verfügbare Uhrzeiten',
+          S.of(context)!.availableTimes,
           style: Theme.of(context)
               .textTheme
               .titleSmall
@@ -1960,7 +1961,7 @@ class _TimeSlotsSection extends ConsumerWidget {
               children: slots.map((slot) {
                 final isSelected = slot == selectedSlot;
                 return ChoiceChip(
-                  label: Text('$slot Uhr'),
+                  label: Text('$slot ${S.of(context)!.clockSuffix}'),
                   selected: isSelected,
                   onSelected: (_) => onSlotSelected(slot),
                   selectedColor: const Color(0xFF0284C7),
@@ -2074,8 +2075,8 @@ class _TireRecommendationsSectionState
     if (allRecommendations.isEmpty) return const SizedBox.shrink();
 
     final sectionTitle = widget.axleLabel != null
-        ? 'Reifenempfehlungen – ${widget.axleLabel}'
-        : 'Reifenempfehlungen';
+        ? S.of(context)!.tireRecommendationsAxle(widget.axleLabel!)
+        : S.of(context)!.tireRecommendations;
 
     // Collect available brands (from category-filtered list) — needed in both views
     final brands = categoryFiltered.map((t) => t.brand).toSet().toList()
@@ -2088,8 +2089,8 @@ class _TireRecommendationsSectionState
         children: [
           Text(
             widget.axleLabel != null
-                ? 'Ausgewählter Reifen – ${widget.axleLabel}'
-                : 'Ausgewählter Reifen',
+                ? S.of(context)!.selectedTireAxle(widget.axleLabel!)
+                : S.of(context)!.selectedTire,
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
@@ -2115,7 +2116,7 @@ class _TireRecommendationsSectionState
                 icon: Icon(Icons.filter_list,
                     size: 18,
                     color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
-                hint: Text('Alle Hersteller',
+                hint: Text(S.of(context)!.allManufacturers,
                     style: TextStyle(
                         fontSize: 13,
                         color: isDark
@@ -2125,7 +2126,7 @@ class _TireRecommendationsSectionState
                 items: [
                   DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Alle Hersteller (${categoryFiltered.length})',
+                    child: Text(S.of(context)!.allManufacturersCount(categoryFiltered.length),
                         style: TextStyle(
                             fontSize: 13,
                             color: isDark
@@ -2166,7 +2167,7 @@ class _TireRecommendationsSectionState
             const SizedBox(height: 12),
             _InfoCard(
               icon: Icons.euro,
-              title: 'Preisübersicht',
+              title: S.of(context)!.priceOverview,
               child: Column(
                 children: [
                   _PriceRow(
@@ -2182,20 +2183,20 @@ class _TireRecommendationsSectionState
                                 fontSize: 12, color: Colors.grey[500])),
                       ),
                     ),
-                  _PriceRow('Montage', workshop.searchBasePrice!),
+                  _PriceRow(S.of(context)!.montageLabel, workshop.searchBasePrice!),
                   if (workshop.disposalFeeApplied != null &&
                       workshop.disposalFeeApplied! > 0)
-                    _PriceRow('Entsorgung', workshop.disposalFeeApplied!),
+                    _PriceRow(S.of(context)!.disposal, workshop.disposalFeeApplied!),
                   if (workshop.runFlatSurchargeApplied != null &&
                       workshop.runFlatSurchargeApplied! > 0)
                     _PriceRow(
-                        'RunFlat-Zuschlag', workshop.runFlatSurchargeApplied!),
+                        S.of(context)!.runflatSurcharge, workshop.runFlatSurchargeApplied!),
                   const Divider(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Gesamtpreis',
-                          style: TextStyle(
+                      Text(S.of(context)!.totalPrice,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)),
                       Text(
                         '${(selectedTire.totalPrice + workshop.searchBasePrice! + (workshop.disposalFeeApplied ?? 0) + (workshop.runFlatSurchargeApplied ?? 0)).toStringAsFixed(2)} €',
@@ -2276,7 +2277,7 @@ class _TireRecommendationsSectionState
               icon: Icon(Icons.filter_list,
                   size: 18,
                   color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
-              hint: Text('Alle Hersteller',
+              hint: Text(S.of(context)!.allManufacturers,
                   style: TextStyle(
                       fontSize: 13,
                       color:
@@ -2285,7 +2286,7 @@ class _TireRecommendationsSectionState
               items: [
                 DropdownMenuItem<String?>(
                   value: null,
-                  child: Text('Alle Hersteller (${categoryFiltered.length})',
+                  child: Text(S.of(context)!.allManufacturersCount(categoryFiltered.length),
                       style: TextStyle(
                           fontSize: 13,
                           color: isDark
@@ -2382,7 +2383,7 @@ class _TireRecommendationsSectionState
           const SizedBox(height: 12),
           _InfoCard(
             icon: Icons.euro,
-            title: 'Preisübersicht',
+            title: S.of(context)!.priceOverview,
             child: Column(
               children: [
                 _PriceRow(
@@ -2398,20 +2399,20 @@ class _TireRecommendationsSectionState
                               TextStyle(fontSize: 12, color: Colors.grey[500])),
                     ),
                   ),
-                _PriceRow('Montage', workshop.searchBasePrice!),
+                _PriceRow(S.of(context)!.montageLabel, workshop.searchBasePrice!),
                 if (workshop.disposalFeeApplied != null &&
                     workshop.disposalFeeApplied! > 0)
-                  _PriceRow('Entsorgung', workshop.disposalFeeApplied!),
+                  _PriceRow(S.of(context)!.disposal, workshop.disposalFeeApplied!),
                 if (workshop.runFlatSurchargeApplied != null &&
                     workshop.runFlatSurchargeApplied! > 0)
                   _PriceRow(
-                      'RunFlat-Zuschlag', workshop.runFlatSurchargeApplied!),
+                      S.of(context)!.runflatSurcharge, workshop.runFlatSurchargeApplied!),
                 const Divider(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Gesamtpreis',
-                        style: TextStyle(
+                    Text(S.of(context)!.totalPrice,
+                        style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(
                       '${(selectedTire.totalPrice + workshop.searchBasePrice! + (workshop.disposalFeeApplied ?? 0) + (workshop.runFlatSurchargeApplied ?? 0)).toStringAsFixed(2)} €',
@@ -2465,15 +2466,15 @@ class _TireRecommendationCard extends StatelessWidget {
         case 'günstigster':
           labelColor = Colors.green;
           labelIcon = Icons.savings;
-          displayLabel = 'Günstigster';
+          displayLabel = S.of(context)!.categoryCheapest;
         case 'testsieger':
           labelColor = Colors.amber[800];
           labelIcon = Icons.star;
-          displayLabel = 'Premium';
+          displayLabel = S.of(context)!.categoryPremium;
         case 'beliebt':
           labelColor = Colors.blue;
           labelIcon = Icons.thumb_up;
-          displayLabel = 'Beste Eigensch.';
+          displayLabel = S.of(context)!.categoryBest;
         default:
           labelColor = Colors.grey;
           labelIcon = Icons.label;
@@ -2772,23 +2773,20 @@ class _PriceBreakdownSection extends StatelessWidget {
     this.selectedPackage,
   });
 
-  static const _packageLabels = <String, String>{
-    // TIRE_REPAIR
-    'foreign_object': 'Fremdkörper-Reparatur',
-    'valve_damage': 'Ventilschaden-Reparatur',
-    // ALIGNMENT_BOTH
-    'measurement_both': 'Vermessung — Beide Achsen',
-    'measurement_front': 'Vermessung — Vorderachse',
-    'measurement_rear': 'Vermessung — Hinterachse',
-    'adjustment_both': 'Einstellung — Beide Achsen',
-    'adjustment_front': 'Einstellung — Vorderachse',
-    'adjustment_rear': 'Einstellung — Hinterachse',
-    'full_service': 'Komplett mit Inspektion',
-    // CLIMATE_SERVICE
-    'check': 'Basis-Check',
-    'basic': 'Standard-Service',
-    'comfort': 'Komfort-Service',
-    'premium': 'Premium-Service',
+  static Map<String, String> _getPackageLabels(BuildContext context) => {
+    'foreign_object': S.of(context)!.pkgForeignObject,
+    'valve_damage': S.of(context)!.pkgValveDamage,
+    'measurement_both': S.of(context)!.pkgMeasureBoth,
+    'measurement_front': S.of(context)!.pkgMeasureFront,
+    'measurement_rear': S.of(context)!.pkgMeasureRear,
+    'adjustment_both': S.of(context)!.pkgAdjustBoth,
+    'adjustment_front': S.of(context)!.pkgAdjustFront,
+    'adjustment_rear': S.of(context)!.pkgAdjustRear,
+    'full_service': S.of(context)!.pkgFullService,
+    'check': S.of(context)!.pkgClimateCheck,
+    'basic': S.of(context)!.pkgBasicService,
+    'comfort': S.of(context)!.pkgComfortService,
+    'premium': S.of(context)!.pkgPremiumService,
   };
 
   static const _defaultPackages = <String, String>{
@@ -2809,7 +2807,8 @@ class _PriceBreakdownSection extends StatelessWidget {
     // Determine the effective package
     final effectivePkg = selectedPackage ?? _defaultPackages[serviceType];
     // Use package-specific label if available, otherwise use generic service name
-    final pkgLabel = effectivePkg != null ? _packageLabels[effectivePkg] : null;
+    final packageLabels = _getPackageLabels(context);
+    final pkgLabel = effectivePkg != null ? packageLabels[effectivePkg] : null;
 
     switch (serviceType) {
       case 'WHEEL_CHANGE':
@@ -2825,23 +2824,23 @@ class _PriceBreakdownSection extends StatelessWidget {
               (wheelChangeBreakdown!['washingSurcharge'] as num?)?.toDouble();
           if (wcbBase != null) {
             total += wcbBase;
-            rows.add(_PriceRow('Räderwechsel', wcbBase));
+            rows.add(_PriceRow(S.of(context)!.wheelChange, wcbBase));
           }
           if (withBalancing && balSurcharge != null && balSurcharge > 0) {
             total += balSurcharge;
-            rows.add(_PriceRow('Auswuchten', balSurcharge));
+            rows.add(_PriceRow(S.of(context)!.balancing, balSurcharge));
           }
           if (withStorage && stoSurcharge != null && stoSurcharge > 0) {
             total += stoSurcharge;
-            rows.add(_PriceRow('Einlagerung', stoSurcharge));
+            rows.add(_PriceRow(S.of(context)!.storage, stoSurcharge));
           }
           if (withWashing && washSurcharge != null && washSurcharge > 0) {
             total += washSurcharge;
-            rows.add(_PriceRow('Waschen', washSurcharge));
+            rows.add(_PriceRow(S.of(context)!.washing, washSurcharge));
           }
           return _InfoCard(
             icon: Icons.euro,
-            title: 'Preisübersicht',
+            title: S.of(context)!.priceOverview,
             child: Column(
               children: [
                 ...rows,
@@ -2850,8 +2849,8 @@ class _PriceBreakdownSection extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Gesamt',
-                          style: TextStyle(
+                      Text(S.of(context)!.total,
+                          style: const TextStyle(
                               fontWeight: FontWeight.bold, fontSize: 16)),
                       Text(
                         '${total.toStringAsFixed(2)} €',
@@ -2872,45 +2871,45 @@ class _PriceBreakdownSection extends StatelessWidget {
             pricing?.basePrice ??
             pricing?.basePrice4 ??
             pricing?.tireChangePricePKW;
-        serviceName = 'Räderwechsel';
+        serviceName = S.of(context)!.wheelChange;
         break;
       case 'TIRE_CHANGE':
         basePrice = searchBasePrice ??
             pricing?.basePrice ??
             pricing?.basePrice4 ??
             pricing?.tireChangePricePKW;
-        serviceName = 'Montage';
+        serviceName = S.of(context)!.montageLabel;
         break;
       case 'TIRE_REPAIR':
         basePrice = searchBasePrice ??
             pricing?.basePrice ??
             pricing?.tireChangePricePKW;
-        serviceName = pkgLabel ?? 'Reifenreparatur';
+        serviceName = pkgLabel ?? S.of(context)!.tireRepair;
         break;
       case 'ALIGNMENT_BOTH':
         basePrice = searchBasePrice ??
             pricing?.basePrice ??
             pricing?.tireChangePricePKW;
-        serviceName = pkgLabel ?? 'Achsvermessung';
+        serviceName = pkgLabel ?? S.of(context)!.axleAlignment;
         break;
       case 'CLIMATE_SERVICE':
         basePrice = searchBasePrice ??
             pricing?.basePrice ??
             pricing?.tireChangePricePKW;
-        serviceName = pkgLabel ?? 'Klimaservice';
+        serviceName = pkgLabel ?? S.of(context)!.climateService;
         break;
       case 'MOTORCYCLE_TIRE':
         basePrice = searchBasePrice ??
             pricing?.basePrice ??
             pricing?.tireChangePriceMotorcycle ??
             pricing?.tireChangePricePKW;
-        serviceName = 'Motorrad-Reifenwechsel';
+        serviceName = S.of(context)!.motorcycleTireChange;
         break;
       default:
         basePrice = searchBasePrice ??
             pricing?.basePrice ??
             pricing?.tireChangePricePKW;
-        serviceName = 'Reifenwechsel';
+        serviceName = S.of(context)!.tireChange;
     }
 
     if (basePrice != null) {
@@ -2932,11 +2931,11 @@ class _PriceBreakdownSection extends StatelessWidget {
         (serviceType == 'TIRE_CHANGE' || serviceType == 'MOTORCYCLE_TIRE')) {
       if (disposalFeeApplied != null && disposalFeeApplied! > 0) {
         total += disposalFeeApplied!;
-        rows.add(_PriceRow('Entsorgung', disposalFeeApplied!));
+        rows.add(_PriceRow(S.of(context)!.disposal, disposalFeeApplied!));
       }
       if (runFlatSurchargeApplied != null && runFlatSurchargeApplied! > 0) {
         total += runFlatSurchargeApplied!;
-        rows.add(_PriceRow('RunFlat-Zuschlag', runFlatSurchargeApplied!));
+        rows.add(_PriceRow(S.of(context)!.runflatSurcharge, runFlatSurchargeApplied!));
       }
     }
 
@@ -2944,24 +2943,24 @@ class _PriceBreakdownSection extends StatelessWidget {
     if (withBalancing && pricing?.balancingPrice != null) {
       final balancingTotal = pricing!.balancingPrice! * 4;
       total += balancingTotal;
-      rows.add(_PriceRow('Auswuchten (×4)', balancingTotal));
+      rows.add(_PriceRow(S.of(context)!.balancingX4, balancingTotal));
     }
 
     // Einlagerung
     if (withStorage && pricing?.storagePrice != null) {
       total += pricing!.storagePrice!;
-      rows.add(_PriceRow('Einlagerung', pricing!.storagePrice!));
+      rows.add(_PriceRow(S.of(context)!.storage, pricing!.storagePrice!));
     }
 
     // Waschen
     if (withWashing && pricing?.washingPrice != null) {
       total += pricing!.washingPrice!;
-      rows.add(_PriceRow('Waschen', pricing!.washingPrice!));
+      rows.add(_PriceRow(S.of(context)!.washing, pricing!.washingPrice!));
     }
 
     return _InfoCard(
       icon: Icons.euro,
-      title: 'Preisübersicht',
+      title: S.of(context)!.priceOverview,
       child: Column(
         children: [
           ...rows,
@@ -2970,8 +2969,8 @@ class _PriceBreakdownSection extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Gesamt',
-                    style:
+                Text(S.of(context)!.total,
+                    style: const
                         TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 Text(
                   '${total.toStringAsFixed(2)} €',

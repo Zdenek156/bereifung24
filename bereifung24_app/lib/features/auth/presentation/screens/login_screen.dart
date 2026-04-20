@@ -9,6 +9,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/services/biometric_service.dart';
 import '../../../../core/storage/secure_storage.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -155,7 +156,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     if (v == null || v.trim().isEmpty) {
                       return 'Bitte E-Mail eingeben';
                     }
-                    if (!v.contains('@')) return 'Ungültige E-Mail';
+                    if (!v.contains('@')) return S.of(context)!.invalidEmail;
                     return null;
                   },
                 ),
@@ -169,7 +170,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _login(),
                   decoration: InputDecoration(
-                    labelText: 'Passwort',
+                    labelText: S.of(context)!.password,
                     prefixIcon: const Icon(Icons.lock_outline),
                     suffixIcon: IconButton(
                       icon: Icon(_obscurePassword
@@ -193,7 +194,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => context.push('/forgot-password'),
-                    child: const Text('Passwort vergessen?'),
+                    child: Text(S.of(context)!.forgotPassword),
                   ),
                 ),
 
@@ -217,7 +218,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Anmelden', style: TextStyle(fontSize: 16)),
+                      : Text(S.of(context)!.login, style: const TextStyle(fontSize: 16)),
                 ),
 
                 const SizedBox(height: 24),
@@ -228,7 +229,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('oder',
+                      child: Text(S.of(context)!.or,
                           style: TextStyle(color: Colors.grey[600])),
                     ),
                     const Expanded(child: Divider()),
@@ -254,7 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         SvgPicture.asset('assets/images/google_logo.svg',
                             height: 20, width: 20),
                         const SizedBox(width: 12),
-                        const Text('Mit Google anmelden'),
+                        Text(S.of(context)!.loginWithGoogle),
                       ],
                     ),
                   ),
@@ -275,7 +276,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         SvgPicture.asset('assets/images/apple_logo.svg',
                             height: 20, width: 20),
                         const SizedBox(width: 12),
-                        const Text('Mit Apple anmelden'),
+                        Text(S.of(context)!.loginWithApple),
                       ],
                     ),
                   ),
@@ -295,7 +296,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         SvgPicture.asset('assets/images/google_logo.svg',
                             height: 20, width: 20),
                         const SizedBox(width: 12),
-                        const Text('Mit Google anmelden'),
+                        Text(S.of(context)!.loginWithGoogle),
                       ],
                     ),
                   ),
@@ -308,7 +309,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   OutlinedButton.icon(
                     onPressed: _biometricLogin,
                     icon: const Icon(Icons.fingerprint, size: 24),
-                    label: const Text('Mit Biometrie anmelden'),
+                    label: Text(S.of(context)!.loginWithBiometric),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -323,11 +324,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Noch kein Konto?',
+                    Text(S.of(context)!.noAccount,
                         style: TextStyle(color: Colors.grey[600])),
                     TextButton(
                       onPressed: () => context.go('/register'),
-                      child: const Text('Registrieren'),
+                      child: Text(S.of(context)!.register),
                     ),
                   ],
                 ),
@@ -578,8 +579,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: Text(nameProvided
-            ? 'Adresse vervollständigen'
-            : 'Profil vervollständigen'),
+            ? S.of(context)!.completeAddress
+            : S.of(context)!.completeProfile),
         content: SingleChildScrollView(
           child: Form(
             key: formKey,
@@ -588,10 +589,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 Text(
                   askForEmail
-                      ? 'Apple hat deine E-Mail-Adresse verborgen. Bitte gib deine echte E-Mail-Adresse an.'
+                      ? S.of(context)!.appleNameNotProvided
                       : nameProvided
-                          ? 'Bitte gib noch deine Adresse an, damit wir Werkstätten in deiner Nähe finden können.'
-                          : 'Dein Name wurde nicht übermittelt. Bitte vervollständige dein Profil.',
+                          ? S.of(context)!.addressNeeded
+                          : S.of(context)!.nameNotProvided,
                   style: const TextStyle(fontSize: 13),
                 ),
                 const SizedBox(height: 16),
@@ -599,8 +600,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'E-Mail-Adresse *',
+                    decoration: InputDecoration(
+                      labelText: S.of(context)!.emailRequired,
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (v) {
@@ -618,7 +619,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: firstNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(labelText: 'Vorname *'),
+                    decoration: InputDecoration(labelText: '${S.of(context)!.firstName} *'),
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
@@ -626,7 +627,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: lastNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(labelText: 'Nachname *'),
+                    decoration: InputDecoration(labelText: '${S.of(context)!.lastName} *'),
                     validator: (v) =>
                         v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
                   ),
@@ -635,8 +636,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 TextFormField(
                   controller: phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefon (optional)',
+                  decoration: InputDecoration(
+                    labelText: S.of(context)!.phoneOptional,
                     prefixIcon: Icon(Icons.phone_outlined),
                   ),
                 ),
@@ -645,8 +646,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: streetCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Straße & Hausnummer *',
+                    decoration: InputDecoration(
+                      labelText: S.of(context)!.street,
                       prefixIcon: Icon(Icons.home_outlined),
                     ),
                     validator: (v) =>
@@ -660,7 +661,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: TextFormField(
                           controller: zipCtrl,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'PLZ *'),
+                          decoration: InputDecoration(labelText: S.of(context)!.zip),
                           validator: (v) {
                             if (v == null || v.trim().isEmpty) return 'Pflicht';
                             if (v.trim().length != 5) return '5 Ziffern';
@@ -674,7 +675,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           controller: cityCtrl,
                           textCapitalization: TextCapitalization.words,
                           decoration:
-                              const InputDecoration(labelText: 'Stadt *'),
+                              InputDecoration(labelText: S.of(context)!.city),
                           validator: (v) => v == null || v.trim().isEmpty
                               ? 'Pflichtfeld'
                               : null,
@@ -690,7 +691,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Abbrechen'),
+            child: Text(S.of(context)!.cancel),
           ),
           FilledButton(
             onPressed: () {

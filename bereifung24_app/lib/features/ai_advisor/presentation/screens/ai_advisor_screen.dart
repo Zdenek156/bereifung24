@@ -18,6 +18,8 @@ import '../../../home/presentation/screens/home_screen.dart'
     show homeVehicleIndexProvider, saveHomeVehicleIndex;
 import '../../../auth/providers/auth_provider.dart';
 import '../widgets/rollo_voice_mode.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../main.dart' show localeProvider;
 
 // ══════════════════════════════════════
 // 🤖 KI Reifen-Berater
@@ -132,9 +134,19 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   // Voice Mode (fullscreen immersive)
   bool _isVoiceMode = false;
   VoiceState _voiceState = VoiceState.idle;
-  String _voiceStatusText = 'Tippe zum Sprechen';
+  String _voiceStatusText = '';
   String? _lastAiText;
   Timer? _listeningTimeout; // safety timeout for stuck listening
+
+  /// Map app locale to speech recognition locale ID
+  String get _speechLocaleId {
+    final lang = ref.read(localeProvider).languageCode;
+    const map = {
+      'de': 'de_DE', 'en': 'en_US', 'tr': 'tr_TR',
+      'ru': 'ru_RU', 'it': 'it_IT', 'fr': 'fr_FR', 'es': 'es_ES',
+    };
+    return map[lang] ?? 'de_DE';
+  }
 
   // TTS init future (await before first speech)
   late final Future<void> _ttsInitFuture;
@@ -213,9 +225,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             'voice', 'mic permission NOT granted: $micStatus');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Mikrofon-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
+            SnackBar(
+                content: Text(S.of(context)!.micPermissionNeeded)),
           );
           // Open app settings so user can grant permission manually
           if (micStatus.isPermanentlyDenied || micStatus.isDenied) {
@@ -235,9 +246,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               'voice', 'iOS speech permission NOT granted: $speechStatus');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text(
-                      'Spracherkennung-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.')),
+              SnackBar(
+                  content: Text(S.of(context)!.speechPermissionNeeded)),
             );
             if (speechStatus.isPermanentlyDenied || speechStatus.isDenied) {
               await openAppSettings();
@@ -257,9 +267,9 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             'voice', 'speechService.init() returned false');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
+            SnackBar(
                 content:
-                    Text('Spracherkennung konnte nicht initialisiert werden.')),
+                    Text(S.of(context)!.speechInitFailed)),
           );
         }
         return;
@@ -274,7 +284,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       setState(() {
         _isVoiceMode = true;
         _voiceState = VoiceState.speaking;
-        _voiceStatusText = 'Rollo begrüßt dich...';
+        _voiceStatusText = S.of(context)!.rolloGreeting;
         _partialSpeech = '';
         _isSpeaking = true;
       });
@@ -289,8 +299,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           ? '${selectedVehicle.make} ${selectedVehicle.model}'
           : null;
       final greeting = (vehicleName != null && vehicleName.trim().isNotEmpty)
-          ? 'Hallo! Ich bin Rollo, dein Reifenberater. Ich sehe, du fährst einen $vehicleName. Wie kann ich dir helfen?'
-          : 'Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?';
+          ? S.of(context)!.rolloIntroWithVehicle(vehicleName)
+          : S.of(context)!.rolloIntroGeneric;
       setState(() {
         _messages
             .add(_ChatMessage(role: 'ai', text: greeting, time: _timeStr()));
@@ -303,9 +313,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         setState(() {
           _isSpeaking = false;
           _voiceState = VoiceState.idle;
-          _voiceStatusText = 'Tippe zum Sprechen';
+          _voiceStatusText = S.of(context)!.tapToSpeak;
         });
-        return;
       }
 
       // Small delay then speak — TTS is guaranteed initialized now
@@ -319,7 +328,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Fehler beim Starten des Sprachmodus: $e')),
+          SnackBar(content: Text('${S.of(context)!.voiceModeError}: $e')),
         );
       }
     }
@@ -383,7 +392,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     setState(() {
       _isListening = true;
       _voiceState = VoiceState.listening;
-      _voiceStatusText = 'Ich höre zu...';
+      _voiceStatusText = S.of(context)!.listening;
       _partialSpeech = '';
     });
 
@@ -396,7 +405,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       setState(() {
         _isListening = false;
         _voiceState = VoiceState.idle;
-        _voiceStatusText = 'Tippe zum Sprechen';
+        _voiceStatusText = S.of(context)!.tapToSpeak;
       });
       // If we have partial speech, send it
       if (_partialSpeech.trim().isNotEmpty) {
@@ -406,6 +415,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     });
 
     final success = await SpeechService().startListening(
+      localeId: _speechLocaleId,
       onResult: (result) {
         if (!mounted) return;
         setState(() {
@@ -420,7 +430,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
           } else {
             setState(() {
               _voiceState = VoiceState.idle;
-              _voiceStatusText = 'Tippe zum Sprechen';
+              _voiceStatusText = S.of(context)!.tapToSpeak;
             });
           }
         }
@@ -434,7 +444,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       setState(() {
         _isListening = false;
         _voiceState = VoiceState.idle;
-        _voiceStatusText = 'Spracherkennung nicht verfügbar';
+        _voiceStatusText = S.of(context)!.speechNotAvailableMsg;
       });
     }
   }
@@ -446,7 +456,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       setState(() {
         _isListening = false;
         _voiceState = VoiceState.idle;
-        _voiceStatusText = 'Tippe zum Sprechen';
+        _voiceStatusText = S.of(context)!.tapToSpeak;
       });
       // Send partial speech if any
       if (_partialSpeech.trim().isNotEmpty) {
@@ -457,7 +467,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _stopSpeaking();
       setState(() {
         _voiceState = VoiceState.idle;
-        _voiceStatusText = 'Tippe zum Sprechen';
+        _voiceStatusText = S.of(context)!.tapToSpeak;
       });
     }
   }
@@ -472,7 +482,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
     setState(() {
       _voiceState = VoiceState.thinking;
-      _voiceStatusText = 'Rollo denkt nach...';
+      _voiceStatusText = S.of(context)!.rolloThinking;
     });
 
     // Add user message to chat history
@@ -532,6 +542,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         vehicleId: _vehicleId,
         latitude: lat,
         longitude: lng,
+        language: Localizations.localeOf(context).languageCode,
       );
       debugPrint(
           '[voice] API response received, status=${response.statusCode}');
@@ -540,7 +551,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
       final data = response.data;
       final aiText = _cleanAiResponse(
-          data['response'] as String? ?? 'Keine Antwort erhalten.');
+          data['response'] as String? ?? S.of(context)!.noResponseReceived);
       final newHistory = data['chatHistory'] as List? ?? [];
       debugPrint(
           '[voice] aiText (${aiText.length} chars): ${aiText.substring(0, aiText.length > 80 ? 80 : aiText.length)}...');
@@ -583,7 +594,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       if (_ttsEnabled && _isVoiceMode) {
         setState(() {
           _voiceState = VoiceState.speaking;
-          _voiceStatusText = 'Rollo spricht...';
+          _voiceStatusText = S.of(context)!.rolloSpeaking;
           _isSpeaking = true;
         });
         // Small delay to let Android release the audio session from speech recognition
@@ -598,7 +609,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         debugPrint('[voice] TTS disabled or not in voice mode, going to idle');
         setState(() {
           _voiceState = VoiceState.idle;
-          _voiceStatusText = 'Tippe zum Sprechen';
+          _voiceStatusText = S.of(context)!.tapToSpeak;
         });
       }
     } catch (e, stack) {
@@ -610,12 +621,12 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         _messages.add(_ChatMessage(
           role: 'ai',
           text:
-              'Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal.',
+              S.of(context)!.aiErrorMessage,
           time: _timeStr(),
         ));
         _isTyping = false;
         _voiceState = VoiceState.idle;
-        _voiceStatusText = 'Tippe zum Sprechen';
+        _voiceStatusText = S.of(context)!.tapToSpeak;
       });
     }
     _scrollToBottom();
@@ -629,7 +640,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       setState(() {
         _isSpeaking = false;
         _voiceState = VoiceState.idle;
-        _voiceStatusText = 'Tippe zum Sprechen';
+        _voiceStatusText = S.of(context)!.tapToSpeak;
       });
       // Auto-restart listening after AI finishes speaking
       if (_isVoiceMode) {
@@ -652,7 +663,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _messages.add(_ChatMessage(
         role: 'ai',
         text:
-            '${vehicle.make} ${vehicle.model} ausgewählt! 🚗\nReifengröße: **${vehicle.tireSizeWithIndex.isNotEmpty ? vehicle.tireSizeWithIndex : 'nicht hinterlegt'}**',
+            S.of(context)!.vehicleSelected('${vehicle.make} ${vehicle.model}', vehicle.tireSizeWithIndex.isNotEmpty ? vehicle.tireSizeWithIndex : S.of(context)!.tireNotStoredLabel),
         time: _timeStr(),
       ));
     });
@@ -681,13 +692,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       _messages.add(_ChatMessage(
         role: 'ai',
         text:
-            'Hallo! 👋 Ich bin **Rollo**, dein KI-Reifen-Berater. Wie kann ich dir helfen?',
+            S.of(context)!.rolloInitialGreeting,
         time: _timeStr(),
         chips: [
-          _QuickChip('recommend', '🎯 Reifen-Empfehlung'),
-          _QuickChip('help', '❓ App-Hilfe'),
-          _QuickChip('workshop', '🔧 Werkstatt finden'),
-          _QuickChip('free', '💬 Frei fragen'),
+          _QuickChip('recommend', '🎯 ${S.of(context)!.tireRecommendation}'),
+          _QuickChip('help', '❓ ${S.of(context)!.appHelp}'),
+          _QuickChip('workshop', '🔧 ${S.of(context)!.findWorkshop}'),
+          _QuickChip('free', '💬 ${S.of(context)!.askFreely}'),
         ],
       ));
     });
@@ -726,7 +737,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             _messages.add(_ChatMessage(
               role: 'ai',
               text:
-                  'Du hast noch kein Fahrzeug angelegt. Bitte füge zuerst ein Fahrzeug unter **Fahrzeuge** hinzu, damit ich dir Reifen empfehlen kann.',
+                  S.of(context)!.noVehicleForAi,
               time: _timeStr(),
             ));
           });
@@ -749,7 +760,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 role: 'user', text: text.trim(), time: _timeStr()));
             _messages.add(_ChatMessage(
               role: 'ai',
-              text: 'Für welches Fahrzeug brauchst du Hilfe?',
+              text: S.of(context)!.whichVehicle,
               time: _timeStr(),
               vehicleChoices: vehicleList,
             ));
@@ -784,13 +795,14 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         vehicleId: _vehicleId,
         latitude: lat,
         longitude: lng,
+        language: Localizations.localeOf(context).languageCode,
       );
 
       if (!mounted) return;
 
       final data = response.data;
       final aiText = _cleanAiResponse(
-          data['response'] as String? ?? 'Keine Antwort erhalten.');
+          data['response'] as String? ?? S.of(context)!.noResponseReceived);
       final newHistory = data['chatHistory'] as List? ?? [];
 
       // Parse recommended tires
@@ -831,7 +843,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         _messages.add(_ChatMessage(
           role: 'ai',
           text:
-              'Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal. 🔄',
+              S.of(context)!.aiErrorMessage,
           time: _timeStr(),
         ));
         _isTyping = false;
@@ -842,10 +854,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
 
   void _onChipTapped(_QuickChip chip) {
     final chipMessages = {
-      'recommend': 'Ich möchte eine Reifen-Empfehlung',
-      'help': 'Wie funktioniert die B24 App?',
-      'workshop': 'Zeig mir Werkstätten in meiner Nähe',
-      'free': 'Ich habe eine Frage zu Reifen',
+      'recommend': S.of(context)!.chipRecommendMsg,
+      'help': S.of(context)!.chipHelpMsg,
+      'workshop': S.of(context)!.chipWorkshopMsg,
+      'free': S.of(context)!.chipFreeMsg,
     };
     _sendMessage(chipMessages[chip.id] ?? chip.label);
   }
@@ -953,7 +965,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 _autoSpeak ? Icons.volume_up : Icons.volume_off,
                 size: 22,
               ),
-              tooltip: _autoSpeak ? 'Sprachausgabe an' : 'Sprachausgabe aus',
+              tooltip: _autoSpeak ? S.of(context)!.speechOutputOn : S.of(context)!.speechOutputOff,
               onPressed: () {
                 setState(() => _autoSpeak = !_autoSpeak);
                 if (!_autoSpeak && _isSpeaking) _stopSpeaking();
@@ -961,7 +973,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 22),
-            tooltip: 'Chat löschen',
+            tooltip: S.of(context)!.deleteChat,
             onPressed: () {
               _stopSpeaking();
               setState(() {
@@ -1258,8 +1270,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     final rearTires = tires.where((t) => t.axle == 'rear').toList();
     final hasMixed = frontTires.isNotEmpty && rearTires.isNotEmpty;
     final isMoto = _vehicleType == 'MOTORCYCLE';
-    final frontLabel = isMoto ? 'Vorderrad' : 'Vorderachse';
-    final rearLabel = isMoto ? 'Hinterrad' : 'Hinterachse';
+    final frontLabel = isMoto ? S.of(context)!.frontWheel : S.of(context)!.frontAxleFull;
+    final rearLabel = isMoto ? S.of(context)!.rearWheel : S.of(context)!.rearAxleFull;
 
     if (hasMixed) {
       return [
@@ -1319,7 +1331,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       child: ElevatedButton.icon(
         onPressed: () => _navigateToSearch(t),
         icon: const Icon(Icons.search, size: 18),
-        label: const Text('Werkstatt mit diesem Reifen finden'),
+        label: Text(S.of(context)!.findWorkshopWithTire),
         style: ElevatedButton.styleFrom(
           backgroundColor: B24Colors.primaryBlue,
           foregroundColor: Colors.white,
@@ -1336,10 +1348,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     final hasRear = _selectedRearTire != null;
     final hasBoth = hasFront && hasRear;
     final label = hasBoth
-        ? 'Werkstatt mit beiden Reifen finden'
-        : hasFront
-            ? 'Werkstatt mit Vorderreifen finden'
-            : 'Werkstatt mit Hinterreifen finden';
+? S.of(context)!.findWorkshopWithBothTires
+            : hasFront
+            ? S.of(context)!.findWorkshopWithFrontTire
+            : S.of(context)!.findWorkshopWithRearTire;
 
     return SizedBox(
       width: double.infinity,
@@ -1726,7 +1738,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 textInputAction: TextInputAction.send,
                 onSubmitted: (text) => _sendMessage(text),
                 decoration: InputDecoration(
-                  hintText: 'Frag mich etwas...',
+                  hintText: S.of(context)!.askMeSomething,
                   hintStyle: TextStyle(
                     color: isDark
                         ? B24Colors.darkTextSecondary

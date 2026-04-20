@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../data/models/models.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
@@ -85,8 +86,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Profil aktualisiert'),
+          SnackBar(
+              content: Text(S.of(context)!.profileUpdated),
               backgroundColor: Colors.green),
         );
         Navigator.pop(context);
@@ -94,8 +95,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Fehler beim Speichern'),
+          SnackBar(
+              content: Text(S.of(context)!.errorSaving),
               backgroundColor: Colors.red),
         );
       }
@@ -109,7 +110,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = ref.watch(authStateProvider).user;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil bearbeiten')),
+      appBar: AppBar(title: Text(S.of(context)!.editProfile)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -120,7 +121,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Section: Persönliche Daten
-                    Text('Persönliche Daten',
+                    Text(S.of(context)!.personalData,
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
@@ -133,7 +134,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             controller: _firstNameCtrl,
                             textCapitalization: TextCapitalization.words,
                             decoration:
-                                const InputDecoration(labelText: 'Vorname *'),
+                                InputDecoration(labelText: S.of(context)!.firstName),
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Pflichtfeld'
                                 : null,
@@ -145,7 +146,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             controller: _lastNameCtrl,
                             textCapitalization: TextCapitalization.words,
                             decoration:
-                                const InputDecoration(labelText: 'Nachname *'),
+                                InputDecoration(labelText: S.of(context)!.lastName),
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Pflichtfeld'
                                 : null,
@@ -167,8 +168,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     TextFormField(
                       controller: _phoneCtrl,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        labelText: 'Telefonnummer *',
+                      decoration: InputDecoration(
+                        labelText: S.of(context)!.phoneNumber,
                       ),
                       validator: (v) =>
                           v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
@@ -177,7 +178,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const SizedBox(height: 28),
 
                     // Section: Adresse
-                    Text('Adresse',
+                    Text(S.of(context)!.address,
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
@@ -185,8 +186,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _streetCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Straße & Hausnummer *',
+                      decoration: InputDecoration(
+                        labelText: S.of(context)!.street,
                       ),
                       validator: (v) =>
                           v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
@@ -199,8 +200,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           child: TextFormField(
                             controller: _zipCodeCtrl,
                             keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                                labelText: 'Postleitzahl *'),
+                            decoration: InputDecoration(
+                                labelText: S.of(context)!.zipLabel),
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Pflichtfeld'
                                 : null,
@@ -212,7 +213,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             controller: _cityCtrl,
                             textCapitalization: TextCapitalization.words,
                             decoration:
-                                const InputDecoration(labelText: 'Stadt *'),
+                                InputDecoration(labelText: S.of(context)!.city),
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Pflichtfeld'
                                 : null,
@@ -236,8 +237,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.white),
                             )
-                          : const Text('Speichern',
-                              style: TextStyle(fontSize: 16)),
+                          : Text(S.of(context)!.save,
+                              style: const TextStyle(fontSize: 16)),
                     ),
                   ],
                 ),

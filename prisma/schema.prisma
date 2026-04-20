@@ -70,6 +70,26 @@ model EmailTemplate {
 }
 
 // ============================================
+// LEGAL TEXTS (AGB, Datenschutz, Impressum)
+// ============================================
+
+model LegalText {
+  id            String   @id @default(cuid())
+  key           String   // agb, impressum, datenschutz
+  title         String
+  content       String   @db.Text
+  version       Int      @default(1)
+  target        String   @default("app") // web or app
+  lastUpdatedBy String?  @map("last_updated_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@unique([key, target])
+  @@index([key])
+  @@map("legal_texts")
+}
+
+// ============================================
 // USER MANAGEMENT
 // ============================================
 

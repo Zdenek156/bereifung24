@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html_core/flutter_widget_from_html_core.dart';
 import '../../../../core/network/api_client.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Dynamic legal screen that fetches HTML content from the API
 /// and renders it as native Flutter widgets using HtmlWidget.
@@ -96,7 +97,7 @@ class _DynamicLegalScreenState extends State<DynamicLegalScreen> {
                             });
                             _loadContent();
                           },
-                          child: const Text('Erneut versuchen'),
+                          child: Text(S.of(context)!.retry),
                         ),
                       ],
                     ),

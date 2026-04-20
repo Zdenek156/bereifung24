@@ -147,7 +147,7 @@ class StripeService {
                 )
               : null,
           // German locale for button text ("Bezahlen" statt "Pay")
-          primaryButtonLabel: 'Bezahlen',
+          // Label set dynamically via caller or defaults to system locale
           appearance: const PaymentSheetAppearance(
             colors: PaymentSheetAppearanceColors(
               primary: Color(0xFF0284C7),
@@ -168,7 +168,7 @@ class StripeService {
           .timeout(const Duration(seconds: 120), onTimeout: () {
         RemoteLogger.error('stripe', 'step 3: TIMEOUT after 120s');
         throw Exception(
-            'Zahlung hat zu lange gedauert. Bitte versuche es erneut.');
+            'Payment took too long. Please try again.');
       });
       await RemoteLogger.log(
           'stripe', 'step 3: presentPaymentSheet DONE — payment succeeded');

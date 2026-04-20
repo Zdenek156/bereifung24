@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../models/workshop_review.dart';
 import '../providers/workshop_provider.dart';
+import '../../../l10n/app_localizations.dart';
 
 class WorkshopReviewsScreen extends ConsumerWidget {
   const WorkshopReviewsScreen({super.key});
@@ -32,7 +33,7 @@ class WorkshopReviewsScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Bewertungen',
+                          S.of(context)!.reviews,
                           style: Theme.of(context)
                               .textTheme
                               .headlineMedium
@@ -102,7 +103,7 @@ class WorkshopReviewsScreen extends ConsumerWidget {
                           const Text('⭐', style: TextStyle(fontSize: 48)),
                           const SizedBox(height: 8),
                           Text(
-                            'Noch keine Bewertungen',
+                            S.of(context)!.noReviewsYet,
                             style: TextStyle(
                               color: isDark ? Colors.white54 : Colors.black45,
                             ),

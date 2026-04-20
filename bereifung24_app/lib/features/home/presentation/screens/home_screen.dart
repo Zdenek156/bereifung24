@@ -10,6 +10,7 @@ import '../../../auth/providers/auth_provider.dart';
 import '../../../bookings/presentation/screens/bookings_screen.dart';
 import '../../../search/presentation/screens/search_screen.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
+import '../../../../l10n/app_localizations.dart';
 
 // ══════════════════════════════════════
 // CO2 Stats Provider
@@ -49,13 +50,18 @@ BoxShadow _cardShadowLight({bool isDark = false}) => BoxShadow(
       spreadRadius: 0,
     );
 
-String _roleName(String role) => switch (role) {
-      'WORKSHOP' => 'Werkstatt',
-      'FREELANCER' => 'Freelancer',
-      'EMPLOYEE' => 'Mitarbeiter',
-      'ADMIN' => 'Administrator',
-      _ => role,
-    };
+String? _getLocalizedServiceLabel(BuildContext context, String serviceType) {
+  final l = S.of(context)!;
+  return switch (serviceType) {
+    'TIRE_CHANGE' => l.serviceTireChange,
+    'WHEEL_CHANGE' => l.serviceWheelChange,
+    'TIRE_REPAIR' => l.serviceTireRepair,
+    'MOTORCYCLE_TIRE' => l.serviceMotorcycleTire,
+    'ALIGNMENT_BOTH' => l.serviceAlignment,
+    'CLIMATE_SERVICE' => l.serviceClimate,
+    _ => null,
+  };
+}
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -111,7 +117,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Hallo${user?.firstName != null ? ', ${user!.firstName}' : ''}!',
+                              S.of(context)!.helloUser(user?.firstName ?? ''),
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w800,
@@ -122,7 +128,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Was steht heute an?',
+                              S.of(context)!.whatIsPlanned,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -167,7 +173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Angemeldet als ${_roleName(user.role)}',
+                                S.of(context)!.loggedInAs(user.role),
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w700,
@@ -176,7 +182,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                'Diese App ist für Kunden. Für die Werkstattverwaltung nutze bitte das Web-Dashboard.',
+                                S.of(context)!.appForCustomersOnly,
                                 style: TextStyle(
                                     fontSize: 11, color: Colors.orange[800]),
                               ),
@@ -222,7 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  'Adresse fehlt',
+                                  S.of(context)!.addressMissing,
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
@@ -238,7 +244,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           Padding(
                             padding: const EdgeInsets.only(left: 32),
                             child: Text(
-                              'Bitte hinterlege deine Adresse, um Werkstätten in deiner Nähe zu finden und Termine buchen zu können.',
+                              S.of(context)!.addressMissingDesc,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isDark
@@ -255,8 +261,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               child: FilledButton.icon(
                                 onPressed: () => context.push('/profile/edit'),
                                 icon: const Icon(Icons.edit, size: 16),
-                                label: const Text('Profil vervollständigen',
-                                    style: TextStyle(fontSize: 13)),
+                                label: Text(S.of(context)!.completeProfile,
+                                    style: const TextStyle(fontSize: 13)),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: B24Colors.primaryBlue,
                                   foregroundColor: Colors.white,
@@ -293,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Serviceangebote',
+                        S.of(context)!.serviceOffers,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -304,9 +310,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       GestureDetector(
                         onTap: () => context.go('/search'),
-                        child: const Text(
-                          'Alle →',
-                          style: TextStyle(
+                        child: Text(
+                          S.of(context)!.viewAll,
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: B24Colors.primaryBlue,
@@ -404,7 +410,7 @@ class _AIAdvisorCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text(
-                'Dein KI-Berater!',
+                S.of(context)!.yourAiAdvisor,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -457,7 +463,7 @@ class _SOSCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Pannenhilfe',
+              S.of(context)!.breakdownHelp,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
@@ -469,7 +475,7 @@ class _SOSCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: Text(
-                'Werkstatt sofort finden',
+                S.of(context)!.findWorkshopNow,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
@@ -491,12 +497,12 @@ class _SOSCard extends StatelessWidget {
 // ══════════════════════════════════════
 
 class _NextAppointmentCard extends ConsumerWidget {
-  static const _serviceLabels = {
-    'TIRE_CHANGE': 'Reifenwechsel',
-    'WHEEL_CHANGE': 'Räderwechsel',
-    'TIRE_REPAIR': 'Reifenreparatur',
-    'MOTORCYCLE_TIRE': 'Motorrad-Reifen',
-    'ALIGNMENT_BOTH': 'Achsvermessung',
+  static final _serviceLabels = {
+    'TIRE_CHANGE': 'serviceTireChange',
+    'WHEEL_CHANGE': 'serviceWheelChange',
+    'TIRE_REPAIR': 'serviceTireRepair',
+    'MOTORCYCLE_TIRE': 'serviceMotorcycleTire',
+    'ALIGNMENT_BOTH': 'serviceAlignment',
   };
 
   @override
@@ -544,10 +550,10 @@ class _NextAppointmentCard extends ConsumerWidget {
           next.appointmentDate.month, next.appointmentDate.day);
       final daysUntil = apptDay.difference(today).inDays;
       final daysLabel = daysUntil == 0
-          ? 'Heute'
+          ? S.of(context)!.today
           : daysUntil == 1
-              ? 'Morgen'
-              : 'In $daysUntil Tagen';
+              ? S.of(context)!.tomorrow
+              : S.of(context)!.inDaysCount('$daysUntil');
 
       return GestureDetector(
         onTap: () => context.go('/bookings'),
@@ -570,7 +576,7 @@ class _NextAppointmentCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _serviceLabels[next.serviceType] ??
+                        _getLocalizedServiceLabel(context, next.serviceType) ??
                             next.serviceTypeDisplay,
                         style: TextStyle(
                           fontSize: 14,
@@ -582,7 +588,7 @@ class _NextAppointmentCard extends ConsumerWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '$dateStr ($daysLabel)${timeStr.isNotEmpty ? '\n$timeStr Uhr' : ''}',
+                        '$dateStr ($daysLabel)${timeStr.isNotEmpty ? '\n$timeStr ${S.of(context)!.clockSuffix}' : ''}',
                         style: TextStyle(
                           fontSize: 12,
                           color: isDark
@@ -747,9 +753,9 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                         minimumSize: Size.zero,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                      child: const Text(
-                        'Fahrzeug wechseln',
-                        style: TextStyle(
+                      child: Text(
+                        S.of(context)!.switchVehicle,
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -810,9 +816,9 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'Fahrzeug wählen',
-                  style: TextStyle(
+                Text(
+                  S.of(context)!.selectVehicle,
+                  style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
                     color: B24Colors.textPrimary,
@@ -987,7 +993,7 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Füge ein Fahrzeug hinzu',
+            S.of(context)!.addAVehicle,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -996,7 +1002,7 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
           ),
           const SizedBox(height: 4),
           Text(
-            'für personalisierte Empfehlungen',
+            S.of(context)!.forPersonalizedRec,
             style: TextStyle(
                 fontSize: 12,
                 color: isDark
@@ -1016,9 +1022,9 @@ class _VehicleQuickBookCardState extends ConsumerState<_VehicleQuickBookCard> {
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              child: const Text(
-                'Fahrzeug hinzufügen',
-                style: TextStyle(fontWeight: FontWeight.w600),
+              child: Text(
+                S.of(context)!.addVehicle,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -1072,7 +1078,7 @@ class _ServicesGrid extends ConsumerWidget {
                     isDisabled: isTrailer &&
                         !_trailerAllowedServices.contains(s.serviceType),
                     disabledMessage:
-                        'Für Anhänger ist nur der Reifenservice verfügbar.',
+                        S.of(context)!.trailerServiceOnly,
                   ),
                 ))
             .toList(),
@@ -1189,7 +1195,7 @@ class _ServiceTile extends StatelessWidget {
                     ),
                   const SizedBox(height: 8),
                   Text(
-                    service.name,
+                    _getLocalizedServiceLabel(context, service.serviceType) ?? service.name,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,
@@ -1263,8 +1269,8 @@ class _SeasonTipCard extends StatelessWidget {
               children: [
                 Text(
                   isWinterSeason
-                      ? 'Winterreifen-Saison'
-                      : 'Sommerreifen-Saison',
+                      ? S.of(context)!.winterTireSeason
+                      : S.of(context)!.summerTireSeason,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -1276,8 +1282,8 @@ class _SeasonTipCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   isWinterSeason
-                      ? 'Von O bis O: Oktober bis Ostern. Jetzt Winterreifen aufziehen lassen!'
-                      : 'Zeit für den Wechsel! Jetzt Termin sichern bevor es voll wird.',
+                      ? S.of(context)!.winterSeasonTip
+                      : S.of(context)!.summerSeasonTip,
                   style: TextStyle(
                     fontSize: 11,
                     color: isDark
@@ -1411,7 +1417,7 @@ class _CO2BilanzCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Deine CO\u2082-Einsparung durch Online-Buchungen',
+                      S.of(context)!.co2SavingsTitle,
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -1423,7 +1429,7 @@ class _CO2BilanzCard extends ConsumerWidget {
                     Text(
                       trips > 0
                           ? '$trips Online-Buchungen statt Werkstattbesuche'
-                          : 'Basierend auf deinen Fahrzeugdaten',
+                          : S.of(context)!.co2BasedOnVehicle,
                       style: TextStyle(
                         fontSize: 10,
                         color: isDark
@@ -1441,22 +1447,22 @@ class _CO2BilanzCard extends ConsumerWidget {
             children: [
               _CO2Stat(
                 value: '$trips',
-                label: 'Fahrten\ngespart',
+                label: S.of(context)!.co2TripsSaved,
                 isDark: isDark,
               ),
               _CO2Stat(
                 value: '${kmSaved.round()} km',
-                label: 'Fahrtwege\nvermieden',
+                label: S.of(context)!.co2KmAvoided,
                 isDark: isDark,
               ),
               _CO2Stat(
                 value: '${co2Kg.toStringAsFixed(1)} kg',
-                label: 'CO\u2082\neingespart',
+                label: S.of(context)!.co2Saved,
                 isDark: isDark,
               ),
               _CO2Stat(
                 value: '${fuelSaved.toStringAsFixed(1)} $fuelUnit',
-                label: 'Kraftstoff\ngespart',
+                label: S.of(context)!.co2FuelSaved,
                 isDark: isDark,
               ),
             ],

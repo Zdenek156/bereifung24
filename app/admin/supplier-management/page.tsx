@@ -252,7 +252,7 @@ export default function SupplierManagementPage() {
     loadSuppliers()
   }
 
-  const isAdmin = session?.user?.role === 'ADMIN'
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'B24_EMPLOYEE'
 
   // Filter suppliers
   const filteredSuppliers = suppliers.filter(s => {

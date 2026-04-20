@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Voice conversation states
 enum VoiceState { idle, listening, thinking, speaking }
@@ -230,9 +231,9 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
             icon: const Icon(Icons.close, color: Colors.white70, size: 24),
           ),
           const Spacer(),
-          const Text(
-            'Rollo Voice',
-            style: TextStyle(
+          Text(
+            S.of(context)!.voiceMode,
+            style: const TextStyle(
               color: Colors.white70,
               fontSize: 14,
               fontWeight: FontWeight.w600,

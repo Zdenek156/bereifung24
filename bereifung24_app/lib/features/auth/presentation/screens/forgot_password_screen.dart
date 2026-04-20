@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -25,7 +26,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     final email = _emailCtrl.text.trim();
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte gültige E-Mail eingeben')),
+        SnackBar(content: Text(S.of(context)!.enterValidEmail)),
       );
       return;
     }
@@ -65,7 +66,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const Icon(Icons.lock_reset, size: 64, color: Colors.grey),
         const SizedBox(height: 24),
         Text(
-          'Passwort zurücksetzen',
+          S.of(context)!.resetPassword,
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -73,7 +74,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Gib deine E-Mail-Adresse ein und wir senden dir einen Link zum Zurücksetzen deines Passworts.',
+          S.of(context)!.resetPasswordDesc,
           style: TextStyle(color: Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
@@ -93,9 +94,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         TextFormField(
           controller: _emailCtrl,
           keyboardType: TextInputType.emailAddress,
-          decoration: const InputDecoration(
-            labelText: 'E-Mail',
-            prefixIcon: Icon(Icons.email_outlined),
+          decoration: InputDecoration(
+            labelText: S.of(context)!.email,
+            prefixIcon: const Icon(Icons.email_outlined),
           ),
         ),
         const SizedBox(height: 24),
@@ -114,7 +115,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   child: CircularProgressIndicator(
                       strokeWidth: 2, color: Colors.white),
                 )
-              : const Text('Link senden', style: TextStyle(fontSize: 16)),
+              : Text(S.of(context)!.sendLink, style: const TextStyle(fontSize: 16)),
         ),
       ],
     );
@@ -134,14 +135,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Prüfe dein Postfach und folge dem Link zum Zurücksetzen deines Passworts.',
+          S.of(context)!.checkInbox,
           textAlign: TextAlign.center,
           style: TextStyle(color: Colors.grey[600]),
         ),
         const SizedBox(height: 32),
         FilledButton(
           onPressed: () => context.go('/login'),
-          child: const Text('Zurück zum Login'),
+          child: Text(S.of(context)!.backToLogin),
         ),
       ],
     );

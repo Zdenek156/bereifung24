@@ -249,6 +249,7 @@ class ApiClient {
     String? vehicleId,
     double? latitude,
     double? longitude,
+    String? language,
   }) {
     return _dio.post('/ai/chat', data: {
       'message': message,
@@ -257,6 +258,7 @@ class ApiClient {
       if (vehicleId != null) 'vehicleId': vehicleId,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
+      if (language != null) 'language': language,
     });
   }
 

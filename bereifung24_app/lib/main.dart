@@ -4,6 +4,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'core/config/app_config.dart';
 import 'core/router/app_router.dart';
@@ -14,6 +16,31 @@ import 'core/services/deep_link_service.dart';
 import 'core/services/cache_service.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/auth/providers/auth_provider.dart';
+
+/// Provider for the current locale – persisted via SharedPreferences.
+final localeProvider = StateNotifierProvider<LocaleNotifier, Locale>((ref) {
+  return LocaleNotifier();
+});
+
+class LocaleNotifier extends StateNotifier<Locale> {
+  LocaleNotifier() : super(const Locale('de')) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final code = prefs.getString('app_locale');
+    if (code != null) {
+      state = Locale(code);
+    }
+  }
+
+  Future<void> setLocale(Locale locale) async {
+    state = locale;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_locale', locale.languageCode);
+  }
+}
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -128,6 +155,7 @@ class _Bereifung24AppState extends ConsumerState<Bereifung24App> {
 
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     return MaterialApp.router(
       title: 'Bereifung24',
@@ -136,9 +164,10 @@ class _Bereifung24AppState extends ConsumerState<Bereifung24App> {
       darkTheme: B24Theme.dark(),
       themeMode: themeMode,
       routerConfig: router,
-      locale: const Locale('de', 'DE'),
-      supportedLocales: const [Locale('de', 'DE')],
+      locale: locale,
+      supportedLocales: S.supportedLocales,
       localizationsDelegates: const [
+        S.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

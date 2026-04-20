@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class FeedbackScreen extends ConsumerStatefulWidget {
   const FeedbackScreen({super.key});
@@ -25,7 +26,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
   Future<void> _submit() async {
     if (_selectedRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte wähle eine Bewertung')),
+        SnackBar(content: Text(S.of(context)!.selectRating)),
       );
       return;
     }
@@ -45,8 +46,8 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Fehler beim Senden. Bitte versuche es erneut.'),
+          SnackBar(
+            content: Text(S.of(context)!.errorSending),
           ),
         );
       }
@@ -83,7 +84,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Vielen Dank!',
+                  S.of(context)!.thankYou,
                   style: Theme.of(context)
                       .textTheme
                       .headlineSmall
@@ -91,7 +92,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Dein Feedback hilft uns, Bereifung24 noch besser zu machen.',
+                  S.of(context)!.feedbackThankYou,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -101,7 +102,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                 const SizedBox(height: 32),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Zurück'),
+                  child: Text(S.of(context)!.back),
                 ),
               ],
             ),
@@ -111,7 +112,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Feedback geben')),
+      appBar: AppBar(title: Text(S.of(context)!.giveFeedbackTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -119,7 +120,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
           children: [
             // Header
             Text(
-              'Wie zufrieden bist du mit Bereifung24?',
+              S.of(context)!.feedbackQuestion,
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -127,7 +128,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Deine Meinung ist uns wichtig! Bewerte uns und hinterlasse optional einen Kommentar.',
+              S.of(context)!.feedbackSubtitle,
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontSize: 14,
@@ -196,7 +197,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
 
             // Comment field
             Text(
-              'Kommentar (optional)',
+              S.of(context)!.commentOptional,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
@@ -209,7 +210,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
               maxLines: 4,
               maxLength: 500,
               decoration: InputDecoration(
-                hintText: 'Was können wir verbessern? Was gefällt dir gut?',
+                hintText: S.of(context)!.feedbackHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -237,7 +238,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                       )
                     : const Icon(Icons.send_rounded),
                 label: Text(
-                  _isSubmitting ? 'Wird gesendet...' : 'Feedback senden',
+                  _isSubmitting ? S.of(context)!.sending : S.of(context)!.sendFeedback,
                   style: const TextStyle(fontSize: 16),
                 ),
                 style: FilledButton.styleFrom(
@@ -267,11 +268,11 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
 
   String _ratingLabel(int rating) {
     return switch (rating) {
-      1 => 'Sehr schlecht',
-      2 => 'Schlecht',
-      3 => 'Okay',
-      4 => 'Gut',
-      5 => 'Ausgezeichnet',
+      1 => S.of(context)!.ratingVeryBad,
+      2 => S.of(context)!.ratingBad,
+      3 => S.of(context)!.ratingOkay,
+      4 => S.of(context)!.ratingGood,
+      5 => S.of(context)!.ratingExcellent,
       _ => '',
     };
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../../../l10n/app_localizations.dart';
 import '../models/workshop_booking.dart';
 import '../providers/workshop_provider.dart';
 
@@ -57,7 +58,7 @@ class _WorkshopCalendarScreenState
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
                   child: Text(
-                    'Kalender',
+                    S.of(context)!.workshopCalendar,
                     style: Theme.of(context)
                         .textTheme
                         .headlineMedium

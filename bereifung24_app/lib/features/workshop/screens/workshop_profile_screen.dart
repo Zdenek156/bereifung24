@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../models/workshop_profile.dart';
 import '../providers/workshop_provider.dart';
@@ -28,7 +29,7 @@ class WorkshopProfileScreen extends ConsumerWidget {
             children: [
               // Header
               Text(
-                'Profil',
+                S.of(context)!.workshopProfile,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -351,7 +352,7 @@ class _LandingPageShareCard extends ConsumerWidget {
                         );
                       },
                       icon: const Icon(Icons.share, size: 18),
-                      label: const Text('Seite teilen'),
+                      label: Text(S.of(context)!.shareLink),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF0284C7),
                         foregroundColor: Colors.white,
@@ -432,7 +433,7 @@ class _LandingPageShareCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-        title: const Text('QR-Code', textAlign: TextAlign.center),
+        title: Text(S.of(context)!.qrCode, textAlign: TextAlign.center),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -556,7 +557,7 @@ class _VacationSection extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Urlaubszeit hinzufügen'),
+        title: Text(S.of(context)!.addVacation),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class NotificationSettingsScreen extends ConsumerStatefulWidget {
   const NotificationSettingsScreen({super.key});
@@ -56,8 +57,8 @@ class _NotificationSettingsScreenState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Einstellungen gespeichert'),
+          SnackBar(
+              content: Text(S.of(context)!.settingsSaved),
               backgroundColor: Colors.green),
         );
       }
@@ -77,7 +78,7 @@ class _NotificationSettingsScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Benachrichtigungen')),
+      appBar: AppBar(title: Text(S.of(context)!.notifications)),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
@@ -98,22 +99,22 @@ class _NotificationSettingsScreenState
                 const SizedBox(height: 16),
                 _NotificationTile(
                   icon: Icons.alarm,
-                  title: 'Terminerinnerung',
-                  subtitle: 'Erinnerung 24h vor deinem Termin',
+                  title: S.of(context)!.appointmentReminder,
+                  subtitle: S.of(context)!.appointmentReminderDesc,
                   value: _reminder,
                   onChanged: (v) => setState(() => _reminder = v),
                 ),
                 _NotificationTile(
                   icon: Icons.ac_unit,
-                  title: 'Saison-Hinweis',
-                  subtitle: 'Hinweis zum Reifenwechsel bei Saisonbeginn',
+                  title: S.of(context)!.seasonHint,
+                  subtitle: S.of(context)!.seasonHintDesc,
                   value: _season,
                   onChanged: (v) => setState(() => _season = v),
                 ),
                 _NotificationTile(
                   icon: Icons.update,
-                  title: 'Buchungs-Updates',
-                  subtitle: 'Statusänderungen deiner Buchungen',
+                  title: S.of(context)!.bookingUpdates,
+                  subtitle: S.of(context)!.bookingUpdatesDesc,
                   value: _bookingUpdate,
                   onChanged: (v) => setState(() => _bookingUpdate = v),
                 ),

@@ -69,6 +69,7 @@ export interface AdvisorContext {
   workshops?: WorkshopContext[]
   bookingHistory?: BookingContext[]
   platform?: 'app' | 'web'
+  language?: string
 }
 
 export interface ChatMessage {
@@ -79,13 +80,24 @@ export interface ChatMessage {
 // ── System Prompt ──
 
 function buildSystemPrompt(context: AdvisorContext): string {
+  const langMap: Record<string, { name: string; instruction: string }> = {
+    de: { name: 'Deutsch', instruction: 'Du antwortest IMMER und AUSSCHLIESSLICH auf DEUTSCH.' },
+    en: { name: 'English', instruction: 'You ALWAYS respond EXCLUSIVELY in ENGLISH.' },
+    tr: { name: 'Türkçe', instruction: 'Her zaman YALNIZCA TÜRKÇE yanıt ver.' },
+    ru: { name: 'Русский', instruction: 'Всегда отвечай ТОЛЬКО на РУССКОМ языке.' },
+    it: { name: 'Italiano', instruction: 'Rispondi SEMPRE ed ESCLUSIVAMENTE in ITALIANO.' },
+    fr: { name: 'Français', instruction: 'Tu réponds TOUJOURS et EXCLUSIVEMENT en FRANÇAIS.' },
+    es: { name: 'Español', instruction: 'Responde SIEMPRE y EXCLUSIVAMENTE en ESPAÑOL.' },
+  }
+  const lang = langMap[context.language || 'de'] || langMap['de']
+
   return `Du bist Rollo, der KI-Reifen-Berater von Bereifung24. Du arbeitest seit 15 Jahren in der Branche und liebst Reifen. Stell dir vor, ein Kunde kommt in deine Werkstatt und fragt dich um Rat — genau so redest du: natürlich, locker, persönlich, wie ein echter Kumpel der sich mit Reifen auskennt.
 
 ## SPRACHE — ABSOLUT WICHTIG
-- Du antwortest IMMER und AUSSCHLIESSLICH auf DEUTSCH.
-- NIEMALS auf Englisch antworten, auch nicht teilweise.
-- Kein englischer Prefix wie "TI:", "Thinking:", "Note:" oder ähnliches.
-- Beginne deine Antwort DIREKT mit dem deutschen Text für den Kunden.
+- ${lang.instruction}
+- NIEMALS in einer anderen Sprache antworten, auch nicht teilweise.
+- Kein Prefix wie "TI:", "Thinking:", "Note:" oder ähnliches.
+- Beginne deine Antwort DIREKT mit dem Text für den Kunden in ${lang.name}.
 
 ## So redest du
 - Du duzt den Kunden und bist freundlich, aber nicht übertrieben

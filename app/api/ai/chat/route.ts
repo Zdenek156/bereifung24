@@ -9,14 +9,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Nicht authentifiziert' }, { status: 401 })
   }
 
-  let body: { message?: string; chatHistory?: ChatMessage[]; vehicleId?: string; latitude?: number; longitude?: number; platform?: 'app' | 'web' }
+  let body: { message?: string; chatHistory?: ChatMessage[]; vehicleId?: string; latitude?: number; longitude?: number; platform?: 'app' | 'web'; language?: string }
   try {
     body = await request.json()
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const { message, chatHistory, vehicleId, latitude, longitude, platform } = body
+  const { message, chatHistory, vehicleId, latitude, longitude, platform, language } = body
 
   if (!message?.trim()) {
     return NextResponse.json({ error: 'Message required' }, { status: 400 })
@@ -238,6 +238,7 @@ export async function POST(request: NextRequest) {
       workshops,
       bookingHistory,
       platform: platform || 'app',
+      language: language || 'de',
     }
 
     // ── Send to Gemini ──

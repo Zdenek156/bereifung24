@@ -6,6 +6,7 @@ import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/stripe_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class BookingFlowScreen extends ConsumerStatefulWidget {
   final String workshopId;
@@ -211,7 +212,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           ? AppBar(
               title: Text(_currentStep < 4
                   ? 'Schritt ${_currentStep + 1} von 4'
-                  : 'Zahlung'),
+                  : S.of(context)!.payment),
               leading: IconButton(
                 icon: const Icon(Icons.close),
                 onPressed: () => _showCancelDialog(),
@@ -265,7 +266,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
-                          child: const Text('Zurück'),
+                          child: Text(S.of(context)!.back),
                         ),
                       ),
                     if (_currentStep > 0 && _currentStep < 4)
@@ -299,7 +300,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                                     ? 'Jetzt bezahlen'
                                     : _currentStep == 3
                                         ? 'Buchen'
-                                        : 'Weiter',
+                                        : S.of(context)!.next,
                                 style: const TextStyle(fontSize: 16),
                               ),
                       ),
@@ -337,51 +338,51 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Service wählen',
+        Text(S.of(context)!.selectService,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('Was möchtest du machen lassen?',
+        Text(S.of(context)!.whatService,
             style: TextStyle(color: Colors.grey[600])),
         const SizedBox(height: 24),
         _ServiceOption(
           icon: Icons.tire_repair,
-          title: 'Reifenwechsel',
-          subtitle: 'Sommer-/Winterreifen wechseln',
+          title: S.of(context)!.tireChange,
+          subtitle: S.of(context)!.tireChangeDesc,
           selected: _serviceType == 'TIRE_CHANGE',
           onTap: () => setState(() => _serviceType = 'TIRE_CHANGE'),
         ),
         const SizedBox(height: 12),
         _ServiceOption(
           icon: Icons.autorenew,
-          title: 'Räderwechsel',
-          subtitle: 'Kompletträder wechseln',
+          title: S.of(context)!.wheelChange,
+          subtitle: S.of(context)!.wheelChangeDesc,
           selected: _serviceType == 'WHEEL_CHANGE',
           onTap: () => setState(() => _serviceType = 'WHEEL_CHANGE'),
         ),
         const SizedBox(height: 12),
         _ServiceOption(
           icon: Icons.build,
-          title: 'Reifenreparatur',
-          subtitle: 'Reifen reparieren lassen',
+          title: S.of(context)!.tireRepair,
+          subtitle: S.of(context)!.tireRepairDesc,
           selected: _serviceType == 'TIRE_REPAIR',
           onTap: () => setState(() => _serviceType = 'TIRE_REPAIR'),
         ),
         const SizedBox(height: 12),
         _ServiceOption(
           icon: Icons.two_wheeler,
-          title: 'Motorrad-Reifenwechsel',
-          subtitle: 'Motorradreifen wechseln',
+          title: S.of(context)!.motorcycleTireChange,
+          subtitle: S.of(context)!.motorcycleTireChangeDesc,
           selected: _serviceType == 'MOTORCYCLE_TIRE',
           onTap: () => setState(() => _serviceType = 'MOTORCYCLE_TIRE'),
         ),
         const SizedBox(height: 12),
         _ServiceOption(
           icon: Icons.straighten,
-          title: 'Achsvermessung',
-          subtitle: 'Spur und Sturz einstellen',
+          title: S.of(context)!.axleAlignment,
+          subtitle: S.of(context)!.axleAlignmentDesc,
           selected: _serviceType == 'ALIGNMENT_BOTH',
           onTap: () => setState(() => _serviceType = 'ALIGNMENT_BOTH'),
         ),
@@ -416,7 +417,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Fahrzeug-Daten',
+        Text(S.of(context)!.vehicleData,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
@@ -516,8 +517,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         ],
 
         TextField(
-          decoration: const InputDecoration(
-            labelText: 'Kennzeichen *',
+          decoration: InputDecoration(
+            labelText: S.of(context)!.licensePlate,
             hintText: 'z.B. M-AB 1234',
             prefixIcon: Icon(Icons.directions_car),
           ),
@@ -530,8 +531,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         ),
         const SizedBox(height: 16),
         TextField(
-          decoration: const InputDecoration(
-            labelText: 'Reifengröße (optional)',
+          decoration: InputDecoration(
+            labelText: S.of(context)!.tireSizeOptional,
             hintText: 'z.B. 205/55 R16',
             prefixIcon: Icon(Icons.tire_repair),
           ),
@@ -550,7 +551,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Termin wählen',
+        Text(S.of(context)!.selectDate,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
@@ -635,7 +636,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Zusammenfassung',
+        Text(S.of(context)!.summary,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge
@@ -659,8 +660,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         TextField(
           controller: _notesCtrl,
           maxLines: 3,
-          decoration: const InputDecoration(
-            labelText: 'Anmerkungen (optional)',
+          decoration: InputDecoration(
+            labelText: S.of(context)!.notesOptional,
             hintText: 'z.B. Reifen liegen im Kofferraum',
             alignLabelWithHint: true,
           ),
@@ -674,7 +675,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Zahlung',
+        Text(S.of(context)!.payment,
             style: Theme.of(context)
                 .textTheme
                 .titleLarge

@@ -9,6 +9,7 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/services/stripe_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../search/presentation/screens/search_screen.dart';
 import '../../../search/presentation/screens/workshop_detail_screen.dart';
 import '../../../vehicles/presentation/screens/vehicles_screen.dart';
@@ -109,41 +110,39 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
   bool _bookingComplete = false;
   final _customerNotesController = TextEditingController();
 
-  static const _serviceLabels = {
-    'TIRE_CHANGE': 'Reifenwechsel',
-    'WHEEL_CHANGE': 'Räderwechsel',
-    'TIRE_REPAIR': 'Reifenreparatur',
-    'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
-    'ALIGNMENT_BOTH': 'Achsvermessung',
-    'CLIMATE_SERVICE': 'Klimaservice',
+  static Map<String, String> _serviceLabelsOf(BuildContext context) => {
+    'TIRE_CHANGE': S.of(context)!.tireChange,
+    'WHEEL_CHANGE': S.of(context)!.wheelChange,
+    'TIRE_REPAIR': S.of(context)!.tireRepair,
+    'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
+    'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
+    'CLIMATE_SERVICE': S.of(context)!.climateService,
   };
 
-  static const _packageLabels = <String, String>{
-    // TIRE_REPAIR
-    'foreign_object': 'Fremdkörper-Reparatur',
-    'valve_damage': 'Ventilschaden-Reparatur',
-    // ALIGNMENT_BOTH
-    'measurement_both': 'Vermessung — Beide Achsen',
-    'measurement_front': 'Vermessung — Vorderachse',
-    'measurement_rear': 'Vermessung — Hinterachse',
-    'adjustment_both': 'Einstellung — Beide Achsen',
-    'adjustment_front': 'Einstellung — Vorderachse',
-    'adjustment_rear': 'Einstellung — Hinterachse',
-    'full_service': 'Komplett mit Inspektion',
-    // CLIMATE_SERVICE
-    'check': 'Basis-Check',
-    'basic': 'Standard-Service',
-    'comfort': 'Komfort-Service',
-    'premium': 'Premium-Service',
+  static Map<String, String> _packageLabelsOf(BuildContext context) => {
+    'foreign_object': S.of(context)!.pkgForeignObject,
+    'valve_damage': S.of(context)!.pkgValveDamage,
+    'measurement_both': S.of(context)!.pkgMeasureBoth,
+    'measurement_front': S.of(context)!.pkgMeasureFront,
+    'measurement_rear': S.of(context)!.pkgMeasureRear,
+    'adjustment_both': S.of(context)!.pkgAdjustBoth,
+    'adjustment_front': S.of(context)!.pkgAdjustFront,
+    'adjustment_rear': S.of(context)!.pkgAdjustRear,
+    'full_service': S.of(context)!.pkgFullService,
+    'check': S.of(context)!.pkgClimateCheck,
+    'basic': S.of(context)!.pkgBasicService,
+    'comfort': S.of(context)!.pkgComfortService,
+    'premium': S.of(context)!.pkgPremiumService,
   };
 
   /// Resolves the display name: package label → fallback to generic service label
-  String get _resolvedServiceName {
+  String _resolvedServiceName(BuildContext context) {
     final pkg = widget.selectedPackage;
-    if (pkg != null && _packageLabels.containsKey(pkg)) {
-      return _packageLabels[pkg]!;
+    final pkgLabels = _packageLabelsOf(context);
+    if (pkg != null && pkgLabels.containsKey(pkg)) {
+      return pkgLabels[pkg]!;
     }
-    return _serviceLabels[widget.serviceType] ?? 'Reifenwechsel';
+    return _serviceLabelsOf(context)[widget.serviceType] ?? S.of(context)!.tireChange;
   }
 
   /// For WHEEL_CHANGE: compute the actual base price by subtracting add-ons from searchBasePrice
@@ -299,7 +298,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
         'serviceType': widget.serviceType ?? 'WHEEL_CHANGE',
         if (widget.selectedPackage != null)
           'serviceSubtype': widget.selectedPackage,
-        'serviceDisplayName': _resolvedServiceName,
+        'serviceDisplayName': _resolvedServiceName(context),
         'vehicleId': vehicle.id,
         'date': widget.date,
         'time': widget.time,
@@ -424,7 +423,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Buchungsübersicht'),
+        title: Text(S.of(context)!.bookingOverview),
       ),
       body: workshopAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -469,12 +468,12 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 // ── Service ──
                 _SummaryCard(
                   icon: Icons.miscellaneous_services,
-                  title: 'Service',
+                  title: S.of(context)!.service,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _resolvedServiceName,
+                        _resolvedServiceName(context),
                         style: const TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 15),
                       ),
@@ -653,9 +652,9 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           spacing: 6,
                           runSpacing: 4,
                           children: [
-                            if (widget.withBalancing) _OptionChip('Auswuchten'),
-                            if (widget.withStorage) _OptionChip('Einlagerung'),
-                            if (widget.withWashing) _OptionChip('Waschen'),
+                            if (widget.withBalancing) _OptionChip(S.of(context)!.balancingX4),
+                            if (widget.withStorage) _OptionChip(S.of(context)!.storage),
+                            if (widget.withWashing) _OptionChip(S.of(context)!.washing),
                           ],
                         ),
                       ],
@@ -710,7 +709,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 // ── Customer Notes ──
                 _SummaryCard(
                   icon: Icons.edit_note,
-                  title: 'Nachricht an die Werkstatt (optional)',
+                  title: S.of(context)!.messageToWorkshop,
                   child: TextField(
                     controller: _customerNotesController,
                     maxLines: 3,
@@ -811,7 +810,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         if (widget.serviceType == 'TIRE_CHANGE' &&
                             widget.tireTotalPrice == null)
                           _PriceLine(
-                            'Montage',
+                            S.of(context)!.montageLabel,
                             widget.searchBasePrice ??
                                 (pricing?.basePrice ??
                                     pricing?.tireChangePricePKW ??
@@ -822,25 +821,25 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           // WHEEL_CHANGE: searchBasePrice includes add-ons, show breakdown
                           _PriceLine(
                             widget.tireTotalPrice != null
-                                ? 'Montage'
-                                : 'Räderwechsel',
+                                ? S.of(context)!.montageLabel
+                                : S.of(context)!.wheelChange,
                             _wheelChangeBasePrice(pricing),
                           ),
                           if (widget.withBalancing &&
                               pricing?.balancingPrice != null)
-                            _PriceLine('Auswuchten (×4)',
+                            _PriceLine(S.of(context)!.balancingX4,
                                 pricing!.balancingPrice! * 4),
                           if (widget.withStorage &&
                               pricing?.storagePrice != null)
-                            _PriceLine('Einlagerung', pricing!.storagePrice!),
+                            _PriceLine(S.of(context)!.storage, pricing!.storagePrice!),
                           if (widget.withWashing &&
                               pricing?.washingPrice != null)
-                            _PriceLine('Waschen', pricing!.washingPrice!),
+                            _PriceLine(S.of(context)!.washing, pricing!.washingPrice!),
                         ] else ...[
                           _PriceLine(
                             widget.tireTotalPrice != null
-                                ? 'Montage'
-                                : _resolvedServiceName,
+                                ? S.of(context)!.montageLabel
+                                : _resolvedServiceName(context),
                             widget.searchBasePrice ??
                                 (widget.serviceType == 'WHEEL_CHANGE'
                                     ? (pricing?.basePrice ??
@@ -853,27 +852,27 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           ),
                           if (widget.withBalancing &&
                               pricing?.balancingPrice != null)
-                            _PriceLine('Auswuchten (×4)',
+                            _PriceLine(S.of(context)!.balancingX4,
                                 pricing!.balancingPrice! * 4),
                           if (widget.withStorage &&
                               pricing?.storagePrice != null)
-                            _PriceLine('Einlagerung', pricing!.storagePrice!),
+                            _PriceLine(S.of(context)!.storage, pricing!.storagePrice!),
                           if (widget.withWashing &&
                               pricing?.washingPrice != null)
-                            _PriceLine('Waschen', pricing!.washingPrice!),
+                            _PriceLine(S.of(context)!.washing, pricing!.washingPrice!),
                         ],
                         if (widget.disposalFeeApplied != null &&
                             widget.disposalFeeApplied! > 0)
-                          _PriceLine('Entsorgung', widget.disposalFeeApplied!),
+                          _PriceLine(S.of(context)!.disposal, widget.disposalFeeApplied!),
                         if (widget.runFlatSurchargeApplied != null &&
                             widget.runFlatSurchargeApplied! > 0)
-                          _PriceLine('RunFlat-Zuschlag',
+                          _PriceLine(S.of(context)!.runflatSurcharge,
                               widget.runFlatSurchargeApplied!),
                         const Divider(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Gesamtpreis',
+                            Text(S.of(context)!.totalPrice,
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 17)),
                             Text(
@@ -896,7 +895,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 if (total > 0) ...[
                   _SummaryCard(
                     icon: Icons.payment,
-                    title: 'Akzeptierte Zahlungsmethoden',
+                    title: S.of(context)!.acceptedPaymentMethods,
                     child: Column(
                       children: [
                         _PaymentInfoRow(
@@ -910,7 +909,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                               _PaymentLogo('amex'),
                             ],
                           ),
-                          label: 'Kreditkarte',
+                          label: S.of(context)!.creditCard,
                         ),
                         const Divider(height: 1),
                         _PaymentInfoRow(
@@ -953,7 +952,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       Icon(Icons.lock, size: 13, color: Colors.green[700]),
                       const SizedBox(width: 4),
                       Text(
-                        'Verschlüsselte & sichere Zahlung über Stripe',
+                        S.of(context)!.encryptedPayment,
                         style:
                             TextStyle(fontSize: 11, color: Colors.green[700]),
                       ),
@@ -972,10 +971,10 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     text: TextSpan(
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       children: [
-                        const TextSpan(
-                            text: 'Mit der Buchung stimmst du unseren '),
                         TextSpan(
-                          text: 'AGBs',
+                            text: S.of(context)!.bookingAgreementPrefix),
+                        TextSpan(
+                          text: S.of(context)!.termsLink,
                           style: const TextStyle(
                             color: Color(0xFF0284C7),
                             decoration: TextDecoration.underline,
@@ -983,9 +982,9 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           recognizer: TapGestureRecognizer()
                             ..onTap = () => context.push('/profile/agb'),
                         ),
-                        const TextSpan(text: ' und der '),
+                        TextSpan(text: S.of(context)!.andThe),
                         TextSpan(
-                          text: 'Datenschutzerklärung',
+                          text: S.of(context)!.privacyPolicy,
                           style: const TextStyle(
                             color: Color(0xFF0284C7),
                             decoration: TextDecoration.underline,
@@ -994,7 +993,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                             ..onTap =
                                 () => context.push('/profile/datenschutz'),
                         ),
-                        const TextSpan(text: ' zu.'),
+                        TextSpan(text: S.of(context)!.agreementSuffix),
                       ],
                     ),
                   ),
@@ -1020,10 +1019,10 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                         : const Icon(Icons.check_circle_outline),
                     label: Text(
                       _isSubmitting
-                          ? 'Wird gebucht...'
+                          ? S.of(context)!.bookingInProgress
                           : total > 0
-                              ? 'Jetzt buchen & bezahlen – ${total.toStringAsFixed(2)} €'
-                              : 'Jetzt verbindlich buchen',
+                              ? S.of(context)!.bookAndPay(total.toStringAsFixed(2))
+                              : S.of(context)!.bookBinding,
                       style: const TextStyle(fontSize: 16),
                     ),
                     style: FilledButton.styleFrom(

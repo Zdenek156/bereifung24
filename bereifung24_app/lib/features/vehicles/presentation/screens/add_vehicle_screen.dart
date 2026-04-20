@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/vehicle.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../utils/vehicle_doc_parser.dart';
 import '../../utils/tire_size_parser.dart';
 import '../widgets/interactive_tire_selector.dart';
@@ -399,9 +401,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       padding: const EdgeInsets.fromLTRB(16, 12, 8, 0),
                       child: Row(
                         children: [
-                          const Text(
-                            'Hersteller wählen',
-                            style: TextStyle(
+                          Text(
+                            S.of(context)!.selectManufacturer,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
                             ),
@@ -420,7 +422,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                       child: TextField(
                         autofocus: false,
                         decoration: InputDecoration(
-                          hintText: 'Suchen...',
+                          hintText: S.of(context)!.searchHint,
                           prefixIcon: const Icon(Icons.search, size: 20),
                           isDense: true,
                           contentPadding: const EdgeInsets.symmetric(
@@ -443,7 +445,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                           final isSelected = brand == _makeCtrl.text;
                           return ListTile(
                             title: Text(
-                              brand,
+                              brand == 'Sonstige' ? S.of(context)!.otherBrand : brand,
                               style: TextStyle(
                                 fontWeight: isSelected
                                     ? FontWeight.w700
@@ -479,13 +481,13 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     final f = sel.frontSpec;
     if (f == null || f['width'] == null) return null; // No tire data = OK
     if (f['loadIndex'] == null || f['speedRating'] == null) {
-      return '$label: Tragfähigkeit und Geschwindigkeitsindex sind Pflichtfelder';
+      return S.of(context)!.tireValidationError(label);
     }
     if (sel.hasDifferentSizes && sel.rearSpec != null) {
       final r = sel.rearSpec!;
       if (r['width'] != null &&
           (r['loadIndex'] == null || r['speedRating'] == null)) {
-        return '$label (Hinterachse): Tragfähigkeit und Geschwindigkeitsindex sind Pflichtfelder';
+        return S.of(context)!.tireValidationErrorRear(label);
       }
     }
     return null;
@@ -496,9 +498,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
     // Validate tire specs have load/speed index
     final tireErrors = [
-      _validateTireSelection(_summer, 'Sommerreifen'),
-      _validateTireSelection(_winter, 'Winterreifen'),
-      _validateTireSelection(_allSeason, 'Ganzjahresreifen'),
+      _validateTireSelection(_summer, S.of(context)!.summerTiresLabel),
+      _validateTireSelection(_winter, S.of(context)!.winterTiresLabel),
+      _validateTireSelection(_allSeason, S.of(context)!.allSeasonTiresLabel),
     ].whereType<String>().toList();
 
     if (tireErrors.isNotEmpty) {
@@ -557,8 +559,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
               content: Text(_isEditing
-                  ? 'Fahrzeug aktualisiert'
-                  : 'Fahrzeug hinzugefügt'),
+                  ? S.of(context)!.vehicleUpdated
+                  : S.of(context)!.vehicleAdded),
               backgroundColor: Colors.green),
         );
         Navigator.pop(context);
@@ -567,7 +569,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text('Fehler beim Speichern: $e'),
+              content: Text('${S.of(context)!.saveError}: $e'),
               backgroundColor: Colors.red),
         );
       }
@@ -576,12 +578,34 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     }
   }
 
+  String? _localizedVehicleType(BuildContext context, String type) {
+    switch (type) {
+      case 'CAR': return S.of(context)!.vehicleTypeCar;
+      case 'MOTORCYCLE': return S.of(context)!.vehicleTypeMotorcycle;
+      case 'TRAILER': return S.of(context)!.vehicleTypeTrailer;
+      default: return null;
+    }
+  }
+
+  String? _localizedFuelType(BuildContext context, String type) {
+    switch (type) {
+      case 'PETROL': return S.of(context)!.fuelPetrol;
+      case 'DIESEL': return S.of(context)!.fuelDiesel;
+      case 'ELECTRIC': return S.of(context)!.fuelElectric;
+      case 'HYBRID': return S.of(context)!.fuelHybrid;
+      case 'PLUGIN_HYBRID': return S.of(context)!.fuelPluginHybrid;
+      case 'LPG': return S.of(context)!.fuelLpg;
+      case 'CNG': return S.of(context)!.fuelCng;
+      default: return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
           title:
-              Text(_isEditing ? 'Fahrzeug bearbeiten' : 'Fahrzeug hinzufügen')),
+              Text(_isEditing ? S.of(context)!.editVehicle : S.of(context)!.addVehicleTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -590,7 +614,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Vehicle Type ──
-              _SectionLabel('Fahrzeugtyp'),
+              _SectionLabel(S.of(context)!.vehicleType),
               const SizedBox(height: 8),
               Row(
                 children: _vehicleTypes.map((t) {
@@ -645,7 +669,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                                       ? B24Colors.primaryBlue
                                       : Colors.grey[600]),
                               const SizedBox(height: 4),
-                              Text(t.$2,
+                              Text(_localizedVehicleType(context, t.$1) ?? t.$2,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: selected
@@ -694,7 +718,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
               // ── Make ──
               if (_vehicleType == 'CAR') ...[
-                _SectionLabel('Hersteller *'),
+                _SectionLabel(S.of(context)!.manufacturer),
                 const SizedBox(height: 8),
                 Builder(builder: (context) {
                   // Include scanned brand in dropdown if not already in list
@@ -707,13 +731,13 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     initialValue:
                         brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
                     validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Pflichtfeld' : null,
+                        (v == null || v.isEmpty) ? S.of(context)!.requiredField : null,
                     builder: (fieldState) {
                       return InkWell(
                         onTap: () => _showBrandPicker(context, brands),
                         child: InputDecorator(
                           decoration: InputDecoration(
-                            hintText: 'Hersteller wählen',
+                            hintText: S.of(context)!.selectManufacturer,
                             errorText: fieldState.errorText,
                             suffixIcon: const Icon(Icons.arrow_drop_down),
                           ),
@@ -729,12 +753,12 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 TextFormField(
                   controller: _makeCtrl,
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Hersteller *',
-                    hintText: 'z.B. Yamaha, Kawasaki',
+                  decoration: InputDecoration(
+                    labelText: S.of(context)!.manufacturer,
+                    hintText: S.of(context)!.manufacturerHint,
                   ),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                 ),
               ],
               const SizedBox(height: 16),
@@ -743,12 +767,12 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               TextFormField(
                 controller: _modelCtrl,
                 textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(
-                  labelText: 'Modell *',
-                  hintText: 'z.B. Golf, 3er, MT-07',
+                decoration: InputDecoration(
+                  labelText: S.of(context)!.model,
+                  hintText: S.of(context)!.hintModel,
                 ),
                 validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                    v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
               ),
               const SizedBox(height: 16),
 
@@ -756,15 +780,15 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               TextFormField(
                 controller: _yearCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Baujahr *',
-                  hintText: 'z.B. 2022',
+                decoration: InputDecoration(
+                  labelText: S.of(context)!.year,
+                  hintText: S.of(context)!.hintYear,
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                  if (v == null || v.trim().isEmpty) return S.of(context)!.requiredField;
                   final y = int.tryParse(v);
                   if (y == null || y < 1980 || y > DateTime.now().year + 1) {
-                    return 'Ungültiges Jahr';
+                    return S.of(context)!.invalidYear;
                   }
                   return null;
                 },
@@ -775,12 +799,12 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               TextFormField(
                 controller: _plateCtrl,
                 textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(
-                  labelText: 'Kennzeichen *',
-                  hintText: 'z.B. M-AB 1234',
+                decoration: InputDecoration(
+                  labelText: S.of(context)!.licensePlate,
+                  hintText: S.of(context)!.hintLicensePlate,
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                  if (v == null || v.trim().isEmpty) return S.of(context)!.requiredField;
                   return null;
                 },
               ),
@@ -790,15 +814,15 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               TextFormField(
                 controller: _vinCtrl,
                 textCapitalization: TextCapitalization.characters,
-                decoration: const InputDecoration(
-                  labelText: 'Fahrgestellnummer (VIN)',
-                  hintText: '17 Zeichen',
+                decoration: InputDecoration(
+                  labelText: S.of(context)!.vinNumber,
+                  hintText: S.of(context)!.vinHint,
                 ),
               ),
               const SizedBox(height: 24),
 
               // ── TÜV-Termin ──
-              _SectionLabel('TÜV-Termin'),
+              _SectionLabel(S.of(context)!.inspectionDate),
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -806,7 +830,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     child: DropdownButtonFormField<int>(
                       value: _inspectionMonth,
                       isExpanded: true,
-                      decoration: const InputDecoration(hintText: 'Monat'),
+                      decoration: InputDecoration(hintText: S.of(context)!.monthLabel),
                       items: List.generate(
                           12,
                           (i) => DropdownMenuItem(
@@ -819,7 +843,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     child: DropdownButtonFormField<int>(
                       value: _inspectionYear,
                       isExpanded: true,
-                      decoration: const InputDecoration(hintText: 'Jahr'),
+                      decoration: InputDecoration(hintText: S.of(context)!.yearLabel),
                       items: List.generate(
                           4,
                           (i) => DropdownMenuItem(
@@ -833,11 +857,11 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               const SizedBox(height: 12),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('An TÜV-Termin erinnern'),
+                title: Text(S.of(context)!.inspectionReminder),
                 subtitle: Text(
                   _inspectionReminder
-                      ? '$_inspectionReminderDays Tage vorher'
-                      : 'Keine Erinnerung',
+                      ? S.of(context)!.daysBefore(_inspectionReminderDays.toString())
+                      : S.of(context)!.noReminder,
                   style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
                 value: _inspectionReminder,
@@ -848,10 +872,10 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 DropdownButtonFormField<int>(
                   value: _inspectionReminderDays,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Erinnerung'),
-                  items: const [
-                    DropdownMenuItem(value: 7, child: Text('7 Tage vorher')),
-                    DropdownMenuItem(value: 30, child: Text('30 Tage vorher')),
+                  decoration: InputDecoration(labelText: S.of(context)!.reminderLabel),
+                  items: [
+                    DropdownMenuItem(value: 7, child: Text(S.of(context)!.daysBeforeReminder7)),
+                    DropdownMenuItem(value: 30, child: Text(S.of(context)!.daysBeforeReminder30)),
                   ],
                   onChanged: (v) =>
                       setState(() => _inspectionReminderDays = v ?? 30),
@@ -862,16 +886,16 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 const SizedBox(height: 24),
 
                 // ── Fuel Type ──
-                _SectionLabel('Kraftstoffart'),
+                _SectionLabel(S.of(context)!.fuelTypeLabel),
                 const SizedBox(height: 8),
                 DropdownButtonFormField<String>(
                   value: _fuelType,
                   isExpanded: true,
                   decoration:
-                      const InputDecoration(hintText: 'Kraftstoff wählen'),
+                      InputDecoration(hintText: S.of(context)!.selectFuel),
                   items: _fuelTypes
                       .map((f) =>
-                          DropdownMenuItem(value: f.$1, child: Text(f.$2)))
+                          DropdownMenuItem(value: f.$1, child: Text(_localizedFuelType(context, f.$1) ?? f.$2)))
                       .toList(),
                   onChanged: (v) => setState(() => _fuelType = v),
                 ),
@@ -880,9 +904,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               const SizedBox(height: 28),
 
               // ── Tire Specs ──
-              _SectionLabel('Reifengrößen'),
+              _SectionLabel(S.of(context)!.tireSizes),
               const SizedBox(height: 4),
-              Text('Gib die Reifengrößen deines Fahrzeugs ein.',
+              Text(S.of(context)!.tireSizesDesc,
                   style: TextStyle(color: Colors.grey[600], fontSize: 13)),
               const SizedBox(height: 12),
 
@@ -894,10 +918,10 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   children: [
                     TabBar(
                       onTap: (i) => setState(() => _tireTabIndex = i),
-                      tabs: const [
-                        Tab(text: '☀️ Sommer'),
-                        Tab(text: '❄️ Winter'),
-                        Tab(text: '🌦️ Ganzjahr'),
+                      tabs: [
+                        Tab(text: S.of(context)!.tireTabSummer),
+                        Tab(text: S.of(context)!.tireTabWinter),
+                        Tab(text: S.of(context)!.tireTabAllSeason),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -942,7 +966,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text('Speichern', style: TextStyle(fontSize: 16)),
+                    : Text(S.of(context)!.save, style: const TextStyle(fontSize: 16)),
               ),
 
               const SizedBox(height: 24),
@@ -984,22 +1008,22 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   color: Colors.white, size: 24),
             ),
             const SizedBox(width: 14),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Fahrzeugschein scannen',
-                    style: TextStyle(
+                    S.of(context)!.scanVehicleDoc,
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'Alle Fahrzeugdaten automatisch ausfüllen',
-                    style: TextStyle(
+                    S.of(context)!.autoFillData,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
                     ),
@@ -1042,7 +1066,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   ),
                 ),
                 Text(
-                  '${r.fieldsFound} Felder erkannt und übernommen',
+                  S.of(context)!.fieldsRecognized(r.fieldsFound),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -1098,10 +1122,10 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             children: [
               const Icon(Icons.tire_repair, color: Color(0xFF0284C7), size: 22),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Reifengröße aus Fahrzeugschein erkannt',
-                  style: TextStyle(
+                  S.of(context)!.tireSizeRecognized,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: Color(0xFF0284C7),
@@ -1130,8 +1154,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
           ],
           const SizedBox(height: 4),
           Text(
-            'Diese Größe ist die zugelassene Bereifung laut Fahrzeugschein. '
-            'Drücke "Übernehmen", um sie einzutragen.',
+            S.of(context)!.tireSizeApplyHint,
             style: TextStyle(fontSize: 11, color: Colors.grey[700]),
           ),
           const SizedBox(height: 10),
@@ -1140,8 +1163,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             child: FilledButton.icon(
               onPressed: _applyScannedTireSizes,
               icon: const Icon(Icons.check, size: 18),
-              label: const Text('Übernehmen',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+              label: Text(S.of(context)!.apply,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF0284C7),
                 padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1179,7 +1202,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Reifengröße nicht erkannt',
+                  S.of(context)!.tireSizeNotRecognized,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -1202,8 +1225,7 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     color: Colors.orange.shade900)),
           const SizedBox(height: 4),
           Text(
-            'Die gescannte Reifengröße stimmt nicht mit den verfügbaren Werten überein. '
-            'Bitte scanne den Fahrzeugschein erneut oder gib die Reifengröße von Hand ein.',
+            S.of(context)!.tireSizeInvalidHint,
             style: TextStyle(fontSize: 11, color: Colors.grey[700]),
           ),
           const SizedBox(height: 10),
@@ -1212,8 +1234,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
             child: OutlinedButton.icon(
               onPressed: _openDocScanner,
               icon: const Icon(Icons.document_scanner, size: 18),
-              label: const Text('Erneut scannen',
-                  style: TextStyle(fontWeight: FontWeight.w700)),
+              label: Text(S.of(context)!.scanAgain,
+                  style: const TextStyle(fontWeight: FontWeight.w700)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.orange.shade700,
                 side: BorderSide(color: Colors.orange.shade300),
@@ -1228,20 +1250,10 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
     );
   }
 
-  String _monthName(int m) => const [
-        'Januar',
-        'Februar',
-        'März',
-        'April',
-        'Mai',
-        'Juni',
-        'Juli',
-        'August',
-        'September',
-        'Oktober',
-        'November',
-        'Dezember',
-      ][m - 1];
+  String _monthName(int m) {
+    final locale = Localizations.localeOf(context).languageCode;
+    return DateFormat('MMMM', locale).format(DateTime(2000, m));
+  }
 }
 
 // ── Section label ──
@@ -1313,8 +1325,8 @@ class _TireTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMoto = vehicleType == 'MOTORCYCLE';
-    final frontLabel = isMoto ? 'Vorderrad' : 'Vorderachse';
-    final rearLabel = isMoto ? 'Hinterrad' : 'Hinterachse';
+    final frontLabel = isMoto ? S.of(context)!.frontWheel : S.of(context)!.frontAxleFull;
+    final rearLabel = isMoto ? S.of(context)!.rearWheel : S.of(context)!.rearAxleFull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1323,8 +1335,8 @@ class _TireTabContent extends StatelessWidget {
           contentPadding: EdgeInsets.zero,
           title: Text(
             isMoto
-                ? 'Unterschiedliche Vorder-/Hinterreifen'
-                : 'Mischbereifung (unterschiedliche Größen)',
+                ? S.of(context)!.differentFrontRear
+                : S.of(context)!.mixedTireSizesLabel,
             style: const TextStyle(fontSize: 13),
           ),
           value: selection.hasDifferentSizes,

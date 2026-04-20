@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    if (!session?.user || (session.user.role !== 'ADMIN' && session.user.role !== 'B24_EMPLOYEE')) {
+      return NextResponse.json({ error: 'Access required' }, { status: 403 })
     }
 
     const body = await request.json()

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../../../../l10n/app_localizations.dart';
 
 /// Interactive tire size selector with visual tire graphic and 5-step flow.
 /// Matches the web app at bereifung24.de.
@@ -488,7 +489,7 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
           TextButton.icon(
             onPressed: _goBack,
             icon: const Icon(Icons.arrow_back, size: 18),
-            label: const Text('Zurück'),
+            label: Text(S.of(context)!.back),
           )
         else
           const SizedBox.shrink(),
@@ -498,12 +499,12 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
   }
 
   Widget _buildStepLabel() {
-    const labels = [
-      'Breite wählen (mm):',
-      'Querschnitt wählen (%):',
-      'Felgengröße wählen (Zoll):',
-      'Tragfähigkeit wählen:',
-      'Geschwindigkeitsindex wählen:',
+    final labels = [
+      S.of(context)!.selectWidth,
+      S.of(context)!.selectAspectRatio,
+      S.of(context)!.selectRimSize,
+      S.of(context)!.selectLoadIndex,
+      S.of(context)!.selectSpeedIndex,
     ];
     const colors = [
       Colors.blue,
@@ -611,8 +612,8 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Reifengröße ausgewählt',
-                        style: TextStyle(
+                    Text(S.of(context)!.tireSizeSelected,
+                        style: const TextStyle(
                             fontWeight: FontWeight.w600, fontSize: 13)),
                     const SizedBox(height: 2),
                     Text(spec,
@@ -631,7 +632,7 @@ class _InteractiveTireSelectorState extends State<InteractiveTireSelector> {
             TextButton.icon(
               onPressed: _reset,
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Andere Größe'),
+              label: Text(S.of(context)!.otherSize),
             ),
           ],
         ),

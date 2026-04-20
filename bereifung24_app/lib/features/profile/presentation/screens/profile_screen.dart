@@ -5,6 +5,8 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
+import '../../../../main.dart';
 import '../../../auth/providers/auth_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -50,7 +52,7 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               const SizedBox(height: 12),
               Text(
-                user?.fullName ?? 'Kein Name',
+                user?.fullName ?? S.of(context)!.noName,
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
@@ -65,22 +67,22 @@ class ProfileScreen extends ConsumerWidget {
 
               // ── Settings list ──
               _SettingsSection(
-                title: 'Konto',
+                title: S.of(context)!.account,
                 children: [
                   _SettingsTile(
                     icon: Icons.person_outline,
-                    title: 'Profil bearbeiten',
+                    title: S.of(context)!.editProfile,
                     onTap: () => context.push('/profile/edit'),
                   ),
                   _SettingsTile(
                     icon: Icons.notifications_outlined,
-                    title: 'Benachrichtigungen',
+                    title: S.of(context)!.notifications,
                     onTap: () => context.push('/profile/notifications'),
                   ),
                   if (user?.googleId == null || user!.googleId!.isEmpty)
                     _SettingsTile(
                       icon: Icons.lock_outline,
-                      title: 'Passwort ändern',
+                      title: S.of(context)!.changePassword,
                       onTap: () => _showChangePasswordDialog(context),
                     ),
                 ],
@@ -89,17 +91,18 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 16),
 
               _SettingsSection(
-                title: 'App',
+                title: S.of(context)!.app,
                 children: [
                   _ThemeModeTile(),
+                  _LanguageTile(),
                   _SettingsTile(
                     icon: Icons.info_outline,
-                    title: 'Über Bereifung24',
+                    title: S.of(context)!.aboutBereifung24,
                     onTap: () => context.push('/profile/about'),
                   ),
                   _SettingsTile(
                     icon: Icons.feedback_outlined,
-                    title: 'Feedback geben',
+                    title: S.of(context)!.giveFeedback,
                     onTap: () => context.push('/profile/feedback'),
                   ),
                 ],
@@ -108,18 +111,18 @@ class ProfileScreen extends ConsumerWidget {
               const SizedBox(height: 16),
 
               _SettingsSection(
-                title: 'Gefahrenzone',
+                title: S.of(context)!.dangerZone,
                 children: [
                   _SettingsTile(
                     icon: Icons.logout,
-                    title: 'Abmelden',
+                    title: S.of(context)!.logout,
                     iconColor: Colors.red,
                     titleColor: Colors.red,
                     onTap: () => _confirmLogout(context, ref),
                   ),
                   _SettingsTile(
                     icon: Icons.delete_forever,
-                    title: 'Konto löschen',
+                    title: S.of(context)!.deleteAccount,
                     iconColor: Colors.red,
                     titleColor: Colors.red,
                     onTap: () => _confirmDelete(context, ref),
@@ -133,7 +136,7 @@ class ProfileScreen extends ConsumerWidget {
               Divider(color: Colors.grey.shade300),
               const SizedBox(height: 12),
               Text(
-                'Rechtliches',
+                S.of(context)!.legal,
                 style: TextStyle(
                   color: Colors.grey[500],
                   fontSize: 12,
@@ -147,7 +150,7 @@ class ProfileScreen extends ConsumerWidget {
                   GestureDetector(
                     onTap: () => context.push('/profile/agb'),
                     child: Text(
-                      'AGB',
+                      S.of(context)!.termsOfService,
                       style: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 12,
@@ -160,7 +163,7 @@ class ProfileScreen extends ConsumerWidget {
                   GestureDetector(
                     onTap: () => context.push('/profile/datenschutz'),
                     child: Text(
-                      'Datenschutz',
+                      S.of(context)!.privacyPolicy,
                       style: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 12,
@@ -173,7 +176,7 @@ class ProfileScreen extends ConsumerWidget {
                   GestureDetector(
                     onTap: () => context.push('/profile/impressum'),
                     child: Text(
-                      'Impressum',
+                      S.of(context)!.imprint,
                       style: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 12,
@@ -216,7 +219,7 @@ class ProfileScreen extends ConsumerWidget {
         var loading = false;
         return StatefulBuilder(
           builder: (ctx, setState) => AlertDialog(
-            title: const Text('Passwort ändern'),
+            title: Text(S.of(context)!.changePasswordTitle),
             content: Form(
               key: formKey,
               child: Column(
@@ -225,24 +228,24 @@ class ProfileScreen extends ConsumerWidget {
                   TextFormField(
                     controller: currentCtrl,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Aktuelles Passwort',
-                      prefixIcon: Icon(Icons.lock_outline),
+                    decoration: InputDecoration(
+                      labelText: S.of(context)!.currentPassword,
+                      prefixIcon: const Icon(Icons.lock_outline),
                     ),
                     validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Pflichtfeld' : null,
+                        (v == null || v.isEmpty) ? S.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: newCtrl,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Neues Passwort',
-                      prefixIcon: Icon(Icons.lock),
+                    decoration: InputDecoration(
+                      labelText: S.of(context)!.newPassword,
+                      prefixIcon: const Icon(Icons.lock),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return 'Pflichtfeld';
-                      if (v.length < 8) return 'Mindestens 8 Zeichen';
+                      if (v == null || v.isEmpty) return S.of(context)!.requiredField;
+                      if (v.length < 8) return S.of(context)!.minEightChars;
                       return null;
                     },
                   ),
@@ -250,13 +253,13 @@ class ProfileScreen extends ConsumerWidget {
                   TextFormField(
                     controller: confirmCtrl,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Passwort bestätigen',
-                      prefixIcon: Icon(Icons.lock),
+                    decoration: InputDecoration(
+                      labelText: S.of(context)!.confirmPasswordLabel,
+                      prefixIcon: const Icon(Icons.lock),
                     ),
                     validator: (v) {
                       if (v != newCtrl.text) {
-                        return 'Passwörter stimmen nicht überein';
+                        return S.of(context)!.passwordsDoNotMatch;
                       }
                       return null;
                     },
@@ -267,7 +270,7 @@ class ProfileScreen extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: loading ? null : () => Navigator.pop(ctx),
-                child: const Text('Abbrechen'),
+                child: Text(S.of(context)!.cancel),
               ),
               FilledButton(
                 onPressed: loading
@@ -283,8 +286,8 @@ class ProfileScreen extends ConsumerWidget {
                           if (ctx.mounted) Navigator.pop(ctx);
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Passwort erfolgreich geändert'),
+                              SnackBar(
+                                content: Text(S.of(context)!.passwordChanged),
                               ),
                             );
                           }
@@ -295,8 +298,8 @@ class ProfileScreen extends ConsumerWidget {
                               SnackBar(
                                 content: Text(
                                   e.toString().contains('falsch')
-                                      ? 'Aktuelles Passwort ist falsch'
-                                      : 'Fehler beim Ändern des Passworts',
+                                      ? S.of(context)!.currentPasswordWrong
+                                      : S.of(context)!.passwordChangeError,
                                 ),
                               ),
                             );
@@ -312,7 +315,7 @@ class ProfileScreen extends ConsumerWidget {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Ändern'),
+                    : Text(S.of(context)!.changeButton),
               ),
             ],
           ),
@@ -325,19 +328,19 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Abmelden?'),
-        content: const Text('Möchtest du dich wirklich abmelden?'),
+        title: Text(S.of(context)!.logoutConfirm),
+        content: Text(S.of(context)!.logoutConfirmText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Abbrechen'),
+            child: Text(S.of(context)!.cancel),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               ref.read(authStateProvider.notifier).logout();
             },
-            child: const Text('Abmelden'),
+            child: Text(S.of(context)!.logout),
           ),
         ],
       ),
@@ -348,13 +351,13 @@ class ProfileScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Konto löschen?'),
-        content: const Text(
-            'Dein Konto und alle Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.'),
+        title: Text(S.of(context)!.deleteAccountConfirm),
+        content: Text(
+            S.of(context)!.deleteAccountWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Abbrechen'),
+            child: Text(S.of(context)!.cancel),
           ),
           FilledButton(
             onPressed: () async {
@@ -364,21 +367,21 @@ class ProfileScreen extends ConsumerWidget {
                 await ref.read(authStateProvider.notifier).logout();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Konto wurde gelöscht')),
+                    SnackBar(content: Text(S.of(context)!.deleteAccountDone)),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                         content: Text(
-                            'Löschen fehlgeschlagen. Bitte versuche es erneut.')),
+                            S.of(context)!.deleteFailed)),
                   );
                 }
               }
             },
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Endgültig löschen'),
+            child: Text(S.of(context)!.deletePermanently),
           ),
         ],
       ),
@@ -456,27 +459,27 @@ class _ThemeModeTile extends ConsumerWidget {
       ThemeMode.system => Icons.auto_mode,
     };
     final label = switch (themeMode) {
-      ThemeMode.dark => 'Dunkel',
-      ThemeMode.light => 'Hell',
-      ThemeMode.system => 'System',
+      ThemeMode.dark => S.of(context)!.dark,
+      ThemeMode.light => S.of(context)!.light,
+      ThemeMode.system => S.of(context)!.system,
     };
 
     return ListTile(
       leading: Icon(icon, color: B24Colors.primaryBlue, size: 22),
-      title: const Text('Erscheinungsbild'),
+      title: Text(S.of(context)!.appearance),
       subtitle: Text(label),
       trailing: PopupMenuButton<ThemeMode>(
         initialValue: themeMode,
         onSelected: (mode) =>
             ref.read(themeModeProvider.notifier).setThemeMode(mode),
-        itemBuilder: (context) => const [
+        itemBuilder: (context) => [
           PopupMenuItem(
             value: ThemeMode.system,
             child: Row(
               children: [
-                Icon(Icons.auto_mode, size: 20),
-                SizedBox(width: 8),
-                Text('System'),
+                const Icon(Icons.auto_mode, size: 20),
+                const SizedBox(width: 8),
+                Text(S.of(context)!.system),
               ],
             ),
           ),
@@ -484,9 +487,9 @@ class _ThemeModeTile extends ConsumerWidget {
             value: ThemeMode.light,
             child: Row(
               children: [
-                Icon(Icons.light_mode, size: 20),
-                SizedBox(width: 8),
-                Text('Hell'),
+                const Icon(Icons.light_mode, size: 20),
+                const SizedBox(width: 8),
+                Text(S.of(context)!.light),
               ],
             ),
           ),
@@ -494,13 +497,58 @@ class _ThemeModeTile extends ConsumerWidget {
             value: ThemeMode.dark,
             child: Row(
               children: [
-                Icon(Icons.dark_mode, size: 20),
-                SizedBox(width: 8),
-                Text('Dunkel'),
+                const Icon(Icons.dark_mode, size: 20),
+                const SizedBox(width: 8),
+                Text(S.of(context)!.dark),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _LanguageTile extends ConsumerWidget {
+  static const _languages = [
+    ('de', '🇩🇪', 'Deutsch'),
+    ('en', '🇬🇧', 'English'),
+    ('tr', '🇹🇷', 'Türkçe'),
+    ('ru', '🇷🇺', 'Русский'),
+    ('it', '🇮🇹', 'Italiano'),
+    ('fr', '🇫🇷', 'Français'),
+    ('es', '🇪🇸', 'Español'),
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(localeProvider);
+    final currentLang = _languages.firstWhere(
+      (l) => l.$1 == current.languageCode,
+      orElse: () => _languages.first,
+    );
+
+    return ListTile(
+      leading:
+          const Icon(Icons.language, color: B24Colors.primaryBlue, size: 22),
+      title: Text(S.of(context)!.language),
+      subtitle: Text('${currentLang.$2} ${currentLang.$3}'),
+      trailing: PopupMenuButton<String>(
+        initialValue: current.languageCode,
+        onSelected: (code) =>
+            ref.read(localeProvider.notifier).setLocale(Locale(code)),
+        itemBuilder: (context) => _languages
+            .map((l) => PopupMenuItem(
+                  value: l.$1,
+                  child: Row(
+                    children: [
+                      Text(l.$2, style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      Text(l.$3),
+                    ],
+                  ),
+                ))
+            .toList(),
       ),
     );
   }

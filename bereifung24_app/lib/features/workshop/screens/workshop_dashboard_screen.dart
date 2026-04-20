@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../l10n/app_localizations.dart';
 import '../providers/workshop_provider.dart';
 
 class WorkshopDashboardScreen extends ConsumerStatefulWidget {
@@ -44,7 +45,7 @@ class _WorkshopDashboardScreenState
                 children: [
                   const Text('😕', style: TextStyle(fontSize: 48)),
                   const SizedBox(height: 12),
-                  Text('Fehler beim Laden',
+                  Text(S.of(context)!.loadingError,
                       style: TextStyle(
                           color: isDark ? Colors.white70 : Colors.black54)),
                   const SizedBox(height: 12),
@@ -67,7 +68,7 @@ class _WorkshopDashboardScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Dashboard',
+                            S.of(context)!.workshopDashboard,
                             style: Theme.of(context)
                                 .textTheme
                                 .headlineMedium

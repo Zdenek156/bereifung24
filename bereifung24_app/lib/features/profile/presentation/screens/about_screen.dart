@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
@@ -36,7 +37,7 @@ class _AboutScreenState extends State<AboutScreen> {
     final subtitleColor = isDark ? const Color(0xFF94A3B8) : Colors.grey[600];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Über Bereifung24')),
+      appBar: AppBar(title: Text(S.of(context)!.aboutBereifung24)),
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         children: [
@@ -65,7 +66,7 @@ class _AboutScreenState extends State<AboutScreen> {
           const SizedBox(height: 4),
           Center(
             child: Text(
-              'Dein Reifenservice – einfach & schnell',
+              S.of(context)!.tagline,
               style: TextStyle(fontSize: 14, color: subtitleColor),
             ),
           ),
@@ -84,7 +85,7 @@ class _AboutScreenState extends State<AboutScreen> {
           _SectionCard(
             children: [
               Text(
-                'Unsere Mission',
+                S.of(context)!.mission,
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -92,10 +93,7 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Bereifung24 verbindet Autofahrer mit den besten Reifenwerkstätten '
-                'in der Nähe. Wir machen Reifenwechsel, Montage und Service so '
-                'einfach wie eine Online-Bestellung – transparent, fair und '
-                'zuverlässig.',
+                S.of(context)!.missionText,
                 style: TextStyle(
                     fontSize: 14, height: 1.6, color: subtitleColor),
               ),
@@ -107,7 +105,7 @@ class _AboutScreenState extends State<AboutScreen> {
           _SectionCard(
             children: [
               Text(
-                'Kontakt',
+                S.of(context)!.contact,
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -139,7 +137,7 @@ class _AboutScreenState extends State<AboutScreen> {
           _SectionCard(
             children: [
               Text(
-                'Firmeninformationen',
+                S.of(context)!.companyInfo,
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -161,7 +159,7 @@ class _AboutScreenState extends State<AboutScreen> {
           _SectionCard(
             children: [
               Text(
-                'Folge uns',
+                S.of(context)!.followUs,
                 style: Theme.of(context)
                     .textTheme
                     .titleMedium
@@ -205,7 +203,7 @@ class _AboutScreenState extends State<AboutScreen> {
           const SizedBox(height: 32),
           Center(
             child: Text(
-              'Made with ❤️ in Deutschland',
+              S.of(context)!.madeInDeutschland,
               style: TextStyle(fontSize: 12, color: subtitleColor),
             ),
           ),
@@ -229,7 +227,7 @@ class _AboutScreenState extends State<AboutScreen> {
                 ),
               ),
               child: Text(
-                'Open-Source-Lizenzen',
+                S.of(context)!.openSourceLicenses,
                 style: TextStyle(fontSize: 12, color: subtitleColor),
               ),
             ),

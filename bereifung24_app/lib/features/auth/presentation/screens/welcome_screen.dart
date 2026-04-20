@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -13,24 +14,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  static const _pages = [
+  List<_OnboardingPage> _pages(BuildContext context) => [
     _OnboardingPage(
       image: 'assets/images/welcome/festpreis_service.jpg',
-      title: 'Reifenservice zum Festpreis',
-      description:
-          'Finde den passenden Reifenservice in deiner Nähe und buche bequem online – zum garantierten Festpreis.',
+      title: S.of(context)!.onboardingTitle1,
+      description: S.of(context)!.onboardingDesc1,
     ),
     _OnboardingPage(
       image: 'assets/images/welcome/schnelle_buchung.jpg',
-      title: 'Schnell & einfach buchen',
-      description:
-          'Wähle deinen Wunschtermin, vergleiche Werkstätten und buche in unter 2 Minuten – alles in einer App.',
+      title: S.of(context)!.onboardingTitle2,
+      description: S.of(context)!.onboardingDesc2,
     ),
     _OnboardingPage(
       image: 'assets/images/welcome/ki_beratung.jpg',
-      title: 'Dein persönlicher KI-Berater',
-      description:
-          'Unser intelligenter Assistent hilft dir bei der Reifenwahl und beantwortet alle Fragen rund ums Fahrzeug.',
+      title: S.of(context)!.onboardingTitle3,
+      description: S.of(context)!.onboardingDesc3,
     ),
   ];
 
@@ -55,10 +53,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
-                itemCount: _pages.length,
+                itemCount: _pages(context).length,
                 onPageChanged: (i) => setState(() => _currentPage = i),
                 itemBuilder: (context, index) {
-                  final page = _pages[index];
+                  final page = _pages(context)[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 32),
                     child: Column(
@@ -118,7 +116,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
-                  _pages.length,
+                  _pages(context).length,
                   (i) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -151,9 +149,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
-                        'Ich habe schon ein Account',
-                        style: TextStyle(
+                      child: Text(
+                        S.of(context)!.haveAccount,
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                         ),
@@ -176,7 +174,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                       ),
                       child: Text(
-                        'Jetzt bei Bereifung24 registrieren',
+                        S.of(context)!.registerAtB24,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,

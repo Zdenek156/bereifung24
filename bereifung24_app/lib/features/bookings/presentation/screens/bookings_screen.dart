@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
+import '../../../../l10n/app_localizations.dart';
 import '../../../auth/providers/auth_provider.dart';
 
 // ── Provider ──
@@ -99,7 +100,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
                       label: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(option.label,
+                          Text(option == BookingSortOption.upcoming ? S.of(context)!.sortUpcoming : option == BookingSortOption.price ? S.of(context)!.sortPrice : S.of(context)!.sortBookedDate,
                               style: const TextStyle(fontSize: 11)),
                           if (isSelected) ...[
                             const SizedBox(width: 3),
@@ -157,7 +158,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
             children: [
               Icon(Icons.event_busy, size: 48, color: Colors.grey[300]),
               const SizedBox(height: 12),
-              Text('Keine Buchungen',
+              Text(S.of(context)!.noBookings,
                   style: TextStyle(color: Colors.grey[500])),
             ],
           ),
@@ -186,7 +187,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Text(
-                'Meine Buchungen',
+                S.of(context)!.myBookings,
                 style: Theme.of(context)
                     .textTheme
                     .headlineSmall
@@ -210,7 +211,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
                     children: [
                       const Icon(Icons.upcoming, size: 18),
                       const SizedBox(width: 6),
-                      const Text('Kommende'),
+                      Text(S.of(context)!.upcoming),
                       bookingsAsync.whenOrNull(
                             data: (b) {
                               final count = b.where((x) => x.isUpcoming).length;
@@ -241,7 +242,7 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
                     children: [
                       const Icon(Icons.history, size: 18),
                       const SizedBox(width: 6),
-                      const Text('Vergangene'),
+                      Text(S.of(context)!.past),
                     ],
                   ),
                 ),
@@ -261,11 +262,11 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
                       const Icon(Icons.error_outline,
                           size: 48, color: Colors.red),
                       const SizedBox(height: 16),
-                      const Text('Termine konnten nicht geladen werden'),
+                      Text(S.of(context)!.bookingsLoadError),
                       const SizedBox(height: 8),
                       FilledButton(
                         onPressed: () => ref.invalidate(bookingsProvider),
-                        child: const Text('Erneut versuchen'),
+                        child: Text(S.of(context)!.retry),
                       ),
                     ],
                   ),
@@ -316,11 +317,11 @@ class _EmptyBookings extends StatelessWidget {
           children: [
             Icon(Icons.calendar_today, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
-            Text('Keine Buchungen',
+            Text(S.of(context)!.noBookings,
                 style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(
-              'Du hast noch keine Buchungen. Suche eine Werkstatt und buche deinen ersten Termin!',
+              S.of(context)!.noBookingsDesc,
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600]),
             ),
@@ -328,7 +329,7 @@ class _EmptyBookings extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.go('/search'),
               icon: const Icon(Icons.search),
-              label: const Text('Werkstatt suchen'),
+              label: Text(S.of(context)!.searchWorkshop),
             ),
           ],
         ),

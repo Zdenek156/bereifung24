@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'bookings_screen.dart';
 
 class BookingDetailScreen extends ConsumerWidget {
@@ -15,15 +17,15 @@ class BookingDetailScreen extends ConsumerWidget {
     final bookingsAsync = ref.watch(bookingsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Buchungsdetails')),
+      appBar: AppBar(title: Text(S.of(context)!.bookingDetails)),
       body: bookingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) =>
-            const Center(child: Text('Details konnten nicht geladen werden')),
+            Center(child: Text(S.of(context)!.detailsCouldNotLoad)),
         data: (bookings) {
           final booking = bookings.where((b) => b.id == bookingId).firstOrNull;
           if (booking == null) {
-            return const Center(child: Text('Buchung nicht gefunden'));
+            return Center(child: Text(S.of(context)!.bookingNotFound));
           }
           return _BookingDetailContent(booking: booking);
         },
@@ -69,7 +71,7 @@ class _BookingDetailContent extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        _statusDescription,
+                        _statusDescription(context),
                         style: TextStyle(color: _statusColor, fontSize: 13),
                       ),
                     ],
@@ -84,7 +86,7 @@ class _BookingDetailContent extends StatelessWidget {
           // Booking ID & Service type
           _DetailCard(
             icon: Icons.confirmation_number,
-            title: 'Buchung',
+            title: S.of(context)!.bookingLabel,
             children: [
               Text(
                 booking.serviceTypeDisplay,
@@ -93,7 +95,7 @@ class _BookingDetailContent extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Buchungs-Nr: ${booking.id.length > 10 ? booking.id.substring(0, 10) : booking.id}',
+                S.of(context)!.bookingNumber(booking.id.length > 10 ? booking.id.substring(0, 10) : booking.id),
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
             ],
@@ -104,20 +106,20 @@ class _BookingDetailContent extends StatelessWidget {
           // Date & Time
           _DetailCard(
             icon: Icons.calendar_today,
-            title: 'Termin',
+            title: S.of(context)!.appointment,
             children: [
               Text(
-                _formatDate(booking.appointmentDate),
+                _formatDate(context, booking.appointmentDate),
                 style:
                     const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
               if (booking.appointmentTime != null) ...[
                 const SizedBox(height: 4),
-                Text('Uhrzeit: ${booking.appointmentTime}'),
+                Text(S.of(context)!.timeLabel(booking.appointmentTime!)),
               ],
               if (booking.durationMinutes != null) ...[
                 const SizedBox(height: 2),
-                Text('Dauer: ca. ${booking.durationMinutes} Minuten',
+                Text(S.of(context)!.durationLabel(booking.durationMinutes!),
                     style: TextStyle(color: Colors.grey[600], fontSize: 13)),
               ],
             ],
@@ -128,7 +130,7 @@ class _BookingDetailContent extends StatelessWidget {
           // Workshop with contact info
           _DetailCard(
             icon: Icons.build,
-            title: 'Werkstatt',
+            title: S.of(context)!.workshop,
             children: [
               if (booking.workshopName != null)
                 Text(booking.workshopName!,
@@ -185,14 +187,14 @@ class _BookingDetailContent extends StatelessWidget {
           // Vehicle
           _DetailCard(
             icon: Icons.directions_car,
-            title: 'Fahrzeug',
+            title: S.of(context)!.vehicle,
             children: [
               Text(booking.vehicleDisplay,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
               if (booking.licensePlate != null &&
                   booking.licensePlate!.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                Text('Kennzeichen: ${booking.licensePlate}',
+                Text(S.of(context)!.licensePlateLabel(booking.licensePlate!),
                     style: TextStyle(color: Colors.grey[600])),
               ],
             ],
@@ -203,7 +205,7 @@ class _BookingDetailContent extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailCard(
               icon: Icons.tire_repair,
-              title: 'Reifendetails',
+              title: S.of(context)!.tireDetails,
               children: [
                 if (booking.tireBrand != null || booking.tireModel != null)
                   Text(
@@ -214,11 +216,11 @@ class _BookingDetailContent extends StatelessWidget {
                   ),
                 if (booking.tireSize != null) ...[
                   const SizedBox(height: 4),
-                  Text('Größe: ${booking.tireSize}'),
+                  Text(S.of(context)!.tireSizeLabel(booking.tireSize!)),
                 ],
                 if (booking.tireQuantity != null) ...[
                   const SizedBox(height: 2),
-                  Text('Anzahl: ${booking.tireQuantity} Stück'),
+                  Text(S.of(context)!.tireQuantityLabel(booking.tireQuantity!)),
                 ],
               ],
             ),
@@ -229,7 +231,7 @@ class _BookingDetailContent extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailCard(
               icon: Icons.add_circle_outline,
-              title: 'Zusatzleistungen',
+              title: S.of(context)!.additionalServices,
               children: [
                 Wrap(
                   spacing: 8,
@@ -254,38 +256,38 @@ class _BookingDetailContent extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailCard(
               icon: Icons.euro,
-              title: 'Zahlungsdetails',
+              title: S.of(context)!.paymentDetails,
               children: [
                 if (booking.paymentMethod != null) ...[
-                  _PriceRow('Zahlungsart', booking.paymentMethodDisplay),
+                  _PriceRow(S.of(context)!.paymentType, booking.paymentMethodDisplay),
                   const SizedBox(height: 6),
                 ],
                 if (booking.paymentStatus != null) ...[
-                  _PriceRow('Zahlungsstatus', booking.paymentStatusDisplay),
+                  _PriceRow(S.of(context)!.paymentStatusLabel, booking.paymentStatusDisplay),
                   const Divider(height: 16),
                 ],
                 if (booking.basePrice != null)
-                  _PriceRow('Grundpreis',
+                  _PriceRow(S.of(context)!.basePrice,
                       '${booking.basePrice!.toStringAsFixed(2)} €'),
                 if (booking.balancingPrice != null &&
                     booking.balancingPrice! > 0)
-                  _PriceRow('Wuchten',
+                  _PriceRow(S.of(context)!.balancingX4,
                       '${booking.balancingPrice!.toStringAsFixed(2)} €'),
                 if (booking.storagePrice != null && booking.storagePrice! > 0)
-                  _PriceRow('Einlagerung',
+                  _PriceRow(S.of(context)!.storage,
                       '${booking.storagePrice!.toStringAsFixed(2)} €'),
                 if (booking.washingPrice != null && booking.washingPrice! > 0)
-                  _PriceRow('Räder waschen',
+                  _PriceRow(S.of(context)!.wheelWashing,
                       '${booking.washingPrice!.toStringAsFixed(2)} €'),
                 if (booking.disposalFee != null && booking.disposalFee! > 0)
-                  _PriceRow('Entsorgung',
+                  _PriceRow(S.of(context)!.disposal,
                       '${booking.disposalFee!.toStringAsFixed(2)} €'),
                 if (booking.discountAmount != null &&
                     booking.discountAmount! > 0) ...[
                   _PriceRow(
                     booking.couponCode != null
-                        ? 'Gutschein (${booking.couponCode})'
-                        : 'Rabatt',
+                        ? S.of(context)!.couponLabel(booking.couponCode!)
+                        : S.of(context)!.discountLabel,
                     '-${booking.discountAmount!.toStringAsFixed(2)} €',
                     valueColor: Colors.green,
                   ),
@@ -294,7 +296,7 @@ class _BookingDetailContent extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Gesamtpreis',
+                    Text(S.of(context)!.totalPrice,
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16)),
                     Text(
@@ -316,7 +318,7 @@ class _BookingDetailContent extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailCard(
               icon: Icons.note,
-              title: 'Anmerkungen',
+              title: S.of(context)!.remarks,
               children: [Text(booking.notes!)],
             ),
           ],
@@ -327,7 +329,7 @@ class _BookingDetailContent extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailCard(
               icon: Icons.message_outlined,
-              title: 'Ihre Nachricht an die Werkstatt',
+              title: S.of(context)!.yourMessageToWorkshop,
               children: [Text(booking.customerNotes!)],
             ),
           ],
@@ -343,8 +345,8 @@ class _BookingDetailContent extends StatelessWidget {
                   '/review/${booking.id}?workshop=${Uri.encodeComponent(booking.workshopName ?? '')}',
                 ),
                 icon: const Icon(Icons.star_rounded),
-                label: const Text(
-                  'Werkstatt bewerten',
+                label: Text(
+                  S.of(context)!.rateWorkshopButton,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
                 style: FilledButton.styleFrom(
@@ -368,23 +370,9 @@ class _BookingDetailContent extends StatelessWidget {
       booking.tireModel != null ||
       booking.tireSize != null;
 
-  String _formatDate(DateTime date) {
-    const weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-    const months = [
-      'Januar',
-      'Februar',
-      'März',
-      'April',
-      'Mai',
-      'Juni',
-      'Juli',
-      'August',
-      'September',
-      'Oktober',
-      'November',
-      'Dezember'
-    ];
-    return '${weekdays[date.weekday - 1]}, ${date.day}. ${months[date.month - 1]} ${date.year}';
+  String _formatDate(BuildContext context, DateTime date) {
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat.yMMMMEEEEd(locale).format(date);
   }
 
   void _launchUrl(String url) async {
@@ -428,18 +416,18 @@ class _BookingDetailContent extends StatelessWidget {
     }
   }
 
-  String get _statusDescription {
+  String _statusDescription(BuildContext context) {
     switch (booking.status) {
       case 'CONFIRMED':
-        return 'Dein Termin wurde bestätigt';
+        return S.of(context)!.appointmentConfirmed;
       case 'PENDING':
-        return 'Wartet auf Bestätigung der Werkstatt';
+        return S.of(context)!.waitingConfirmation;
       case 'IN_PROGRESS':
-        return 'Wird gerade bearbeitet';
+        return S.of(context)!.beingProcessed;
       case 'COMPLETED':
-        return 'Abgeschlossen';
+        return S.of(context)!.completedStatus;
       case 'CANCELLED':
-        return 'Dieser Termin wurde storniert';
+        return S.of(context)!.appointmentCancelled;
       default:
         return '';
     }

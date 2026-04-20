@@ -7,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../data/models/workshop.dart';
+import '../../../../l10n/app_localizations.dart';
 
 // ══════════════════════════════════════
 // 🆘 Pannen-Modus / Emergency Screen
@@ -66,7 +67,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
       setState(() {
         _phase = _ScreenPhase.error;
         _errorMessage = locService.lastError ??
-            'Standort konnte nicht ermittelt werden.\nBitte aktiviere die Standortfreigabe.';
+            S.of(context)!.locationFailedPermission;
       });
       return;
     }
@@ -109,7 +110,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
       if (!mounted) return;
       setState(() {
         _phase = _ScreenPhase.error;
-        _errorMessage = 'Werkstätten konnten nicht geladen werden.';
+        _errorMessage = S.of(context)!.errorOccurred;
       });
     }
   }
@@ -128,14 +129,14 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('🆘', style: TextStyle(fontSize: 20)),
-            SizedBox(width: 8),
+            const Text('🆘', style: TextStyle(fontSize: 20)),
+            const SizedBox(width: 8),
             Text(
-              'Pannen-Modus',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              S.of(context)!.emergencyTitle,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
             ),
           ],
         ),
@@ -233,7 +234,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
           ),
           const SizedBox(height: 28),
           Text(
-            isFound ? 'Standort gefunden!' : 'Standort wird ermittelt...',
+            isFound ? S.of(context)!.locationFound : S.of(context)!.locatingPosition2,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -257,7 +258,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
           if (!isFound) ...[
             const SizedBox(height: 6),
             Text(
-              'Wir suchen Werkstätten in deiner Nähe...',
+              S.of(context)!.searchingNearby,
               style: TextStyle(
                 fontSize: 13,
                 color: isDark
@@ -284,7 +285,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
                 size: 64, color: B24Colors.accentRed),
             const SizedBox(height: 16),
             Text(
-              _errorMessage ?? 'Ein Fehler ist aufgetreten.',
+              _errorMessage ?? S.of(context)!.errorOccurred,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -297,7 +298,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             FilledButton.icon(
               onPressed: _startLocating,
               icon: const Icon(Icons.refresh),
-              label: const Text('Erneut versuchen'),
+              label: Text(S.of(context)!.retryLocating),
               style: FilledButton.styleFrom(
                 backgroundColor: B24Colors.accentRed,
               ),
@@ -306,7 +307,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             OutlinedButton.icon(
               onPressed: () => LocationService().openAppSettings(),
               icon: const Icon(Icons.settings),
-              label: const Text('Standort-Einstellungen'),
+              label: Text(S.of(context)!.locationSettings),
             ),
           ],
         ),
@@ -334,8 +335,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
               Expanded(
                 child: Text(
                   _workshops.isNotEmpty
-                      ? '${_workshops.length} ${_workshops.length == 1 ? "Werkstatt" : "Werkstätten"} in deiner Nähe gefunden'
-                      : 'Keine Werkstätten in der Nähe gefunden',
+                      ? (_workshops.length == 1 ? S.of(context)!.workshopsFoundNearby('${_workshops.length}') : S.of(context)!.workshopsFoundNearbyPlural('${_workshops.length}'))
+                      : S.of(context)!.noWorkshopsNearby,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -386,8 +387,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             ],
           ),
           child: Text(
-            'Rufe die Werkstatt an und vereinbare eine Soforthilfe. '
-            'Deinen nächsten Service kannst du danach direkt über B24 buchen.',
+            S.of(context)!.emergencyBottomHint,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -417,7 +417,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
                     : B24Colors.textTertiary),
             const SizedBox(height: 16),
             Text(
-              'Keine Werkstätten gefunden',
+              S.of(context)!.noWorkshopsNearby,
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -427,7 +427,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
             ),
             const SizedBox(height: 6),
             Text(
-              'Leider gibt es keine Werkstätten in 25 km Umkreis.',
+              S.of(context)!.noWorkshopsIn25km,
               textAlign: TextAlign.center,
               style: TextStyle(
                   fontSize: 13,
@@ -462,7 +462,7 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
               const Text('💡', style: TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
               Text(
-                'Notfall-Nummern',
+                S.of(context)!.emergencyNumbers,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -475,13 +475,13 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
           ),
           const SizedBox(height: 10),
           _EmergencyPhoneRow(
-            label: 'ADAC Pannenhilfe',
+            label: S.of(context)!.adacBreakdown,
             number: '0800 510 0112',
             icon: Icons.car_repair,
           ),
           const SizedBox(height: 6),
           _EmergencyPhoneRow(
-            label: 'Polizei / Notruf',
+            label: S.of(context)!.policeEmergency,
             number: '110',
             icon: Icons.local_police,
           ),
@@ -636,7 +636,7 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isOpen ? 'Geöffnet' : 'Geschlossen',
+                  isOpen ? S.of(context)!.openStatus : S.of(context)!.closedStatus,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -678,7 +678,7 @@ class _WorkshopEmergencyCard extends StatelessWidget {
               ],
               Expanded(
                 child: Text(
-                  _getHoursText(workshop),
+                  _getHoursText(context, workshop),
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark
@@ -701,7 +701,7 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                   ? FilledButton.icon(
                       onPressed: () => _callNumber(workshop.phone!),
                       icon: const Icon(Icons.phone, size: 18),
-                      label: const Text('Jetzt anrufen'),
+                      label: Text(S.of(context)!.callNow),
                       style: FilledButton.styleFrom(
                         backgroundColor: B24Colors.accentGreen,
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -714,7 +714,7 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                       onPressed: () => _callNumber(workshop.phone!),
                       icon: const Icon(Icons.phone, size: 18),
                       label: Text(
-                        'Trotzdem anrufen · ${workshop.phone}',
+                        '${S.of(context)!.callAnyway} · ${workshop.phone}',
                         style: const TextStyle(fontSize: 13),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -736,7 +736,7 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                'Keine Telefonnummer hinterlegt',
+                S.of(context)!.noPhoneNumber,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -778,7 +778,7 @@ bool _isCurrentlyOpen(Workshop workshop) {
   return false;
 }
 
-String _getHoursText(Workshop workshop) {
+String _getHoursText(BuildContext context, Workshop workshop) {
   if (workshop.openingHours.isEmpty) return '';
   final now = DateTime.now();
   final todayHours =
@@ -792,20 +792,20 @@ String _getHoursText(Workshop workshop) {
           .where((h) => h.dayOfWeek == nextDay && !h.isClosed)
           .toList();
       if (nextHours.isNotEmpty) {
-        return 'Öffnet ${nextHours.first.dayName} ${nextHours.first.openTime}';
+        return S.of(context)!.opensOnDay(nextHours.first.dayName, nextHours.first.openTime);
       }
     }
-    return 'Geschlossen';
+    return S.of(context)!.closedStatus;
   }
 
   final open =
       todayHours.firstWhere((h) => !h.isClosed, orElse: () => todayHours.first);
-  if (open.isClosed) return 'Heute geschlossen';
+  if (open.isClosed) return S.of(context)!.closedToday;
 
   if (_isCurrentlyOpen(workshop)) {
-    return 'Schließt um ${open.closeTime} Uhr';
+    return S.of(context)!.closesAt(open.closeTime);
   } else {
-    return 'Öffnet um ${open.openTime} Uhr';
+    return S.of(context)!.opensAt(open.openTime);
   }
 }
 

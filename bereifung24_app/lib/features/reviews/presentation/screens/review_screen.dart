@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class ReviewScreen extends ConsumerStatefulWidget {
   final String bookingId;
@@ -33,7 +34,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Future<void> _submit() async {
     if (_selectedRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte wähle eine Bewertung')),
+        const SnackBar(content: Text('Bitte w\u00e4hle eine Bewertung')),
       );
       return;
     }
@@ -53,8 +54,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Fehler beim Senden. Bitte versuche es erneut.'),
+          SnackBar(
+            content: Text(S.of(context)!.errorSendingReview),
           ),
         );
       }
@@ -69,7 +70,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
     if (_submitted) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Bewertung')),
+        appBar: AppBar(title: Text(S.of(context)!.reviewTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -91,7 +92,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Vielen Dank!',
+                  S.of(context)!.thankYou,
                   style: Theme.of(context)
                       .textTheme
                       .headlineSmall
@@ -99,7 +100,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Ihre Bewertung hilft anderen Kunden bei der Werkstattsuche.',
+                  S.of(context)!.reviewThankYou,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -109,7 +110,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                 const SizedBox(height: 32),
                 FilledButton(
                   onPressed: () => context.go('/bookings'),
-                  child: const Text('Zurück zu Buchungen'),
+                  child: Text(S.of(context)!.backToBookings),
                 ),
               ],
             ),
@@ -119,7 +120,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Werkstatt bewerten')),
+      appBar: AppBar(title: Text(S.of(context)!.rateWorkshop)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -127,7 +128,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
           children: [
             // Header
             Text(
-              'Wie war Ihr Besuch?',
+              S.of(context)!.howWasYourVisit,
               style: Theme.of(context)
                   .textTheme
                   .titleLarge
@@ -145,7 +146,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               ),
             const SizedBox(height: 4),
             Text(
-              'Bewerten Sie Ihren Termin und helfen Sie anderen Kunden bei der Suche.',
+              S.of(context)!.reviewHelpsOthers,
               style: TextStyle(
                 color: isDark ? Colors.grey[400] : Colors.grey[600],
                 fontSize: 14,
@@ -195,7 +196,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
 
             // Comment field
             Text(
-              'Kommentar (optional)',
+              S.of(context)!.commentOptional,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
@@ -208,7 +209,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               maxLines: 4,
               maxLength: 500,
               decoration: InputDecoration(
-                hintText: 'Beschreiben Sie Ihre Erfahrung...',
+                hintText: S.of(context)!.reviewHint,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -240,8 +241,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'Bewertung absenden',
+                    : Text(
+                        S.of(context)!.submitReview,
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
               ),
@@ -254,7 +255,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               child: TextButton(
                 onPressed: () => context.pop(),
                 child: Text(
-                  'Später bewerten',
+                  S.of(context)!.rateLater,
                   style: TextStyle(
                     color: isDark ? Colors.grey[400] : Colors.grey[600],
                   ),
@@ -270,15 +271,15 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   String _ratingLabel(int rating) {
     switch (rating) {
       case 1:
-        return 'Sehr schlecht';
+        return S.of(context)!.ratingVeryBad;
       case 2:
-        return 'Nicht gut';
+        return S.of(context)!.reviewNotGood;
       case 3:
-        return 'Okay';
+        return S.of(context)!.ratingOkay;
       case 4:
-        return 'Gut';
+        return S.of(context)!.ratingGood;
       case 5:
-        return 'Hervorragend';
+        return S.of(context)!.reviewExcellent;
       default:
         return '';
     }

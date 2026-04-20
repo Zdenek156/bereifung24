@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../../l10n/app_localizations.dart';
 import '../models/workshop_booking.dart';
 import '../providers/workshop_provider.dart';
 
@@ -37,7 +38,7 @@ class _WorkshopBookingsScreenState
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
-                'Buchungen',
+                S.of(context)!.workshopBookings,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

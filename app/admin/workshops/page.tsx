@@ -22,6 +22,7 @@ interface Workshop {
   companyName: string
   logoUrl: string | null
   isVerified: boolean
+  status: string | null
   createdAt: string
   distance: number | null
   offersCount: number
@@ -48,7 +49,7 @@ export default function WorkshopManagementPage() {
   const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
-  const [filter, setFilter] = useState<'all' | 'verified' | 'pending'>('all')
+  const [filter, setFilter] = useState<'all' | 'verified' | 'pending' | 'deleted'>('all')
   const [sortBy, setSortBy] = useState<SortOption>('recent')
   const [crmDialogOpen, setCrmDialogOpen] = useState(false)
   const [selectedWorkshop, setSelectedWorkshop] = useState<{ id: string; name: string } | null>(null)
@@ -167,9 +168,10 @@ export default function WorkshopManagementPage() {
 
   const filteredWorkshops = workshops
     .filter(workshop => {
-      if (filter === 'verified') return workshop.isVerified
-      if (filter === 'pending') return !workshop.isVerified
-      return true
+      if (filter === 'deleted') return workshop.status === 'DELETED'
+      if (filter === 'verified') return workshop.isVerified && workshop.status !== 'DELETED'
+      if (filter === 'pending') return !workshop.isVerified && workshop.status !== 'DELETED'
+      return workshop.status !== 'DELETED'
     })
     .filter(workshop => {
       if (!searchTerm) return true
@@ -237,12 +239,13 @@ export default function WorkshopManagementPage() {
               </label>
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as 'all' | 'verified' | 'pending')}
+                onChange={(e) => setFilter(e.target.value as 'all' | 'verified' | 'pending' | 'deleted')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 <option value="all">Alle Werkstätten</option>
                 <option value="verified">Freigeschaltet</option>
                 <option value="pending">Wartend</option>
+                <option value="deleted">Gelöscht / Blacklist</option>
               </select>
             </div>
 
@@ -298,18 +301,18 @@ export default function WorkshopManagementPage() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-sm text-gray-600">Gesamt</p>
-            <p className="mt-2 text-3xl font-bold text-gray-900">{workshops.length}</p>
+            <p className="mt-2 text-3xl font-bold text-gray-900">{workshops.filter(w => w.status !== 'DELETED').length}</p>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-sm text-gray-600">Freigeschaltet</p>
             <p className="mt-2 text-3xl font-bold text-green-600">
-              {workshops.filter(w => w.isVerified).length}
+              {workshops.filter(w => w.isVerified && w.status !== 'DELETED').length}
             </p>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-sm text-gray-600">Wartend</p>
             <p className="mt-2 text-3xl font-bold text-yellow-600">
-              {workshops.filter(w => !w.isVerified).length}
+              {workshops.filter(w => !w.isVerified && w.status !== 'DELETED').length}
             </p>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
@@ -322,9 +325,9 @@ export default function WorkshopManagementPage() {
             </p>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
-            <p className="text-sm text-gray-600">Über Freelancer</p>
-            <p className="mt-2 text-3xl font-bold text-purple-600">
-              {workshops.filter(w => w.freelancer).length}
+            <p className="text-sm text-gray-600">Gelöscht</p>
+            <p className="mt-2 text-3xl font-bold text-red-600">
+              {workshops.filter(w => w.status === 'DELETED').length}
             </p>
           </div>
         </div>
@@ -366,7 +369,11 @@ export default function WorkshopManagementPage() {
                         <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
                           {workshop.customerNumber}
                         </span>
-                        {workshop.isVerified ? (
+                        {workshop.status === 'DELETED' ? (
+                          <span className="px-3 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">
+                            Gelöscht
+                          </span>
+                        ) : workshop.isVerified ? (
                           <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                             Freigeschaltet
                           </span>

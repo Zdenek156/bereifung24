@@ -110,6 +110,7 @@ export async function GET(req: NextRequest) {
         companyName: workshop.companyName,
         logoUrl: workshop.logoUrl || null,
         isVerified: workshop.isVerified,
+        status: workshop.status,
         createdAt: workshop.createdAt,
         distance,
         offersCount,

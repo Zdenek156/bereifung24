@@ -156,6 +156,75 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ [Credential Request] Workshop "${workshop.companyName}" (KD-Nr: ${customerNumber}) requested API credentials from ${supplier}. Email sent to ${recipientEmail}`)
 
+    // Notify B24 employees who have supplier credential request notifications enabled
+    try {
+      const notificationRecipients = await prisma.adminNotificationSetting.findMany({
+        where: { notifySupplierCredentialRequest: true }
+      })
+
+      if (notificationRecipients.length > 0) {
+        const b24NotificationHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5; }
+    .container { max-width: 640px; margin: 20px auto; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .header { background: #1e3a5f; color: white; padding: 24px 32px; }
+    .header h1 { margin: 0; font-size: 20px; font-weight: 600; }
+    .header p { margin: 4px 0 0; font-size: 13px; opacity: 0.85; }
+    .content { padding: 32px; }
+    .info-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    .info-table td { padding: 8px 12px; border: 1px solid #e5e7eb; font-size: 14px; }
+    .info-table td:first-child { background: #f8f9fa; font-weight: 600; width: 200px; }
+    .footer { background: #f8f9fa; border-top: 1px solid #e5e7eb; padding: 20px 32px; font-size: 12px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🔔 TyreSystem Zugangsdaten-Anfrage</h1>
+      <p>Eine Werkstatt hat API-Zugangsdaten angefordert</p>
+    </div>
+    <div class="content">
+      <p>Folgende Werkstatt hat soeben TyreSystem API-Zugangsdaten angefordert:</p>
+      <table class="info-table">
+        <tr><td>Werkstatt</td><td>${workshop.companyName || 'Unbekannt'}</td></tr>
+        <tr><td>Kontaktperson</td><td>${user.firstName || ''} ${user.lastName || ''}</td></tr>
+        <tr><td>E-Mail</td><td>${user.email || ''}</td></tr>
+        <tr><td>Telefon</td><td>${user.phone || 'Nicht angegeben'}</td></tr>
+        <tr><td>PLZ / Ort</td><td>${user.zipCode || ''} ${user.city || ''}</td></tr>
+        <tr><td>Kundennummer</td><td><strong>${customerNumber}</strong></td></tr>
+        <tr><td>Lieferant</td><td>${supplierConfig.companyName || supplier}</td></tr>
+        <tr><td>Gesendet an</td><td>${recipientEmail}</td></tr>
+      </table>
+      <p style="margin-top: 16px; font-size: 13px; color: #6b7280;">Die E-Mail an den Lieferanten wurde bereits automatisch versendet.</p>
+    </div>
+    <div class="footer">
+      <p>Diese Benachrichtigung wurde automatisch über die Bereifung24 Plattform versendet.</p>
+    </div>
+  </div>
+</body>
+</html>`
+
+        for (const recipient of notificationRecipients) {
+          try {
+            await sendEmail({
+              to: recipient.email,
+              subject: `[B24] TyreSystem Zugangsdaten-Anfrage: ${workshop.companyName || 'Werkstatt'}`,
+              html: b24NotificationHtml,
+              text: `TyreSystem Zugangsdaten-Anfrage\n\nWerkstatt: ${workshop.companyName}\nKontakt: ${user.firstName} ${user.lastName}\nE-Mail: ${user.email}\nKundennummer: ${customerNumber}\nLieferant: ${supplierConfig.companyName || supplier}\nGesendet an: ${recipientEmail}`,
+            })
+            console.log(`📧 [Credential Request] B24 notification sent to ${recipient.email}`)
+          } catch (emailErr) {
+            console.error(`❌ [Credential Request] Failed to notify ${recipient.email}:`, emailErr)
+          }
+        }
+      }
+    } catch (notifyErr) {
+      console.error('❌ [Credential Request] B24 notification error:', notifyErr)
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Anfrage erfolgreich gesendet',

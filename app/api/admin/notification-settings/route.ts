@@ -57,7 +57,8 @@ export async function POST(req: NextRequest) {
         name: name || null,
         notifyCustomerRegistration: true,
         notifyWorkshopRegistration: true,
-        notifyInfluencerApplication: false
+        notifyInfluencerApplication: false,
+        notifySupplierCredentialRequest: false
       }
     })
 
@@ -80,7 +81,7 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json()
     console.log('[NOTIFICATION-SETTINGS] PATCH body:', body)
-    const { id, notifyCustomerRegistration, notifyWorkshopRegistration, notifyInfluencerApplication } = body
+    const { id, notifyCustomerRegistration, notifyWorkshopRegistration, notifyInfluencerApplication, notifySupplierCredentialRequest } = body
 
     if (!id) {
       return NextResponse.json({ error: 'ID ist erforderlich' }, { status: 400 })
@@ -95,6 +96,9 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof notifyInfluencerApplication === 'boolean') {
       updateData.notifyInfluencerApplication = notifyInfluencerApplication
+    }
+    if (typeof notifySupplierCredentialRequest === 'boolean') {
+      updateData.notifySupplierCredentialRequest = notifySupplierCredentialRequest
     }
 
     console.log('[NOTIFICATION-SETTINGS] Update data:', updateData)

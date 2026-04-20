@@ -113,7 +113,7 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete workshop and associated user
+// DELETE - Soft-delete workshop (deactivate, keep data for accounting)
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
@@ -122,48 +122,34 @@ export async function DELETE(
     const authError = await requireAdminOrEmployee()
     if (authError) return authError
 
-    // Hole die Werkstatt mit User ID
     const workshop = await prisma.workshop.findUnique({
       where: { id: params.id },
-      select: { userId: true, id: true }
+      select: { userId: true, id: true, companyName: true, status: true }
     })
 
     if (!workshop) {
       return NextResponse.json({ error: 'Workshop nicht gefunden' }, { status: 404 })
     }
 
-    // Lösche alle abhängigen Daten manuell
-    // 1. Lösche alle Offers
-    await prisma.offer.deleteMany({
-      where: { workshopId: workshop.id }
+    // Soft-Delete: Status auf DELETED setzen + User-Login deaktivieren
+    // Alle Buchungen, Provisionen, Bewertungen etc. bleiben für die Buchhaltung erhalten
+    await prisma.workshop.update({
+      where: { id: workshop.id },
+      data: {
+        status: 'DELETED',
+        approved: false,
+      }
     })
 
-    // 2. Lösche alle Bookings
-    await prisma.booking.deleteMany({
-      where: { workshopId: workshop.id }
+    // User-Login deaktivieren
+    await prisma.user.update({
+      where: { id: workshop.userId },
+      data: { isActive: false }
     })
 
-    // 3. Lösche alle Reviews
-    await prisma.review.deleteMany({
-      where: { workshopId: workshop.id }
-    })
+    console.log(`🗑️ [Workshop] Soft-deleted: "${workshop.companyName}" (ID: ${workshop.id}) - Daten bleiben für Buchhaltung erhalten`)
 
-    // 4. Lösche alle Commissions
-    await prisma.commission.deleteMany({
-      where: { workshopId: workshop.id }
-    })
-
-    // 5. Lösche die Werkstatt
-    await prisma.workshop.delete({
-      where: { id: workshop.id }
-    })
-
-    // 7. Lösche den User
-    await prisma.user.delete({
-      where: { id: workshop.userId }
-    })
-
-    return NextResponse.json({ success: true, message: 'Werkstatt erfolgreich gelöscht' })
+    return NextResponse.json({ success: true, message: 'Werkstatt erfolgreich deaktiviert' })
 
   } catch (error) {
     console.error('Workshop delete error:', error)

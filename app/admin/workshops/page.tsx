@@ -141,9 +141,9 @@ export default function WorkshopManagementPage() {
 
   const deleteWorkshop = async (workshopId: string, workshopName: string) => {
     const confirmed = window.confirm(
-      `Möchtest du die Werkstatt "${workshopName}" wirklich endgültig löschen?\n\n` +
-      `Alle zugehörigen Daten (Angebote, Termine, Bewertungen etc.) werden ebenfalls gelöscht.\n\n` +
-      `Diese Aktion kann nicht rückgängig gemacht werden!`
+      `Möchtest du die Werkstatt "${workshopName}" wirklich deaktivieren?\n\n` +
+      `Die Werkstatt wird deaktiviert und kann sich nicht mehr einloggen.\n` +
+      `Alle Buchungen, Provisionen und Bewertungen bleiben für die Buchhaltung erhalten.`
     )
     
     if (!confirmed) return
@@ -154,14 +154,14 @@ export default function WorkshopManagementPage() {
       })
       
       if (response.ok) {
-        alert('Werkstatt erfolgreich gelöscht')
+        alert('Werkstatt erfolgreich deaktiviert')
         fetchWorkshops()
       } else {
-        alert('Fehler beim Löschen der Werkstatt')
+        alert('Fehler beim Deaktivieren der Werkstatt')
       }
     } catch (error) {
       console.error('Error deleting workshop:', error)
-      alert('Fehler beim Löschen der Werkstatt')
+      alert('Fehler beim Deaktivieren der Werkstatt')
     }
   }
 

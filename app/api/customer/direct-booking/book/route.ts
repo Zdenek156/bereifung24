@@ -355,7 +355,8 @@ export async function POST(request: NextRequest) {
             `Telefon: ${customerPhone || 'Nicht angegeben'}`,
             '',
             `Fahrzeug: ${vehicleMake} ${booking.vehicle.model}${booking.vehicle.licensePlate ? ` - ${booking.vehicle.licensePlate}` : ''}`,
-            `Service: ${serviceDisplayName || serviceLabels[booking.serviceType] || booking.serviceType}`,
+            // Workshop calendar always in German (workshop's language), ignore client locale
+            `Service: ${serviceLabels[booking.serviceType] || booking.serviceType}`,
           ]
           if (booking.hasBalancing) calDescription.push(`✅ Auswuchtung${booking.balancingPrice ? `: ${Number(booking.balancingPrice).toFixed(2)} €` : ''}`)
           if (booking.hasStorage) calDescription.push(`✅ Einlagerung${booking.storagePrice ? `: ${Number(booking.storagePrice).toFixed(2)} €` : ''}`)
@@ -379,7 +380,8 @@ export async function POST(request: NextRequest) {
           calDescription.push('')
           // Price breakdown in calendar
           if (booking.basePrice && Number(booking.basePrice) > 0) {
-            const basePriceLabel = (booking.serviceType === 'TIRE_CHANGE' && !tireTotalPrice) ? 'Montage' : (serviceDisplayName || serviceLabels[booking.serviceType] || 'Service')
+            // Workshop calendar always in German
+            const basePriceLabel = (booking.serviceType === 'TIRE_CHANGE' && !tireTotalPrice) ? 'Montage' : (serviceLabels[booking.serviceType] || 'Service')
             calDescription.push(`${basePriceLabel}: ${Number(booking.basePrice).toFixed(2)} €`)
           }
           if (booking.balancingPrice && Number(booking.balancingPrice) > 0) {
@@ -411,7 +413,8 @@ export async function POST(request: NextRequest) {
             calRefreshToken,
             calCalendarId,
             {
-              summary: `${serviceDisplayName || serviceLabels[booking.serviceType] || booking.serviceType} - ${vehicleMake} ${booking.vehicle.model}${calSummaryTire}`,
+              // Workshop calendar always in German
+              summary: `${serviceLabels[booking.serviceType] || booking.serviceType} - ${vehicleMake} ${booking.vehicle.model}${calSummaryTire}`,
               description: calDescription.join('\n'),
               start: startDateTime.toISOString(),
               end: endDateTime.toISOString(),
@@ -533,7 +536,8 @@ export async function POST(request: NextRequest) {
             'ALIGNMENT_BOTH': 'Achsvermessung',
             'CLIMATE_SERVICE': 'Klimaservice'
           }
-          const serviceNameWs = serviceDisplayName || serviceLabelsWs[booking.serviceType] || booking.serviceType
+          // Workshop notification always in German (workshop's language), ignore client locale
+          const serviceNameWs = serviceLabelsWs[booking.serviceType] || booking.serviceType
 
           const PLATFORM_COMMISSION_RATE = 0.069
           const platformCommission = Number(booking.totalPrice) * PLATFORM_COMMISSION_RATE

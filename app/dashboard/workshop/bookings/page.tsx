@@ -183,10 +183,13 @@ export default function WorkshopBookingsPage() {
     try {
       setLoading(true)
       const response = await fetch('/api/workshop/bookings')
+      // Defensive: filter out bookings missing customer or vehicle (data integrity issue)
+      // to prevent client-side TypeError when accessing booking.customer.user.firstName
       
       if (response.ok) {
         const data = await response.json()
-        setBookings(data.bookings)
+        const safeBookings = (data.bookings || []).filter((b: any) => b && b.customer && b.customer.user && b.vehicle)
+        setBookings(safeBookings)
       } else {
         console.error('Failed to fetch bookings')
       }

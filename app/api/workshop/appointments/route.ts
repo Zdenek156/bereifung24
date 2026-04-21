@@ -91,17 +91,19 @@ export async function GET(request: NextRequest) {
       storagePrice: db.storagePrice ? Number(db.storagePrice) : null,
       serviceType: db.serviceType,
       serviceSubtype: db.serviceSubtype || null,
-      customer: {
-        user: {
-          firstName: db.customer.user.firstName,
-          lastName: db.customer.user.lastName,
-          email: db.customer.user.email,
-          phone: db.customer.user.phone,
-          street: db.customer.user.street,
-          zipCode: db.customer.user.zipCode,
-          city: db.customer.user.city,
-        },
-      },
+      customer: db.customer?.user
+        ? {
+            user: {
+              firstName: db.customer.user.firstName,
+              lastName: db.customer.user.lastName,
+              email: db.customer.user.email,
+              phone: db.customer.user.phone,
+              street: db.customer.user.street,
+              zipCode: db.customer.user.zipCode,
+              city: db.customer.user.city,
+            },
+          }
+        : null,
       vehicle: db.vehicle,
       tireRequest: null,
       offer: null,

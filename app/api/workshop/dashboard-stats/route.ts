@@ -211,9 +211,13 @@ export async function GET(request: NextRequest) {
     const todaysBookings = todaysBookingsList.map(booking => ({
       id: booking.id,
       time: booking.time,
-      customerName: `${booking.customer.user.firstName} ${booking.customer.user.lastName}`,
+      customerName: booking.customer?.user
+        ? `${booking.customer.user.firstName} ${booking.customer.user.lastName}`
+        : 'Unbekannter Kunde',
       serviceType: serviceTypeLabels[booking.serviceType] || booking.serviceType,
-      vehicle: `${booking.vehicle.make} ${booking.vehicle.model}`,
+      vehicle: booking.vehicle
+        ? `${booking.vehicle.make} ${booking.vehicle.model}`
+        : '',
       status: booking.status
     }))
 
@@ -223,7 +227,9 @@ export async function GET(request: NextRequest) {
     // Neue Buchungen
     for (const booking of recentBookings) {
       const serviceName = serviceTypeLabels[booking.serviceType] || booking.serviceType
-      const customerName = `${booking.customer.user.firstName} ${booking.customer.user.lastName}`
+      const customerName = booking.customer?.user
+        ? `${booking.customer.user.firstName} ${booking.customer.user.lastName}`
+        : 'Unbekannter Kunde'
       recentActivities.push({
         id: `booking-${booking.id}`,
         type: 'booking',

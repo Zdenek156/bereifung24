@@ -38,6 +38,100 @@ class _BookingDetailContent extends StatelessWidget {
   final Booking booking;
   const _BookingDetailContent({required this.booking});
 
+  String _serviceLabel(BuildContext context) {
+    final s = S.of(context)!;
+    final serviceMap = {
+      'TIRE_CHANGE': s.tireChange,
+      'WHEEL_CHANGE': s.wheelChange,
+      'TIRE_REPAIR': s.tireRepair,
+      'MOTORCYCLE_TIRE': s.motorcycleTireChange,
+      'ALIGNMENT_BOTH': s.axleAlignment,
+      'WHEEL_ALIGNMENT': s.axleAlignment,
+      'CLIMATE_SERVICE': s.climateService,
+      'BRAKE_SERVICE': s.brakeService,
+      'BATTERY_SERVICE': s.batteryService,
+    };
+    final base = serviceMap[booking.serviceType] ?? booking.serviceType;
+
+    final subtypeMap = {
+      'foreign_object': s.pkgForeignObject,
+      'valve_damage': s.pkgValveDamage,
+      'measurement_both': s.pkgMeasureBoth,
+      'measurement_front': s.pkgMeasureFront,
+      'measurement_rear': s.pkgMeasureRear,
+      'adjustment_both': s.pkgAdjustBoth,
+      'adjustment_front': s.pkgAdjustFront,
+      'adjustment_rear': s.pkgAdjustRear,
+      'full_service': s.pkgFullService,
+      'check': s.pkgClimateCheck,
+      'basic': s.pkgBasicService,
+      'comfort': s.pkgComfortService,
+      'premium': s.pkgPremiumService,
+    };
+
+    final subtype = booking.serviceSubtype;
+    if (subtype != null && subtypeMap.containsKey(subtype)) {
+      return '$base - ${subtypeMap[subtype]!}';
+    }
+    return base;
+  }
+
+  String _statusLabel(BuildContext context) {
+    final s = S.of(context)!;
+    switch (booking.status) {
+      case 'CONFIRMED':
+        return s.confirmed;
+      case 'PENDING':
+        return s.waitingConfirmation;
+      case 'IN_PROGRESS':
+        return s.beingProcessed;
+      case 'COMPLETED':
+        return s.completedStatus;
+      case 'CANCELLED':
+        return s.appointmentCancelled;
+      default:
+        return booking.status;
+    }
+  }
+
+  String _paymentStatusLabel(BuildContext context) {
+    switch ((booking.paymentStatus ?? '').toUpperCase()) {
+      case 'PAID':
+        return 'Paid';
+      case 'PENDING':
+        return 'Pending';
+      case 'FAILED':
+        return 'Failed';
+      case 'REFUNDED':
+        return 'Refunded';
+      default:
+        return booking.paymentStatus ?? '';
+    }
+  }
+
+  String _paymentMethodLabel() {
+    switch ((booking.paymentMethodDetail ?? booking.paymentMethod ?? '').toLowerCase()) {
+      case 'card':
+        return 'Card';
+      case 'google_pay':
+        return 'Google Pay';
+      case 'apple_pay':
+        return 'Apple Pay';
+      case 'klarna':
+        return 'Klarna';
+      case 'eps':
+        return 'EPS';
+      case 'ideal':
+        return 'iDEAL';
+      case 'amazon_pay':
+        return 'Amazon Pay';
+      case 'link':
+        return 'Link';
+      default:
+        return booking.paymentMethod ?? '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
@@ -63,7 +157,7 @@ class _BookingDetailContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        booking.statusDisplay,
+                        _statusLabel(context),
                         style: TextStyle(
                           color: _statusColor,
                           fontWeight: FontWeight.bold,
@@ -89,13 +183,15 @@ class _BookingDetailContent extends StatelessWidget {
             title: S.of(context)!.bookingLabel,
             children: [
               Text(
-                booking.serviceTypeDisplay,
+                _serviceLabel(context),
                 style:
                     const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
               ),
               const SizedBox(height: 4),
               Text(
-                S.of(context)!.bookingNumber(booking.id.length > 10 ? booking.id.substring(0, 10) : booking.id),
+                S.of(context)!.bookingNumber(booking.id.length > 10
+                    ? booking.id.substring(0, 10)
+                    : booking.id),
                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
               ),
             ],
@@ -259,11 +355,13 @@ class _BookingDetailContent extends StatelessWidget {
               title: S.of(context)!.paymentDetails,
               children: [
                 if (booking.paymentMethod != null) ...[
-                  _PriceRow(S.of(context)!.paymentType, booking.paymentMethodDisplay),
+                  _PriceRow(S.of(context)!.paymentType, _paymentMethodLabel()),
                   const SizedBox(height: 6),
                 ],
                 if (booking.paymentStatus != null) ...[
-                  _PriceRow(S.of(context)!.paymentStatusLabel, booking.paymentStatusDisplay),
+                  _PriceRow(
+                      S.of(context)!.paymentStatusLabel,
+                      _paymentStatusLabel(context)),
                   const Divider(height: 16),
                 ],
                 if (booking.basePrice != null)

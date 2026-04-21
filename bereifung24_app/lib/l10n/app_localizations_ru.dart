@@ -926,6 +926,37 @@ class SRu extends S {
   String get workshopDashboard => 'Панель управления';
 
   @override
+  String get workshopNext7Days => 'Следующие 7 дней';
+
+  @override
+  String get workshopTodayAppointments => 'Записи на сегодня';
+
+  @override
+  String get workshopNoAppointmentsToday => 'Сегодня записей нет';
+
+  @override
+  String get workshopRecentActivities => 'Недавняя активность';
+
+  @override
+  String get workshopNoAppointmentsOnDay => 'На этот день записей нет';
+
+  @override
+  String get workshopDirectBookingViaB24 =>
+      'Прямое бронирование через Bereifung24';
+
+  @override
+  String get workshopFilterAll => 'Все';
+
+  @override
+  String get workshopFilterUpcoming => 'Предстоящие';
+
+  @override
+  String get workshopFilterCompleted => 'Завершенные';
+
+  @override
+  String get workshopFilterCancelled => 'Отмененные';
+
+  @override
   String get loadingError => 'Ошибка загрузки';
 
   @override
@@ -943,10 +974,31 @@ class SRu extends S {
   String get workshopProfile => 'Профиль';
 
   @override
+  String get landingPageTitle => 'Ваша лендинг-страница';
+
+  @override
+  String get activeStatus => 'Активна';
+
+  @override
+  String get inactiveStatus => 'Неактивна';
+
+  @override
   String get shareLink => 'Поделиться страницей';
 
   @override
+  String landingPageShareMessage(String url) {
+    return 'Посетите нашу страницу и бронируйте онлайн напрямую: $url';
+  }
+
+  @override
   String get qrCode => 'QR-код';
+
+  @override
+  String get noLandingPage => 'Нет лендинг-страницы';
+
+  @override
+  String get noLandingPageDescription =>
+      'Ваша лендинг-страница создаётся и управляется через админ-портал.';
 
   @override
   String get vacation => 'Отпуск';
@@ -959,6 +1011,9 @@ class SRu extends S {
 
   @override
   String get vacationReasonHint => 'напр. Корпоративный отпуск';
+
+  @override
+  String get noVacationEntries => 'Периоды отпуска не добавлены';
 
   @override
   String get vacationSaved => 'Отпуск сохранён ✅';
@@ -974,6 +1029,9 @@ class SRu extends S {
 
   @override
   String get reviewReplyHint => 'Ваш ответ...';
+
+  @override
+  String get workshopYourReply => 'Ваш ответ:';
 
   @override
   String get replySaved => 'Ответ сохранён ✅';

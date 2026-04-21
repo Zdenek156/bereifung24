@@ -15,22 +15,22 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   int _currentPage = 0;
 
   List<_OnboardingPage> _pages(BuildContext context) => [
-    _OnboardingPage(
-      image: 'assets/images/welcome/festpreis_service.jpg',
-      title: S.of(context)!.onboardingTitle1,
-      description: S.of(context)!.onboardingDesc1,
-    ),
-    _OnboardingPage(
-      image: 'assets/images/welcome/schnelle_buchung.jpg',
-      title: S.of(context)!.onboardingTitle2,
-      description: S.of(context)!.onboardingDesc2,
-    ),
-    _OnboardingPage(
-      image: 'assets/images/welcome/ki_beratung.jpg',
-      title: S.of(context)!.onboardingTitle3,
-      description: S.of(context)!.onboardingDesc3,
-    ),
-  ];
+        _OnboardingPage(
+          image: 'assets/images/welcome/festpreis_service.jpg',
+          title: S.of(context)!.onboardingTitle1,
+          description: S.of(context)!.onboardingDesc1,
+        ),
+        _OnboardingPage(
+          image: 'assets/images/welcome/schnelle_buchung.jpg',
+          title: S.of(context)!.onboardingTitle2,
+          description: S.of(context)!.onboardingDesc2,
+        ),
+        _OnboardingPage(
+          image: 'assets/images/welcome/ki_beratung.jpg',
+          title: S.of(context)!.onboardingTitle3,
+          description: S.of(context)!.onboardingDesc3,
+        ),
+      ];
 
   @override
   void dispose() {

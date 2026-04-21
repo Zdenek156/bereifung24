@@ -929,6 +929,36 @@ class SEn extends S {
   String get workshopDashboard => 'Dashboard';
 
   @override
+  String get workshopNext7Days => 'Next 7 days';
+
+  @override
+  String get workshopTodayAppointments => 'Today\'s appointments';
+
+  @override
+  String get workshopNoAppointmentsToday => 'No appointments today';
+
+  @override
+  String get workshopRecentActivities => 'Recent activities';
+
+  @override
+  String get workshopNoAppointmentsOnDay => 'No appointments on this day';
+
+  @override
+  String get workshopDirectBookingViaB24 => 'Direct booking via Bereifung24';
+
+  @override
+  String get workshopFilterAll => 'All';
+
+  @override
+  String get workshopFilterUpcoming => 'Upcoming';
+
+  @override
+  String get workshopFilterCompleted => 'Completed';
+
+  @override
+  String get workshopFilterCancelled => 'Cancelled';
+
+  @override
   String get loadingError => 'Loading error';
 
   @override
@@ -946,10 +976,31 @@ class SEn extends S {
   String get workshopProfile => 'Profile';
 
   @override
+  String get landingPageTitle => 'Your landing page';
+
+  @override
+  String get activeStatus => 'Active';
+
+  @override
+  String get inactiveStatus => 'Inactive';
+
+  @override
   String get shareLink => 'Share page';
 
   @override
+  String landingPageShareMessage(String url) {
+    return 'Visit our page and book directly online: $url';
+  }
+
+  @override
   String get qrCode => 'QR code';
+
+  @override
+  String get noLandingPage => 'No landing page';
+
+  @override
+  String get noLandingPageDescription =>
+      'Your landing page is created and managed via the admin portal.';
 
   @override
   String get vacation => 'Vacation time';
@@ -962,6 +1013,9 @@ class SEn extends S {
 
   @override
   String get vacationReasonHint => 'e.g. Company holidays';
+
+  @override
+  String get noVacationEntries => 'No vacation periods entered';
 
   @override
   String get vacationSaved => 'Vacation time saved ✅';
@@ -978,6 +1032,9 @@ class SEn extends S {
 
   @override
   String get reviewReplyHint => 'Your reply...';
+
+  @override
+  String get workshopYourReply => 'Your reply:';
 
   @override
   String get replySaved => 'Reply saved ✅';

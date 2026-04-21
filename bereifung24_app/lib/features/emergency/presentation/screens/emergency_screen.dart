@@ -66,8 +66,8 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
     if (position == null) {
       setState(() {
         _phase = _ScreenPhase.error;
-        _errorMessage = locService.lastError ??
-            S.of(context)!.locationFailedPermission;
+        _errorMessage =
+            locService.lastError ?? S.of(context)!.locationFailedPermission;
       });
       return;
     }
@@ -234,7 +234,9 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
           ),
           const SizedBox(height: 28),
           Text(
-            isFound ? S.of(context)!.locationFound : S.of(context)!.locatingPosition2,
+            isFound
+                ? S.of(context)!.locationFound
+                : S.of(context)!.locatingPosition2,
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
@@ -335,7 +337,12 @@ class _EmergencyScreenState extends ConsumerState<EmergencyScreen>
               Expanded(
                 child: Text(
                   _workshops.isNotEmpty
-                      ? (_workshops.length == 1 ? S.of(context)!.workshopsFoundNearby('${_workshops.length}') : S.of(context)!.workshopsFoundNearbyPlural('${_workshops.length}'))
+                      ? (_workshops.length == 1
+                          ? S
+                              .of(context)!
+                              .workshopsFoundNearby('${_workshops.length}')
+                          : S.of(context)!.workshopsFoundNearbyPlural(
+                              '${_workshops.length}'))
                       : S.of(context)!.noWorkshopsNearby,
                   style: TextStyle(
                     fontSize: 13,
@@ -636,7 +643,9 @@ class _WorkshopEmergencyCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  isOpen ? S.of(context)!.openStatus : S.of(context)!.closedStatus,
+                  isOpen
+                      ? S.of(context)!.openStatus
+                      : S.of(context)!.closedStatus,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -792,7 +801,9 @@ String _getHoursText(BuildContext context, Workshop workshop) {
           .where((h) => h.dayOfWeek == nextDay && !h.isClosed)
           .toList();
       if (nextHours.isNotEmpty) {
-        return S.of(context)!.opensOnDay(nextHours.first.dayName, nextHours.first.openTime);
+        return S
+            .of(context)!
+            .opensOnDay(nextHours.first.dayName, nextHours.first.openTime);
       }
     }
     return S.of(context)!.closedStatus;

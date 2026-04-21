@@ -115,7 +115,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   child: CircularProgressIndicator(
                       strokeWidth: 2, color: Colors.white),
                 )
-              : Text(S.of(context)!.sendLink, style: const TextStyle(fontSize: 16)),
+              : Text(S.of(context)!.sendLink,
+                  style: const TextStyle(fontSize: 16)),
         ),
       ],
     );

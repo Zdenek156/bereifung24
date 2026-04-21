@@ -926,6 +926,37 @@ class STr extends S {
   String get workshopDashboard => 'Kontrol Paneli';
 
   @override
+  String get workshopNext7Days => 'Sonraki 7 gün';
+
+  @override
+  String get workshopTodayAppointments => 'Bugünün randevuları';
+
+  @override
+  String get workshopNoAppointmentsToday => 'Bugün randevu yok';
+
+  @override
+  String get workshopRecentActivities => 'Son aktiviteler';
+
+  @override
+  String get workshopNoAppointmentsOnDay => 'Bu gün için randevu yok';
+
+  @override
+  String get workshopDirectBookingViaB24 =>
+      'Bereifung24 üzerinden doğrudan rezervasyon';
+
+  @override
+  String get workshopFilterAll => 'Tümü';
+
+  @override
+  String get workshopFilterUpcoming => 'Yaklaşan';
+
+  @override
+  String get workshopFilterCompleted => 'Tamamlanan';
+
+  @override
+  String get workshopFilterCancelled => 'İptal edilen';
+
+  @override
   String get loadingError => 'Yükleme hatası';
 
   @override
@@ -943,10 +974,31 @@ class STr extends S {
   String get workshopProfile => 'Profil';
 
   @override
+  String get landingPageTitle => 'Açılış sayfanız';
+
+  @override
+  String get activeStatus => 'Aktif';
+
+  @override
+  String get inactiveStatus => 'Pasif';
+
+  @override
   String get shareLink => 'Sayfayı paylaş';
 
   @override
+  String landingPageShareMessage(String url) {
+    return 'Sayfamızı ziyaret edin ve doğrudan çevrimiçi rezervasyon yapın: $url';
+  }
+
+  @override
   String get qrCode => 'QR kodu';
+
+  @override
+  String get noLandingPage => 'Açılış sayfası yok';
+
+  @override
+  String get noLandingPageDescription =>
+      'Açılış sayfanız yönetim portalı üzerinden oluşturulur ve yönetilir.';
 
   @override
   String get vacation => 'Tatil süresi';
@@ -959,6 +1011,9 @@ class STr extends S {
 
   @override
   String get vacationReasonHint => 'ör. İşletme tatili';
+
+  @override
+  String get noVacationEntries => 'Kayıtlı tatil dönemi yok';
 
   @override
   String get vacationSaved => 'Tatil süresi kaydedildi ✅';
@@ -975,6 +1030,9 @@ class STr extends S {
 
   @override
   String get reviewReplyHint => 'Yanıtınız...';
+
+  @override
+  String get workshopYourReply => 'Yanıtınız:';
 
   @override
   String get replySaved => 'Yanıt kaydedildi ✅';
@@ -1964,7 +2022,7 @@ class STr extends S {
 
   @override
   String reviewsCountLabel(int count) {
-    return '($count Bewertungen)';
+    return '($count değerlendirme)';
   }
 
   @override

@@ -15,13 +15,6 @@ class WorkshopDashboardScreen extends ConsumerStatefulWidget {
 class _WorkshopDashboardScreenState
     extends ConsumerState<WorkshopDashboardScreen> {
   static const _periods = ['1d', '7d', '30d', '365d', 'all'];
-  static const _periodLabels = {
-    '1d': '1 Tag',
-    '7d': '7 Tage',
-    '30d': '30 Tage',
-    '365d': '1 Jahr',
-    'all': 'Gesamt',
-  };
   int _periodIndex = 1; // default: 7d
 
   @override
@@ -52,13 +45,13 @@ class _WorkshopDashboardScreenState
                   ElevatedButton(
                     onPressed: () =>
                         ref.invalidate(workshopStatsPeriodProvider(period)),
-                    child: const Text('Erneut versuchen'),
+                    child: Text(S.of(context)!.retry),
                   ),
                 ],
               ),
             ),
             data: (stats) => ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
               children: [
                 // Header
                 Row(
@@ -78,7 +71,7 @@ class _WorkshopDashboardScreenState
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _greeting(stats.workshopName),
+                            _greeting(context, stats.workshopName),
                             style: TextStyle(
                               color: isDark ? Colors.white60 : Colors.black45,
                               fontSize: 14,
@@ -93,7 +86,7 @@ class _WorkshopDashboardScreenState
                         color: isDark ? Colors.white38 : Colors.black26,
                         size: 22,
                       ),
-                      tooltip: 'Bildschirm drehen',
+                      tooltip: S.of(context)!.rotateScreen,
                       onPressed: () {
                         final isPortrait = MediaQuery.of(context).orientation ==
                             Orientation.portrait;
@@ -121,7 +114,7 @@ class _WorkshopDashboardScreenState
                       Expanded(
                         child: _KpiCard(
                           emoji: '📅',
-                          label: 'Heute',
+                          label: S.of(context)!.today,
                           value: '${stats.todaysBookings}',
                           color: const Color(0xFF3B82F6),
                         ),
@@ -130,7 +123,7 @@ class _WorkshopDashboardScreenState
                       Expanded(
                         child: _KpiCard(
                           emoji: '📊',
-                          label: 'Nächste 7 Tage',
+                          label: S.of(context)!.workshopNext7Days,
                           value: '${stats.upcomingBookings}',
                           color: const Color(0xFF10B981),
                         ),
@@ -153,9 +146,9 @@ class _WorkshopDashboardScreenState
                           },
                           child: _KpiCard(
                             emoji: '💰',
-                            label: 'Umsatz ${_periodLabels[period]}',
+                            label: _revenueLabel(context, period),
                             value: '${stats.revenue7Days.toStringAsFixed(0)} €',
-                            subtitle: 'Tippen zum Wechseln ›',
+                            subtitle: S.of(context)!.tapToSwitch,
                             color: const Color(0xFFF59E0B),
                           ),
                         ),
@@ -164,11 +157,11 @@ class _WorkshopDashboardScreenState
                       Expanded(
                         child: _KpiCard(
                           emoji: '⭐',
-                          label: 'Bewertung',
+                          label: S.of(context)!.reviews,
                           value: stats.totalReviews > 0
                               ? stats.averageRating.toStringAsFixed(1)
                               : '-',
-                          subtitle: '${stats.totalReviews} Bewertungen',
+                          subtitle: S.of(context)!.reviewsCountLabel(stats.totalReviews),
                           color: const Color(0xFFEF4444),
                         ),
                       ),
@@ -181,7 +174,7 @@ class _WorkshopDashboardScreenState
                 // Today's Bookings
                 if (stats.todaysBookingsList.isNotEmpty) ...[
                   Text(
-                    'Heutige Termine',
+                    S.of(context)!.workshopTodayAppointments,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -204,13 +197,13 @@ class _WorkshopDashboardScreenState
                             : const Color(0xFFE2E8F0),
                       ),
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
-                        Text('☀️', style: TextStyle(fontSize: 36)),
-                        SizedBox(height: 8),
+                        const Text('☀️', style: TextStyle(fontSize: 36)),
+                        const SizedBox(height: 8),
                         Text(
-                          'Keine Termine heute',
-                          style: TextStyle(fontWeight: FontWeight.w500),
+                          S.of(context)!.workshopNoAppointmentsToday,
+                          style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
                       ],
                     ),
@@ -222,7 +215,7 @@ class _WorkshopDashboardScreenState
                 // Recent Activity
                 if (stats.recentActivities.isNotEmpty) ...[
                   Text(
-                    'Letzte Aktivitäten',
+                    S.of(context)!.workshopRecentActivities,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
@@ -242,12 +235,31 @@ class _WorkshopDashboardScreenState
     );
   }
 
-  String _greeting(String workshopName) {
+  String _greeting(BuildContext context, String workshopName) {
     final hour = DateTime.now().hour;
     final name = workshopName.isNotEmpty ? ', $workshopName' : '';
-    if (hour < 12) return 'Guten Morgen$name! ☀️';
-    if (hour < 18) return 'Guten Tag$name! 👋';
-    return 'Guten Abend$name! 🌙';
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang == 'de') {
+      if (hour < 12) return 'Guten Morgen$name! ☀️';
+      if (hour < 18) return 'Guten Tag$name! 👋';
+      return 'Guten Abend$name! 🌙';
+    }
+    if (hour < 12) return 'Good morning$name! ☀️';
+    if (hour < 18) return 'Good day$name! 👋';
+    return 'Good evening$name! 🌙';
+  }
+
+  String _revenueLabel(BuildContext context, String period) {
+    final lang = Localizations.localeOf(context).languageCode;
+    final revenue = lang == 'de' ? 'Umsatz' : 'Revenue';
+    final periodLabel = switch (period) {
+      '1d' => lang == 'de' ? '1 Tag' : '1 day',
+      '7d' => lang == 'de' ? '7 Tage' : '7 days',
+      '30d' => lang == 'de' ? '30 Tage' : '30 days',
+      '365d' => lang == 'de' ? '1 Jahr' : '1 year',
+      _ => lang == 'de' ? 'Gesamt' : 'All time',
+    };
+    return '$revenue $periodLabel';
   }
 }
 
@@ -376,7 +388,7 @@ class _TodayBookingTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${booking.serviceType} · ${booking.vehicle}',
+                  '${_serviceLabel(context, booking.serviceType)} · ${booking.vehicle}',
                   style: TextStyle(
                     fontSize: 12,
                     color: isDark ? Colors.white54 : const Color(0xFF64748B),
@@ -389,6 +401,55 @@ class _TodayBookingTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _serviceLabel(BuildContext context, String raw) {
+    final key = raw.toUpperCase().trim();
+    final isDe = Localizations.localeOf(context).languageCode == 'de';
+    const deLabels = {
+      'WHEEL_CHANGE': 'Räderwechsel',
+      'RÄDERWECHSEL': 'Räderwechsel',
+      'TIRE_CHANGE': 'Reifenwechsel',
+      'REIFENWECHSEL': 'Reifenwechsel',
+      'TIRE_REPAIR': 'Reifenreparatur',
+      'REIFENREPARATUR': 'Reifenreparatur',
+      'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
+      'MOTORRAD-REIFENWECHSEL': 'Motorrad-Reifenwechsel',
+      'ALIGNMENT_BOTH': 'Achsvermessung',
+      'ACHSVERMESSUNG': 'Achsvermessung',
+      'CLIMATE_SERVICE': 'Klimaservice',
+      'KLIMASERVICE': 'Klimaservice',
+    };
+    if (isDe) {
+      return deLabels[key] ?? raw;
+    }
+    if (key == 'WHEEL_CHANGE' || key == 'RÄDERWECHSEL') {
+      return _normalizeServiceLabel(S.of(context)!.serviceWheelChange);
+    }
+    if (key == 'TIRE_CHANGE' || key == 'REIFENWECHSEL') {
+      return _normalizeServiceLabel(S.of(context)!.serviceTireChange);
+    }
+    if (key == 'TIRE_REPAIR' || key == 'REIFENREPARATUR') {
+      return S.of(context)!.foreignObjectRepair;
+    }
+    if (key == 'MOTORCYCLE_TIRE' || key == 'MOTORRAD-REIFENWECHSEL') {
+      return _normalizeServiceLabel(S.of(context)!.serviceMotorcycleTire);
+    }
+    if (key == 'ALIGNMENT_BOTH' || key == 'ACHSVERMESSUNG') {
+      return _normalizeServiceLabel(S.of(context)!.serviceAlignment);
+    }
+    if (key == 'CLIMATE_SERVICE' || key == 'KLIMASERVICE') {
+      return _normalizeServiceLabel(S.of(context)!.serviceClimate);
+    }
+    return raw;
+  }
+
+  String _normalizeServiceLabel(String value) {
+    return value
+        .replaceAll('-\n', '')
+        .replaceAll('\n', ' ')
+        .replaceAll('  ', ' ')
+        .trim();
   }
 
   Widget _statusDot(String status) {

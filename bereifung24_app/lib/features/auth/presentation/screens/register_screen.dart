@@ -53,8 +53,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     if (!_agreeTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Bitte akzeptiere die Nutzungsbedingungen')),
+        SnackBar(content: Text(S.of(context)!.acceptTerms)),
       );
       return;
     }
@@ -90,9 +89,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (idToken == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Google-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+            SnackBar(content: Text(S.of(context)!.googleRegisterFailed)),
           );
         }
         return;
@@ -114,8 +111,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(error ?? 'Google-Registrierung fehlgeschlagen')),
+            SnackBar(content: Text(error ?? S.of(context)!.googleRegisterFailed)),
           );
         }
         return;
@@ -155,9 +151,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       debugPrint('Google Sign-In error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Google-Registrierung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+          SnackBar(content: Text(S.of(context)!.googleRegisterFailed)),
         );
       }
     }
@@ -176,9 +170,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (idToken == null) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Apple-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+            SnackBar(content: Text(S.of(context)!.appleRegisterFailed)),
           );
         }
         return;
@@ -199,8 +191,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(error ?? 'Apple-Registrierung fehlgeschlagen')),
+            SnackBar(content: Text(error ?? S.of(context)!.appleRegisterFailed)),
           );
         }
         return;
@@ -255,9 +246,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       debugPrint('Apple Sign-In error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Apple-Registrierung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+          SnackBar(content: Text(S.of(context)!.appleRegisterFailed)),
         );
       }
     }
@@ -307,16 +296,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: emailCtrl,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: 'E-Mail-Adresse *',
-                      prefixIcon: Icon(Icons.email_outlined),
+                    decoration: InputDecoration(
+                      labelText: S.of(context)!.emailRequired,
+                      prefixIcon: const Icon(Icons.email_outlined),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                      if (v == null || v.trim().isEmpty) {
+                        return S.of(context)!.requiredField;
+                      }
                       if (!v.contains('@') || !v.contains('.'))
-                        return 'Ungültige E-Mail';
+                        return S.of(context)!.invalidEmail;
                       if (v.contains('privaterelay.appleid.com'))
-                        return 'Bitte echte E-Mail angeben';
+                        return S.of(context)!.enterValidEmail;
                       return null;
                     },
                   ),
@@ -326,26 +317,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: firstNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(labelText: 'Vorname *'),
+                    decoration:
+                        InputDecoration(labelText: '${S.of(context)!.firstName} *'),
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: lastNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(labelText: 'Nachname *'),
+                    decoration:
+                        InputDecoration(labelText: '${S.of(context)!.lastName} *'),
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                 ],
                 TextFormField(
                   controller: phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefon (optional)',
-                    prefixIcon: Icon(Icons.phone_outlined),
+                  decoration: InputDecoration(
+                    labelText: S.of(context)!.phoneOptional,
+                    prefixIcon: const Icon(Icons.phone_outlined),
                   ),
                 ),
                 if (!addressOptional) ...[
@@ -353,12 +346,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: streetCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: const InputDecoration(
-                      labelText: 'Straße & Hausnummer *',
-                      prefixIcon: Icon(Icons.home_outlined),
+                    decoration: InputDecoration(
+                      labelText: S.of(context)!.street,
+                      prefixIcon: const Icon(Icons.home_outlined),
                     ),
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -368,10 +361,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: TextFormField(
                           controller: zipCtrl,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(labelText: 'PLZ *'),
+                          decoration:
+                              InputDecoration(labelText: S.of(context)!.zip),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Pflicht';
-                            if (v.trim().length != 5) return '5 Ziffern';
+                            if (v == null || v.trim().isEmpty) {
+                              return S.of(context)!.requiredField;
+                            }
+                            if (v.trim().length != 5) {
+                              return S.of(context)!.requiredField;
+                            }
                             return null;
                           },
                         ),
@@ -381,10 +379,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: TextFormField(
                           controller: cityCtrl,
                           textCapitalization: TextCapitalization.words,
-                          decoration:
-                              const InputDecoration(labelText: 'Stadt *'),
+                          decoration: InputDecoration(labelText: S.of(context)!.city),
                           validator: (v) => v == null || v.trim().isEmpty
-                              ? 'Pflichtfeld'
+                              ? S.of(context)!.requiredField
                               : null,
                         ),
                       ),
@@ -398,7 +395,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Abbrechen'),
+            child: Text(S.of(context)!.cancel),
           ),
           FilledButton(
             onPressed: () {
@@ -414,7 +411,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 });
               }
             },
-            child: const Text('Weiter'),
+            child: Text(S.of(context)!.next),
           ),
         ],
       ),
@@ -454,14 +451,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 const SizedBox(height: 16),
 
                 Text(
-                  'Konto erstellen',
+                  S.of(context)!.register,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Erstelle dein kostenloses Bereifung24-Konto',
+                  S.of(context)!.registerAtB24,
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
@@ -487,7 +484,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         SvgPicture.asset('assets/images/google_logo.svg',
                             height: 20, width: 20),
                         const SizedBox(width: 12),
-                        const Text('Mit Google registrieren'),
+                        Text(S.of(context)!.registerWithGoogle),
                       ],
                     ),
                   ),
@@ -508,7 +505,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         SvgPicture.asset('assets/images/apple_logo.svg',
                             height: 20, width: 20),
                         const SizedBox(width: 12),
-                        const Text('Mit Apple registrieren'),
+                        Text(S.of(context)!.registerWithApple),
                       ],
                     ),
                   ),
@@ -528,7 +525,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         SvgPicture.asset('assets/images/google_logo.svg',
                             height: 20, width: 20),
                         const SizedBox(width: 12),
-                        const Text('Mit Google registrieren'),
+                        Text(S.of(context)!.registerWithGoogle),
                       ],
                     ),
                   ),
@@ -573,9 +570,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: TextFormField(
                         controller: _firstNameCtrl,
                         textCapitalization: TextCapitalization.words,
-                        decoration: InputDecoration(labelText: S.of(context)!.firstName),
+                        decoration: InputDecoration(
+                            labelText: S.of(context)!.firstName),
                         validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Pflichtfeld'
+                          ? S.of(context)!.requiredField
                             : null,
                       ),
                     ),
@@ -587,7 +585,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         decoration:
                             InputDecoration(labelText: S.of(context)!.lastName),
                         validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Pflichtfeld'
+                          ? S.of(context)!.requiredField
                             : null,
                       ),
                     ),
@@ -604,8 +602,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
-                    if (!v.contains('@')) return 'Ungültige E-Mail';
+                    if (v == null || v.trim().isEmpty) {
+                      return S.of(context)!.requiredField;
+                    }
+                    if (!v.contains('@')) return S.of(context)!.invalidEmail;
                     return null;
                   },
                 ),
@@ -615,9 +615,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextFormField(
                   controller: _phoneCtrl,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(
-                    labelText: 'Telefon (optional)',
-                    prefixIcon: Icon(Icons.phone_outlined),
+                  decoration: InputDecoration(
+                    labelText: S.of(context)!.phoneOptional,
+                    prefixIcon: const Icon(Icons.phone_outlined),
                   ),
                 ),
 
@@ -627,15 +627,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 Row(
                   children: [
                     Text(
-                      'Adresse *',
+                      S.of(context)!.address,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),
                     ),
                     const SizedBox(width: 8),
                     Tooltip(
-                      message:
-                          'Ihre Adresse wird benötigt, um Werkstätten in Ihrer Nähe zu finden und die Entfernung zu berechnen.',
+                      message: S.of(context)!.addressInfoText,
                       triggerMode: TooltipTriggerMode.tap,
                       child: Container(
                         width: 20,
@@ -658,7 +657,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Ihre Adresse wird benötigt, um Werkstätten in Ihrer Nähe zu finden und die Entfernung zu berechnen.',
+                  S.of(context)!.addressInfoText,
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 12),
@@ -671,7 +670,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     prefixIcon: const Icon(Icons.home_outlined),
                   ),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -683,13 +682,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: TextFormField(
                         controller: _zipCodeCtrl,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'PLZ *',
-                        ),
+                        decoration:
+                            InputDecoration(labelText: S.of(context)!.zip),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty)
-                            return 'Pflichtfeld';
-                          if (v.trim().length != 5) return '5 Ziffern';
+                            return S.of(context)!.requiredField;
+                          if (v.trim().length != 5) return S.of(context)!.requiredField;
                           return null;
                         },
                       ),
@@ -699,11 +697,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       child: TextFormField(
                         controller: _cityCtrl,
                         textCapitalization: TextCapitalization.words,
-                        decoration: const InputDecoration(
-                          labelText: 'Stadt *',
-                        ),
+                        decoration:
+                            InputDecoration(labelText: S.of(context)!.city),
                         validator: (v) => v == null || v.trim().isEmpty
-                            ? 'Pflichtfeld'
+                            ? S.of(context)!.requiredField
                             : null,
                       ),
                     ),
@@ -727,8 +724,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Pflichtfeld';
-                    if (v.length < 8) return 'Mindestens 8 Zeichen';
+                    if (v == null || v.isEmpty) return S.of(context)!.requiredField;
+                    if (v.length < 8) return S.of(context)!.requiredField;
                     return null;
                   },
                 ),
@@ -781,9 +778,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                           : null,
                                     ),
                             children: [
-                              const TextSpan(text: 'Ich akzeptiere die '),
+                              TextSpan(text: '${S.of(context)!.acceptTerms}: '),
                               TextSpan(
-                                text: 'AGB',
+                                text: S.of(context)!.agb,
                                 style: TextStyle(
                                   color: B24Colors.primaryLight,
                                   decoration: TextDecoration.underline,
@@ -796,9 +793,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                         ),
                                       ),
                               ),
-                              const TextSpan(text: ' und '),
+                              TextSpan(text: S.of(context)!.andThe),
                               TextSpan(
-                                text: 'Datenschutzerklärung',
+                                text: S.of(context)!.datenschutz,
                                 style: TextStyle(
                                   color: B24Colors.primaryLight,
                                   decoration: TextDecoration.underline,

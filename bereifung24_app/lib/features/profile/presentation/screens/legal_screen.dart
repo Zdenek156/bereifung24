@@ -35,8 +35,8 @@ class _DynamicLegalScreenState extends State<DynamicLegalScreen> {
   Future<void> _loadContent() async {
     try {
       final response = await ApiClient().dio.get(
-        '/public/legal/${widget.legalKey}',
-      );
+            '/public/legal/${widget.legalKey}',
+          );
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
@@ -160,4 +160,3 @@ class ImpressumScreen extends StatelessWidget {
     );
   }
 }
-

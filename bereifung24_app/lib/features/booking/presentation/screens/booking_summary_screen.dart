@@ -111,29 +111,29 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
   final _customerNotesController = TextEditingController();
 
   static Map<String, String> _serviceLabelsOf(BuildContext context) => {
-    'TIRE_CHANGE': S.of(context)!.tireChange,
-    'WHEEL_CHANGE': S.of(context)!.wheelChange,
-    'TIRE_REPAIR': S.of(context)!.tireRepair,
-    'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
-    'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
-    'CLIMATE_SERVICE': S.of(context)!.climateService,
-  };
+        'TIRE_CHANGE': S.of(context)!.tireChange,
+        'WHEEL_CHANGE': S.of(context)!.wheelChange,
+        'TIRE_REPAIR': S.of(context)!.tireRepair,
+        'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
+        'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
+        'CLIMATE_SERVICE': S.of(context)!.climateService,
+      };
 
   static Map<String, String> _packageLabelsOf(BuildContext context) => {
-    'foreign_object': S.of(context)!.pkgForeignObject,
-    'valve_damage': S.of(context)!.pkgValveDamage,
-    'measurement_both': S.of(context)!.pkgMeasureBoth,
-    'measurement_front': S.of(context)!.pkgMeasureFront,
-    'measurement_rear': S.of(context)!.pkgMeasureRear,
-    'adjustment_both': S.of(context)!.pkgAdjustBoth,
-    'adjustment_front': S.of(context)!.pkgAdjustFront,
-    'adjustment_rear': S.of(context)!.pkgAdjustRear,
-    'full_service': S.of(context)!.pkgFullService,
-    'check': S.of(context)!.pkgClimateCheck,
-    'basic': S.of(context)!.pkgBasicService,
-    'comfort': S.of(context)!.pkgComfortService,
-    'premium': S.of(context)!.pkgPremiumService,
-  };
+        'foreign_object': S.of(context)!.pkgForeignObject,
+        'valve_damage': S.of(context)!.pkgValveDamage,
+        'measurement_both': S.of(context)!.pkgMeasureBoth,
+        'measurement_front': S.of(context)!.pkgMeasureFront,
+        'measurement_rear': S.of(context)!.pkgMeasureRear,
+        'adjustment_both': S.of(context)!.pkgAdjustBoth,
+        'adjustment_front': S.of(context)!.pkgAdjustFront,
+        'adjustment_rear': S.of(context)!.pkgAdjustRear,
+        'full_service': S.of(context)!.pkgFullService,
+        'check': S.of(context)!.pkgClimateCheck,
+        'basic': S.of(context)!.pkgBasicService,
+        'comfort': S.of(context)!.pkgComfortService,
+        'premium': S.of(context)!.pkgPremiumService,
+      };
 
   /// Resolves the display name: package label → fallback to generic service label
   String _resolvedServiceName(BuildContext context) {
@@ -142,7 +142,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
     if (pkg != null && pkgLabels.containsKey(pkg)) {
       return pkgLabels[pkg]!;
     }
-    return _serviceLabelsOf(context)[widget.serviceType] ?? S.of(context)!.tireChange;
+    return _serviceLabelsOf(context)[widget.serviceType] ??
+        S.of(context)!.tireChange;
   }
 
   /// For WHEEL_CHANGE: compute the actual base price by subtracting add-ons from searchBasePrice
@@ -239,14 +240,16 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       // Check user address before payment
       final user = ref.read(authStateProvider).user;
       if (user == null ||
-          user.street == null || user.street!.trim().isEmpty ||
-          user.zipCode == null || user.zipCode!.trim().isEmpty ||
-          user.city == null || user.city!.trim().isEmpty) {
+          user.street == null ||
+          user.street!.trim().isEmpty ||
+          user.zipCode == null ||
+          user.zipCode!.trim().isEmpty ||
+          user.city == null ||
+          user.city!.trim().isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'Bitte hinterlege deine Adresse in deinem Profil, bevor du buchst.'),
+            SnackBar(
+              content: Text(S.of(context)!.addressNeeded),
               backgroundColor: Colors.red,
             ),
           );
@@ -272,7 +275,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                  content: Text('Zahlung fehlgeschlagen: $e'),
+                  content: Text('${S.of(context)!.paymentFailed}: $e'),
                   backgroundColor: Colors.red),
             );
             setState(() => _isSubmitting = false);
@@ -285,8 +288,8 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       if (vehicle?.id == null || vehicle!.id!.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Bitte wähle ein Fahrzeug aus'),
+            SnackBar(
+                content: Text(S.of(context)!.selectVehicle),
                 backgroundColor: Colors.red),
           );
           setState(() => _isSubmitting = false);
@@ -388,7 +391,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       }
     } catch (e) {
       if (mounted) {
-        String message = 'Buchung fehlgeschlagen. Bitte versuche es erneut.';
+        String message = S.of(context)!.bookingFailed;
         if (e is DioException && e.response?.data != null) {
           final serverError = e.response?.data?['error'];
           if (serverError != null && serverError.toString().isNotEmpty) {
@@ -427,13 +430,14 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
       ),
       body: workshopAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Fehler: $err')),
+        error: (err, _) => Center(child: Text('${S.of(context)!.error}: $err')),
         data: (workshop) {
           final pricing = workshop.pricing;
           final total = _calculateTotal(pricing);
           final parsedDate = DateTime.tryParse(widget.date);
+          final localeTag = Localizations.localeOf(context).toLanguageTag();
           final dateFormatted = parsedDate != null
-              ? DateFormat('EEEE, d. MMMM yyyy', 'de_DE').format(parsedDate)
+              ? DateFormat('EEEE, d. MMMM yyyy', localeTag).format(parsedDate)
               : widget.date;
 
           return SingleChildScrollView(
@@ -444,7 +448,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 // ── Workshop ──
                 _SummaryCard(
                   icon: Icons.build_circle_outlined,
-                  title: 'Werkstatt',
+                  title: S.of(context)!.workshop,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -501,7 +505,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                   color: const Color(0xFF0284C7),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('VA',
+                                child: Text(S.of(context)!.frontAxle,
                                     style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
@@ -560,7 +564,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                   color: const Color(0xFF0284C7),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
-                                child: const Text('HA',
+                                child: Text(S.of(context)!.rearAxle,
                                     style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
@@ -652,9 +656,12 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                           spacing: 6,
                           runSpacing: 4,
                           children: [
-                            if (widget.withBalancing) _OptionChip(S.of(context)!.balancingX4),
-                            if (widget.withStorage) _OptionChip(S.of(context)!.storage),
-                            if (widget.withWashing) _OptionChip(S.of(context)!.washing),
+                            if (widget.withBalancing)
+                              _OptionChip(S.of(context)!.balancingX4),
+                            if (widget.withStorage)
+                              _OptionChip(S.of(context)!.storage),
+                            if (widget.withWashing)
+                              _OptionChip(S.of(context)!.washing),
                           ],
                         ),
                       ],
@@ -667,7 +674,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 // ── Vehicle ──
                 _SummaryCard(
                   icon: Icons.directions_car,
-                  title: 'Fahrzeug',
+                  title: S.of(context)!.vehicle,
                   child: selectedVehicle != null
                       ? Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -677,13 +684,14 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                     fontWeight: FontWeight.w600, fontSize: 15)),
                             if (selectedVehicle.tireSizeWithIndex.isNotEmpty)
                               Text(
-                                  'Reifengröße: ${selectedVehicle.tireSizeWithIndex}',
+                                  S.of(context)!.tireSizeLabel(
+                                      selectedVehicle.tireSizeWithIndex),
                                   style: TextStyle(
                                       color: Colors.grey[600], fontSize: 13)),
                           ],
                         )
-                      : const Text('Kein Fahrzeug ausgewählt',
-                          style: TextStyle(color: Colors.red)),
+                      : Text(S.of(context)!.noVehicleSelected,
+                          style: const TextStyle(color: Colors.red)),
                 ),
 
                 const SizedBox(height: 12),
@@ -691,14 +699,14 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 // ── Termin ──
                 _SummaryCard(
                   icon: Icons.calendar_today,
-                  title: 'Termin',
+                  title: S.of(context)!.appointment,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(dateFormatted,
                           style: const TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 15)),
-                      Text('${widget.time} Uhr',
+                      Text(S.of(context)!.timeLabel(widget.time),
                           style: const TextStyle(fontSize: 15)),
                     ],
                   ),
@@ -715,8 +723,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     maxLines: 3,
                     maxLength: 500,
                     decoration: InputDecoration(
-                      hintText: 'z.B. Felgenschloss liegt im Kofferraum, '
-                          'Bitte Reifendruck prüfen...',
+                      hintText: S.of(context)!.messageHint,
                       hintStyle:
                           TextStyle(fontSize: 13, color: Colors.grey[400]),
                       filled: true,
@@ -748,7 +755,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                 if (pricing != null || widget.searchBasePrice != null) ...[
                   _SummaryCard(
                     icon: Icons.euro,
-                    title: 'Kosten',
+                    title: S.of(context)!.costs,
                     child: Column(
                       children: [
                         // Mischbereifung front/rear tire lines
@@ -831,10 +838,12 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                 pricing!.balancingPrice! * 4),
                           if (widget.withStorage &&
                               pricing?.storagePrice != null)
-                            _PriceLine(S.of(context)!.storage, pricing!.storagePrice!),
+                            _PriceLine(
+                                S.of(context)!.storage, pricing!.storagePrice!),
                           if (widget.withWashing &&
                               pricing?.washingPrice != null)
-                            _PriceLine(S.of(context)!.washing, pricing!.washingPrice!),
+                            _PriceLine(
+                                S.of(context)!.washing, pricing!.washingPrice!),
                         ] else ...[
                           _PriceLine(
                             widget.tireTotalPrice != null
@@ -856,14 +865,17 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                                 pricing!.balancingPrice! * 4),
                           if (widget.withStorage &&
                               pricing?.storagePrice != null)
-                            _PriceLine(S.of(context)!.storage, pricing!.storagePrice!),
+                            _PriceLine(
+                                S.of(context)!.storage, pricing!.storagePrice!),
                           if (widget.withWashing &&
                               pricing?.washingPrice != null)
-                            _PriceLine(S.of(context)!.washing, pricing!.washingPrice!),
+                            _PriceLine(
+                                S.of(context)!.washing, pricing!.washingPrice!),
                         ],
                         if (widget.disposalFeeApplied != null &&
                             widget.disposalFeeApplied! > 0)
-                          _PriceLine(S.of(context)!.disposal, widget.disposalFeeApplied!),
+                          _PriceLine(S.of(context)!.disposal,
+                              widget.disposalFeeApplied!),
                         if (widget.runFlatSurchargeApplied != null &&
                             widget.runFlatSurchargeApplied! > 0)
                           _PriceLine(S.of(context)!.runflatSurcharge,
@@ -971,8 +983,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                     text: TextSpan(
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       children: [
-                        TextSpan(
-                            text: S.of(context)!.bookingAgreementPrefix),
+                        TextSpan(text: S.of(context)!.bookingAgreementPrefix),
                         TextSpan(
                           text: S.of(context)!.termsLink,
                           style: const TextStyle(
@@ -1021,7 +1032,9 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
                       _isSubmitting
                           ? S.of(context)!.bookingInProgress
                           : total > 0
-                              ? S.of(context)!.bookAndPay(total.toStringAsFixed(2))
+                              ? S
+                                  .of(context)!
+                                  .bookAndPay(total.toStringAsFixed(2))
                               : S.of(context)!.bookBinding,
                       style: const TextStyle(fontSize: 16),
                     ),
@@ -1275,13 +1288,13 @@ class _BookingConfirmation extends StatelessWidget {
               const Icon(Icons.check_circle,
                   size: 80, color: Color(0xFF0284C7)),
               const SizedBox(height: 24),
-              const Text(
-                'Buchung erfolgreich!',
+              Text(
+                S.of(context)!.bookingSuccessful,
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
               Text(
-                'Deine Buchung wurde bestätigt. Du erhältst in Kürze eine Bestätigung per E-Mail.',
+                S.of(context)!.appointmentConfirmed,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 15, color: Colors.grey[600]),
               ),
@@ -1291,7 +1304,7 @@ class _BookingConfirmation extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onGoToBookings,
                   icon: const Icon(Icons.list_alt),
-                  label: const Text('Meine Buchungen'),
+                  label: Text(S.of(context)!.goToBookings),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFF0284C7),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -1307,7 +1320,7 @@ class _BookingConfirmation extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onGoHome,
                   icon: const Icon(Icons.home),
-                  label: const Text('Zur Startseite'),
+                  label: Text(S.of(context)!.goToHome),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(

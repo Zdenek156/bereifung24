@@ -150,7 +150,7 @@ class ProfileScreen extends ConsumerWidget {
                   GestureDetector(
                     onTap: () => context.push('/profile/agb'),
                     child: Text(
-                      S.of(context)!.termsOfService,
+                      'AGB',
                       style: TextStyle(
                         color: Colors.grey[500],
                         fontSize: 12,
@@ -232,8 +232,9 @@ class ProfileScreen extends ConsumerWidget {
                       labelText: S.of(context)!.currentPassword,
                       prefixIcon: const Icon(Icons.lock_outline),
                     ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? S.of(context)!.requiredField : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? S.of(context)!.requiredField
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -244,7 +245,8 @@ class ProfileScreen extends ConsumerWidget {
                       prefixIcon: const Icon(Icons.lock),
                     ),
                     validator: (v) {
-                      if (v == null || v.isEmpty) return S.of(context)!.requiredField;
+                      if (v == null || v.isEmpty)
+                        return S.of(context)!.requiredField;
                       if (v.length < 8) return S.of(context)!.minEightChars;
                       return null;
                     },
@@ -352,8 +354,7 @@ class ProfileScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(S.of(context)!.deleteAccountConfirm),
-        content: Text(
-            S.of(context)!.deleteAccountWarning),
+        content: Text(S.of(context)!.deleteAccountWarning),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -373,9 +374,7 @@ class ProfileScreen extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            S.of(context)!.deleteFailed)),
+                    SnackBar(content: Text(S.of(context)!.deleteFailed)),
                   );
                 }
               }

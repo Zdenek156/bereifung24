@@ -445,7 +445,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                           final isSelected = brand == _makeCtrl.text;
                           return ListTile(
                             title: Text(
-                              brand == 'Sonstige' ? S.of(context)!.otherBrand : brand,
+                              brand == 'Sonstige'
+                                  ? S.of(context)!.otherBrand
+                                  : brand,
                               style: TextStyle(
                                 fontWeight: isSelected
                                     ? FontWeight.w700
@@ -580,23 +582,35 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
   String? _localizedVehicleType(BuildContext context, String type) {
     switch (type) {
-      case 'CAR': return S.of(context)!.vehicleTypeCar;
-      case 'MOTORCYCLE': return S.of(context)!.vehicleTypeMotorcycle;
-      case 'TRAILER': return S.of(context)!.vehicleTypeTrailer;
-      default: return null;
+      case 'CAR':
+        return S.of(context)!.vehicleTypeCar;
+      case 'MOTORCYCLE':
+        return S.of(context)!.vehicleTypeMotorcycle;
+      case 'TRAILER':
+        return S.of(context)!.vehicleTypeTrailer;
+      default:
+        return null;
     }
   }
 
   String? _localizedFuelType(BuildContext context, String type) {
     switch (type) {
-      case 'PETROL': return S.of(context)!.fuelPetrol;
-      case 'DIESEL': return S.of(context)!.fuelDiesel;
-      case 'ELECTRIC': return S.of(context)!.fuelElectric;
-      case 'HYBRID': return S.of(context)!.fuelHybrid;
-      case 'PLUGIN_HYBRID': return S.of(context)!.fuelPluginHybrid;
-      case 'LPG': return S.of(context)!.fuelLpg;
-      case 'CNG': return S.of(context)!.fuelCng;
-      default: return null;
+      case 'PETROL':
+        return S.of(context)!.fuelPetrol;
+      case 'DIESEL':
+        return S.of(context)!.fuelDiesel;
+      case 'ELECTRIC':
+        return S.of(context)!.fuelElectric;
+      case 'HYBRID':
+        return S.of(context)!.fuelHybrid;
+      case 'PLUGIN_HYBRID':
+        return S.of(context)!.fuelPluginHybrid;
+      case 'LPG':
+        return S.of(context)!.fuelLpg;
+      case 'CNG':
+        return S.of(context)!.fuelCng;
+      default:
+        return null;
     }
   }
 
@@ -604,8 +618,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title:
-              Text(_isEditing ? S.of(context)!.editVehicle : S.of(context)!.addVehicleTitle)),
+          title: Text(_isEditing
+              ? S.of(context)!.editVehicle
+              : S.of(context)!.addVehicleTitle)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -730,8 +745,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   return FormField<String>(
                     initialValue:
                         brands.contains(_makeCtrl.text) ? _makeCtrl.text : null,
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? S.of(context)!.requiredField : null,
+                    validator: (v) => (v == null || v.isEmpty)
+                        ? S.of(context)!.requiredField
+                        : null,
                     builder: (fieldState) {
                       return InkWell(
                         onTap: () => _showBrandPicker(context, brands),
@@ -757,8 +773,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     labelText: S.of(context)!.manufacturer,
                     hintText: S.of(context)!.manufacturerHint,
                   ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? S.of(context)!.requiredField
+                      : null,
                 ),
               ],
               const SizedBox(height: 16),
@@ -771,8 +788,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   labelText: S.of(context)!.model,
                   hintText: S.of(context)!.hintModel,
                 ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? S.of(context)!.requiredField
+                    : null,
               ),
               const SizedBox(height: 16),
 
@@ -785,7 +803,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   hintText: S.of(context)!.hintYear,
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return S.of(context)!.requiredField;
+                  if (v == null || v.trim().isEmpty)
+                    return S.of(context)!.requiredField;
                   final y = int.tryParse(v);
                   if (y == null || y < 1980 || y > DateTime.now().year + 1) {
                     return S.of(context)!.invalidYear;
@@ -804,7 +823,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   hintText: S.of(context)!.hintLicensePlate,
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return S.of(context)!.requiredField;
+                  if (v == null || v.trim().isEmpty)
+                    return S.of(context)!.requiredField;
                   return null;
                 },
               ),
@@ -830,7 +850,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     child: DropdownButtonFormField<int>(
                       value: _inspectionMonth,
                       isExpanded: true,
-                      decoration: InputDecoration(hintText: S.of(context)!.monthLabel),
+                      decoration:
+                          InputDecoration(hintText: S.of(context)!.monthLabel),
                       items: List.generate(
                           12,
                           (i) => DropdownMenuItem(
@@ -843,7 +864,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                     child: DropdownButtonFormField<int>(
                       value: _inspectionYear,
                       isExpanded: true,
-                      decoration: InputDecoration(hintText: S.of(context)!.yearLabel),
+                      decoration:
+                          InputDecoration(hintText: S.of(context)!.yearLabel),
                       items: List.generate(
                           4,
                           (i) => DropdownMenuItem(
@@ -860,7 +882,9 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 title: Text(S.of(context)!.inspectionReminder),
                 subtitle: Text(
                   _inspectionReminder
-                      ? S.of(context)!.daysBefore(_inspectionReminderDays.toString())
+                      ? S
+                          .of(context)!
+                          .daysBefore(_inspectionReminderDays.toString())
                       : S.of(context)!.noReminder,
                   style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
@@ -872,10 +896,15 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                 DropdownButtonFormField<int>(
                   value: _inspectionReminderDays,
                   isExpanded: true,
-                  decoration: InputDecoration(labelText: S.of(context)!.reminderLabel),
+                  decoration:
+                      InputDecoration(labelText: S.of(context)!.reminderLabel),
                   items: [
-                    DropdownMenuItem(value: 7, child: Text(S.of(context)!.daysBeforeReminder7)),
-                    DropdownMenuItem(value: 30, child: Text(S.of(context)!.daysBeforeReminder30)),
+                    DropdownMenuItem(
+                        value: 7,
+                        child: Text(S.of(context)!.daysBeforeReminder7)),
+                    DropdownMenuItem(
+                        value: 30,
+                        child: Text(S.of(context)!.daysBeforeReminder30)),
                   ],
                   onChanged: (v) =>
                       setState(() => _inspectionReminderDays = v ?? 30),
@@ -894,8 +923,10 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                   decoration:
                       InputDecoration(hintText: S.of(context)!.selectFuel),
                   items: _fuelTypes
-                      .map((f) =>
-                          DropdownMenuItem(value: f.$1, child: Text(_localizedFuelType(context, f.$1) ?? f.$2)))
+                      .map((f) => DropdownMenuItem(
+                          value: f.$1,
+                          child:
+                              Text(_localizedFuelType(context, f.$1) ?? f.$2)))
                       .toList(),
                   onChanged: (v) => setState(() => _fuelType = v),
                 ),
@@ -966,7 +997,8 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
                         child: CircularProgressIndicator(
                             strokeWidth: 2, color: Colors.white),
                       )
-                    : Text(S.of(context)!.save, style: const TextStyle(fontSize: 16)),
+                    : Text(S.of(context)!.save,
+                        style: const TextStyle(fontSize: 16)),
               ),
 
               const SizedBox(height: 24),
@@ -1325,8 +1357,10 @@ class _TireTabContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMoto = vehicleType == 'MOTORCYCLE';
-    final frontLabel = isMoto ? S.of(context)!.frontWheel : S.of(context)!.frontAxleFull;
-    final rearLabel = isMoto ? S.of(context)!.rearWheel : S.of(context)!.rearAxleFull;
+    final frontLabel =
+        isMoto ? S.of(context)!.frontWheel : S.of(context)!.frontAxleFull;
+    final rearLabel =
+        isMoto ? S.of(context)!.rearWheel : S.of(context)!.rearAxleFull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

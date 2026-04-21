@@ -185,10 +185,14 @@ class WorkshopSearchState {
         aiRearArticleId: clearAiRearArticleId
             ? null
             : (aiRearArticleId ?? this.aiRearArticleId),
-        aiFrontBrand: clearAiFrontBrand ? null : (aiFrontBrand ?? this.aiFrontBrand),
-        aiFrontModel: clearAiFrontModel ? null : (aiFrontModel ?? this.aiFrontModel),
-        aiRearBrand: clearAiRearBrand ? null : (aiRearBrand ?? this.aiRearBrand),
-        aiRearModel: clearAiRearModel ? null : (aiRearModel ?? this.aiRearModel),
+        aiFrontBrand:
+            clearAiFrontBrand ? null : (aiFrontBrand ?? this.aiFrontBrand),
+        aiFrontModel:
+            clearAiFrontModel ? null : (aiFrontModel ?? this.aiFrontModel),
+        aiRearBrand:
+            clearAiRearBrand ? null : (aiRearBrand ?? this.aiRearBrand),
+        aiRearModel:
+            clearAiRearModel ? null : (aiRearModel ?? this.aiRearModel),
         effectiveServiceType: clearEffectiveServiceType
             ? null
             : (effectiveServiceType ?? this.effectiveServiceType),
@@ -1010,15 +1014,15 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchCtrl = TextEditingController();
 
   static Map<String, String> _serviceLabels(BuildContext context) => {
-    'TIRE_CHANGE': S.of(context)!.tireChange,
-    'WHEEL_CHANGE': S.of(context)!.wheelChange,
-    'TIRE_REPAIR': S.of(context)!.tireRepair,
-    'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
-    'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
-    'CLIMATE_SERVICE': S.of(context)!.climateService,
-    'BRAKE_SERVICE': S.of(context)!.brakeService,
-    'BATTERY_SERVICE': S.of(context)!.batteryService,
-  };
+        'TIRE_CHANGE': S.of(context)!.tireChange,
+        'WHEEL_CHANGE': S.of(context)!.wheelChange,
+        'TIRE_REPAIR': S.of(context)!.tireRepair,
+        'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
+        'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
+        'CLIMATE_SERVICE': S.of(context)!.climateService,
+        'BRAKE_SERVICE': S.of(context)!.brakeService,
+        'BATTERY_SERVICE': S.of(context)!.batteryService,
+      };
 
   @override
   void initState() {
@@ -1332,7 +1336,9 @@ class _FilterBar extends ConsumerWidget {
                     child: Text(
                       state.workshops.length == 1
                           ? S.of(context)!.workshopCountOne
-                          : S.of(context)!.workshopCountMany(state.workshops.length),
+                          : S
+                              .of(context)!
+                              .workshopCountMany(state.workshops.length),
                       style: TextStyle(
                         color:
                             isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
@@ -1497,7 +1503,8 @@ class _FilterBar extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Text(S.of(context)!.radius,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 17)),
             ),
             ...[5, 10, 25, 50, 100].map((r) => ListTile(
                   leading: Icon(Icons.radar,
@@ -1533,7 +1540,8 @@ class _FilterBar extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
               child: Text(S.of(context)!.sortBy,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 17)),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 17)),
             ),
             ...[
               ('distance', S.of(context)!.sortDistance, Icons.near_me),
@@ -1626,9 +1634,13 @@ class TireChangeFilters extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Expanded(child: _seasonBadge(context, 's', '☀️', S.of(context)!.tireSummer)),
+                Expanded(
+                    child: _seasonBadge(
+                        context, 's', '☀️', S.of(context)!.tireSummer)),
                 const SizedBox(width: 6),
-                Expanded(child: _seasonBadge(context, 'w', '❄️', S.of(context)!.tireWinter)),
+                Expanded(
+                    child: _seasonBadge(
+                        context, 'w', '❄️', S.of(context)!.tireWinter)),
                 const SizedBox(width: 6),
                 Expanded(child: _ganzjahrBadge(context)),
               ],
@@ -1654,8 +1666,8 @@ class TireChangeFilters extends StatelessWidget {
                         state.withDisposal, () => notifier.toggleDisposal())),
                 const SizedBox(width: 6),
                 Expanded(
-                    child: _optionBadge(context, S.of(context)!.runflat, state.withRunFlat,
-                        () => notifier.toggleRunFlat())),
+                    child: _optionBadge(context, S.of(context)!.runflat,
+                        state.withRunFlat, () => notifier.toggleRunFlat())),
                 if (state.tireSeason == 'w' || state.tireSeason == 'g') ...[
                   const SizedBox(width: 6),
                   Expanded(
@@ -1709,16 +1721,16 @@ class TireChangeFilters extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                    child: _categoryBadge(
-                        context, '💰', S.of(context)!.categoryCheapest, 'Günstigster')),
+                    child: _categoryBadge(context, '💰',
+                        S.of(context)!.categoryCheapest, 'Günstigster')),
                 const SizedBox(width: 6),
                 Expanded(
                     child: _categoryBadge(
                         context, '👍', S.of(context)!.categoryBest, 'Beliebt')),
                 const SizedBox(width: 6),
                 Expanded(
-                    child:
-                        _categoryBadge(context, '⭐', S.of(context)!.categoryPremium, 'Testsieger')),
+                    child: _categoryBadge(context, '⭐',
+                        S.of(context)!.categoryPremium, 'Testsieger')),
               ],
             ),
           ],
@@ -2294,11 +2306,15 @@ class MotorcycleTireFilters extends StatelessWidget {
           // Row 2: Vorderreifen / Hinterreifen / Beide Reifen
           Row(
             children: [
-              Expanded(child: _tireBadge(context, 'front', S.of(context)!.frontTire)),
+              Expanded(
+                  child:
+                      _tireBadge(context, 'front', S.of(context)!.frontTire)),
               const SizedBox(width: 6),
-              Expanded(child: _tireBadge(context, 'rear', S.of(context)!.rearTire)),
+              Expanded(
+                  child: _tireBadge(context, 'rear', S.of(context)!.rearTire)),
               const SizedBox(width: 6),
-              Expanded(child: _tireBadge(context, 'both', S.of(context)!.bothTires)),
+              Expanded(
+                  child: _tireBadge(context, 'both', S.of(context)!.bothTires)),
             ],
           ),
           const SizedBox(height: 8),
@@ -2320,12 +2336,12 @@ class MotorcycleTireFilters extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                    child: _constructionBadge(context, S.of(context)!.radial, 'radial',
-                        S.of(context)!.radialDesc)),
+                    child: _constructionBadge(context, S.of(context)!.radial,
+                        'radial', S.of(context)!.radialDesc)),
                 const SizedBox(width: 6),
                 Expanded(
-                    child: _constructionBadge(context, S.of(context)!.diagonal, 'diagonal',
-                        S.of(context)!.diagonalDesc)),
+                    child: _constructionBadge(context, S.of(context)!.diagonal,
+                        'diagonal', S.of(context)!.diagonalDesc)),
               ],
             ),
           ],
@@ -2335,12 +2351,12 @@ class MotorcycleTireFilters extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                    child: _categoryBadge(
-                        context, '💰', S.of(context)!.categoryCheapest, 'Günstigster')),
+                    child: _categoryBadge(context, '💰',
+                        S.of(context)!.categoryCheapest, 'Günstigster')),
                 const SizedBox(width: 6),
                 Expanded(
-                    child:
-                        _categoryBadge(context, '⭐', S.of(context)!.categoryPremium, 'Testsieger')),
+                    child: _categoryBadge(context, '⭐',
+                        S.of(context)!.categoryPremium, 'Testsieger')),
               ],
             ),
           ],
@@ -2576,14 +2592,14 @@ class WheelChangeFilters extends StatelessWidget {
       })),
       const SizedBox(width: 6),
       Expanded(
-          child: _badge(context, isDark, '📦', S.of(context)!.storage, state.withStorage,
-              supportsStorage, () {
+          child: _badge(context, isDark, '📦', S.of(context)!.storage,
+              state.withStorage, supportsStorage, () {
         if (supportsStorage) notifier.toggleStorage();
       })),
       const SizedBox(width: 6),
       Expanded(
-          child: _badge(context, isDark, '🧼', S.of(context)!.washing, state.withWashing,
-              supportsWashing, () {
+          child: _badge(context, isDark, '🧼', S.of(context)!.washing,
+              state.withWashing, supportsWashing, () {
         if (supportsWashing) notifier.toggleWashing();
       })),
     ];
@@ -2619,8 +2635,7 @@ class WheelChangeFilters extends StatelessWidget {
           : () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content:
-                      Text(S.of(context)!.serviceNotOffered(label)),
+                  content: Text(S.of(context)!.serviceNotOffered(label)),
                   duration: const Duration(seconds: 2),
                 ),
               );
@@ -2927,7 +2942,8 @@ class _WorkshopList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      // Extra bottom space so last card is never hidden behind floating tab bar.
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 124),
       itemCount: workshops.length,
       separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) =>
@@ -2942,15 +2958,15 @@ class _WorkshopCard extends ConsumerWidget {
   const _WorkshopCard({required this.workshop, this.serviceType});
 
   static Map<String, String> _serviceLabels(BuildContext context) => {
-    'TIRE_CHANGE': S.of(context)!.tireChange,
-    'WHEEL_CHANGE': S.of(context)!.wheelChange,
-    'TIRE_REPAIR': S.of(context)!.tireRepair,
-    'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
-    'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
-    'CLIMATE_SERVICE': S.of(context)!.climateService,
-    'BRAKE_SERVICE': S.of(context)!.brakeService,
-    'BATTERY_SERVICE': S.of(context)!.batteryService,
-  };
+        'TIRE_CHANGE': S.of(context)!.tireChange,
+        'WHEEL_CHANGE': S.of(context)!.wheelChange,
+        'TIRE_REPAIR': S.of(context)!.tireRepair,
+        'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
+        'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
+        'CLIMATE_SERVICE': S.of(context)!.climateService,
+        'BRAKE_SERVICE': S.of(context)!.brakeService,
+        'BATTERY_SERVICE': S.of(context)!.batteryService,
+      };
 
   static const _serviceIcons = <String, IconData>{
     'TIRE_CHANGE': Icons.tire_repair,
@@ -2963,7 +2979,8 @@ class _WorkshopCard extends ConsumerWidget {
     'BATTERY_SERVICE': Icons.battery_charging_full,
   };
 
-  static String _packageLabel(BuildContext context, String serviceType, String? pkg) {
+  static String _packageLabel(
+      BuildContext context, String serviceType, String? pkg) {
     final s = S.of(context)!;
     final labels = {
       'measurement_front': s.pkgMeasureFront,
@@ -3226,11 +3243,13 @@ class _WorkshopCard extends ConsumerWidget {
         }
         if (workshop.disposalFeeApplied != null &&
             workshop.disposalFeeApplied! > 0) {
-          breakdown[S.of(context)!.oldTireDisposalLabel] = workshop.disposalFeeApplied!;
+          breakdown[S.of(context)!.oldTireDisposalLabel] =
+              workshop.disposalFeeApplied!;
         }
         if (workshop.runFlatSurchargeApplied != null &&
             workshop.runFlatSurchargeApplied! > 0) {
-          breakdown[S.of(context)!.runflatSurcharge] = workshop.runFlatSurchargeApplied!;
+          breakdown[S.of(context)!.runflatSurcharge] =
+              workshop.runFlatSurchargeApplied!;
         }
       }
     } else if (isMotorcycleTire && workshop.tireAvailable) {
@@ -3281,7 +3300,8 @@ class _WorkshopCard extends ConsumerWidget {
         if (workshop.disposalFeeApplied != null &&
             workshop.disposalFeeApplied! > 0) {
           computed += workshop.disposalFeeApplied!;
-          breakdown[S.of(context)!.oldTireDisposalLabel] = workshop.disposalFeeApplied!;
+          breakdown[S.of(context)!.oldTireDisposalLabel] =
+              workshop.disposalFeeApplied!;
         }
         totalPrice = computed;
       }
@@ -3334,7 +3354,8 @@ class _WorkshopCard extends ConsumerWidget {
           }
           if (searchState.withWashing &&
               workshop.pricing?.washingPrice != null) {
-            breakdown[S.of(context)!.wheelWash] = workshop.pricing!.washingPrice!;
+            breakdown[S.of(context)!.wheelWash] =
+                workshop.pricing!.washingPrice!;
           }
         }
         // If nothing could be broken down, show the total as single line
@@ -3348,7 +3369,8 @@ class _WorkshopCard extends ConsumerWidget {
         breakdown[S.of(context)!.montageLabel] = motoBase;
         if (workshop.disposalFeeApplied != null &&
             workshop.disposalFeeApplied! > 0) {
-          breakdown[S.of(context)!.oldTireDisposalLabel] = workshop.disposalFeeApplied!;
+          breakdown[S.of(context)!.oldTireDisposalLabel] =
+              workshop.disposalFeeApplied!;
         }
         // If total is higher, show remaining as additional services
         if (totalPrice != null) {
@@ -3367,14 +3389,17 @@ class _WorkshopCard extends ConsumerWidget {
         breakdown[S.of(context)!.montageLabel] = montageTotal;
         if (workshop.disposalFeeApplied != null &&
             workshop.disposalFeeApplied! > 0) {
-          breakdown[S.of(context)!.oldTireDisposalLabel] = workshop.disposalFeeApplied!;
+          breakdown[S.of(context)!.oldTireDisposalLabel] =
+              workshop.disposalFeeApplied!;
         }
         if (workshop.runFlatSurchargeApplied != null &&
             workshop.runFlatSurchargeApplied! > 0) {
-          breakdown[S.of(context)!.runflatSurcharge] = workshop.runFlatSurchargeApplied!;
+          breakdown[S.of(context)!.runflatSurcharge] =
+              workshop.runFlatSurchargeApplied!;
         }
       } else {
-        breakdown[_packageLabel(context, serviceType!, searchState.selectedPackage)] =
+        breakdown[_packageLabel(
+                context, serviceType!, searchState.selectedPackage)] =
             workshop.searchBasePrice!;
         // Show add-on breakdown (already included in server totalPrice)
         if (searchState.withBalancing &&
@@ -3419,7 +3444,8 @@ class _WorkshopCard extends ConsumerWidget {
         breakdown.isNotEmpty; // for post-API services show even single entry
     // For search cards, prefer reliable images (card/logo) over heroImage
     // which may reference deleted files from landing pages
-    final img = workshop.cardImageUrl ?? workshop.profileImage ?? workshop.heroImage;
+    final img =
+        workshop.cardImageUrl ?? workshop.profileImage ?? workshop.heroImage;
     final hasImage = img != null && img.isNotEmpty;
 
     return Card(
@@ -3545,12 +3571,15 @@ class _WorkshopCard extends ConsumerWidget {
                         child: Text(
                           (isTireChange || isMotorcycleTire)
                               ? (workshop.tireAvailable && totalPrice != null
-                                  ? S.of(context)!.totalWithPrice(totalPrice.toStringAsFixed(2))
+                                  ? S.of(context)!.totalWithPrice(
+                                      totalPrice.toStringAsFixed(2))
                                   : workshop.tireAvailable
                                       ? S.of(context)!.tiresAvailable
                                       : S.of(context)!.noTiresLabel)
                               : totalPrice != null
-                                  ? S.of(context)!.fixedPrice(totalPrice.toStringAsFixed(2))
+                                  ? S
+                                      .of(context)!
+                                      .fixedPrice(totalPrice.toStringAsFixed(2))
                                   : (isPostApiService
                                       ? S.of(context)!.notAvailable
                                       : S.of(context)!.priceOnRequest),
@@ -3948,11 +3977,11 @@ class _WorkshopCard extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     tireLabel == 'Günstigster'
-                                        ? '💰 Günstigster'
+                                      ? S.of(context)!.categoryCheapestBadge
                                         : tireLabel == 'Testsieger'
-                                            ? '⭐ Premium'
+                                        ? S.of(context)!.categoryPremiumBadge
                                             : tireLabel == 'Beliebt'
-                                                ? '👍 Beste Eigenschaften'
+                                          ? S.of(context)!.categoryBestBadge
                                                 : tireLabel,
                                     style: const TextStyle(
                                       fontSize: 10,
@@ -4777,15 +4806,15 @@ class _TireCategoryBadge extends StatelessWidget {
     switch (label) {
       case 'Günstigster':
         color = const Color(0xFF16A34A);
-        displayLabel = '💰 Günstigster';
+        displayLabel = S.of(context)!.categoryCheapestBadge;
         break;
       case 'Testsieger':
         color = const Color(0xFFD97706);
-        displayLabel = '⭐ Premium';
+        displayLabel = S.of(context)!.categoryPremiumBadge;
         break;
       case 'Beliebt':
         color = const Color(0xFF0284C7);
-        displayLabel = '👍 Beste Eigenschaften';
+        displayLabel = S.of(context)!.categoryBestBadge;
         break;
       default:
         color = const Color(0xFF64748B);

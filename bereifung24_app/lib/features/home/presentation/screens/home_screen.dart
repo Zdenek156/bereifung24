@@ -542,8 +542,9 @@ class _NextAppointmentCard extends ConsumerWidget {
       if (upcoming.isEmpty) return const SizedBox.shrink();
 
       final next = upcoming.first;
-      final dateStr =
-          DateFormat('EEE, d. MMM yyyy', 'de_DE').format(next.appointmentDate);
+        final localeTag = Localizations.localeOf(context).toLanguageTag();
+        final dateStr =
+          DateFormat('EEE, d. MMM yyyy', localeTag).format(next.appointmentDate);
       final timeStr = next.appointmentTime ?? '';
       final today = DateTime(now.year, now.month, now.day);
       final apptDay = DateTime(next.appointmentDate.year,

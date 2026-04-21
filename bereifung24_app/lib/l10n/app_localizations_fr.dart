@@ -933,6 +933,37 @@ class SFr extends S {
   String get workshopDashboard => 'Tableau de bord';
 
   @override
+  String get workshopNext7Days => '7 prochains jours';
+
+  @override
+  String get workshopTodayAppointments => 'Rendez-vous d\'aujourd\'hui';
+
+  @override
+  String get workshopNoAppointmentsToday => 'Aucun rendez-vous aujourd\'hui';
+
+  @override
+  String get workshopRecentActivities => 'Activité récente';
+
+  @override
+  String get workshopNoAppointmentsOnDay => 'Aucun rendez-vous ce jour';
+
+  @override
+  String get workshopDirectBookingViaB24 =>
+      'Réservation directe via Bereifung24';
+
+  @override
+  String get workshopFilterAll => 'Tous';
+
+  @override
+  String get workshopFilterUpcoming => 'À venir';
+
+  @override
+  String get workshopFilterCompleted => 'Terminés';
+
+  @override
+  String get workshopFilterCancelled => 'Annulés';
+
+  @override
   String get loadingError => 'Erreur de chargement';
 
   @override
@@ -950,10 +981,31 @@ class SFr extends S {
   String get workshopProfile => 'Profil';
 
   @override
+  String get landingPageTitle => 'Votre page d\'atterrissage';
+
+  @override
+  String get activeStatus => 'Active';
+
+  @override
+  String get inactiveStatus => 'Inactive';
+
+  @override
   String get shareLink => 'Partager la page';
 
   @override
+  String landingPageShareMessage(String url) {
+    return 'Visitez notre page et réservez directement en ligne : $url';
+  }
+
+  @override
   String get qrCode => 'Code QR';
+
+  @override
+  String get noLandingPage => 'Aucune page d\'atterrissage';
+
+  @override
+  String get noLandingPageDescription =>
+      'Votre page d\'atterrissage est créée et gérée via le portail d\'administration.';
 
   @override
   String get vacation => 'Période de vacances';
@@ -966,6 +1018,9 @@ class SFr extends S {
 
   @override
   String get vacationReasonHint => 'ex. Fermeture annuelle';
+
+  @override
+  String get noVacationEntries => 'Aucune période de vacances enregistrée';
 
   @override
   String get vacationSaved => 'Période de vacances enregistrée ✅';
@@ -982,6 +1037,9 @@ class SFr extends S {
 
   @override
   String get reviewReplyHint => 'Votre réponse...';
+
+  @override
+  String get workshopYourReply => 'Votre réponse:';
 
   @override
   String get replySaved => 'Réponse enregistrée ✅';

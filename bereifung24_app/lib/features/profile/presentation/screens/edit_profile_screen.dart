@@ -133,8 +133,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           child: TextFormField(
                             controller: _firstNameCtrl,
                             textCapitalization: TextCapitalization.words,
-                            decoration:
-                                InputDecoration(labelText: S.of(context)!.firstName),
+                            decoration: InputDecoration(
+                                labelText: S.of(context)!.firstName),
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Pflichtfeld'
                                 : null,
@@ -145,8 +145,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           child: TextFormField(
                             controller: _lastNameCtrl,
                             textCapitalization: TextCapitalization.words,
-                            decoration:
-                                InputDecoration(labelText: S.of(context)!.lastName),
+                            decoration: InputDecoration(
+                                labelText: S.of(context)!.lastName),
                             validator: (v) => v == null || v.trim().isEmpty
                                 ? 'Pflichtfeld'
                                 : null,

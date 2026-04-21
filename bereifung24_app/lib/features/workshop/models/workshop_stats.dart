@@ -21,15 +21,34 @@ class WorkshopStats {
     required this.recentActivities,
   });
 
+  static int _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
+  }
+
+  static double _asDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value) ?? 0;
+    return 0;
+  }
+
   factory WorkshopStats.fromJson(Map<String, dynamic> json) => WorkshopStats(
         workshopName: json['workshopName'] ?? '',
-        todaysBookings: json['todaysBookings'] ?? 0,
-        upcomingBookings: json['upcomingBookings'] ?? 0,
-        revenue7Days: (json['revenue7Days'] ?? 0).toDouble(),
-        revenue7DaysCount: json['revenue7DaysCount'] ?? 0,
-        averageRating: (json['averageRating'] ?? 0).toDouble(),
-        totalReviews: json['totalReviews'] ?? 0,
-        todaysBookingsList: (json['todaysBookings_list'] as List? ?? [])
+        todaysBookings: _asInt(json['todaysBookings'] ?? json['todayBookings']),
+        upcomingBookings:
+            _asInt(json['upcomingBookings'] ?? json['next7DaysBookings']),
+        revenue7Days: _asDouble(json['revenue7Days'] ?? json['totalRevenue']),
+        revenue7DaysCount:
+            _asInt(json['revenue7DaysCount'] ?? json['bookingsCount7Days']),
+        averageRating: _asDouble(json['averageRating']),
+        totalReviews: _asInt(json['totalReviews']),
+        todaysBookingsList: ((json['todaysBookings_list'] ??
+                    json['todaysBookingsList'] ??
+                    json['todayBookingsList']) as List? ??
+                [])
             .map((e) => TodayBooking.fromJson(e))
             .toList(),
         recentActivities: (json['recentActivities'] as List? ?? [])

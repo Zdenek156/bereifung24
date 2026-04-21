@@ -65,8 +65,8 @@ class _NotificationSettingsScreenState
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Fehler beim Speichern'),
+          SnackBar(
+              content: Text(S.of(context)!.saveError),
               backgroundColor: Colors.red),
         );
       }
@@ -85,7 +85,7 @@ class _NotificationSettingsScreenState
               padding: const EdgeInsets.all(16),
               children: [
                 Text(
-                  'Push-Benachrichtigungen',
+                  S.of(context)!.notifications,
                   style: Theme.of(context)
                       .textTheme
                       .titleMedium
@@ -93,7 +93,7 @@ class _NotificationSettingsScreenState
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Wähle welche Benachrichtigungen du erhalten möchtest.',
+                  S.of(context)!.notificationsDescription,
                   style: TextStyle(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 16),
@@ -134,7 +134,8 @@ class _NotificationSettingsScreenState
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Speichern', style: TextStyle(fontSize: 16)),
+                      : Text(S.of(context)!.save,
+                          style: const TextStyle(fontSize: 16)),
                 ),
               ],
             ),

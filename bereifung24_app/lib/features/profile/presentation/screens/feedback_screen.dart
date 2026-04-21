@@ -62,7 +62,7 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
 
     if (_submitted) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Feedback')),
+        appBar: AppBar(title: Text(S.of(context)!.feedback)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(32),
@@ -238,7 +238,9 @@ class _FeedbackScreenState extends ConsumerState<FeedbackScreen> {
                       )
                     : const Icon(Icons.send_rounded),
                 label: Text(
-                  _isSubmitting ? S.of(context)!.sending : S.of(context)!.sendFeedback,
+                  _isSubmitting
+                      ? S.of(context)!.sending
+                      : S.of(context)!.sendFeedback,
                   style: const TextStyle(fontSize: 16),
                 ),
                 style: FilledButton.styleFrom(

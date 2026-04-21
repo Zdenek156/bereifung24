@@ -138,16 +138,16 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
     }
   }
 
-  static const _serviceLabels = <String, String>{
-    'TIRE_CHANGE': 'Reifenwechsel',
-    'WHEEL_CHANGE': 'R\u00e4derwechsel',
-    'TIRE_REPAIR': 'Reifenreparatur',
-    'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
-    'ALIGNMENT_BOTH': 'Achsvermessung',
-    'CLIMATE_SERVICE': 'Klimaservice',
-    'BRAKE_SERVICE': 'Bremsendienst',
-    'BATTERY_SERVICE': 'Batterieservice',
-  };
+  static Map<String, String> _serviceLabels(BuildContext context) => {
+        'TIRE_CHANGE': S.of(context)!.tireChange,
+        'WHEEL_CHANGE': S.of(context)!.wheelChange,
+        'TIRE_REPAIR': S.of(context)!.tireRepair,
+        'MOTORCYCLE_TIRE': S.of(context)!.motorcycleTireChange,
+        'ALIGNMENT_BOTH': S.of(context)!.axleAlignment,
+        'CLIMATE_SERVICE': S.of(context)!.climateService,
+        'BRAKE_SERVICE': S.of(context)!.brakeService,
+        'BATTERY_SERVICE': S.of(context)!.batteryService,
+      };
 
   static const _serviceIcons = <String, IconData>{
     'TIRE_CHANGE': Icons.tire_repair,
@@ -212,15 +212,13 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
           state: state,
           notifier: notifier,
           defaultPackage: 'foreign_object',
-          options: const [
-            ('foreign_object', '🔩', 'Fremdkörper'),
-            ('valve_damage', '🔧', 'Ventilschaden'),
+          options: [
+            ('foreign_object', '🔩', S.of(context)!.pkgForeignObject),
+            ('valve_damage', '🔧', S.of(context)!.pkgValveDamage),
           ],
-          descriptions: const {
-            'foreign_object':
-                'Professionelle Reparatur von Reifenschäden durch Fremdkörper wie Nägel oder Schrauben',
-            'valve_damage':
-                'Austausch oder Reparatur defekter oder undichter Ventile',
+          descriptions: {
+            'foreign_object': S.of(context)!.pkgForeignObject,
+            'valve_damage': S.of(context)!.pkgValveDamage,
           },
           padding: _wp,
         );
@@ -228,33 +226,26 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
         return DropdownServiceFilter(
           state: state,
           notifier: notifier,
-          title: 'Achsvermessung',
+          title: S.of(context)!.axleAlignment,
           icon: Icons.straighten,
           defaultPackage: 'measurement_both',
-          options: const [
-            ('measurement_both', '📐  Vermessung — Beide Achsen'),
-            ('measurement_front', '📐  Vermessung — Vorderachse'),
-            ('measurement_rear', '📐  Vermessung — Hinterachse'),
-            ('adjustment_both', '🔧  Einstellung — Beide Achsen'),
-            ('adjustment_front', '🔧  Einstellung — Vorderachse'),
-            ('adjustment_rear', '🔧  Einstellung — Hinterachse'),
-            ('full_service', '⭐  Komplett mit Inspektion'),
+          options: [
+            ('measurement_both', '📐  ${S.of(context)!.pkgMeasureBoth}'),
+            ('measurement_front', '📐  ${S.of(context)!.pkgMeasureFront}'),
+            ('measurement_rear', '📐  ${S.of(context)!.pkgMeasureRear}'),
+            ('adjustment_both', '🔧  ${S.of(context)!.pkgAdjustBoth}'),
+            ('adjustment_front', '🔧  ${S.of(context)!.pkgAdjustFront}'),
+            ('adjustment_rear', '🔧  ${S.of(context)!.pkgAdjustRear}'),
+            ('full_service', '⭐  ${S.of(context)!.pkgFullService}'),
           ],
-          descriptions: const {
-            'measurement_both':
-                'Komplette Vermessung von Vorder- und Hinterachse mit Gesamtprotokoll',
-            'measurement_front':
-                'Vermessung der Vorderachse mit detailliertem Prüfprotokoll',
-            'measurement_rear':
-                'Vermessung der Hinterachse mit detailliertem Prüfprotokoll',
-            'adjustment_both':
-                'Komplette Vermessung und Einstellung beider Achsen für perfekte Fahreigenschaften',
-            'adjustment_front':
-                'Vermessung und präzise Einstellung der Vorderachse für optimalen Geradeauslauf',
-            'adjustment_rear':
-                'Vermessung und präzise Einstellung der Hinterachse',
-            'full_service':
-                'Achsvermessung, Einstellung und zusätzliche Fahrwerksinspektion (Stoßdämpfer, Spurstangen, etc.)',
+          descriptions: {
+            'measurement_both': S.of(context)!.pkgMeasureBoth,
+            'measurement_front': S.of(context)!.pkgMeasureFront,
+            'measurement_rear': S.of(context)!.pkgMeasureRear,
+            'adjustment_both': S.of(context)!.pkgAdjustBoth,
+            'adjustment_front': S.of(context)!.pkgAdjustFront,
+            'adjustment_rear': S.of(context)!.pkgAdjustRear,
+            'full_service': S.of(context)!.pkgFullService,
           },
           padding: _wp,
         );
@@ -262,24 +253,20 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
         return DropdownServiceFilter(
           state: state,
           notifier: notifier,
-          title: 'Klimaservice',
+          title: S.of(context)!.climateService,
           icon: Icons.ac_unit,
           defaultPackage: 'basic',
-          options: const [
-            ('check', '🔍  Basis-Check'),
-            ('basic', '❄️  Standard-Service'),
-            ('comfort', '🌡️  Komfort-Service'),
-            ('premium', '⭐  Premium-Service'),
+          options: [
+            ('check', '🔍  ${S.of(context)!.pkgClimateCheck}'),
+            ('basic', '❄️  ${S.of(context)!.pkgBasicService}'),
+            ('comfort', '🌡️  ${S.of(context)!.pkgComfortService}'),
+            ('premium', '⭐  ${S.of(context)!.pkgPremiumService}'),
           ],
-          descriptions: const {
-            'check':
-                'Sichtprüfung der Klimaanlage, Funktionstest und Temperaturmessung. Keine Befüllung enthalten.',
-            'basic':
-                'Funktionscheck, Druckprüfung und Nachfüllen von Kältemittel. Bis zu 100ml inklusive.',
-            'comfort':
-                'Standard-Service inkl. Kältemittel (bis 200ml), Wechsel des Pollenfilters und Reinigung der Verdampfer-Lamellen.',
-            'premium':
-                'Kompletter Service: Kältemittel-Befüllung (bis 500ml), Desinfektion mit Ozon/Ultraschall, Premium-Aktivkohlefilter.',
+          descriptions: {
+            'check': S.of(context)!.pkgClimateCheck,
+            'basic': S.of(context)!.pkgBasicService,
+            'comfort': S.of(context)!.pkgComfortService,
+            'premium': S.of(context)!.pkgPremiumService,
           },
           padding: _wp,
         );
@@ -407,12 +394,12 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
             children: [
               const Icon(Icons.error_outline, size: 48, color: Colors.red),
               const SizedBox(height: 16),
-              const Text('Werkstatt konnte nicht geladen werden'),
+              Text(S.of(context)!.workshopLoadError),
               const SizedBox(height: 8),
               FilledButton(
                 onPressed: () =>
                     ref.invalidate(workshopDetailProvider(widget.workshopId)),
-                child: const Text('Erneut versuchen'),
+                child: Text(S.of(context)!.retry),
               ),
             ],
           ),
@@ -542,7 +529,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                       fontSize: 14),
                                 ),
                                 Text(
-                                  ' (${workshop.reviewCount} ${workshop.reviewCount == 1 ? "Bewertung" : "Bewertungen"})',
+                                  ' ${S.of(context)!.reviewsCountLabel(workshop.reviewCount)}',
                                   style: TextStyle(
                                       color: Colors.grey[600], fontSize: 12),
                                 ),
@@ -564,15 +551,15 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     color: const Color(0xFF0284C7)
                                         .withValues(alpha: 0.3)),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.fiber_new,
+                                  const Icon(Icons.fiber_new,
                                       size: 18, color: Color(0xFF0284C7)),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'Neu',
-                                    style: TextStyle(
+                                    S.of(context)!.newBadge,
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                       color: Color(0xFF0284C7),
@@ -635,9 +622,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                               }
                             },
                             icon: const Icon(Icons.map_outlined),
-                            tooltip: Platform.isIOS
-                                ? 'In Karten öffnen'
-                                : 'In Maps öffnen',
+                            tooltip: 'Open in maps',
                             style: IconButton.styleFrom(
                               foregroundColor: const Color(0xFF0284C7),
                             ),
@@ -651,7 +636,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         workshop.services.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Text(
-                        'Service w\u00e4hlen',
+                        S.of(context)!.selectService,
                         style: Theme.of(context)
                             .textTheme
                             .titleMedium
@@ -667,7 +652,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         childAspectRatio: 0.8,
                         children: workshop.services.map((s) {
                           final isSelected = _selectedServiceType == s;
-                          final label = _serviceLabels[s] ?? s;
+                          final label = _serviceLabels(context)[s] ?? s;
                           final imagePath = _serviceImages[s];
                           final icon =
                               _serviceIcons[s] ?? Icons.miscellaneous_services;
@@ -796,7 +781,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                       const SizedBox(height: 12),
                       _InfoCard(
                         icon: Icons.directions_car,
-                        title: 'Dein Fahrzeug',
+                        title: S.of(context)!.yourVehicle,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -807,7 +792,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                             ),
                             if (selectedVehicle.tireSizeWithIndex.isNotEmpty)
                               Text(
-                                  'Reifengröße: ${selectedVehicle.tireSizeWithIndex}',
+                                  S.of(context)!.tireSizeLabel(
+                                      selectedVehicle.tireSizeWithIndex),
                                   style: TextStyle(
                                       color: Colors.grey[600], fontSize: 13)),
                           ],
@@ -841,7 +827,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'Bitte pflege zuerst ein Fahrzeug ein, um buchen zu können.',
+                                      S.of(context)!.selectVehicle,
                                       style: TextStyle(
                                           fontSize: 13,
                                           color: isDark
@@ -858,7 +844,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                   onPressed: () =>
                                       context.push('/vehicles/add'),
                                   icon: const Icon(Icons.add, size: 18),
-                                  label: const Text('Fahrzeug hinzufügen'),
+                                  label: Text(S.of(context)!.addVehicle),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: isDark
                                         ? Colors.amber.shade300
@@ -909,8 +895,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                               Expanded(
                                 child: Text(
                                   effectiveService == 'MOTORCYCLE_TIRE'
-                                      ? 'Du hast kein Motorrad ausgewählt. Bitte wähle ein Motorrad als Fahrzeug.'
-                                      : 'Du hast ein Motorrad ausgewählt. Dieser Service ist nur für PKW/Anhänger verfügbar.',
+                                      ? S.of(context)!.selectMotorcycleFirst
+                                      : 'This service is available only for car/trailer vehicles.',
                                   style: TextStyle(
                                       fontSize: 13, color: Colors.red[800]),
                                 ),
@@ -1056,16 +1042,21 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         // Only show Rollo card when AI recommendation is active (from Rollo advisor),
                         // NOT when tire brand comes from normal search navigation
                         final bool hasAiRecommendation =
-                            (currentSearch.aiFrontBrand != null && currentSearch.aiFrontBrand!.isNotEmpty) ||
-                            (currentSearch.aiRearBrand != null && currentSearch.aiRearBrand!.isNotEmpty) ||
-                            (currentSearch.aiArticleId != null && currentSearch.aiArticleId!.isNotEmpty);
+                            (currentSearch.aiFrontBrand != null &&
+                                    currentSearch.aiFrontBrand!.isNotEmpty) ||
+                                (currentSearch.aiRearBrand != null &&
+                                    currentSearch.aiRearBrand!.isNotEmpty) ||
+                                (currentSearch.aiArticleId != null &&
+                                    currentSearch.aiArticleId!.isNotEmpty);
                         debugPrint(
                             '🤖 [ROLLO-CARD] hasFrontPref=$hasFrontPref ($prefBrand), hasRearPref=$hasRearPref ($prefRearBrand), hasAiRecommendation=$hasAiRecommendation, ws=${ws != null}');
                         debugPrint(
                             '🤖 [ROLLO-CARD] widget.preferredTireBrand=${widget.preferredTireBrand}, widget.preferredRearTireBrand=${widget.preferredRearTireBrand}');
                         debugPrint(
                             '🤖 [ROLLO-CARD] currentSearch.aiFrontBrand=${currentSearch.aiFrontBrand}, currentSearch.aiRearBrand=${currentSearch.aiRearBrand}, aiArticleId=${currentSearch.aiArticleId}');
-                        if (hasAiRecommendation && (hasFrontPref || hasRearPref) && ws != null) {
+                        if (hasAiRecommendation &&
+                            (hasFrontPref || hasRearPref) &&
+                            ws != null) {
                           final allRecs = ws.tireRecommendationsRaw
                               .map((r) => TireRecommendation.fromJson(r))
                               .toList();
@@ -1172,14 +1163,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                         ],
                                       ),
                                     ),
-                                    Text(
-                                      'Verfügbar ✓',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF16A34A),
-                                      ),
-                                    ),
+                                    const Icon(Icons.check_circle,
+                                        size: 16, color: Color(0xFF16A34A)),
                                   ],
                                 ),
                               );
@@ -1199,7 +1184,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        '${axleLabel != null ? "$axleLabel: " : ""}${brand ?? ""} ${model ?? ""} nicht verfügbar',
+                                        '${axleLabel != null ? "$axleLabel: " : ""}${brand ?? ""} ${model ?? ""} ${S.of(context)!.notAvailable.toLowerCase()}',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: isDark
@@ -1260,7 +1245,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Rollo Empfehlung',
+                                            S.of(context)!.aiRecommendation,
                                             style: TextStyle(
                                               fontWeight: FontWeight.w700,
                                               fontSize: 15,
@@ -1270,7 +1255,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                             ),
                                           ),
                                           Text(
-                                            'KI-basierte Reifenempfehlung',
+                                            S.of(context)!.tireRecommendations,
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: isDark
@@ -1292,8 +1277,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                         prefBrand,
                                         prefModel,
                                         effectiveService == 'MOTORCYCLE_TIRE'
-                                            ? 'Vorderrad'
-                                            : 'Vorderachse'),
+                                        ? S.of(context)!.frontWheel
+                                        : S.of(context)!.frontAxleFull),
                                   if (hasFrontPref && hasRearPref)
                                     const SizedBox(height: 8),
                                   if (hasRearPref)
@@ -1302,8 +1287,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                         prefRearBrand,
                                         prefRearModel,
                                         effectiveService == 'MOTORCYCLE_TIRE'
-                                            ? 'Hinterrad'
-                                            : 'Hinterachse'),
+                                        ? S.of(context)!.rearWheel
+                                        : S.of(context)!.rearAxleFull),
                                 ] else ...[
                                   // Single tire
                                   buildTireRow(
@@ -1334,8 +1319,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 workshopId: widget.workshopId,
                                 axleFilter: 'front',
                                 axleLabel: effectiveService == 'MOTORCYCLE_TIRE'
-                                    ? 'Vorderrad'
-                                    : 'Vorderachse (VA)',
+                                  ? S.of(context)!.frontWheel
+                                  : '${S.of(context)!.frontAxleFull} (${S.of(context)!.frontAxle})',
                                 preselected: _tireAutoSelected,
                                 isMotorcycle:
                                     effectiveService == 'MOTORCYCLE_TIRE',
@@ -1345,8 +1330,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 workshopId: widget.workshopId,
                                 axleFilter: 'rear',
                                 axleLabel: effectiveService == 'MOTORCYCLE_TIRE'
-                                    ? 'Hinterrad'
-                                    : 'Hinterachse (HA)',
+                                  ? S.of(context)!.rearWheel
+                                  : '${S.of(context)!.rearAxleFull} (${S.of(context)!.rearAxle})',
                                 preselected: _tireAutoSelected,
                                 isMotorcycle:
                                     effectiveService == 'MOTORCYCLE_TIRE',
@@ -1396,14 +1381,16 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                             ),
                                           ),
                                       ],
-                                      _PriceRow(S.of(context)!.montageLabel, ws.searchBasePrice!),
+                                      _PriceRow(S.of(context)!.montageLabel,
+                                          ws.searchBasePrice!),
                                       if (ws.disposalFeeApplied != null &&
                                           ws.disposalFeeApplied! > 0)
                                         _PriceRow(S.of(context)!.disposal,
                                             ws.disposalFeeApplied!),
                                       if (ws.runFlatSurchargeApplied != null &&
                                           ws.runFlatSurchargeApplied! > 0)
-                                        _PriceRow(S.of(context)!.runflatSurcharge,
+                                        _PriceRow(
+                                            S.of(context)!.runflatSurcharge,
                                             ws.runFlatSurchargeApplied!),
                                       const Divider(height: 16),
                                       Row(
@@ -1524,8 +1511,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     reviewsAsync.when(
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
-                      error: (_, __) => Text(
-                          S.of(context)!.reviewsLoadError),
+                      error: (_, __) => Text(S.of(context)!.reviewsLoadError),
                       data: (reviews) => reviews.isEmpty
                           ? Text(S.of(context)!.noReviewsYet)
                           : Column(
@@ -1594,9 +1580,11 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
           } else if (_selectedSlot == null) {
             buttonLabel = S.of(context)!.pleaseSelectTime;
           } else if (isTireChange) {
-            buttonLabel = S.of(context)!.bookTireAndMontageAt('$_selectedSlot ${S.of(context)!.clockSuffix}');
+            buttonLabel = S.of(context)!.bookTireAndMontageAt(
+                '$_selectedSlot ${S.of(context)!.clockSuffix}');
           } else {
-            buttonLabel = S.of(context)!.bookAppointmentAt('$_selectedSlot ${S.of(context)!.clockSuffix}');
+            buttonLabel = S.of(context)!.bookAppointmentAt(
+                '$_selectedSlot ${S.of(context)!.clockSuffix}');
           }
 
           return SafeArea(
@@ -1924,8 +1912,8 @@ class _TimeSlotsSection extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       isCalendarError
-                          ? 'Google Kalender konnte nicht abgefragt werden. Bitte kontaktieren Sie die Werkstatt telefonisch.'
-                          : 'Zeiten konnten nicht geladen werden.',
+                          ? 'Google Calendar is currently unavailable. Please contact the workshop by phone.'
+                          : 'Time slots could not be loaded.',
                       style: TextStyle(color: Colors.red[700]),
                     ),
                   ),
@@ -1947,7 +1935,7 @@ class _TimeSlotsSection extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Keine freien Termine an diesem Tag.',
+                        'No available slots on this day.',
                         style: TextStyle(color: Colors.orange.shade900),
                       ),
                     ),
@@ -2126,7 +2114,10 @@ class _TireRecommendationsSectionState
                 items: [
                   DropdownMenuItem<String?>(
                     value: null,
-                    child: Text(S.of(context)!.allManufacturersCount(categoryFiltered.length),
+                    child: Text(
+                        S
+                            .of(context)!
+                            .allManufacturersCount(categoryFiltered.length),
                         style: TextStyle(
                             fontSize: 13,
                             color: isDark
@@ -2183,14 +2174,16 @@ class _TireRecommendationsSectionState
                                 fontSize: 12, color: Colors.grey[500])),
                       ),
                     ),
-                  _PriceRow(S.of(context)!.montageLabel, workshop.searchBasePrice!),
+                  _PriceRow(
+                      S.of(context)!.montageLabel, workshop.searchBasePrice!),
                   if (workshop.disposalFeeApplied != null &&
                       workshop.disposalFeeApplied! > 0)
-                    _PriceRow(S.of(context)!.disposal, workshop.disposalFeeApplied!),
+                    _PriceRow(
+                        S.of(context)!.disposal, workshop.disposalFeeApplied!),
                   if (workshop.runFlatSurchargeApplied != null &&
                       workshop.runFlatSurchargeApplied! > 0)
-                    _PriceRow(
-                        S.of(context)!.runflatSurcharge, workshop.runFlatSurchargeApplied!),
+                    _PriceRow(S.of(context)!.runflatSurcharge,
+                        workshop.runFlatSurchargeApplied!),
                   const Divider(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2217,8 +2210,7 @@ class _TireRecommendationsSectionState
             child: OutlinedButton.icon(
               onPressed: () => setState(() => _expanded = true),
               icon: const Icon(Icons.expand_more, size: 18),
-              label: Text(
-                  'Weitere Reifen anzeigen (${categoryFiltered.length - 1})'),
+              label: Text(S.of(context)!.showMore(categoryFiltered.length - 1)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0284C7),
                 side: const BorderSide(color: Color(0xFF0284C7)),
@@ -2252,7 +2244,7 @@ class _TireRecommendationsSectionState
         ),
         const SizedBox(height: 4),
         Text(
-          '${filtered.length} passende Reifen gefunden',
+          '${filtered.length} matching tires found',
           style: TextStyle(
               color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
               fontSize: 13),
@@ -2286,7 +2278,10 @@ class _TireRecommendationsSectionState
               items: [
                 DropdownMenuItem<String?>(
                   value: null,
-                  child: Text(S.of(context)!.allManufacturersCount(categoryFiltered.length),
+                  child: Text(
+                      S
+                          .of(context)!
+                          .allManufacturersCount(categoryFiltered.length),
                       style: TextStyle(
                           fontSize: 13,
                           color: isDark
@@ -2338,8 +2333,8 @@ class _TireRecommendationsSectionState
             child: TextButton.icon(
               onPressed: () => setState(() => _visibleCount += _pageSize),
               icon: const Icon(Icons.expand_more, size: 18),
-              label:
-                  Text('Weitere anzeigen (${filtered.length - _visibleCount})'),
+              label: Text(
+                  S.of(context)!.showMore(filtered.length - _visibleCount)),
             ),
           ),
         ],
@@ -2349,7 +2344,7 @@ class _TireRecommendationsSectionState
             child: TextButton.icon(
               onPressed: () => setState(() => _visibleCount = _initialLimit),
               icon: const Icon(Icons.expand_less, size: 18),
-              label: const Text('Weniger anzeigen'),
+              label: Text(S.of(context)!.showLess),
             ),
           ),
         ],
@@ -2365,7 +2360,7 @@ class _TireRecommendationsSectionState
                 _selectedBrand = null;
               }),
               icon: const Icon(Icons.expand_less, size: 18),
-              label: const Text('Weniger Reifen anzeigen'),
+              label: Text(S.of(context)!.showLessTires),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF0284C7),
                 side: const BorderSide(color: Color(0xFF0284C7)),
@@ -2399,14 +2394,16 @@ class _TireRecommendationsSectionState
                               TextStyle(fontSize: 12, color: Colors.grey[500])),
                     ),
                   ),
-                _PriceRow(S.of(context)!.montageLabel, workshop.searchBasePrice!),
+                _PriceRow(
+                    S.of(context)!.montageLabel, workshop.searchBasePrice!),
                 if (workshop.disposalFeeApplied != null &&
                     workshop.disposalFeeApplied! > 0)
-                  _PriceRow(S.of(context)!.disposal, workshop.disposalFeeApplied!),
+                  _PriceRow(
+                      S.of(context)!.disposal, workshop.disposalFeeApplied!),
                 if (workshop.runFlatSurchargeApplied != null &&
                     workshop.runFlatSurchargeApplied! > 0)
-                  _PriceRow(
-                      S.of(context)!.runflatSurcharge, workshop.runFlatSurchargeApplied!),
+                  _PriceRow(S.of(context)!.runflatSurcharge,
+                      workshop.runFlatSurchargeApplied!),
                 const Divider(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -2464,6 +2461,7 @@ class _TireRecommendationCard extends StatelessWidget {
     if (hasLabel) {
       switch (effectiveLabel.toLowerCase()) {
         case 'günstigster':
+        case 'cheapest':
           labelColor = Colors.green;
           labelIcon = Icons.savings;
           displayLabel = S.of(context)!.categoryCheapest;
@@ -2663,12 +2661,12 @@ class _TireRecommendationCard extends StatelessWidget {
                 // Selection indicator
                 if (isSelected) ...[
                   const SizedBox(height: 8),
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.check_circle,
+                      const Icon(Icons.check_circle,
                           size: 16, color: Color(0xFF0284C7)),
-                      SizedBox(width: 6),
-                      Text('Ausgewählt',
+                      const SizedBox(width: 6),
+                      Text(S.of(context)!.selected,
                           style: TextStyle(
                               fontSize: 12,
                               color: Color(0xFF0284C7),
@@ -2774,20 +2772,20 @@ class _PriceBreakdownSection extends StatelessWidget {
   });
 
   static Map<String, String> _getPackageLabels(BuildContext context) => {
-    'foreign_object': S.of(context)!.pkgForeignObject,
-    'valve_damage': S.of(context)!.pkgValveDamage,
-    'measurement_both': S.of(context)!.pkgMeasureBoth,
-    'measurement_front': S.of(context)!.pkgMeasureFront,
-    'measurement_rear': S.of(context)!.pkgMeasureRear,
-    'adjustment_both': S.of(context)!.pkgAdjustBoth,
-    'adjustment_front': S.of(context)!.pkgAdjustFront,
-    'adjustment_rear': S.of(context)!.pkgAdjustRear,
-    'full_service': S.of(context)!.pkgFullService,
-    'check': S.of(context)!.pkgClimateCheck,
-    'basic': S.of(context)!.pkgBasicService,
-    'comfort': S.of(context)!.pkgComfortService,
-    'premium': S.of(context)!.pkgPremiumService,
-  };
+        'foreign_object': S.of(context)!.pkgForeignObject,
+        'valve_damage': S.of(context)!.pkgValveDamage,
+        'measurement_both': S.of(context)!.pkgMeasureBoth,
+        'measurement_front': S.of(context)!.pkgMeasureFront,
+        'measurement_rear': S.of(context)!.pkgMeasureRear,
+        'adjustment_both': S.of(context)!.pkgAdjustBoth,
+        'adjustment_front': S.of(context)!.pkgAdjustFront,
+        'adjustment_rear': S.of(context)!.pkgAdjustRear,
+        'full_service': S.of(context)!.pkgFullService,
+        'check': S.of(context)!.pkgClimateCheck,
+        'basic': S.of(context)!.pkgBasicService,
+        'comfort': S.of(context)!.pkgComfortService,
+        'premium': S.of(context)!.pkgPremiumService,
+      };
 
   static const _defaultPackages = <String, String>{
     'TIRE_REPAIR': 'foreign_object',
@@ -2935,7 +2933,8 @@ class _PriceBreakdownSection extends StatelessWidget {
       }
       if (runFlatSurchargeApplied != null && runFlatSurchargeApplied! > 0) {
         total += runFlatSurchargeApplied!;
-        rows.add(_PriceRow(S.of(context)!.runflatSurcharge, runFlatSurchargeApplied!));
+        rows.add(_PriceRow(
+            S.of(context)!.runflatSurcharge, runFlatSurchargeApplied!));
       }
     }
 
@@ -2970,8 +2969,8 @@ class _PriceBreakdownSection extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(S.of(context)!.total,
-                    style: const
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
                 Text(
                   '${total.toStringAsFixed(2)} €',
                   style: const TextStyle(

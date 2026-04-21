@@ -933,6 +933,36 @@ class SEs extends S {
   String get workshopDashboard => 'Panel de control';
 
   @override
+  String get workshopNext7Days => 'Próximos 7 días';
+
+  @override
+  String get workshopTodayAppointments => 'Citas de hoy';
+
+  @override
+  String get workshopNoAppointmentsToday => 'No hay citas hoy';
+
+  @override
+  String get workshopRecentActivities => 'Actividad reciente';
+
+  @override
+  String get workshopNoAppointmentsOnDay => 'No hay citas este día';
+
+  @override
+  String get workshopDirectBookingViaB24 => 'Reserva directa vía Bereifung24';
+
+  @override
+  String get workshopFilterAll => 'Todas';
+
+  @override
+  String get workshopFilterUpcoming => 'Próximas';
+
+  @override
+  String get workshopFilterCompleted => 'Completadas';
+
+  @override
+  String get workshopFilterCancelled => 'Canceladas';
+
+  @override
   String get loadingError => 'Error de carga';
 
   @override
@@ -950,10 +980,31 @@ class SEs extends S {
   String get workshopProfile => 'Perfil';
 
   @override
+  String get landingPageTitle => 'Tu página de destino';
+
+  @override
+  String get activeStatus => 'Activa';
+
+  @override
+  String get inactiveStatus => 'Inactiva';
+
+  @override
   String get shareLink => 'Compartir página';
 
   @override
+  String landingPageShareMessage(String url) {
+    return 'Visita nuestra página y reserva directamente en línea: $url';
+  }
+
+  @override
   String get qrCode => 'Código QR';
+
+  @override
+  String get noLandingPage => 'Sin página de destino';
+
+  @override
+  String get noLandingPageDescription =>
+      'Tu página de destino se crea y gestiona desde el portal de administración.';
 
   @override
   String get vacation => 'Período de vacaciones';
@@ -966,6 +1017,9 @@ class SEs extends S {
 
   @override
   String get vacationReasonHint => 'ej. Vacaciones de empresa';
+
+  @override
+  String get noVacationEntries => 'No hay períodos de vacaciones registrados';
 
   @override
   String get vacationSaved => 'Período de vacaciones guardado ✅';
@@ -982,6 +1036,9 @@ class SEs extends S {
 
   @override
   String get reviewReplyHint => 'Tu respuesta...';
+
+  @override
+  String get workshopYourReply => 'Tu respuesta:';
 
   @override
   String get replySaved => 'Respuesta guardada ✅';

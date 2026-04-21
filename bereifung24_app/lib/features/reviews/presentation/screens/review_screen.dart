@@ -34,7 +34,7 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
   Future<void> _submit() async {
     if (_selectedRating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte w\u00e4hle eine Bewertung')),
+        SnackBar(content: Text(S.of(context)!.selectRating)),
       );
       return;
     }
@@ -168,7 +168,9 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       child: Icon(
-                        isSelected ? Icons.star_rounded : Icons.star_outline_rounded,
+                        isSelected
+                            ? Icons.star_rounded
+                            : Icons.star_outline_rounded,
                         color: isSelected ? Colors.amber : Colors.grey[400],
                         size: _selectedRating == rating ? 52 : 44,
                       ),
@@ -225,7 +227,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
               width: double.infinity,
               height: 52,
               child: FilledButton(
-                onPressed: _selectedRating > 0 && !_isSubmitting ? _submit : null,
+                onPressed:
+                    _selectedRating > 0 && !_isSubmitting ? _submit : null,
                 style: FilledButton.styleFrom(
                   backgroundColor: B24Colors.primaryBlue,
                   shape: RoundedRectangleBorder(
@@ -243,7 +246,8 @@ class _ReviewScreenState extends ConsumerState<ReviewScreen> {
                       )
                     : Text(
                         S.of(context)!.submitReview,
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w600),
                       ),
               ),
             ),

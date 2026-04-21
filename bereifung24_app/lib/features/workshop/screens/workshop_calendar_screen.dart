@@ -30,19 +30,19 @@ class _WorkshopCalendarScreenState
         bottom: false,
         child: bookingsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(
+          error: (_, __) => Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Text('😕', style: TextStyle(fontSize: 48)),
                 const SizedBox(height: 12),
-                Text('Fehler: $e',
+                Text(S.of(context)!.loadingError,
                     style: TextStyle(
                         color: isDark ? Colors.white60 : Colors.black45)),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => ref.invalidate(workshopBookingsProvider),
-                  child: const Text('Erneut versuchen'),
+                  child: Text(S.of(context)!.retry),
                 ),
               ],
             ),
@@ -74,7 +74,7 @@ class _WorkshopCalendarScreenState
                   selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                   calendarFormat: _calendarFormat,
                   startingDayOfWeek: StartingDayOfWeek.monday,
-                  locale: 'de_DE',
+                  locale: Localizations.localeOf(context).toLanguageTag(),
                   eventLoader: (day) {
                     final key = _dayKey(day);
                     return eventMap[key] ?? [];
@@ -91,10 +91,11 @@ class _WorkshopCalendarScreenState
                   onPageChanged: (focusedDay) {
                     _focusedDay = focusedDay;
                   },
-                  availableCalendarFormats: const {
-                    CalendarFormat.month: 'Monat',
-                    CalendarFormat.twoWeeks: '2 Wochen',
-                    CalendarFormat.week: 'Woche',
+                  availableCalendarFormats: {
+                    CalendarFormat.month: _calendarFormatLabel(context, 'month'),
+                    CalendarFormat.twoWeeks:
+                        _calendarFormatLabel(context, 'twoWeeks'),
+                    CalendarFormat.week: _calendarFormatLabel(context, 'week'),
                   },
                   headerStyle: HeaderStyle(
                     formatButtonVisible: true,
@@ -279,7 +280,8 @@ class _WorkshopCalendarScreenState
                   child: Row(
                     children: [
                       Text(
-                        DateFormat('EEEE, d. MMMM', 'de_DE')
+                        DateFormat('EEEE, d. MMMM',
+                                Localizations.localeOf(context).toLanguageTag())
                             .format(_selectedDay),
                         style: TextStyle(
                           fontSize: 14,
@@ -291,7 +293,7 @@ class _WorkshopCalendarScreenState
                       const Spacer(),
                       if (dayBookings.isNotEmpty)
                         Text(
-                          '${dayBookings.length} Termin${dayBookings.length > 1 ? 'e' : ''}',
+                          '${dayBookings.length} ${S.of(context)!.appointment}',
                           style: TextStyle(
                             fontSize: 12,
                             color: isDark
@@ -314,7 +316,7 @@ class _WorkshopCalendarScreenState
                               const Text('📭', style: TextStyle(fontSize: 36)),
                               const SizedBox(height: 8),
                               Text(
-                                'Keine Termine an diesem Tag',
+                                S.of(context)!.workshopNoAppointmentsOnDay,
                                 style: TextStyle(
                                   color:
                                       isDark ? Colors.white54 : Colors.black45,
@@ -328,8 +330,7 @@ class _WorkshopCalendarScreenState
                             ref.invalidate(workshopBookingsProvider);
                           },
                           child: ListView.separated(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 4),
+                            padding: const EdgeInsets.fromLTRB(16, 4, 16, 120),
                             itemCount: dayBookings.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 8),
@@ -355,7 +356,8 @@ class _WorkshopCalendarScreenState
     for (final b in bookings) {
       final d = DateTime.tryParse(b.appointmentDate);
       if (d == null) continue;
-      final key = _dayKey(d);
+      final localDay = DateTime(d.toLocal().year, d.toLocal().month, d.toLocal().day);
+      final key = _dayKey(localDay);
       map.putIfAbsent(key, () => []).add(b);
     }
     return map;
@@ -366,7 +368,10 @@ class _WorkshopCalendarScreenState
     return bookings.where((b) {
       final d = DateTime.tryParse(b.appointmentDate);
       if (d == null) return false;
-      return isSameDay(d, day);
+      final local = d.toLocal();
+      return local.year == day.year &&
+          local.month == day.month &&
+          local.day == day.day;
     }).toList()
       ..sort((a, b) =>
           (a.appointmentTime ?? '').compareTo(b.appointmentTime ?? ''));
@@ -389,7 +394,8 @@ class _WorkshopCalendarScreenState
   void _showBookingDetail(BuildContext context, WorkshopBooking b) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = _statusColor(b.status);
-    final dateStr = DateFormat('dd.MM.yyyy')
+    final isDe = Localizations.localeOf(context).languageCode == 'de';
+    final dateStr = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
         .format(DateTime.tryParse(b.appointmentDate) ?? DateTime.now());
 
     showModalBottomSheet(
@@ -423,7 +429,7 @@ class _WorkshopCalendarScreenState
               children: [
                 Expanded(
                   child: Text(
-                    'Buchungsdetails',
+                    S.of(context)!.bookingDetails,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -439,7 +445,7 @@ class _WorkshopCalendarScreenState
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    b.statusLabel,
+                    _statusLabel(context, b.status),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -452,7 +458,7 @@ class _WorkshopCalendarScreenState
             const SizedBox(height: 20),
 
             // Customer
-            _detailSection(isDark, '👤', 'Kunde', [
+            _detailSection(isDark, '👤', isDe ? 'Kunde' : 'Customer', [
               b.customerName,
               if (b.customerEmail != null && b.customerEmail!.isNotEmpty)
                 b.customerEmail!,
@@ -462,26 +468,30 @@ class _WorkshopCalendarScreenState
             const SizedBox(height: 14),
 
             // Appointment
-            _detailSection(isDark, '📅', 'Termin', [
-              'Datum: $dateStr',
-              if (b.appointmentTime != null) 'Uhrzeit: ${b.appointmentTime}',
-              'Dauer: ${b.estimatedDuration} Min.',
+            _detailSection(isDark, '📅', isDe ? 'Termin' : 'Appointment', [
+              '${isDe ? 'Datum' : 'Date'}: $dateStr',
+              if (b.appointmentTime != null)
+                '${isDe ? 'Uhrzeit' : 'Time'}: ${b.appointmentTime}',
+              '${isDe ? 'Dauer' : 'Duration'}: ${b.estimatedDuration} min',
             ]),
             const SizedBox(height: 14),
 
             // Service
             _detailSection(isDark, '🔧', 'Service', [
-              b.serviceLabel,
-              if (b.serviceSubtypeLabel != null) b.serviceSubtypeLabel!,
+              _serviceLabel(context, b.serviceType),
+              if (b.serviceSubtypeLabel != null)
+                _humanizeCode(b.serviceSubtypeLabel!),
             ]),
             const SizedBox(height: 14),
 
             // Vehicle
             if (b.vehicleMake != null) ...[
-              _detailSection(isDark, '🚗', 'Fahrzeug', [
+              _detailSection(isDark, '🚗', isDe ? 'Fahrzeug' : 'Vehicle', [
                 '${b.vehicleMake} ${b.vehicleModel ?? ''}',
-                if (b.vehicleYear != null) 'Baujahr: ${b.vehicleYear}',
-                if (b.licensePlate != null) 'Kennzeichen: ${b.licensePlate}',
+                if (b.vehicleYear != null)
+                  '${isDe ? 'Baujahr' : 'Year'}: ${b.vehicleYear}',
+                if (b.licensePlate != null)
+                  '${isDe ? 'Kennzeichen' : 'License plate'}: ${b.licensePlate}',
               ]),
               const SizedBox(height: 14),
             ],
@@ -489,28 +499,32 @@ class _WorkshopCalendarScreenState
             // Tires - mixed/motorcycle (front + rear separate)
             if (b.isMixedTires) ...[
               if (b.frontTire != null) ...[
-                _detailSection(isDark, '🛞', 'Reifen vorne', [
+                _detailSection(
+                    isDark, '🛞', isDe ? 'Reifen vorne' : 'Front tires', [
                   if (b.frontTire!['brand'] != null)
-                    'Marke: ${b.frontTire!['brand']}',
+                    '${isDe ? 'Marke' : 'Brand'}: ${b.frontTire!['brand']}',
                   if (b.frontTire!['model'] != null)
-                    'Modell: ${b.frontTire!['model']}',
+                    '${isDe ? 'Modell' : 'Model'}: ${b.frontTire!['model']}',
                   if (b.frontTire!['size'] != null)
-                    'Größe: ${b.frontTire!['size']}',
-                  'Anzahl: ${b.frontTire!['quantity'] ?? 2}',
-                  if (b.frontTire!['runflat'] == true) 'RunFlat: Ja',
+                    '${isDe ? 'Größe' : 'Size'}: ${b.frontTire!['size']}',
+                  '${isDe ? 'Anzahl' : 'Quantity'}: ${b.frontTire!['quantity'] ?? 2}',
+                  if (b.frontTire!['runflat'] == true)
+                    'RunFlat: ${isDe ? 'Ja' : 'Yes'}',
                 ]),
                 const SizedBox(height: 14),
               ],
               if (b.rearTire != null) ...[
-                _detailSection(isDark, '🛞', 'Reifen hinten', [
+                _detailSection(
+                    isDark, '🛞', isDe ? 'Reifen hinten' : 'Rear tires', [
                   if (b.rearTire!['brand'] != null)
-                    'Marke: ${b.rearTire!['brand']}',
+                    '${isDe ? 'Marke' : 'Brand'}: ${b.rearTire!['brand']}',
                   if (b.rearTire!['model'] != null)
-                    'Modell: ${b.rearTire!['model']}',
+                    '${isDe ? 'Modell' : 'Model'}: ${b.rearTire!['model']}',
                   if (b.rearTire!['size'] != null)
-                    'Größe: ${b.rearTire!['size']}',
-                  'Anzahl: ${b.rearTire!['quantity'] ?? 2}',
-                  if (b.rearTire!['runflat'] == true) 'RunFlat: Ja',
+                    '${isDe ? 'Größe' : 'Size'}: ${b.rearTire!['size']}',
+                  '${isDe ? 'Anzahl' : 'Quantity'}: ${b.rearTire!['quantity'] ?? 2}',
+                  if (b.rearTire!['runflat'] == true)
+                    'RunFlat: ${isDe ? 'Ja' : 'Yes'}',
                 ]),
                 const SizedBox(height: 14),
               ],
@@ -519,28 +533,34 @@ class _WorkshopCalendarScreenState
             else if (b.tireBrand != null ||
                 b.tireModel != null ||
                 b.tireSize != null) ...[
-              _detailSection(isDark, '🛞', 'Reifen', [
-                if (b.tireBrand != null) 'Marke: ${b.tireBrand}',
-                if (b.tireModel != null) 'Modell: ${b.tireModel}',
-                if (b.tireSize != null) 'Größe: ${b.tireSize}',
-                if (b.tireQuantity != null) 'Anzahl: ${b.tireQuantity}',
-                if (b.tireRunFlat) 'RunFlat: Ja',
+              _detailSection(isDark, '🛞', isDe ? 'Reifen' : 'Tires', [
+                if (b.tireBrand != null)
+                  '${isDe ? 'Marke' : 'Brand'}: ${b.tireBrand}',
+                if (b.tireModel != null)
+                  '${isDe ? 'Modell' : 'Model'}: ${b.tireModel}',
+                if (b.tireSize != null)
+                  '${isDe ? 'Größe' : 'Size'}: ${b.tireSize}',
+                if (b.tireQuantity != null)
+                  '${isDe ? 'Anzahl' : 'Quantity'}: ${b.tireQuantity}',
+                if (b.tireRunFlat) 'RunFlat: ${isDe ? 'Ja' : 'Yes'}',
               ]),
               const SizedBox(height: 14),
             ]
             // No tire data but tire-related service
             else if (b.serviceType == 'TIRE_CHANGE' ||
                 b.serviceType == 'MOTORCYCLE_TIRE') ...[
-              _detailSection(isDark, '🛞', 'Reifen', [
-                'Keine Reifeninformationen hinterlegt',
+              _detailSection(isDark, '🛞', isDe ? 'Reifen' : 'Tires', [
+                isDe
+                    ? 'Keine Reifeninformationen hinterlegt'
+                    : 'No tire information stored',
               ]),
               const SizedBox(height: 14),
             ],
 
             // Pricing (with additional options merged in)
-            _detailSection(isDark, '💰', 'Preis', [
+            _detailSection(isDark, '💰', isDe ? 'Preis' : 'Price', [
               if (b.basePrice != null)
-                'Grundpreis: ${b.basePrice!.toStringAsFixed(2)} €',
+                '${isDe ? 'Grundpreis' : 'Base price'}: ${b.basePrice!.toStringAsFixed(2)} €',
               if (b.hasBalancing)
                 'Auswuchten: ${b.balancingPrice != null ? '${b.balancingPrice!.toStringAsFixed(2)} €' : 'inkl.'}',
               if (b.hasStorage)
@@ -548,18 +568,18 @@ class _WorkshopCalendarScreenState
               if (b.hasWashing)
                 'Felgenwäsche: ${b.washingPrice != null ? '${b.washingPrice!.toStringAsFixed(2)} €' : 'inkl.'}',
               if (b.hasDisposal)
-                'Altreifenentsorgung: ${b.disposalFee != null ? '${b.disposalFee!.toStringAsFixed(2)} €' : 'inkl.'}',
+                '${isDe ? 'Altreifenentsorgung' : 'Disposal'}: ${b.disposalFee != null ? '${b.disposalFee!.toStringAsFixed(2)} €' : (isDe ? 'inkl.' : 'incl.')}',
               if (b.tireRunFlat && b.runFlatSurcharge != null)
                 'RunFlat-Zuschlag: ${b.runFlatSurcharge!.toStringAsFixed(2)} €',
               if (b.totalPrice != null)
-                'Gesamtpreis: ${b.totalPrice!.toStringAsFixed(2)} €',
+                '${isDe ? 'Gesamtpreis' : 'Total'}: ${b.totalPrice!.toStringAsFixed(2)} €',
             ]),
             const SizedBox(height: 14),
 
             // Meta
             _detailSection(isDark, 'ℹ️', 'Info', [
-              'Erstellt: ${DateFormat('dd.MM.yyyy HH:mm').format(b.createdAt)}',
-              if (b.isDirectBooking) 'Direktbuchung über Bereifung24',
+              '${isDe ? 'Erstellt' : 'Created'}: ${DateFormat('dd.MM.yyyy HH:mm').format(b.createdAt)}',
+              if (b.isDirectBooking) S.of(context)!.workshopDirectBookingViaB24,
             ]),
           ],
         ),
@@ -613,6 +633,79 @@ class _WorkshopCalendarScreenState
       default:
         return const Color(0xFF64748B);
     }
+  }
+
+  String _calendarFormatLabel(BuildContext context, String format) {
+    final isDe = Localizations.localeOf(context).languageCode == 'de';
+    return switch (format) {
+      'month' => isDe ? 'Monat' : 'Month',
+      'twoWeeks' => isDe ? '2 Wochen' : '2 weeks',
+      _ => isDe ? 'Woche' : 'Week',
+    };
+  }
+
+  String _statusLabel(BuildContext context, String status) {
+    final lang = Localizations.localeOf(context).languageCode;
+    return switch (status) {
+      'CONFIRMED' => S.of(context)!.confirmed_status,
+      'COMPLETED' => S.of(context)!.completedStatus,
+      'CANCELLED' => lang == 'de' ? 'Storniert' : 'Cancelled',
+      'RESERVED' => lang == 'de' ? 'Reserviert' : 'Reserved',
+      'PENDING' => lang == 'de' ? 'Ausstehend' : 'Pending',
+      'NO_SHOW' => lang == 'de' ? 'Nicht erschienen' : 'No show',
+      _ => status,
+    };
+  }
+
+  String _serviceLabel(BuildContext context, String? serviceType) {
+    final key = (serviceType ?? '').toUpperCase().trim();
+    final isDe = Localizations.localeOf(context).languageCode == 'de';
+    if (isDe) {
+      const deLabels = {
+        'WHEEL_CHANGE': 'Räderwechsel',
+        'RÄDERWECHSEL': 'Räderwechsel',
+        'TIRE_CHANGE': 'Reifenwechsel',
+        'REIFENWECHSEL': 'Reifenwechsel',
+        'TIRE_REPAIR': 'Reifenreparatur',
+        'REIFENREPARATUR': 'Reifenreparatur',
+        'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
+        'MOTORRAD-REIFENWECHSEL': 'Motorrad-Reifenwechsel',
+        'ALIGNMENT_BOTH': 'Achsvermessung',
+        'ACHSVERMESSUNG': 'Achsvermessung',
+        'CLIMATE_SERVICE': 'Klimaservice',
+        'KLIMASERVICE': 'Klimaservice',
+      };
+      return deLabels[key] ?? serviceType ?? 'Service';
+    }
+    return switch (key) {
+      'WHEEL_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
+      'TIRE_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceTireChange),
+      'TIRE_REPAIR' => S.of(context)!.foreignObjectRepair,
+      'MOTORCYCLE_TIRE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceMotorcycleTire),
+      'ALIGNMENT_BOTH' => _normalizeServiceLabel(S.of(context)!.serviceAlignment),
+      'CLIMATE_SERVICE' => _normalizeServiceLabel(S.of(context)!.serviceClimate),
+      _ => serviceType ?? 'Service',
+    };
+  }
+
+  String _normalizeServiceLabel(String value) {
+    return value
+        .replaceAll('-\n', '')
+        .replaceAll('\n', ' ')
+        .replaceAll('  ', ' ')
+        .trim();
+  }
+
+  String _humanizeCode(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) =>
+            '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+        .join(' ');
   }
 }
 
@@ -674,7 +767,7 @@ class _BookingCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    booking.serviceLabel,
+                    _serviceLabel(context, booking.serviceType),
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? Colors.white54 : const Color(0xFF64748B),
@@ -706,7 +799,7 @@ class _BookingCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    booking.statusLabel,
+                    _statusLabel(context, booking.status),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -746,5 +839,58 @@ class _BookingCard extends StatelessWidget {
       default:
         return const Color(0xFF64748B);
     }
+  }
+
+  String _statusLabel(BuildContext context, String status) {
+    final lang = Localizations.localeOf(context).languageCode;
+    return switch (status) {
+      'CONFIRMED' => S.of(context)!.confirmed_status,
+      'COMPLETED' => S.of(context)!.completedStatus,
+      'CANCELLED' => lang == 'de' ? 'Storniert' : 'Cancelled',
+      'RESERVED' => lang == 'de' ? 'Reserviert' : 'Reserved',
+      'PENDING' => lang == 'de' ? 'Ausstehend' : 'Pending',
+      'NO_SHOW' => lang == 'de' ? 'Nicht erschienen' : 'No show',
+      _ => status,
+    };
+  }
+
+  String _serviceLabel(BuildContext context, String? serviceType) {
+    final key = (serviceType ?? '').toUpperCase().trim();
+    final isDe = Localizations.localeOf(context).languageCode == 'de';
+    if (isDe) {
+      const deLabels = {
+        'WHEEL_CHANGE': 'Räderwechsel',
+        'RÄDERWECHSEL': 'Räderwechsel',
+        'TIRE_CHANGE': 'Reifenwechsel',
+        'REIFENWECHSEL': 'Reifenwechsel',
+        'TIRE_REPAIR': 'Reifenreparatur',
+        'REIFENREPARATUR': 'Reifenreparatur',
+        'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
+        'MOTORRAD-REIFENWECHSEL': 'Motorrad-Reifenwechsel',
+        'ALIGNMENT_BOTH': 'Achsvermessung',
+        'ACHSVERMESSUNG': 'Achsvermessung',
+        'CLIMATE_SERVICE': 'Klimaservice',
+        'KLIMASERVICE': 'Klimaservice',
+      };
+      return deLabels[key] ?? serviceType ?? 'Service';
+    }
+    return switch (key) {
+      'WHEEL_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
+      'TIRE_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceTireChange),
+      'TIRE_REPAIR' => S.of(context)!.foreignObjectRepair,
+      'MOTORCYCLE_TIRE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceMotorcycleTire),
+      'ALIGNMENT_BOTH' => _normalizeServiceLabel(S.of(context)!.serviceAlignment),
+      'CLIMATE_SERVICE' => _normalizeServiceLabel(S.of(context)!.serviceClimate),
+      _ => serviceType ?? 'Service',
+    };
+  }
+
+  String _normalizeServiceLabel(String value) {
+    return value
+        .replaceAll('-\n', '')
+        .replaceAll('\n', ' ')
+        .replaceAll('  ', ' ')
+        .trim();
   }
 }

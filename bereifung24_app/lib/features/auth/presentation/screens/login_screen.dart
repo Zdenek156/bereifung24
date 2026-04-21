@@ -148,13 +148,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'E-Mail',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: S.of(context)!.email,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
-                      return 'Bitte E-Mail eingeben';
+                      return S.of(context)!.requiredField;
                     }
                     if (!v.contains('@')) return S.of(context)!.invalidEmail;
                     return null;
@@ -181,8 +181,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty)
-                      return 'Bitte Passwort eingeben';
+                    if (v == null || v.isEmpty) return S.of(context)!.requiredField;
                     return null;
                   },
                 ),
@@ -218,7 +217,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: Colors.white,
                           ),
                         )
-                      : Text(S.of(context)!.login, style: const TextStyle(fontSize: 16)),
+                      : Text(S.of(context)!.login,
+                          style: const TextStyle(fontSize: 16)),
                 ),
 
                 const SizedBox(height: 24),
@@ -357,9 +357,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         debugPrint('Google Sign-In: idToken is null');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Google-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+            SnackBar(content: Text(S.of(context)!.googleLoginFailed)),
           );
         }
         return;
@@ -381,7 +379,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error ?? 'Google-Anmeldung fehlgeschlagen')),
+            SnackBar(content: Text(error ?? S.of(context)!.googleLoginFailed)),
           );
         }
         return;
@@ -423,9 +421,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       debugPrint('Google Sign-In error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Google-Anmeldung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+          SnackBar(content: Text(S.of(context)!.googleLoginFailed)),
         );
       }
     }
@@ -445,9 +441,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         debugPrint('Apple Sign-In: identityToken is null');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Apple-Token konnte nicht abgerufen werden. Bitte versuche es erneut.')),
+            SnackBar(content: Text(S.of(context)!.appleLoginFailed)),
           );
         }
         return;
@@ -473,7 +467,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error ?? 'Apple-Anmeldung fehlgeschlagen')),
+            SnackBar(content: Text(error ?? S.of(context)!.appleLoginFailed)),
           );
         }
         return;
@@ -548,9 +542,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       debugPrint('Apple Sign-In error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text(
-                  'Apple-Anmeldung fehlgeschlagen: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}')),
+          SnackBar(content: Text(S.of(context)!.appleLoginFailed)),
         );
       }
     }
@@ -605,11 +597,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       prefixIcon: Icon(Icons.email_outlined),
                     ),
                     validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Pflichtfeld';
+                      if (v == null || v.trim().isEmpty) {
+                        return S.of(context)!.requiredField;
+                      }
                       if (!v.contains('@') || !v.contains('.'))
-                        return 'Ungültige E-Mail';
+                        return S.of(context)!.invalidEmail;
                       if (v.contains('privaterelay.appleid.com'))
-                        return 'Bitte echte E-Mail angeben';
+                        return S.of(context)!.enterValidEmail;
                       return null;
                     },
                   ),
@@ -619,17 +613,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextFormField(
                     controller: firstNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(labelText: '${S.of(context)!.firstName} *'),
+                    decoration: InputDecoration(
+                        labelText: '${S.of(context)!.firstName} *'),
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: lastNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(labelText: '${S.of(context)!.lastName} *'),
+                    decoration: InputDecoration(
+                        labelText: '${S.of(context)!.lastName} *'),
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -651,7 +647,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       prefixIcon: Icon(Icons.home_outlined),
                     ),
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Pflichtfeld' : null,
+                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -661,10 +657,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         child: TextFormField(
                           controller: zipCtrl,
                           keyboardType: TextInputType.number,
-                          decoration: InputDecoration(labelText: S.of(context)!.zip),
+                          decoration:
+                              InputDecoration(labelText: S.of(context)!.zip),
                           validator: (v) {
-                            if (v == null || v.trim().isEmpty) return 'Pflicht';
-                            if (v.trim().length != 5) return '5 Ziffern';
+                            if (v == null || v.trim().isEmpty) {
+                              return S.of(context)!.requiredField;
+                            }
+                            if (v.trim().length != 5) {
+                              return S.of(context)!.requiredField;
+                            }
                             return null;
                           },
                         ),
@@ -677,7 +678,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           decoration:
                               InputDecoration(labelText: S.of(context)!.city),
                           validator: (v) => v == null || v.trim().isEmpty
-                              ? 'Pflichtfeld'
+                              ? S.of(context)!.requiredField
                               : null,
                         ),
                       ),
@@ -707,7 +708,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 });
               }
             },
-            child: const Text('Weiter'),
+            child: Text(S.of(context)!.next),
           ),
         ],
       ),

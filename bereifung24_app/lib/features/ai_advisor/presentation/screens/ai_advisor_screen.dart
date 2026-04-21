@@ -128,7 +128,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   bool _isListening = false;
   bool _isSpeaking = false;
   bool _ttsEnabled = false;
-  bool _autoSpeak = true; // auto-speak AI responses
+  bool _autoSpeak =
+      false; // text chat should stay silent; voice mode handles speech
   String _partialSpeech = '';
 
   // Voice Mode (fullscreen immersive)
@@ -142,8 +143,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
   String get _speechLocaleId {
     final lang = ref.read(localeProvider).languageCode;
     const map = {
-      'de': 'de_DE', 'en': 'en_US', 'tr': 'tr_TR',
-      'ru': 'ru_RU', 'it': 'it_IT', 'fr': 'fr_FR', 'es': 'es_ES',
+      'de': 'de_DE',
+      'en': 'en_US',
+      'tr': 'tr_TR',
+      'ru': 'ru_RU',
+      'it': 'it_IT',
+      'fr': 'fr_FR',
+      'es': 'es_ES',
     };
     return map[lang] ?? 'de_DE';
   }
@@ -184,25 +190,6 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     }
   }
 
-  Future<void> _speakText(String text) async {
-    if (!_ttsEnabled) return;
-    setState(() => _isSpeaking = true);
-    await ElevenLabsTtsService().speak(text);
-    // Listen for completion
-    Future.delayed(const Duration(milliseconds: 500), () {
-      _checkSpeakingState();
-    });
-  }
-
-  void _checkSpeakingState() {
-    if (!mounted) return;
-    if (ElevenLabsTtsService().isSpeaking) {
-      Future.delayed(const Duration(milliseconds: 300), _checkSpeakingState);
-    } else {
-      setState(() => _isSpeaking = false);
-    }
-  }
-
   Future<void> _stopSpeaking() async {
     await ElevenLabsTtsService().stop();
     setState(() => _isSpeaking = false);
@@ -225,8 +212,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             'voice', 'mic permission NOT granted: $micStatus');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text(S.of(context)!.micPermissionNeeded)),
+            SnackBar(content: Text(S.of(context)!.micPermissionNeeded)),
           );
           // Open app settings so user can grant permission manually
           if (micStatus.isPermanentlyDenied || micStatus.isDenied) {
@@ -246,8 +232,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
               'voice', 'iOS speech permission NOT granted: $speechStatus');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                  content: Text(S.of(context)!.speechPermissionNeeded)),
+              SnackBar(content: Text(S.of(context)!.speechPermissionNeeded)),
             );
             if (speechStatus.isPermanentlyDenied || speechStatus.isDenied) {
               await openAppSettings();
@@ -267,9 +252,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
             'voice', 'speechService.init() returned false');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content:
-                    Text(S.of(context)!.speechInitFailed)),
+            SnackBar(content: Text(S.of(context)!.speechInitFailed)),
           );
         }
         return;
@@ -620,8 +603,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       setState(() {
         _messages.add(_ChatMessage(
           role: 'ai',
-          text:
-              S.of(context)!.aiErrorMessage,
+          text: S.of(context)!.aiErrorMessage,
           time: _timeStr(),
         ));
         _isTyping = false;
@@ -662,8 +644,11 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
       ));
       _messages.add(_ChatMessage(
         role: 'ai',
-        text:
-            S.of(context)!.vehicleSelected('${vehicle.make} ${vehicle.model}', vehicle.tireSizeWithIndex.isNotEmpty ? vehicle.tireSizeWithIndex : S.of(context)!.tireNotStoredLabel),
+        text: S.of(context)!.vehicleSelected(
+            '${vehicle.make} ${vehicle.model}',
+            vehicle.tireSizeWithIndex.isNotEmpty
+                ? vehicle.tireSizeWithIndex
+                : S.of(context)!.tireNotStoredLabel),
         time: _timeStr(),
       ));
     });
@@ -691,8 +676,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     setState(() {
       _messages.add(_ChatMessage(
         role: 'ai',
-        text:
-            S.of(context)!.rolloInitialGreeting,
+        text: S.of(context)!.rolloInitialGreeting,
         time: _timeStr(),
         chips: [
           _QuickChip('recommend', '🎯 ${S.of(context)!.tireRecommendation}'),
@@ -736,8 +720,7 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                 role: 'user', text: text.trim(), time: _timeStr()));
             _messages.add(_ChatMessage(
               role: 'ai',
-              text:
-                  S.of(context)!.noVehicleForAi,
+              text: S.of(context)!.noVehicleForAi,
               time: _timeStr(),
             ));
           });
@@ -833,17 +816,13 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         _isTyping = false;
       });
 
-      // Auto-speak AI response
-      if (_autoSpeak && _ttsEnabled) {
-        _speakText(aiText);
-      }
+      // Keep text chat silent. Speech output is handled only in voice mode.
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _messages.add(_ChatMessage(
           role: 'ai',
-          text:
-              S.of(context)!.aiErrorMessage,
+          text: S.of(context)!.aiErrorMessage,
           time: _timeStr(),
         ));
         _isTyping = false;
@@ -959,18 +938,6 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
         ),
         centerTitle: true,
         actions: [
-          if (_ttsEnabled)
-            IconButton(
-              icon: Icon(
-                _autoSpeak ? Icons.volume_up : Icons.volume_off,
-                size: 22,
-              ),
-              tooltip: _autoSpeak ? S.of(context)!.speechOutputOn : S.of(context)!.speechOutputOff,
-              onPressed: () {
-                setState(() => _autoSpeak = !_autoSpeak);
-                if (!_autoSpeak && _isSpeaking) _stopSpeaking();
-              },
-            ),
           IconButton(
             icon: const Icon(Icons.delete_outline, size: 22),
             tooltip: S.of(context)!.deleteChat,
@@ -1126,27 +1093,6 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
                         : B24Colors.textTertiary,
                   ),
                 ),
-                if (!isUser && _ttsEnabled) ...[
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () {
-                      if (_isSpeaking) {
-                        _stopSpeaking();
-                      } else {
-                        _speakText(msg.text);
-                      }
-                    },
-                    child: Icon(
-                      _isSpeaking
-                          ? Icons.stop_circle_outlined
-                          : Icons.play_circle_outline,
-                      size: 16,
-                      color: _isSpeaking
-                          ? Colors.red
-                          : B24Colors.primaryBlue.withValues(alpha: 0.6),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),
@@ -1270,8 +1216,10 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     final rearTires = tires.where((t) => t.axle == 'rear').toList();
     final hasMixed = frontTires.isNotEmpty && rearTires.isNotEmpty;
     final isMoto = _vehicleType == 'MOTORCYCLE';
-    final frontLabel = isMoto ? S.of(context)!.frontWheel : S.of(context)!.frontAxleFull;
-    final rearLabel = isMoto ? S.of(context)!.rearWheel : S.of(context)!.rearAxleFull;
+    final frontLabel =
+        isMoto ? S.of(context)!.frontWheel : S.of(context)!.frontAxleFull;
+    final rearLabel =
+        isMoto ? S.of(context)!.rearWheel : S.of(context)!.rearAxleFull;
 
     if (hasMixed) {
       return [
@@ -1348,8 +1296,8 @@ class _AIAdvisorScreenState extends ConsumerState<AIAdvisorScreen> {
     final hasRear = _selectedRearTire != null;
     final hasBoth = hasFront && hasRear;
     final label = hasBoth
-? S.of(context)!.findWorkshopWithBothTires
-            : hasFront
+        ? S.of(context)!.findWorkshopWithBothTires
+        : hasFront
             ? S.of(context)!.findWorkshopWithFrontTire
             : S.of(context)!.findWorkshopWithRearTire;
 

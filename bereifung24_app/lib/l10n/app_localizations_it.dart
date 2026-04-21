@@ -934,6 +934,38 @@ class SIt extends S {
   String get workshopDashboard => 'Dashboard';
 
   @override
+  String get workshopNext7Days => 'Prossimi 7 giorni';
+
+  @override
+  String get workshopTodayAppointments => 'Appuntamenti di oggi';
+
+  @override
+  String get workshopNoAppointmentsToday => 'Nessun appuntamento oggi';
+
+  @override
+  String get workshopRecentActivities => 'Attività recenti';
+
+  @override
+  String get workshopNoAppointmentsOnDay =>
+      'Nessun appuntamento in questo giorno';
+
+  @override
+  String get workshopDirectBookingViaB24 =>
+      'Prenotazione diretta via Bereifung24';
+
+  @override
+  String get workshopFilterAll => 'Tutte';
+
+  @override
+  String get workshopFilterUpcoming => 'In arrivo';
+
+  @override
+  String get workshopFilterCompleted => 'Completate';
+
+  @override
+  String get workshopFilterCancelled => 'Annullate';
+
+  @override
   String get loadingError => 'Errore di caricamento';
 
   @override
@@ -951,10 +983,31 @@ class SIt extends S {
   String get workshopProfile => 'Profilo';
 
   @override
+  String get landingPageTitle => 'La tua landing page';
+
+  @override
+  String get activeStatus => 'Attiva';
+
+  @override
+  String get inactiveStatus => 'Inattiva';
+
+  @override
   String get shareLink => 'Condividi pagina';
 
   @override
+  String landingPageShareMessage(String url) {
+    return 'Visita la nostra pagina e prenota direttamente online: $url';
+  }
+
+  @override
   String get qrCode => 'Codice QR';
+
+  @override
+  String get noLandingPage => 'Nessuna landing page';
+
+  @override
+  String get noLandingPageDescription =>
+      'La tua landing page viene creata e gestita tramite il portale admin.';
 
   @override
   String get vacation => 'Periodo di vacanza';
@@ -967,6 +1020,9 @@ class SIt extends S {
 
   @override
   String get vacationReasonHint => 'es. Chiusura aziendale';
+
+  @override
+  String get noVacationEntries => 'Nessun periodo di vacanza registrato';
 
   @override
   String get vacationSaved => 'Periodo di vacanza salvato ✅';
@@ -983,6 +1039,9 @@ class SIt extends S {
 
   @override
   String get reviewReplyHint => 'La tua risposta...';
+
+  @override
+  String get workshopYourReply => 'La tua risposta:';
 
   @override
   String get replySaved => 'Risposta salvata ✅';

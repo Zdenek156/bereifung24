@@ -347,7 +347,9 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        isDone ? S.of(context)!.vehicleRecognized : S.of(context)!.scanDocument,
+                        isDone
+                            ? S.of(context)!.vehicleRecognized
+                            : S.of(context)!.scanDocument,
                         style: TextStyle(
                           color: isDone ? successColor : Colors.white,
                           fontSize: 14,
@@ -430,8 +432,8 @@ class _VehicleDocScannerScreenState extends State<VehicleDocScannerScreen>
                                   color: accentColor, size: 16),
                               label: Text(
                                 S.of(context)!.scanAgain,
-                                style:
-                                    const TextStyle(color: accentColor, fontSize: 12),
+                                style: const TextStyle(
+                                    color: accentColor, fontSize: 12),
                               ),
                             ),
                             const SizedBox(width: 16),

@@ -1841,6 +1841,66 @@ abstract class S {
   /// **'Dashboard'**
   String get workshopDashboard;
 
+  /// No description provided for @workshopNext7Days.
+  ///
+  /// In de, this message translates to:
+  /// **'Nächste 7 Tage'**
+  String get workshopNext7Days;
+
+  /// No description provided for @workshopTodayAppointments.
+  ///
+  /// In de, this message translates to:
+  /// **'Heutige Termine'**
+  String get workshopTodayAppointments;
+
+  /// No description provided for @workshopNoAppointmentsToday.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Termine heute'**
+  String get workshopNoAppointmentsToday;
+
+  /// No description provided for @workshopRecentActivities.
+  ///
+  /// In de, this message translates to:
+  /// **'Letzte Aktivitäten'**
+  String get workshopRecentActivities;
+
+  /// No description provided for @workshopNoAppointmentsOnDay.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Termine an diesem Tag'**
+  String get workshopNoAppointmentsOnDay;
+
+  /// No description provided for @workshopDirectBookingViaB24.
+  ///
+  /// In de, this message translates to:
+  /// **'Direktbuchung über Bereifung24'**
+  String get workshopDirectBookingViaB24;
+
+  /// No description provided for @workshopFilterAll.
+  ///
+  /// In de, this message translates to:
+  /// **'Alle'**
+  String get workshopFilterAll;
+
+  /// No description provided for @workshopFilterUpcoming.
+  ///
+  /// In de, this message translates to:
+  /// **'Bevorstehend'**
+  String get workshopFilterUpcoming;
+
+  /// No description provided for @workshopFilterCompleted.
+  ///
+  /// In de, this message translates to:
+  /// **'Erledigt'**
+  String get workshopFilterCompleted;
+
+  /// No description provided for @workshopFilterCancelled.
+  ///
+  /// In de, this message translates to:
+  /// **'Storniert'**
+  String get workshopFilterCancelled;
+
   /// No description provided for @loadingError.
   ///
   /// In de, this message translates to:
@@ -1871,17 +1931,53 @@ abstract class S {
   /// **'Profil'**
   String get workshopProfile;
 
+  /// No description provided for @landingPageTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Ihre Landing Page'**
+  String get landingPageTitle;
+
+  /// No description provided for @activeStatus.
+  ///
+  /// In de, this message translates to:
+  /// **'Aktiv'**
+  String get activeStatus;
+
+  /// No description provided for @inactiveStatus.
+  ///
+  /// In de, this message translates to:
+  /// **'Inaktiv'**
+  String get inactiveStatus;
+
   /// No description provided for @shareLink.
   ///
   /// In de, this message translates to:
   /// **'Seite teilen'**
   String get shareLink;
 
+  /// No description provided for @landingPageShareMessage.
+  ///
+  /// In de, this message translates to:
+  /// **'Besuchen Sie unsere Seite und buchen Sie direkt online: {url}'**
+  String landingPageShareMessage(String url);
+
   /// No description provided for @qrCode.
   ///
   /// In de, this message translates to:
   /// **'QR-Code'**
   String get qrCode;
+
+  /// No description provided for @noLandingPage.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Landing Page'**
+  String get noLandingPage;
+
+  /// No description provided for @noLandingPageDescription.
+  ///
+  /// In de, this message translates to:
+  /// **'Ihre Landing Page wird über das Admin-Portal erstellt und verwaltet.'**
+  String get noLandingPageDescription;
 
   /// No description provided for @vacation.
   ///
@@ -1906,6 +2002,12 @@ abstract class S {
   /// In de, this message translates to:
   /// **'z.B. Betriebsferien'**
   String get vacationReasonHint;
+
+  /// No description provided for @noVacationEntries.
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Urlaubszeiten eingetragen'**
+  String get noVacationEntries;
 
   /// No description provided for @vacationSaved.
   ///
@@ -1936,6 +2038,12 @@ abstract class S {
   /// In de, this message translates to:
   /// **'Ihre Antwort...'**
   String get reviewReplyHint;
+
+  /// No description provided for @workshopYourReply.
+  ///
+  /// In de, this message translates to:
+  /// **'Ihre Antwort:'**
+  String get workshopYourReply;
 
   /// No description provided for @replySaved.
   ///

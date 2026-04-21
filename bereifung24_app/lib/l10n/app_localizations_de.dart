@@ -930,6 +930,36 @@ class SDe extends S {
   String get workshopDashboard => 'Dashboard';
 
   @override
+  String get workshopNext7Days => 'Nächste 7 Tage';
+
+  @override
+  String get workshopTodayAppointments => 'Heutige Termine';
+
+  @override
+  String get workshopNoAppointmentsToday => 'Keine Termine heute';
+
+  @override
+  String get workshopRecentActivities => 'Letzte Aktivitäten';
+
+  @override
+  String get workshopNoAppointmentsOnDay => 'Keine Termine an diesem Tag';
+
+  @override
+  String get workshopDirectBookingViaB24 => 'Direktbuchung über Bereifung24';
+
+  @override
+  String get workshopFilterAll => 'Alle';
+
+  @override
+  String get workshopFilterUpcoming => 'Bevorstehend';
+
+  @override
+  String get workshopFilterCompleted => 'Erledigt';
+
+  @override
+  String get workshopFilterCancelled => 'Storniert';
+
+  @override
   String get loadingError => 'Fehler beim Laden';
 
   @override
@@ -947,10 +977,31 @@ class SDe extends S {
   String get workshopProfile => 'Profil';
 
   @override
+  String get landingPageTitle => 'Ihre Landing Page';
+
+  @override
+  String get activeStatus => 'Aktiv';
+
+  @override
+  String get inactiveStatus => 'Inaktiv';
+
+  @override
   String get shareLink => 'Seite teilen';
 
   @override
+  String landingPageShareMessage(String url) {
+    return 'Besuchen Sie unsere Seite und buchen Sie direkt online: $url';
+  }
+
+  @override
   String get qrCode => 'QR-Code';
+
+  @override
+  String get noLandingPage => 'Keine Landing Page';
+
+  @override
+  String get noLandingPageDescription =>
+      'Ihre Landing Page wird über das Admin-Portal erstellt und verwaltet.';
 
   @override
   String get vacation => 'Urlaubszeit';
@@ -963,6 +1014,9 @@ class SDe extends S {
 
   @override
   String get vacationReasonHint => 'z.B. Betriebsferien';
+
+  @override
+  String get noVacationEntries => 'Keine Urlaubszeiten eingetragen';
 
   @override
   String get vacationSaved => 'Urlaubszeit gespeichert ✅';
@@ -979,6 +1033,9 @@ class SDe extends S {
 
   @override
   String get reviewReplyHint => 'Ihre Antwort...';
+
+  @override
+  String get workshopYourReply => 'Ihre Antwort:';
 
   @override
   String get replySaved => 'Antwort gespeichert ✅';

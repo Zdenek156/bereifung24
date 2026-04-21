@@ -143,63 +143,78 @@ class WorkshopBooking {
   }
 
   factory WorkshopBooking.fromJson(Map<String, dynamic> json) {
-    final customer = json['customer'] ?? {};
-    final customerUser = customer['user'] ?? {};
-    final vehicle = json['vehicle'];
+    final customer = (json['customer'] is Map ? json['customer'] : {}) as Map;
+    final customerUser =
+        (customer['user'] is Map ? customer['user'] : {}) as Map;
+    final vehicle = json['vehicle'] is Map ? json['vehicle'] as Map : null;
+    final tireRequest =
+        json['tireRequest'] is Map ? json['tireRequest'] as Map : null;
+    final offer = json['offer'] is Map ? json['offer'] as Map : null;
+
+    double? _readPrice(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toDouble();
+      if (value is String) return double.tryParse(value);
+      return null;
+    }
 
     return WorkshopBooking(
-      id: json['id'] ?? '',
-      appointmentDate: json['appointmentDate'] ?? json['date'] ?? '',
-      appointmentTime: json['appointmentTime'] ?? json['time'],
+      id: json['id']?.toString() ?? '',
+      appointmentDate:
+          (json['appointmentDate'] ?? json['date'] ?? '').toString(),
+      appointmentTime: json['appointmentTime']?.toString() ??
+          json['time']?.toString(),
       estimatedDuration:
-          json['estimatedDuration'] ?? json['durationMinutes'] ?? 60,
-      status: json['status'] ?? '',
-      paymentStatus: json['paymentStatus'],
-      isDirectBooking: json['isDirectBooking'] ?? false,
-      paymentMethod: json['paymentMethod'],
-      totalPrice: json['totalPrice'] != null
-          ? (json['totalPrice'] as num).toDouble()
-          : null,
-      basePrice: json['basePrice'] != null
-          ? (json['basePrice'] as num).toDouble()
-          : null,
-      serviceType: json['serviceType'],
-      serviceSubtype: json['serviceSubtype'],
-      customerFirstName: customerUser['firstName'] ?? '',
-      customerLastName: customerUser['lastName'] ?? '',
-      customerEmail: customerUser['email'],
-      customerPhone: customerUser['phone'],
-      vehicleMake: vehicle?['make'],
-      vehicleModel: vehicle?['model'],
-      vehicleYear: vehicle?['year'],
-      licensePlate: vehicle?['licensePlate'],
-      createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      tireBrand: json['tireBrand'],
-      tireModel: json['tireModel'],
-      tireSize: json['tireSize'],
-      tireQuantity: json['tireQuantity'],
-      tireRunFlat: json['tireRunFlat'] ?? json['tireRunflat'] ?? false,
+          (json['estimatedDuration'] ?? json['durationMinutes'] ?? 60) as int,
+      status: json['status']?.toString() ?? '',
+      paymentStatus: json['paymentStatus']?.toString(),
+      isDirectBooking: json['isDirectBooking'] == true,
+      paymentMethod: json['paymentMethod']?.toString(),
+      totalPrice: _readPrice(json['totalPrice']) ?? _readPrice(offer?['price']),
+      basePrice: _readPrice(json['basePrice']) ?? _readPrice(offer?['price']),
+      serviceType: json['serviceType']?.toString() ??
+          tireRequest?['serviceType']?.toString(),
+      serviceSubtype: json['serviceSubtype']?.toString(),
+      customerFirstName: (customerUser['firstName'] ?? '').toString(),
+      customerLastName: (customerUser['lastName'] ?? '').toString(),
+      customerEmail: customerUser['email']?.toString(),
+      customerPhone: customerUser['phone']?.toString(),
+      vehicleMake: vehicle?['make']?.toString(),
+      vehicleModel: vehicle?['model']?.toString(),
+      vehicleYear: vehicle?['year'] is int
+          ? vehicle!['year'] as int
+          : int.tryParse(vehicle?['year']?.toString() ?? ''),
+      licensePlate: vehicle?['licensePlate']?.toString(),
+      createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+          DateTime.now(),
+      tireBrand: json['tireBrand']?.toString(),
+      tireModel: json['tireModel']?.toString(),
+      tireSize: json['tireSize']?.toString(),
+      tireQuantity: json['tireQuantity'] is int
+          ? json['tireQuantity'] as int
+          : int.tryParse(json['tireQuantity']?.toString() ?? ''),
+      tireRunFlat: json['tireRunFlat'] == true || json['tireRunflat'] == true,
       tireData:
           json['tireData'] is Map<String, dynamic> ? json['tireData'] : null,
-      hasBalancing: json['hasBalancing'] ?? false,
-      hasStorage: json['hasStorage'] ?? false,
-      hasWashing: json['hasWashing'] ?? false,
-      hasDisposal: json['hasDisposal'] ?? false,
-      balancingPrice: json['balancingPrice'] != null
-          ? (json['balancingPrice'] as num).toDouble()
-          : null,
-      storagePrice: json['storagePrice'] != null
-          ? (json['storagePrice'] as num).toDouble()
-          : null,
-      washingPrice: json['washingPrice'] != null
-          ? (json['washingPrice'] as num).toDouble()
-          : null,
-      disposalFee: json['disposalFee'] != null
-          ? (json['disposalFee'] as num).toDouble()
-          : null,
-      runFlatSurcharge: json['runFlatSurcharge'] != null
-          ? (json['runFlatSurcharge'] as num).toDouble()
-          : null,
+      hasBalancing: json['hasBalancing'] == true ||
+          json['wantsbalancing'] == true ||
+          json['wantsBalancing'] == true,
+      hasStorage: json['hasStorage'] == true ||
+          json['wantsstorage'] == true ||
+          json['wantsStorage'] == true,
+      hasWashing: json['hasWashing'] == true,
+      hasDisposal: json['hasDisposal'] == true,
+      balancingPrice: _readPrice(json['balancingPrice']) ??
+          _readPrice(offer?['balancingPrice']) ??
+          _readPrice(offer?['balancingprice']),
+      storagePrice: _readPrice(json['storagePrice']) ??
+          _readPrice(offer?['storagePrice']) ??
+          _readPrice(offer?['storageprice']),
+      washingPrice: _readPrice(json['washingPrice']),
+      disposalFee:
+          _readPrice(json['disposalFee']) ?? _readPrice(offer?['disposalFee']),
+      runFlatSurcharge: _readPrice(json['runFlatSurcharge']) ??
+          _readPrice(offer?['runFlatSurcharge']),
     );
   }
 }

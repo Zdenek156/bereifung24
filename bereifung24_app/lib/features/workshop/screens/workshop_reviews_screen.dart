@@ -18,7 +18,7 @@ class WorkshopReviewsScreen extends ConsumerWidget {
         bottom: false,
         child: reviewsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Fehler: $e')),
+          error: (e, _) => Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
           data: (state) => RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(workshopReviewsProvider);
@@ -69,7 +69,7 @@ class WorkshopReviewsScreen extends ConsumerWidget {
                                       rating: state.averageRating, size: 18),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '${state.totalReviews} Bewertungen',
+                                    S.of(context)!.reviewsCountLabel(state.totalReviews),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: isDark
@@ -113,14 +113,17 @@ class WorkshopReviewsScreen extends ConsumerWidget {
                     ),
                   )
                 else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => _ReviewTile(
-                        review: state.reviews[index],
-                        onRespond: () => _showRespondDialog(
-                            context, ref, state.reviews[index]),
+                  SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 120),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) => _ReviewTile(
+                          review: state.reviews[index],
+                          onRespond: () => _showRespondDialog(
+                              context, ref, state.reviews[index]),
+                        ),
+                        childCount: state.reviews.length,
                       ),
-                      childCount: state.reviews.length,
                     ),
                   ),
               ],
@@ -172,8 +175,8 @@ class WorkshopReviewsScreen extends ConsumerWidget {
             TextField(
               controller: controller,
               maxLines: 4,
-              decoration: const InputDecoration(
-                hintText: 'Ihre Antwort...',
+              decoration: InputDecoration(
+                hintText: S.of(context)!.reviewReplyHint,
                 border: OutlineInputBorder(),
               ),
             ),
@@ -198,7 +201,7 @@ class WorkshopReviewsScreen extends ConsumerWidget {
                     ref.invalidate(workshopReviewsProvider);
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Antwort gespeichert ✅')),
+                        SnackBar(content: Text(S.of(context)!.replySaved)),
                       );
                     }
                   } catch (e) {
@@ -213,7 +216,7 @@ class WorkshopReviewsScreen extends ConsumerWidget {
                     }
                   }
                 },
-                child: const Text('Antwort senden'),
+                child: Text(S.of(context)!.sendReply),
               ),
             ),
           ],
@@ -232,7 +235,8 @@ class _ReviewTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dateStr = DateFormat('dd.MM.yyyy').format(review.createdAt);
+    final dateStr = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
+        .format(review.createdAt);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -303,7 +307,7 @@ class _ReviewTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Ihre Antwort:',
+                    S.of(context)!.workshopYourReply,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -325,7 +329,7 @@ class _ReviewTile extends StatelessWidget {
               child: TextButton.icon(
                 onPressed: onRespond,
                 icon: const Icon(Icons.reply, size: 16),
-                label: const Text('Antworten'),
+                label: Text(S.of(context)!.reply),
                 style: TextButton.styleFrom(
                   foregroundColor: const Color(0xFF0284C7),
                   textStyle: const TextStyle(fontSize: 13),

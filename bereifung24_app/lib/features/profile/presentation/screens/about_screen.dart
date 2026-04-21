@@ -94,8 +94,8 @@ class _AboutScreenState extends State<AboutScreen> {
               const SizedBox(height: 8),
               Text(
                 S.of(context)!.missionText,
-                style: TextStyle(
-                    fontSize: 14, height: 1.6, color: subtitleColor),
+                style:
+                    TextStyle(fontSize: 14, height: 1.6, color: subtitleColor),
               ),
             ],
           ),
@@ -149,7 +149,8 @@ class _AboutScreenState extends State<AboutScreen> {
                 'Jahnstraße 2\n'
                 '71706 Markgröningen\n'
                 'Deutschland',
-                style: TextStyle(fontSize: 14, height: 1.6, color: subtitleColor),
+                style:
+                    TextStyle(fontSize: 14, height: 1.6, color: subtitleColor),
               ),
             ],
           ),
@@ -188,10 +189,18 @@ class _AboutScreenState extends State<AboutScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _SocialButton(
-                      icon: Icons.work_outline,
+                      iconWidget: const Text(
+                        'in',
+                        style: TextStyle(
+                          color: Color(0xFF0284C7),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 26,
+                          height: 1,
+                        ),
+                      ),
                       label: 'LinkedIn',
-                      onTap: () =>
-                          _launch('https://www.linkedin.com/company/bereifung24'),
+                      onTap: () => _launch(
+                          'https://www.linkedin.com/company/bereifung24'),
                     ),
                   ),
                 ],
@@ -293,11 +302,12 @@ class _ContactTile extends StatelessWidget {
 }
 
 class _SocialButton extends StatelessWidget {
-  final IconData icon;
+  final IconData? icon;
+  final Widget? iconWidget;
   final String label;
   final VoidCallback onTap;
   const _SocialButton(
-      {required this.icon, required this.label, required this.onTap});
+      {this.icon, this.iconWidget, required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -313,7 +323,9 @@ class _SocialButton extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, size: 28, color: const Color(0xFF0284C7)),
+            iconWidget ??
+                Icon(icon ?? Icons.link,
+                    size: 28, color: const Color(0xFF0284C7)),
             const SizedBox(height: 4),
             Text(label, style: const TextStyle(fontSize: 12)),
           ],

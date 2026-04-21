@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
@@ -84,7 +85,8 @@ class VehiclesScreen extends ConsumerWidget {
                     : RefreshIndicator(
                         onRefresh: () async => ref.invalidate(vehiclesProvider),
                         child: ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          // Extra bottom space so last card is never hidden behind floating tab bar.
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 124),
                           itemCount: vehicles.length,
                           separatorBuilder: (_, __) =>
                               const SizedBox(height: 12),
@@ -153,7 +155,9 @@ class _VehicleCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(S.of(context)!.deleteVehicle),
-        content: Text(S.of(context)!.deleteVehicleConfirm(vehicle.brand ?? '', vehicle.model ?? '')),
+        content: Text(S
+            .of(context)!
+            .deleteVehicleConfirm(vehicle.brand ?? '', vehicle.model ?? '')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -198,33 +202,21 @@ class _VehicleCard extends ConsumerWidget {
     return tuevDate.difference(DateTime.now()).inDays;
   }
 
-  String? get _tuevDisplay {
+  String? _tuevDisplay(BuildContext context) {
     if (vehicle.nextInspectionDate == null) return null;
     final parts = vehicle.nextInspectionDate!.split('-');
     if (parts.length < 2) return null;
-    const months = [
-      '',
-      'Januar',
-      'Februar',
-      'März',
-      'April',
-      'Mai',
-      'Juni',
-      'Juli',
-      'August',
-      'September',
-      'Oktober',
-      'November',
-      'Dezember'
-    ];
     final m = int.tryParse(parts[1]);
-    return m != null && m >= 1 && m <= 12 ? '${months[m]} ${parts[0]}' : null;
+    if (m == null || m < 1 || m > 12) return null;
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    final parsed = DateTime(int.tryParse(parts[0]) ?? 2000, m, 1);
+    return DateFormat('MMMM yyyy', localeTag).format(parsed);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tuevDays = _tuevDaysLeft;
-    final tuevStr = _tuevDisplay;
+    final tuevStr = _tuevDisplay(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Card(
@@ -278,7 +270,8 @@ class _VehicleCard extends ConsumerWidget {
                               if (vehicle.licensePlate != null &&
                                   vehicle.licensePlate!.isNotEmpty)
                                 vehicle.licensePlate!,
-                              if (vehicle.year != null) S.of(context)!.buildYear('${vehicle.year}'),
+                              if (vehicle.year != null)
+                                S.of(context)!.buildYear('${vehicle.year}'),
                             ].join(' · '),
                             style: TextStyle(
                               color: isDark
@@ -304,14 +297,16 @@ class _VehicleCard extends ConsumerWidget {
                 // ── Tire sections (compact) ──
                 if (vehicle.summerTires != null &&
                     !vehicle.summerTires!.isEmpty)
-                  _tireSection('☀️', S.of(context)!.tireSummer, vehicle.summerTires!, isDark),
+                  _tireSection(context, '☀️', S.of(context)!.tireSummer,
+                      vehicle.summerTires!, isDark),
                 if (vehicle.winterTires != null &&
                     !vehicle.winterTires!.isEmpty)
-                  _tireSection('❄️', S.of(context)!.tireWinter, vehicle.winterTires!, isDark),
+                  _tireSection(context, '❄️', S.of(context)!.tireWinter,
+                      vehicle.winterTires!, isDark),
                 if (vehicle.allSeasonTires != null &&
                     !vehicle.allSeasonTires!.isEmpty)
-                  _tireSection(
-                      '🌦️', S.of(context)!.tireAllSeason, vehicle.allSeasonTires!, isDark),
+                  _tireSection(context, '🌦️', S.of(context)!.tireAllSeason,
+                      vehicle.allSeasonTires!, isDark),
 
                 // ── VIN ──
                 if (vehicle.vin != null && vehicle.vin!.isNotEmpty) ...[
@@ -365,7 +360,8 @@ class _VehicleCard extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              '${tuevDays.abs()} ${S.of(context)!.daysCount('')}'.trim(),
+                              '${tuevDays.abs()} ${S.of(context)!.daysCount('')}'
+                                  .trim(),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -403,7 +399,8 @@ class _VehicleCard extends ConsumerWidget {
     );
   }
 
-  Widget _tireSection(String emoji, String label, TireSpec spec, bool isDark) {
+  Widget _tireSection(
+      BuildContext context, String emoji, String label, TireSpec spec, bool isDark) {
     final front = _formatSpec(spec);
     final hasRear = spec.hasDifferentSizes && spec.rearWidth != null;
     final rear = hasRear
@@ -439,7 +436,7 @@ class _VehicleCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  hasRear ? 'V: $front' : front,
+                  hasRear ? '${S.of(context)!.frontAxle}: $front' : front,
                   style: TextStyle(
                     color: isDark ? Colors.white : B24Colors.textPrimary,
                     fontSize: 13,
@@ -458,7 +455,7 @@ class _VehicleCard extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'H: $rear',
+                      '${S.of(context)!.rearAxle}: $rear',
                       style: TextStyle(
                         color: isDark ? Colors.white : B24Colors.textPrimary,
                         fontSize: 13,

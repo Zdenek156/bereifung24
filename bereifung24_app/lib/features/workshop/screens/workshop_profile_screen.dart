@@ -6,6 +6,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../main.dart' show localeProvider;
 import '../../auth/providers/auth_provider.dart';
 import '../models/workshop_profile.dart';
 import '../providers/workshop_provider.dart';
@@ -23,7 +24,7 @@ class WorkshopProfileScreen extends ConsumerWidget {
         bottom: false,
         child: profileAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Fehler: $e')),
+          error: (e, _) => Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
           data: (profile) => ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             children: [
@@ -63,7 +64,7 @@ class WorkshopProfileScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  'Rechtliches',
+                  S.of(context)!.legal,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -78,9 +79,9 @@ class WorkshopProfileScreen extends ConsumerWidget {
                   children: [
                     _legalLink(context, 'AGB', '/profile/agb'),
                     _dot(isDark),
-                    _legalLink(context, 'Datenschutz', '/profile/datenschutz'),
+                    _legalLink(context, S.of(context)!.datenschutz, '/profile/datenschutz'),
                     _dot(isDark),
-                    _legalLink(context, 'Impressum', '/profile/impressum'),
+                    _legalLink(context, S.of(context)!.imprint, '/profile/impressum'),
                   ],
                 ),
               ),
@@ -92,7 +93,7 @@ class WorkshopProfileScreen extends ConsumerWidget {
                     ref.read(authStateProvider.notifier).logout();
                   },
                   icon: const Icon(Icons.logout, size: 18),
-                  label: const Text('Abmelden'),
+                  label: Text(S.of(context)!.logout),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFEF4444),
                     side: const BorderSide(color: Color(0xFFEF4444)),
@@ -272,13 +273,13 @@ class _LandingPageShareCard extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (e, __) {
         debugPrint('Landing page error: $e');
-        return _buildNoLandingPage(isDark);
+        return _buildNoLandingPage(context, isDark);
       },
       data: (lp) {
-        if (lp == null) return _buildNoLandingPage(isDark);
+        if (lp == null) return _buildNoLandingPage(context, isDark);
         final slug = (lp['slug'] ?? lp['Slug'] ?? '').toString();
         final isActive = lp['isActive'] == true || lp['is_active'] == true;
-        if (slug.isEmpty) return _buildNoLandingPage(isDark);
+        if (slug.isEmpty) return _buildNoLandingPage(context, isDark);
 
         final url = 'https://bereifung24.de/$slug';
 
@@ -299,7 +300,7 @@ class _LandingPageShareCard extends ConsumerWidget {
                   const Text('🔗', style: TextStyle(fontSize: 20)),
                   const SizedBox(width: 8),
                   Text(
-                    'Ihre Landing Page',
+                    S.of(context)!.landingPageTitle,
                     style: TextStyle(
                       color: isDark ? Colors.white : Colors.black87,
                       fontWeight: FontWeight.bold,
@@ -329,7 +330,9 @@ class _LandingPageShareCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      isActive ? 'Aktiv' : 'Inaktiv',
+                      isActive
+                          ? S.of(context)!.activeStatus
+                          : S.of(context)!.inactiveStatus,
                       style: TextStyle(
                         color: isActive
                             ? const Color(0xFF10B981)
@@ -348,7 +351,7 @@ class _LandingPageShareCard extends ConsumerWidget {
                     child: ElevatedButton.icon(
                       onPressed: () {
                         Share.share(
-                          'Besuchen Sie unsere Seite und buchen Sie direkt online: $url',
+                          S.of(context)!.landingPageShareMessage(url),
                         );
                       },
                       icon: const Icon(Icons.share, size: 18),
@@ -391,7 +394,7 @@ class _LandingPageShareCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildNoLandingPage(bool isDark) {
+  Widget _buildNoLandingPage(BuildContext context, bool isDark) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -406,7 +409,7 @@ class _LandingPageShareCard extends ConsumerWidget {
           const Text('🔗', style: TextStyle(fontSize: 28)),
           const SizedBox(height: 8),
           Text(
-            'Keine Landing Page',
+            S.of(context)!.noLandingPage,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 15,
@@ -415,7 +418,7 @@ class _LandingPageShareCard extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Ihre Landing Page wird über das Admin-Portal erstellt und verwaltet.',
+            S.of(context)!.noLandingPageDescription,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -463,7 +466,7 @@ class _LandingPageShareCard extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Schließen'),
+            child: Text(S.of(context)!.close),
           ),
         ],
       ),
@@ -493,10 +496,10 @@ class _VacationSection extends ConsumerWidget {
             children: [
               const Text('🏖️', style: TextStyle(fontSize: 20)),
               const SizedBox(width: 8),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Urlaub / Betriebsferien',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  S.of(context)!.vacation,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
               ),
               IconButton(
@@ -513,14 +516,14 @@ class _VacationSection extends ConsumerWidget {
               padding: EdgeInsets.all(12),
               child: CircularProgressIndicator(strokeWidth: 2),
             )),
-            error: (e, _) => Text('Fehler: $e',
+            error: (e, _) => Text(S.of(context)!.errorLabel(e.toString()),
                 style: const TextStyle(color: Color(0xFFEF4444))),
             data: (vacations) {
               if (vacations.isEmpty) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    'Keine Urlaubszeiten eingetragen',
+                    S.of(context)!.noVacationEntries,
                     style: TextStyle(
                       color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
                       fontSize: 13,
@@ -549,7 +552,7 @@ class _VacationSection extends ConsumerWidget {
       context: context,
       firstDate: now,
       lastDate: now.add(const Duration(days: 365)),
-      locale: const Locale('de', 'DE'),
+      locale: Localizations.localeOf(context),
     );
     if (range == null || !context.mounted) return;
 
@@ -563,16 +566,16 @@ class _VacationSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${DateFormat('dd.MM.yyyy').format(range.start)} - ${DateFormat('dd.MM.yyyy').format(range.end)}',
+              '${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(range.start)} - ${DateFormat.yMd(Localizations.localeOf(context).toLanguageTag()).format(range.end)}',
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: reasonController,
-              decoration: const InputDecoration(
-                labelText: 'Grund (optional)',
-                hintText: 'z.B. Betriebsferien',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: S.of(context)!.vacationReason,
+                hintText: S.of(context)!.vacationReasonHint,
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -580,11 +583,11 @@ class _VacationSection extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Abbrechen'),
+            child: Text(S.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Speichern'),
+            child: Text(S.of(context)!.save),
           ),
         ],
       ),
@@ -603,13 +606,13 @@ class _VacationSection extends ConsumerWidget {
       ref.invalidate(workshopVacationsProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Urlaubszeit gespeichert ✅')),
+          SnackBar(content: Text(S.of(context)!.vacationSaved)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Fehler: $e')));
+            .showSnackBar(SnackBar(content: Text(S.of(context)!.errorLabel(e.toString()))));
       }
     }
   }
@@ -618,19 +621,19 @@ class _VacationSection extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Urlaubszeit löschen?'),
-        content: const Text('Diese Urlaubszeit wird unwiderruflich gelöscht.'),
+        title: Text(S.of(context)!.deleteVacation),
+        content: Text(S.of(context)!.deleteVacationConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Abbrechen'),
+            child: Text(S.of(context)!.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFEF4444),
             ),
-            child: const Text('Löschen'),
+            child: Text(S.of(context)!.delete),
           ),
         ],
       ),
@@ -642,13 +645,13 @@ class _VacationSection extends ConsumerWidget {
       ref.invalidate(workshopVacationsProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Urlaubszeit gelöscht')),
+          SnackBar(content: Text(S.of(context)!.vacationDeleted)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Fehler: $e')));
+            .showSnackBar(SnackBar(content: Text(S.of(context)!.errorLabel(e.toString()))));
       }
     }
   }
@@ -662,7 +665,7 @@ class _VacationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dateFormat = DateFormat('dd.MM.yyyy');
+    final dateFormat = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag());
     final isActive = vacation.isActive;
 
     return Container(
@@ -722,15 +725,23 @@ class _OpeningHoursCard extends StatelessWidget {
   final Map<String, dynamic> openingHours;
   const _OpeningHoursCard({required this.openingHours});
 
-  static const _dayNames = {
-    'monday': 'Montag',
-    'tuesday': 'Dienstag',
-    'wednesday': 'Mittwoch',
-    'thursday': 'Donnerstag',
-    'friday': 'Freitag',
-    'saturday': 'Samstag',
-    'sunday': 'Sonntag',
+  static const _weekdayIndex = {
+    'monday': DateTime.monday,
+    'tuesday': DateTime.tuesday,
+    'wednesday': DateTime.wednesday,
+    'thursday': DateTime.thursday,
+    'friday': DateTime.friday,
+    'saturday': DateTime.saturday,
+    'sunday': DateTime.sunday,
   };
+
+  String _localizedDayLabel(BuildContext context, String key) {
+    final weekday = _weekdayIndex[key] ?? DateTime.monday;
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    final baseMonday = DateTime(2024, 1, 1);
+    final date = baseMonday.add(Duration(days: weekday - DateTime.monday));
+    return DateFormat.EEEE(localeTag).format(date);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -748,18 +759,18 @@ class _OpeningHoursCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Text('🕐', style: TextStyle(fontSize: 20)),
-              SizedBox(width: 8),
+              const Text('🕐', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
               Text(
-                '\u00d6ffnungszeiten',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                S.of(context)!.openingHours,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          ..._dayNames.entries.map((entry) {
+          ..._weekdayIndex.entries.map((entry) {
             final day = openingHours[entry.key];
             final closed = day == null || day['closed'] == true;
             return Padding(
@@ -769,7 +780,7 @@ class _OpeningHoursCard extends StatelessWidget {
                   SizedBox(
                     width: 100,
                     child: Text(
-                      entry.value,
+                      _localizedDayLabel(context, entry.key),
                       style: TextStyle(
                         fontSize: 13,
                         color:
@@ -778,7 +789,9 @@ class _OpeningHoursCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    closed ? 'Geschlossen' : '${day['open']} - ${day['close']}',
+                    closed
+                        ? S.of(context)!.closedStatus
+                        : '${day['open']} - ${day['close']}',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: closed ? FontWeight.w400 : FontWeight.w600,
@@ -798,10 +811,25 @@ class _OpeningHoursCard extends StatelessWidget {
 }
 
 class _AppearanceCard extends ConsumerWidget {
+  static const _languages = [
+    ('de', '🇩🇪', 'Deutsch'),
+    ('en', '🇬🇧', 'English'),
+    ('tr', '🇹🇷', 'Türkçe'),
+    ('ru', '🇷🇺', 'Русский'),
+    ('it', '🇮🇹', 'Italiano'),
+    ('fr', '🇫🇷', 'Français'),
+    ('es', '🇪🇸', 'Español'),
+  ];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final themeMode = ref.watch(themeModeProvider);
+    final currentLocale = ref.watch(localeProvider);
+    final currentLang = _languages.firstWhere(
+      (l) => l.$1 == currentLocale.languageCode,
+      orElse: () => _languages.first,
+    );
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -815,13 +843,13 @@ class _AppearanceCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Text('🎨', style: TextStyle(fontSize: 20)),
-              SizedBox(width: 8),
+              const Text('🎨', style: TextStyle(fontSize: 20)),
+              const SizedBox(width: 8),
               Text(
-                'Darstellung',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                S.of(context)!.appearance,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ],
           ),
@@ -836,7 +864,7 @@ class _AppearanceCard extends ConsumerWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Dark Mode',
+                  S.of(context)!.dark,
                   style: TextStyle(
                     fontSize: 14,
                     color: isDark ? Colors.white70 : Colors.black87,
@@ -846,12 +874,87 @@ class _AppearanceCard extends ConsumerWidget {
               Switch.adaptive(
                 value: themeMode == ThemeMode.dark ||
                     (themeMode == ThemeMode.system && isDark),
-                activeColor: const Color(0xFF0284C7),
+                activeThumbColor: const Color(0xFF0284C7),
                 onChanged: (val) {
                   ref.read(themeModeProvider.notifier).setThemeMode(
                         val ? ThemeMode.dark : ThemeMode.light,
                       );
                 },
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                Icons.language,
+                size: 20,
+                color: isDark ? Colors.white54 : const Color(0xFF64748B),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  S.of(context)!.language,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                ),
+              ),
+              PopupMenuButton<String>(
+                initialValue: currentLocale.languageCode,
+                tooltip: S.of(context)!.language,
+                onSelected: (code) {
+                  ref.read(localeProvider.notifier).setLocale(Locale(code));
+                },
+                itemBuilder: (context) => _languages
+                    .map((l) => PopupMenuItem(
+                          value: l.$1,
+                          child: Row(
+                            children: [
+                              Text(l.$2, style: const TextStyle(fontSize: 18)),
+                              const SizedBox(width: 8),
+                              Text(l.$3),
+                            ],
+                          ),
+                        ))
+                    .toList(),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.14)
+                          : const Color(0xFFE2E8F0),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(currentLang.$2),
+                      const SizedBox(width: 6),
+                      Text(
+                        currentLang.$1.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: isDark ? Colors.white70 : Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        Icons.expand_more,
+                        size: 16,
+                        color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),

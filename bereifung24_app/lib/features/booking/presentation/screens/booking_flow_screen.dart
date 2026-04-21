@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/services/analytics_service.dart';
 import '../../../../core/services/stripe_service.dart';
@@ -11,7 +12,8 @@ import '../../../../l10n/app_localizations.dart';
 class BookingFlowScreen extends ConsumerStatefulWidget {
   final String workshopId;
   final String? serviceType;
-  const BookingFlowScreen({super.key, required this.workshopId, this.serviceType});
+  const BookingFlowScreen(
+      {super.key, required this.workshopId, this.serviceType});
 
   @override
   ConsumerState<BookingFlowScreen> createState() => _BookingFlowScreenState();
@@ -26,16 +28,30 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
   late String _serviceType;
   String _vehicleType = 'CAR';
 
-  static const _serviceLabels = {
-    'TIRE_CHANGE': 'Reifenwechsel',
-    'WHEEL_CHANGE': 'Räderwechsel',
-    'TIRE_REPAIR': 'Reifenreparatur',
-    'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
-    'ALIGNMENT_BOTH': 'Achsvermessung',
-    'CLIMATE_SERVICE': 'Klimaservice',
-    'BRAKE_SERVICE': 'Bremsendienst',
-    'BATTERY_SERVICE': 'Batterieservice',
-  };
+  String _serviceLabel(BuildContext context, String serviceType) {
+    final s = S.of(context)!;
+    switch (serviceType) {
+      case 'TIRE_CHANGE':
+        return s.tireChange;
+      case 'WHEEL_CHANGE':
+        return s.wheelChange;
+      case 'TIRE_REPAIR':
+        return s.tireRepair;
+      case 'MOTORCYCLE_TIRE':
+        return s.motorcycleTireChange;
+      case 'ALIGNMENT_BOTH':
+      case 'WHEEL_ALIGNMENT':
+        return s.axleAlignment;
+      case 'CLIMATE_SERVICE':
+        return s.climateService;
+      case 'BRAKE_SERVICE':
+        return s.brakeService;
+      case 'BATTERY_SERVICE':
+        return s.batteryService;
+      default:
+        return serviceType;
+    }
+  }
 
   // Step 2: Vehicle
   String _licensePlate = '';
@@ -57,10 +73,29 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
   double _totalAmount = 0;
 
   final _availableTimes = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-    '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
-    '15:00', '15:30', '16:00', '16:30', '17:00',
+    '08:00',
+    '08:30',
+    '09:00',
+    '09:30',
+    '10:00',
+    '10:30',
+    '11:00',
+    '11:30',
+    '13:00',
+    '13:30',
+    '14:00',
+    '14:30',
+    '15:00',
+    '15:30',
+    '16:00',
+    '16:30',
+    '17:00',
   ];
+
+  String _formatDate(BuildContext context, DateTime date) {
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
+    return DateFormat.yMMMd(localeTag).format(date);
+  }
 
   @override
   void initState() {
@@ -159,8 +194,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Buchung fehlgeschlagen. Bitte versuche es erneut.'),
+          SnackBar(
+            content: Text(S.of(context)!.bookingFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -188,14 +223,14 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
       } else {
         // User cancelled payment — stay on payment step
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Zahlung abgebrochen.')),
+          SnackBar(content: Text(S.of(context)!.paymentCancelled)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Zahlung fehlgeschlagen. Bitte versuche es erneut.'),
+          SnackBar(
+            content: Text(S.of(context)!.paymentFailed),
             backgroundColor: Colors.red,
           ),
         );
@@ -211,7 +246,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
       appBar: _currentStep < 5
           ? AppBar(
               title: Text(_currentStep < 4
-                  ? 'Schritt ${_currentStep + 1} von 4'
+              ? S.of(context)!.booking
                   : S.of(context)!.payment),
               leading: IconButton(
                 icon: const Icon(Icons.close),
@@ -225,7 +260,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
             // Progress indicator (steps 0-3, optionally 4 for payment)
             if (_currentStep < 5)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: List.generate(_paymentRequired ? 5 : 4, (i) {
                     return Expanded(
@@ -261,8 +297,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                     if (_currentStep > 0 && _currentStep < 4)
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () =>
-                              setState(() => _currentStep--),
+                          onPressed: () => setState(() => _currentStep--),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
@@ -297,9 +332,9 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                               )
                             : Text(
                                 _currentStep == 4
-                                    ? 'Jetzt bezahlen'
+                                ? S.of(context)!.payButtonLabel
                                     : _currentStep == 3
-                                        ? 'Buchen'
+                                  ? S.of(context)!.bookNow
                                         : S.of(context)!.next,
                                 style: const TextStyle(fontSize: 16),
                               ),
@@ -387,7 +422,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           onTap: () => setState(() => _serviceType = 'ALIGNMENT_BOTH'),
         ),
         const SizedBox(height: 24),
-        Text('Fahrzeugtyp',
+        Text(S.of(context)!.vehicleType,
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
@@ -396,9 +431,9 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         Wrap(
           spacing: 8,
           children: [
-            ('CAR', 'Auto'),
-            ('MOTORCYCLE', 'Motorrad'),
-            ('TRAILER', 'Anhänger'),
+            ('CAR', S.of(context)!.vehicleTypeCar),
+            ('MOTORCYCLE', S.of(context)!.vehicleTypeMotorcycle),
+            ('TRAILER', S.of(context)!.vehicleTypeTrailer),
           ].map((e) {
             final selected = _vehicleType == e.$1;
             return ChoiceChip(
@@ -423,7 +458,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('Wähle ein gespeichertes Fahrzeug oder gib die Daten manuell ein.',
+        Text(S.of(context)!.selectSavedVehicle,
             style: TextStyle(color: Colors.grey[600])),
         const SizedBox(height: 24),
 
@@ -434,7 +469,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
             child: Center(child: CircularProgressIndicator()),
           )
         else if (_savedVehicles.isNotEmpty) ...[
-          Text('Gespeicherte Fahrzeuge',
+          Text(S.of(context)!.savedVehicles,
               style: Theme.of(context)
                   .textTheme
                   .titleSmall
@@ -476,9 +511,8 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                               '${vehicle.brand} ${vehicle.model}',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
-                                color: isSelected
-                                    ? B24Colors.primaryBlue
-                                    : null,
+                                color:
+                                    isSelected ? B24Colors.primaryBlue : null,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -499,7 +533,6 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
               ),
             );
           }),
-
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(
@@ -507,7 +540,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                 const Expanded(child: Divider()),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text('oder manuell eingeben',
+                  child: Text(S.of(context)!.orEnterManually,
                       style: TextStyle(color: Colors.grey[500], fontSize: 13)),
                 ),
                 const Expanded(child: Divider()),
@@ -519,7 +552,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         TextField(
           decoration: InputDecoration(
             labelText: S.of(context)!.licensePlate,
-            hintText: 'z.B. M-AB 1234',
+            hintText: S.of(context)!.licensePlateHint,
             prefixIcon: Icon(Icons.directions_car),
           ),
           textCapitalization: TextCapitalization.characters,
@@ -533,7 +566,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
         TextField(
           decoration: InputDecoration(
             labelText: S.of(context)!.tireSizeOptional,
-            hintText: 'z.B. 205/55 R16',
+            hintText: S.of(context)!.tireSizeHint,
             prefixIcon: Icon(Icons.tire_repair),
           ),
           controller: TextEditingController(text: _tireSize),
@@ -557,16 +590,17 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('Wähle Datum und Uhrzeit.',
+        Text(S.of(context)!.selectDateDesc,
             style: TextStyle(color: Colors.grey[600])),
         const SizedBox(height: 24),
 
         // Date picker
         ListTile(
-          leading: const Icon(Icons.calendar_today, color: B24Colors.primaryBlue),
+          leading:
+              const Icon(Icons.calendar_today, color: B24Colors.primaryBlue),
           title: Text(_selectedDate != null
-              ? '${_selectedDate!.day}.${_selectedDate!.month}.${_selectedDate!.year}'
-              : 'Datum auswählen'),
+            ? _formatDate(context, _selectedDate!)
+              : S.of(context)!.selectDate),
           trailing: const Icon(Icons.chevron_right),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -580,7 +614,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
               initialDate: tomorrow,
               firstDate: tomorrow,
               lastDate: now.add(const Duration(days: 90)),
-              locale: const Locale('de', 'DE'),
+              locale: Localizations.localeOf(context),
             );
             if (date != null) setState(() => _selectedDate = date);
           },
@@ -590,7 +624,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
 
         // Time grid
         if (_selectedDate != null) ...[
-          Text('Uhrzeit',
+          Text(S.of(context)!.time,
               style: Theme.of(context)
                   .textTheme
                   .titleSmall
@@ -642,19 +676,26 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 24),
-        _SummaryRow(label: 'Service', value: _serviceLabels[_serviceType] ?? _serviceType),
-        _SummaryRow(label: 'Fahrzeugtyp', value: _vehicleType == 'CAR' ? 'Auto' : _vehicleType == 'MOTORCYCLE' ? 'Motorrad' : 'Anhänger'),
+        _SummaryRow(
+          label: S.of(context)!.service,
+            value: _serviceLabel(context, _serviceType)),
+        _SummaryRow(
+          label: S.of(context)!.vehicleType,
+            value: _vehicleType == 'CAR'
+            ? S.of(context)!.vehicleTypeCar
+                : _vehicleType == 'MOTORCYCLE'
+              ? S.of(context)!.vehicleTypeMotorcycle
+              : S.of(context)!.vehicleTypeTrailer),
         if (_selectedVehicle != null)
           _SummaryRow(
-              label: 'Fahrzeug',
+            label: S.of(context)!.vehicle,
               value: '${_selectedVehicle!.brand} ${_selectedVehicle!.model}'),
-        _SummaryRow(label: 'Kennzeichen', value: _licensePlate),
+        _SummaryRow(label: S.of(context)!.licensePlate, value: _licensePlate),
         if (_tireSize.isNotEmpty)
-          _SummaryRow(label: 'Reifengröße', value: _tireSize),
+          _SummaryRow(label: S.of(context)!.tireSizeOptional, value: _tireSize),
         _SummaryRow(
-          label: 'Termin',
-          value:
-              '${_selectedDate!.day}.${_selectedDate!.month}.${_selectedDate!.year} um $_selectedTime',
+          label: S.of(context)!.appointment,
+          value: '${_formatDate(context, _selectedDate!)} · ${S.of(context)!.timeLabel(_selectedTime ?? '')}',
         ),
         const SizedBox(height: 24),
         TextField(
@@ -662,7 +703,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           maxLines: 3,
           decoration: InputDecoration(
             labelText: S.of(context)!.notesOptional,
-            hintText: 'z.B. Reifen liegen im Kofferraum',
+            hintText: S.of(context)!.notesHint,
             alignLabelWithHint: true,
           ),
         ),
@@ -681,7 +722,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                 .titleLarge
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        Text('Bitte schließe die Zahlung ab.',
+        Text(S.of(context)!.completePayment,
             style: TextStyle(color: Colors.grey[600])),
         const SizedBox(height: 32),
 
@@ -697,7 +738,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           ),
           child: Column(
             children: [
-              const Text('Gesamtbetrag',
+              Text(S.of(context)!.totalAmount,
                   style: TextStyle(color: Colors.white70, fontSize: 14)),
               const SizedBox(height: 8),
               Text(
@@ -727,7 +768,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Sichere Zahlung über Stripe. Deine Kartendaten werden verschlüsselt übertragen.',
+                  S.of(context)!.encryptedPayment,
                   style: TextStyle(color: Colors.blue.shade700, fontSize: 13),
                 ),
               ),
@@ -743,7 +784,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           children: [
             Icon(Icons.credit_card, color: Colors.grey[600], size: 28),
             const SizedBox(width: 12),
-            Text('Visa, Mastercard, SEPA',
+            Text(S.of(context)!.paymentMethods,
                 style: TextStyle(color: Colors.grey[600])),
           ],
         ),
@@ -767,26 +808,26 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
             child: Icon(Icons.check, size: 64, color: Colors.green.shade700),
           ),
           const SizedBox(height: 24),
-          Text('Buchung erfolgreich!',
+            Text(S.of(context)!.bookingSuccessful,
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall
                   ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(
-            'Dein Termin wurde angefragt.\nDu erhältst eine Bestätigung per E-Mail.',
+              S.of(context)!.appointmentConfirmed,
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[600]),
           ),
           const SizedBox(height: 32),
           FilledButton(
             onPressed: () => context.go('/bookings'),
-            child: const Text('Zu meinen Terminen'),
+              child: Text(S.of(context)!.goToBookings),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: () => context.go('/home'),
-            child: const Text('Zur Startseite'),
+              child: Text(S.of(context)!.goToHome),
           ),
         ],
       ),
@@ -797,19 +838,19 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Buchung abbrechen?'),
-        content: const Text('Dein Fortschritt geht verloren.'),
+        title: Text(S.of(context)!.cancelBooking),
+        content: Text(S.of(context)!.progressLost),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Nein'),
+            child: Text(S.of(context)!.no),
           ),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
               context.pop();
             },
-            child: const Text('Ja, abbrechen'),
+            child: Text(S.of(context)!.yesCancel),
           ),
         ],
       ),
@@ -842,7 +883,8 @@ class _ServiceOption extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? B24Colors.primaryBlue.withValues(alpha: 0.05) : null,
+          color:
+              selected ? B24Colors.primaryBlue.withValues(alpha: 0.05) : null,
           border: Border.all(
             color: selected ? B24Colors.primaryBlue : Colors.grey.shade300,
             width: selected ? 2 : 1,

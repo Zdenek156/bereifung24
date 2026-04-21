@@ -17,17 +17,16 @@ class _WorkshopBookingsScreenState
     extends ConsumerState<WorkshopBookingsScreen> {
   String _filter = 'all';
 
-  static const _filters = [
-    ('all', 'Alle'),
-    ('upcoming', 'Bevorstehend'),
-    ('COMPLETED', 'Erledigt'),
-    ('CANCELLED', 'Storniert'),
-  ];
-
   @override
   Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(workshopDirectBookingsProvider(_filter));
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final filters = [
+      ('all', S.of(context)!.workshopFilterAll),
+      ('upcoming', S.of(context)!.workshopFilterUpcoming),
+      ('COMPLETED', S.of(context)!.workshopFilterCompleted),
+      ('CANCELLED', S.of(context)!.workshopFilterCancelled),
+    ];
 
     return Scaffold(
       body: SafeArea(
@@ -51,7 +50,7 @@ class _WorkshopBookingsScreenState
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: _filters.map((f) {
+                children: filters.map((f) {
                   final isActive = _filter == f.$1;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -84,7 +83,7 @@ class _WorkshopBookingsScreenState
             Expanded(
               child: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Fehler: $e')),
+                error: (e, _) => Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
                 data: (bookings) {
                   if (bookings.isEmpty) {
                     return Center(
@@ -94,7 +93,7 @@ class _WorkshopBookingsScreenState
                           const Text('📋', style: TextStyle(fontSize: 48)),
                           const SizedBox(height: 8),
                           Text(
-                            'Keine Buchungen gefunden',
+                            S.of(context)!.noBookings,
                             style: TextStyle(
                               color: isDark ? Colors.white54 : Colors.black45,
                             ),
@@ -108,7 +107,7 @@ class _WorkshopBookingsScreenState
                       ref.invalidate(workshopDirectBookingsProvider(_filter));
                     },
                     child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
                       itemCount: bookings.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (_, i) =>
@@ -166,7 +165,7 @@ class _BookingListTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    booking.statusLabel,
+                    _statusLabel(context, booking.status),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -197,7 +196,7 @@ class _BookingListTile extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
-                Text('🔧 ${booking.serviceLabel}',
+                Text('🔧 ${_serviceLabel(context, booking.serviceType)}',
                     style: TextStyle(
                       fontSize: 12,
                       color: isDark ? Colors.white54 : const Color(0xFF64748B),
@@ -234,6 +233,7 @@ class _BookingListTile extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = _statusColor(b.status);
     final dateStr = _formatDate(b.appointmentDate);
+    final isDe = Localizations.localeOf(context).languageCode == 'de';
 
     showModalBottomSheet(
       context: context,
@@ -267,7 +267,7 @@ class _BookingListTile extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'Buchungsdetails',
+                    S.of(context)!.bookingDetails,
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -283,7 +283,7 @@ class _BookingListTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    b.statusLabel,
+                    _statusLabel(context, b.status),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -296,7 +296,7 @@ class _BookingListTile extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Customer
-            _detailSection(isDark, '👤', 'Kunde', [
+            _detailSection(isDark, '👤', isDe ? 'Kunde' : 'Customer', [
               b.customerName,
               if (b.customerEmail != null && b.customerEmail!.isNotEmpty)
                 b.customerEmail!,
@@ -306,26 +306,30 @@ class _BookingListTile extends StatelessWidget {
             const SizedBox(height: 14),
 
             // Appointment
-            _detailSection(isDark, '📅', 'Termin', [
-              'Datum: $dateStr',
-              if (b.appointmentTime != null) 'Uhrzeit: ${b.appointmentTime}',
-              'Dauer: ${b.estimatedDuration} Min.',
+            _detailSection(isDark, '📅', isDe ? 'Termin' : 'Appointment', [
+              '${isDe ? 'Datum' : 'Date'}: $dateStr',
+              if (b.appointmentTime != null)
+                '${isDe ? 'Uhrzeit' : 'Time'}: ${b.appointmentTime}',
+              '${isDe ? 'Dauer' : 'Duration'}: ${b.estimatedDuration} min',
             ]),
             const SizedBox(height: 14),
 
             // Service
             _detailSection(isDark, '🔧', 'Service', [
-              b.serviceLabel,
-              if (b.serviceSubtypeLabel != null) b.serviceSubtypeLabel!,
+              _serviceLabel(context, b.serviceType),
+              if (b.serviceSubtypeLabel != null)
+                _humanizeCode(b.serviceSubtypeLabel!),
             ]),
             const SizedBox(height: 14),
 
             // Vehicle
             if (b.vehicleMake != null) ...[
-              _detailSection(isDark, '🚗', 'Fahrzeug', [
+              _detailSection(isDark, '🚗', isDe ? 'Fahrzeug' : 'Vehicle', [
                 '${b.vehicleMake} ${b.vehicleModel ?? ''}',
-                if (b.vehicleYear != null) 'Baujahr: ${b.vehicleYear}',
-                if (b.licensePlate != null) 'Kennzeichen: ${b.licensePlate}',
+                if (b.vehicleYear != null)
+                  '${isDe ? 'Baujahr' : 'Year'}: ${b.vehicleYear}',
+                if (b.licensePlate != null)
+                  '${isDe ? 'Kennzeichen' : 'License plate'}: ${b.licensePlate}',
               ]),
               const SizedBox(height: 14),
             ],
@@ -333,28 +337,32 @@ class _BookingListTile extends StatelessWidget {
             // Tires - mixed/motorcycle (front + rear separate)
             if (b.isMixedTires) ...[
               if (b.frontTire != null) ...[
-                _detailSection(isDark, '🛞', 'Reifen vorne', [
+                _detailSection(
+                    isDark, '🛞', isDe ? 'Reifen vorne' : 'Front tires', [
                   if (b.frontTire!['brand'] != null)
-                    'Marke: ${b.frontTire!['brand']}',
+                    '${isDe ? 'Marke' : 'Brand'}: ${b.frontTire!['brand']}',
                   if (b.frontTire!['model'] != null)
-                    'Modell: ${b.frontTire!['model']}',
+                    '${isDe ? 'Modell' : 'Model'}: ${b.frontTire!['model']}',
                   if (b.frontTire!['size'] != null)
-                    'Größe: ${b.frontTire!['size']}',
-                  'Anzahl: ${b.frontTire!['quantity'] ?? 2}',
-                  if (b.frontTire!['runflat'] == true) 'RunFlat: Ja',
+                    '${isDe ? 'Größe' : 'Size'}: ${b.frontTire!['size']}',
+                  '${isDe ? 'Anzahl' : 'Quantity'}: ${b.frontTire!['quantity'] ?? 2}',
+                  if (b.frontTire!['runflat'] == true)
+                    'RunFlat: ${isDe ? 'Ja' : 'Yes'}',
                 ]),
                 const SizedBox(height: 14),
               ],
               if (b.rearTire != null) ...[
-                _detailSection(isDark, '🛞', 'Reifen hinten', [
+                _detailSection(
+                    isDark, '🛞', isDe ? 'Reifen hinten' : 'Rear tires', [
                   if (b.rearTire!['brand'] != null)
-                    'Marke: ${b.rearTire!['brand']}',
+                    '${isDe ? 'Marke' : 'Brand'}: ${b.rearTire!['brand']}',
                   if (b.rearTire!['model'] != null)
-                    'Modell: ${b.rearTire!['model']}',
+                    '${isDe ? 'Modell' : 'Model'}: ${b.rearTire!['model']}',
                   if (b.rearTire!['size'] != null)
-                    'Größe: ${b.rearTire!['size']}',
-                  'Anzahl: ${b.rearTire!['quantity'] ?? 2}',
-                  if (b.rearTire!['runflat'] == true) 'RunFlat: Ja',
+                    '${isDe ? 'Größe' : 'Size'}: ${b.rearTire!['size']}',
+                  '${isDe ? 'Anzahl' : 'Quantity'}: ${b.rearTire!['quantity'] ?? 2}',
+                  if (b.rearTire!['runflat'] == true)
+                    'RunFlat: ${isDe ? 'Ja' : 'Yes'}',
                 ]),
                 const SizedBox(height: 14),
               ],
@@ -363,47 +371,53 @@ class _BookingListTile extends StatelessWidget {
             else if (b.tireBrand != null ||
                 b.tireModel != null ||
                 b.tireSize != null) ...[
-              _detailSection(isDark, '🛞', 'Reifen', [
-                if (b.tireBrand != null) 'Marke: ${b.tireBrand}',
-                if (b.tireModel != null) 'Modell: ${b.tireModel}',
-                if (b.tireSize != null) 'Größe: ${b.tireSize}',
-                if (b.tireQuantity != null) 'Anzahl: ${b.tireQuantity}',
-                if (b.tireRunFlat) 'RunFlat: Ja',
+              _detailSection(isDark, '🛞', isDe ? 'Reifen' : 'Tires', [
+                if (b.tireBrand != null)
+                  '${isDe ? 'Marke' : 'Brand'}: ${b.tireBrand}',
+                if (b.tireModel != null)
+                  '${isDe ? 'Modell' : 'Model'}: ${b.tireModel}',
+                if (b.tireSize != null)
+                  '${isDe ? 'Größe' : 'Size'}: ${b.tireSize}',
+                if (b.tireQuantity != null)
+                  '${isDe ? 'Anzahl' : 'Quantity'}: ${b.tireQuantity}',
+                if (b.tireRunFlat) 'RunFlat: ${isDe ? 'Ja' : 'Yes'}',
               ]),
               const SizedBox(height: 14),
             ]
             // No tire data but tire-related service
             else if (b.serviceType == 'TIRE_CHANGE' ||
                 b.serviceType == 'MOTORCYCLE_TIRE') ...[
-              _detailSection(isDark, '🛞', 'Reifen', [
-                'Keine Reifeninformationen hinterlegt',
+              _detailSection(isDark, '🛞', isDe ? 'Reifen' : 'Tires', [
+                isDe
+                    ? 'Keine Reifeninformationen hinterlegt'
+                    : 'No tire information stored',
               ]),
               const SizedBox(height: 14),
             ],
 
             // Pricing (with additional options merged in)
-            _detailSection(isDark, '💰', 'Preis', [
+            _detailSection(isDark, '💰', isDe ? 'Preis' : 'Price', [
               if (b.basePrice != null)
-                'Grundpreis: ${b.basePrice!.toStringAsFixed(2)} €',
+                '${isDe ? 'Grundpreis' : 'Base price'}: ${b.basePrice!.toStringAsFixed(2)} €',
               if (b.hasBalancing)
-                'Auswuchten: ${b.balancingPrice != null ? '${b.balancingPrice!.toStringAsFixed(2)} €' : 'inkl.'}',
+                '${isDe ? 'Auswuchten' : 'Balancing'}: ${b.balancingPrice != null ? '${b.balancingPrice!.toStringAsFixed(2)} €' : (isDe ? 'inkl.' : 'incl.')}',
               if (b.hasStorage)
-                'Einlagerung: ${b.storagePrice != null ? '${b.storagePrice!.toStringAsFixed(2)} €' : 'inkl.'}',
+                '${isDe ? 'Einlagerung' : 'Storage'}: ${b.storagePrice != null ? '${b.storagePrice!.toStringAsFixed(2)} €' : (isDe ? 'inkl.' : 'incl.')}',
               if (b.hasWashing)
-                'Felgenwäsche: ${b.washingPrice != null ? '${b.washingPrice!.toStringAsFixed(2)} €' : 'inkl.'}',
+                '${isDe ? 'Felgenwäsche' : 'Wheel wash'}: ${b.washingPrice != null ? '${b.washingPrice!.toStringAsFixed(2)} €' : (isDe ? 'inkl.' : 'incl.')}',
               if (b.hasDisposal)
-                'Altreifenentsorgung: ${b.disposalFee != null ? '${b.disposalFee!.toStringAsFixed(2)} €' : 'inkl.'}',
+                '${isDe ? 'Altreifenentsorgung' : 'Disposal'}: ${b.disposalFee != null ? '${b.disposalFee!.toStringAsFixed(2)} €' : (isDe ? 'inkl.' : 'incl.')}',
               if (b.tireRunFlat && b.runFlatSurcharge != null)
-                'RunFlat-Zuschlag: ${b.runFlatSurcharge!.toStringAsFixed(2)} €',
+                '${isDe ? 'RunFlat-Zuschlag' : 'Run-flat surcharge'}: ${b.runFlatSurcharge!.toStringAsFixed(2)} €',
               if (b.totalPrice != null)
-                'Gesamtpreis: ${b.totalPrice!.toStringAsFixed(2)} €',
+                '${isDe ? 'Gesamtpreis' : 'Total'}: ${b.totalPrice!.toStringAsFixed(2)} €',
             ]),
             const SizedBox(height: 14),
 
             // Meta
             _detailSection(isDark, 'ℹ️', 'Info', [
-              'Erstellt: ${DateFormat('dd.MM.yyyy HH:mm').format(b.createdAt)}',
-              if (b.isDirectBooking) 'Direktbuchung über Bereifung24',
+              '${isDe ? 'Erstellt' : 'Created'}: ${DateFormat('dd.MM.yyyy HH:mm').format(b.createdAt)}',
+              if (b.isDirectBooking) S.of(context)!.workshopDirectBookingViaB24,
             ]),
           ],
         ),
@@ -463,5 +477,69 @@ class _BookingListTile extends StatelessWidget {
       default:
         return const Color(0xFF64748B);
     }
+  }
+
+  String _statusLabel(BuildContext context, String status) {
+    final lang = Localizations.localeOf(context).languageCode;
+    return switch (status) {
+      'CONFIRMED' => S.of(context)!.confirmed_status,
+      'COMPLETED' => S.of(context)!.completedStatus,
+      'CANCELLED' => lang == 'de' ? 'Storniert' : 'Cancelled',
+      'RESERVED' => lang == 'de' ? 'Reserviert' : 'Reserved',
+      'PENDING' => lang == 'de' ? 'Ausstehend' : 'Pending',
+      'NO_SHOW' => lang == 'de' ? 'Nicht erschienen' : 'No show',
+      _ => status,
+    };
+  }
+
+  String _serviceLabel(BuildContext context, String? serviceType) {
+    final key = (serviceType ?? '').toUpperCase().trim();
+    final isDe = Localizations.localeOf(context).languageCode == 'de';
+    if (isDe) {
+      const deLabels = {
+        'WHEEL_CHANGE': 'Räderwechsel',
+        'RÄDERWECHSEL': 'Räderwechsel',
+        'TIRE_CHANGE': 'Reifenwechsel',
+        'REIFENWECHSEL': 'Reifenwechsel',
+        'TIRE_REPAIR': 'Reifenreparatur',
+        'REIFENREPARATUR': 'Reifenreparatur',
+        'MOTORCYCLE_TIRE': 'Motorrad-Reifenwechsel',
+        'MOTORRAD-REIFENWECHSEL': 'Motorrad-Reifenwechsel',
+        'ALIGNMENT_BOTH': 'Achsvermessung',
+        'ACHSVERMESSUNG': 'Achsvermessung',
+        'CLIMATE_SERVICE': 'Klimaservice',
+        'KLIMASERVICE': 'Klimaservice',
+      };
+      return deLabels[key] ?? serviceType ?? 'Service';
+    }
+    return switch (key) {
+      'WHEEL_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
+      'TIRE_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceTireChange),
+      'TIRE_REPAIR' => S.of(context)!.foreignObjectRepair,
+      'MOTORCYCLE_TIRE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceMotorcycleTire),
+      'ALIGNMENT_BOTH' => _normalizeServiceLabel(S.of(context)!.serviceAlignment),
+      'CLIMATE_SERVICE' => _normalizeServiceLabel(S.of(context)!.serviceClimate),
+      _ => serviceType ?? 'Service',
+    };
+  }
+
+  String _normalizeServiceLabel(String value) {
+    return value
+        .replaceAll('-\n', '')
+        .replaceAll('\n', ' ')
+        .replaceAll('  ', ' ')
+        .trim();
+  }
+
+  String _humanizeCode(String value) {
+    return value
+        .replaceAll('_', ' ')
+        .replaceAll('-', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) =>
+            '${part[0].toUpperCase()}${part.substring(1).toLowerCase()}')
+        .join(' ');
   }
 }

@@ -489,8 +489,8 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
                   onPressed: () =>
                       widget.onTireSearch?.call(widget.selectedTire),
                   icon: const Icon(Icons.search, size: 16),
-                  label: const Text('Werkstatt finden',
-                      style: TextStyle(fontSize: 13)),
+                  label:
+                    Text(S.of(context)!.findWorkshop, style: const TextStyle(fontSize: 13)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: B24Colors.primaryBlue,
                     foregroundColor: Colors.white,
@@ -512,8 +512,12 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
         widget.recommendedTires!.where((t) => t.axle == 'front').toList();
     final rearTires =
         widget.recommendedTires!.where((t) => t.axle == 'rear').toList();
-    final frontLabel = widget.isMotorcycle ? 'Vorderrad' : 'Vorderachse';
-    final rearLabel = widget.isMotorcycle ? 'Hinterrad' : 'Hinterachse';
+    final frontLabel = widget.isMotorcycle
+      ? S.of(context)!.frontWheel
+      : S.of(context)!.frontAxleFull;
+    final rearLabel = widget.isMotorcycle
+      ? S.of(context)!.rearWheel
+      : S.of(context)!.rearAxleFull;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -533,8 +537,8 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
               children: [
                 Icon(Icons.recommend, color: B24Colors.accentGreen, size: 18),
                 const SizedBox(width: 8),
-                const Text(
-                  'Reifen-Empfehlungen',
+                Text(
+                  S.of(context)!.tireRecommendations,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 14,
@@ -598,8 +602,8 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
                 child: ElevatedButton.icon(
                   onPressed: () => widget.onTireSearch?.call(null),
                   icon: const Icon(Icons.search, size: 16),
-                  label: const Text('Werkstatt finden',
-                      style: TextStyle(fontSize: 13)),
+                  label:
+                      Text(S.of(context)!.findWorkshop, style: const TextStyle(fontSize: 13)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: B24Colors.primaryBlue,
                     foregroundColor: Colors.white,

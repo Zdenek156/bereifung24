@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/models/models.dart';
@@ -23,13 +24,12 @@ final bookingsProvider = FutureProvider<List<Booking>>((ref) async {
 // ── Sort options ──
 
 enum BookingSortOption {
-  upcoming('Kommender Termin', Icons.event),
-  price('Preis', Icons.euro),
-  bookedDate('Buchungsdatum', Icons.calendar_month);
+  upcoming(Icons.event),
+  price(Icons.euro),
+  bookedDate(Icons.calendar_month);
 
-  final String label;
   final IconData icon;
-  const BookingSortOption(this.label, this.icon);
+  const BookingSortOption(this.icon);
 }
 
 // ── Screen ──
@@ -100,7 +100,12 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
                       label: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(option == BookingSortOption.upcoming ? S.of(context)!.sortUpcoming : option == BookingSortOption.price ? S.of(context)!.sortPrice : S.of(context)!.sortBookedDate,
+                          Text(
+                              option == BookingSortOption.upcoming
+                                  ? S.of(context)!.sortUpcoming
+                                  : option == BookingSortOption.price
+                                      ? S.of(context)!.sortPrice
+                                      : S.of(context)!.sortBookedDate,
                               style: const TextStyle(fontSize: 11)),
                           if (isSelected) ...[
                             const SizedBox(width: 3),
@@ -167,7 +172,8 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
     }
     final sorted = _sortBookings(bookings);
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      // Extra bottom space so last card is never hidden behind floating tab bar.
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 124),
       itemCount: sorted.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (_, i) => _BookingCard(booking: sorted[i]),
@@ -342,6 +348,100 @@ class _BookingCard extends StatelessWidget {
   final Booking booking;
   const _BookingCard({required this.booking});
 
+  String _serviceLabel(BuildContext context) {
+    final s = S.of(context)!;
+    final serviceMap = {
+      'TIRE_CHANGE': s.tireChange,
+      'WHEEL_CHANGE': s.wheelChange,
+      'TIRE_REPAIR': s.tireRepair,
+      'MOTORCYCLE_TIRE': s.motorcycleTireChange,
+      'ALIGNMENT_BOTH': s.axleAlignment,
+      'WHEEL_ALIGNMENT': s.axleAlignment,
+      'CLIMATE_SERVICE': s.climateService,
+      'BRAKE_SERVICE': s.brakeService,
+      'BATTERY_SERVICE': s.batteryService,
+    };
+    final base = serviceMap[booking.serviceType] ?? booking.serviceType;
+
+    final subtypeMap = {
+      'foreign_object': s.pkgForeignObject,
+      'valve_damage': s.pkgValveDamage,
+      'measurement_both': s.pkgMeasureBoth,
+      'measurement_front': s.pkgMeasureFront,
+      'measurement_rear': s.pkgMeasureRear,
+      'adjustment_both': s.pkgAdjustBoth,
+      'adjustment_front': s.pkgAdjustFront,
+      'adjustment_rear': s.pkgAdjustRear,
+      'full_service': s.pkgFullService,
+      'check': s.pkgClimateCheck,
+      'basic': s.pkgBasicService,
+      'comfort': s.pkgComfortService,
+      'premium': s.pkgPremiumService,
+    };
+
+    final subtype = booking.serviceSubtype;
+    if (subtype != null && subtypeMap.containsKey(subtype)) {
+      return '$base - ${subtypeMap[subtype]!}';
+    }
+    return base;
+  }
+
+  String _statusLabel(BuildContext context) {
+    final s = S.of(context)!;
+    switch (booking.status) {
+      case 'CONFIRMED':
+        return s.confirmed;
+      case 'PENDING':
+        return s.waitingConfirmation;
+      case 'IN_PROGRESS':
+        return s.beingProcessed;
+      case 'COMPLETED':
+        return s.completedStatus;
+      case 'CANCELLED':
+        return s.appointmentCancelled;
+      default:
+        return booking.status;
+    }
+  }
+
+  String _paymentStatusLabel(BuildContext context) {
+    switch ((booking.paymentStatus ?? '').toUpperCase()) {
+      case 'PAID':
+        return 'Paid';
+      case 'PENDING':
+        return 'Pending';
+      case 'FAILED':
+        return 'Failed';
+      case 'REFUNDED':
+        return 'Refunded';
+      default:
+        return booking.paymentStatus ?? '';
+    }
+  }
+
+  String _translateAdditionalService(BuildContext context, String service) {
+    final s = S.of(context)!;
+    switch (service.trim().toLowerCase()) {
+      case 'wuchten':
+      case 'balancing':
+        return s.balancing;
+      case 'einlagerung':
+      case 'storage':
+        return s.storage;
+      case 'wäsche':
+      case 'waesche':
+      case 'washing':
+        return s.washing;
+      case 'entsorgung':
+      case 'disposal':
+        return s.disposal;
+      case 'runflat':
+        return s.runflat;
+      default:
+        return service;
+    }
+  }
+
   static const _serviceIcons = <String, IconData>{
     'TIRE_CHANGE': Icons.tire_repair,
     'WHEEL_CHANGE': Icons.autorenew,
@@ -390,25 +490,9 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const months = [
-      '',
-      'Jan',
-      'Feb',
-      'Mär',
-      'Apr',
-      'Mai',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Okt',
-      'Nov',
-      'Dez'
-    ];
-    const weekdays = ['', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    final localeTag = Localizations.localeOf(context).toLanguageTag();
     final d = booking.appointmentDate;
-    final dateStr =
-        '${weekdays[d.weekday]}, ${d.day}. ${months[d.month]} ${d.year}';
+    final dateStr = DateFormat('EEE, d. MMM yyyy', localeTag).format(d);
     final svcIcon =
         _serviceIcons[booking.serviceType] ?? Icons.miscellaneous_services;
     final hasDiscount =
@@ -438,7 +522,7 @@ class _BookingCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      booking.serviceTypeDisplay,
+                      _serviceLabel(context),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -458,7 +542,7 @@ class _BookingCard extends StatelessWidget {
                         Icon(_statusIcon, size: 14, color: _statusColor),
                         const SizedBox(width: 4),
                         Text(
-                          booking.statusDisplay,
+                          _statusLabel(context),
                           style: TextStyle(
                             color: _statusColor,
                             fontWeight: FontWeight.w600,
@@ -494,13 +578,11 @@ class _BookingCard extends StatelessWidget {
                         Icon(Icons.access_time,
                             size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 4),
-                        Text(
-                          '${booking.appointmentTime} Uhr',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
-                          ),
-                        ),
+                        Text(S.of(context)!.timeLabel(booking.appointmentTime!),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            )),
                       ],
                     ],
                   ),
@@ -509,9 +591,11 @@ class _BookingCard extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(left: 22),
                       child: Text(
-                        '${booking.durationMinutes} Minuten',
-                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                      ),
+                          S
+                              .of(context)!
+                              .durationLabel(booking.durationMinutes!),
+                          style:
+                              TextStyle(color: Colors.grey[500], fontSize: 12)),
                     ),
                   ],
                   const SizedBox(height: 12),
@@ -649,7 +733,7 @@ class _BookingCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            '+ $s',
+                            '+ ${_translateAdditionalService(context, s)}',
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
@@ -729,7 +813,7 @@ class _BookingCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Text(
-                            booking.paymentStatusDisplay,
+                            _paymentStatusLabel(context),
                             style: TextStyle(
                               color: _paymentColor,
                               fontWeight: FontWeight.w600,
@@ -748,7 +832,8 @@ class _BookingCard extends StatelessWidget {
                       children: [
                         if (booking.createdAt != null)
                           Text(
-                            'Gebucht am ${booking.createdAt!.day}.${booking.createdAt!.month}.${booking.createdAt!.year}',
+                            DateFormat('d. MMM yyyy', localeTag)
+                                .format(booking.createdAt!),
                             style: TextStyle(
                                 color: Colors.grey[400], fontSize: 11),
                           ),

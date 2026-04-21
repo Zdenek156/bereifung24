@@ -41,6 +41,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
     await prefs.setString('app_locale', locale.languageCode);
   }
 }
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

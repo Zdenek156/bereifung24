@@ -55,6 +55,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/feedback': 'feedback',
   '/admin/social-media': 'social-media',
   '/admin/legal-texts': 'legal-texts',
+  '/admin/workshop-recommendations': 'workshop-empfehlungen',
 }
 
 // API routes to application mapping
@@ -85,6 +86,7 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/feedback': 'feedback',
   '/api/admin/social-media': 'social-media',
   '/api/admin/legal-texts': 'legal-texts',
+  '/api/admin/workshop-recommendations': 'workshop-empfehlungen',
 }
 
 /**

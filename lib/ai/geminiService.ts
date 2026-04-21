@@ -20,6 +20,45 @@ async function getModel() {
   })
 }
 
+/**
+ * Generic one-shot text generation using Gemini 2.5 Flash.
+ * Use this for non-chat use cases (email drafts, summaries, etc.).
+ */
+export async function generateText(
+  prompt: string,
+  options?: { temperature?: number; maxOutputTokens?: number }
+): Promise<string> {
+  const apiKey = await getApiSetting('GEMINI_API_KEY')
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY nicht konfiguriert. Bitte unter Admin → API-Einstellungen hinterlegen.')
+  }
+  const genAI = new GoogleGenerativeAI(apiKey)
+  const model = genAI.getGenerativeModel({
+    model: 'gemini-2.5-flash',
+    generationConfig: {
+      temperature: options?.temperature ?? 0.7,
+      topP: 0.9,
+      maxOutputTokens: options?.maxOutputTokens ?? 2048,
+      ...({ thinkingConfig: { thinkingBudget: 0 } } as any),
+    },
+  })
+  const result = await model.generateContent(prompt)
+
+  let response = ''
+  try {
+    const parts = result.response.candidates?.[0]?.content?.parts || []
+    for (const part of parts) {
+      if (part.text && !(part as any).thought) {
+        response += part.text
+      }
+    }
+  } catch { /* fallback below */ }
+  if (!response) {
+    response = result.response.text()
+  }
+  return response.replace(/^(TI|Thinking|THINKING|Thought|Internal):\s*.+?\n\n/s, '').trim()
+}
+
 // ── Types ──
 
 interface VehicleContext {

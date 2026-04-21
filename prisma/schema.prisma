@@ -353,6 +353,9 @@ model Workshop {
   // Direct Bookings
   directBookings DirectBooking[] @relation("DirectBookingWorkshop")
 
+  // Workshop Recommendations (KI-generierte Optimierungs-Emails)
+  recommendations WorkshopRecommendation[] @relation("WorkshopRecommendationTarget")
+
   // Tire Supplier Integration
   tirePricingBySizes TirePricingBySize[] @relation("WorkshopTirePricing")
   tireChangePricing  TireChangePricingBySize[] @relation("WorkshopTireChangePricing")
@@ -1487,6 +1490,9 @@ model B24Employee {
   submittedImprovements ImprovementSuggestion[] @relation("ImprovementSubmitter")
   assignedImprovements  ImprovementSuggestion[] @relation("ImprovementAssignee")
   improvementComments   ImprovementComment[]
+
+  // Workshop Recommendations sent
+  sentWorkshopRecommendations WorkshopRecommendation[] @relation("WorkshopRecommendationSender")
 
   // File Management Relations
   createdFolders FileFolder[]
@@ -5281,6 +5287,63 @@ enum BlogAudience {
   CUSTOMER
   WORKSHOP
   BOTH
+}
+
+// ─────────────────────────────────────────────────────────
+// Workshop Recommendations (KI-generierte Optimierungs-Emails)
+// ─────────────────────────────────────────────────────────
+model WorkshopRecommendation {
+  id String @id @default(cuid())
+
+  // Target workshop
+  workshopId String
+  workshop   Workshop @relation("WorkshopRecommendationTarget", fields: [workshopId], references: [id], onDelete: Cascade)
+
+  // Sender (B24Employee or Admin)
+  sentById String?
+  sentBy   B24Employee? @relation("WorkshopRecommendationSender", fields: [sentById], references: [id])
+  sentByName String? // Snapshot, falls Mitarbeiter gelöscht wird
+
+  // Admin input
+  adminNotes String  @db.Text // Stichpunkte vom Mitarbeiter
+  topics     String? // JSON-Array mit Quick-Tags z.B. ["profile_picture","slow_response"]
+  tone       String  @default("FRIENDLY") // FRIENDLY | PROFESSIONAL | MOTIVATING
+  language   String  @default("de") // de | en
+
+  // Generated content
+  generatedSubject String  @db.Text
+  generatedBody    String  @db.Text // Plain text from Gemini (used in HTML wrapper)
+  finalSubject     String  @db.Text // After admin edit
+  finalBody        String  @db.Text // After admin edit
+  finalHtml        String  @db.Text // Full HTML that was sent
+
+  // Recipient snapshot
+  recipientEmail String
+  recipientName  String?
+
+  // Status & Tracking
+  status      String   @default("DRAFT") // DRAFT | SENT | FAILED
+  sentAt      DateTime?
+  errorMessage String? @db.Text
+
+  // Engagement tracking
+  openedAt        DateTime?
+  openCount       Int      @default(0)
+  clickedCtaAt    DateTime?
+  clickCount      Int      @default(0)
+  ctaUrl          String?  // Where the CTA links to (workshop dashboard)
+
+  // Optional follow-up
+  followUpDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workshopId])
+  @@index([sentById])
+  @@index([status])
+  @@index([sentAt])
+  @@map("workshop_recommendations")
 }
 
 // ============================================

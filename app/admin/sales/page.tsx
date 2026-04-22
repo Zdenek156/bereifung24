@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Search, TrendingUp, Users, Target, MapPin } from 'lucide-react'
+import { Search, TrendingUp, Users, Target, MapPin, Settings, Mail } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 
 interface Stats {
@@ -132,7 +132,15 @@ export default function SalesDashboard() {
 
         {/* Quick Actions */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Schnellzugriff</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Schnellzugriff</h2>
+            <Link
+              href="/admin/sales/settings"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm border border-gray-300 rounded-md bg-white hover:bg-gray-50"
+            >
+              <Settings className="h-4 w-4" /> Outreach-Einstellungen
+            </Link>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ActionCard
               href="/mitarbeiter/sales/search"

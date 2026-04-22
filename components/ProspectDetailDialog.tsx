@@ -526,17 +526,41 @@ export default function ProspectDetailDialog({
       
       {/* Dialog */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{prospect.name}</h2>
-              <p className="text-sm text-gray-500 mt-1">{prospect.city}</p>
+          <div className="flex items-start justify-between gap-6 p-6 border-b border-gray-200">
+            <div className="flex items-start gap-4 min-w-0 flex-1">
+              {prospect.photoUrls && prospect.photoUrls.length > 0 ? (
+                <img
+                  src={prospect.photoUrls[0]}
+                  alt={prospect.name}
+                  className="w-20 h-20 object-cover rounded-lg shadow-sm flex-shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => window.open(prospect.photoUrls![0], '_blank')}
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl font-bold text-blue-600">
+                    {prospect.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
+              <div className="min-w-0">
+                <h2 className="text-2xl font-bold text-gray-900 truncate">{prospect.name}</h2>
+                <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" /> {prospect.city}
+                </p>
+                {prospect.rating && (
+                  <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
+                    <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
+                    {prospect.rating.toFixed(1)} ({prospect.reviewCount} Bewertungen)
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={handleGoogleMaps}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2"
+                className="h-10 px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
               >
                 <ExternalLink className="h-4 w-4" />
                 Google Maps
@@ -544,23 +568,25 @@ export default function ProspectDetailDialog({
               <button
                 onClick={handleConvert}
                 disabled={converting}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+                className="h-10 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
               >
-                {converting ? 'Konvertiere...' : 'In Werkstatt konvertieren'}
+                <CheckSquare className="h-4 w-4" />
+                {converting ? 'Konvertiere...' : 'Konvertieren'}
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition-colors flex items-center gap-2"
+                className="h-10 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400 transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
               >
                 <Trash2 className="h-4 w-4" />
                 {deleting ? 'Lösche...' : 'Löschen'}
               </button>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="h-10 w-10 inline-flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Schließen"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
           </div>

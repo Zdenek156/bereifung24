@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     const city = searchParams.get('city');
     const postalCode = searchParams.get('postalCode');
     const search = searchParams.get('search');
+    const dueOnly = searchParams.get('dueOnly') === 'true';
     
     // Pagination
     const page = parseInt(searchParams.get('page') || '1');
@@ -44,6 +45,12 @@ export async function GET(request: Request) {
         { address: { contains: search, mode: 'insensitive' } },
         { phone: { contains: search } }
       ];
+    }
+    if (dueOnly) {
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+      where.nextFollowUpDate = { lte: endOfToday };
+      where.status = { notIn: ['WON', 'LOST'] };
     }
 
     // Get prospects
@@ -85,11 +92,13 @@ export async function GET(request: Request) {
             }
           }
         },
-        orderBy: [
-          { priority: 'desc' },
-          { leadScore: 'desc' },
-          { createdAt: 'desc' }
-        ],
+        orderBy: dueOnly
+          ? [{ nextFollowUpDate: 'asc' }, { priority: 'desc' }]
+          : [
+              { priority: 'desc' },
+              { leadScore: 'desc' },
+              { createdAt: 'desc' }
+            ],
         skip,
         take: limit
       }),

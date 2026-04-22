@@ -1,9 +1,9 @@
 'use client'
 
 import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { MapPin, Phone, Globe, Star, Info } from 'lucide-react'
+import { MapPin, Phone, Globe, Star, Info, Bell, X } from 'lucide-react'
 import Link from 'next/link'
 import ProspectDetailDialog from '@/components/ProspectDetailDialog'
 import BackButton from '@/components/BackButton'
@@ -48,6 +48,8 @@ const priorityColors: Record<string, string> = {
 export default function ProspectsListPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const dueOnly = searchParams?.get('dueOnly') === 'true'
   const [prospects, setProspects] = useState<Prospect[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
@@ -62,11 +64,15 @@ export default function ProspectsListPage() {
     }
     
     fetchProspects()
-  }, [status, session, router])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, session, router, dueOnly])
 
   const fetchProspects = async () => {
     try {
-      const response = await fetch('/api/sales/prospects')
+      const url = dueOnly
+        ? '/api/sales/prospects?dueOnly=true'
+        : '/api/sales/prospects'
+      const response = await fetch(url)
       if (response.ok) {
         const data = await response.json()
         setProspects(data.prospects || [])
@@ -95,7 +101,9 @@ export default function ProspectsListPage() {
             <div className="flex items-center space-x-4">
               <BackButton />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Meine Prospects</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  {dueOnly ? 'Fällige Follow-ups' : 'Meine Prospects'}
+                </h1>
                 <p className="mt-1 text-sm text-gray-600">
                   {prospects.length} Werkstätten
                 </p>
@@ -112,6 +120,20 @@ export default function ProspectsListPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {dueOnly && (
+          <div className="mb-6 flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+            <div className="flex items-center gap-2 text-red-800">
+              <Bell className="h-5 w-5" />
+              <span className="font-medium">Filter aktiv: Nur überfällige Follow-ups</span>
+            </div>
+            <Link
+              href="/mitarbeiter/sales/prospects"
+              className="inline-flex items-center gap-1 text-sm text-red-700 hover:text-red-900"
+            >
+              <X className="h-4 w-4" /> Filter entfernen
+            </Link>
+          </div>
+        )}
         {prospects.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-2">

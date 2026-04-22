@@ -127,6 +127,24 @@ export async function POST(
     )
   }
 
+  // Follow-up Sequenz:
+  // FIRST_CONTACT → +7 Tage | FOLLOWUP #1 → +10 Tage | FOLLOWUP #2 → +14 Tage | BREAKUP → +180 Tage
+  let daysUntilFollowUp = 7
+  if (templateType === 'FOLLOWUP') {
+    const priorOutbound = await prisma.prospectOutreachEmail.count({
+      where: { prospectId: prospect.id, direction: 'OUTBOUND', status: 'SENT' },
+    })
+    // priorOutbound zählt bereits gesendete (ohne diese hier, die noch DRAFT ist)
+    // 1 Prior = das war FIRST_CONTACT, jetzt FU#1 → +10 Tage
+    // 2 Prior = jetzt FU#2 → +14 Tage
+    daysUntilFollowUp = priorOutbound >= 2 ? 14 : 10
+  } else if (templateType === 'BREAKUP') {
+    daysUntilFollowUp = 180
+  } else if (templateType === 'CUSTOM') {
+    daysUntilFollowUp = 7
+  }
+  const nextFollowUpDate = new Date(Date.now() + daysUntilFollowUp * 24 * 60 * 60 * 1000)
+
   await prisma.$transaction([
     prisma.prospectOutreachEmail.update({
       where: { id: created.id },
@@ -137,6 +155,8 @@ export async function POST(
       data: {
         lastContactDate: new Date(),
         firstContactDate: prospect.firstContactDate || new Date(),
+        nextFollowUpDate,
+        status: prospect.status === 'NEW' ? 'CONTACTED' : prospect.status,
       },
     }),
   ])

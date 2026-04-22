@@ -101,6 +101,16 @@ export async function GET(request: Request) {
       }
     });
 
+    // Follow-ups: heute fällig oder überfällig (aus Outreach-Sequenz, nicht zeitraumgefiltert)
+    const endOfToday = new Date()
+    endOfToday.setHours(23, 59, 59, 999)
+    const followUpsDue = await prisma.prospectWorkshop.count({
+      where: {
+        nextFollowUpDate: { lte: endOfToday },
+        status: { notIn: ['WON', 'LOST'] },
+      },
+    });
+
     // Get recent activity
     const recentNotes = await prisma.prospectNote.findMany({
       where: {
@@ -188,6 +198,7 @@ export async function GET(request: Request) {
       conversionRate,
       avgLeadScore,
       activeTasks,
+      followUpsDue,
       recentActivity: allActivity.slice(0, 20)
     });
 

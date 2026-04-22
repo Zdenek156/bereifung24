@@ -4,7 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Search, TrendingUp, Users, Target, MapPin, Settings, Mail } from 'lucide-react'
+import { Search, TrendingUp, Users, Target, MapPin, Settings, Mail, Bell } from 'lucide-react'
 import BackButton from '@/components/BackButton'
 
 interface Stats {
@@ -14,6 +14,7 @@ interface Stats {
   conversionRate: number
   avgLeadScore: number
   activeTasks: number
+  followUpsDue: number
   recentActivity: any[]
 }
 
@@ -103,7 +104,7 @@ export default function SalesDashboard() {
 
       {/* Stats Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <StatCard
             icon={<Users className="h-6 w-6" />}
             title="Gesamt Prospects"
@@ -121,6 +122,13 @@ export default function SalesDashboard() {
             title="Offene Aufgaben"
             value={stats.activeTasks}
             color="purple"
+          />
+          <StatCard
+            icon={<Bell className="h-6 w-6" />}
+            title="Follow-ups fällig"
+            value={stats.followUpsDue ?? 0}
+            color="red"
+            href="/mitarbeiter/sales/prospects?dueOnly=true"
           />
           <StatCard
             icon={<MapPin className="h-6 w-6" />}
@@ -141,7 +149,7 @@ export default function SalesDashboard() {
               <Settings className="h-4 w-4" /> Outreach-Einstellungen
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <ActionCard
               href="/mitarbeiter/sales/search"
               icon={<Search className="h-8 w-8" />}
@@ -155,6 +163,13 @@ export default function SalesDashboard() {
               title="Alle Prospects"
               description="Übersicht und Verwaltung aller Leads"
               color="green"
+            />
+            <ActionCard
+              href="/mitarbeiter/sales/prospects?dueOnly=true"
+              icon={<Bell className="h-8 w-8" />}
+              title={`Follow-ups${stats.followUpsDue ? ` (${stats.followUpsDue})` : ''}`}
+              description="Fällige Wiedervorlagen aus der Outreach-Sequenz"
+              color="red"
             />
             <ActionCard
               href="/mitarbeiter/sales/reports"
@@ -174,28 +189,41 @@ interface StatCardProps {
   icon: React.ReactNode
   title: string
   value: string | number
-  color: 'blue' | 'green' | 'purple' | 'orange'
+  color: 'blue' | 'green' | 'purple' | 'orange' | 'red'
+  href?: string
 }
 
-function StatCard({ icon, title, value, color }: StatCardProps) {
+function StatCard({ icon, title, value, color, href }: StatCardProps) {
   const colorClasses = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
     purple: 'bg-purple-50 text-purple-600',
     orange: 'bg-orange-50 text-orange-600',
+    red: 'bg-red-50 text-red-600',
   }
 
+  const inner = (
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-sm font-medium text-gray-600">{title}</p>
+        <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+      </div>
+      <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
+        {icon}
+      </div>
+    </div>
+  )
+
+  if (href) {
+    return (
+      <Link href={href} className="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md hover:border-gray-300 transition-all">
+        {inner}
+      </Link>
+    )
+  }
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
-        </div>
-        <div className={`p-3 rounded-lg ${colorClasses[color]}`}>
-          {icon}
-        </div>
-      </div>
+      {inner}
     </div>
   )
 }
@@ -205,7 +233,7 @@ interface ActionCardProps {
   icon: React.ReactNode
   title: string
   description: string
-  color: 'blue' | 'green' | 'purple'
+  color: 'blue' | 'green' | 'purple' | 'red'
 }
 
 function ActionCard({ href, icon, title, description, color }: ActionCardProps) {
@@ -213,6 +241,7 @@ function ActionCard({ href, icon, title, description, color }: ActionCardProps) 
     blue: 'bg-blue-50 text-blue-600 group-hover:bg-blue-100',
     green: 'bg-green-50 text-green-600 group-hover:bg-green-100',
     purple: 'bg-purple-50 text-purple-600 group-hover:bg-purple-100',
+    red: 'bg-red-50 text-red-600 group-hover:bg-red-100',
   }
 
   return (

@@ -7,7 +7,7 @@ const prisma = new PrismaClient()
 const PLACES_API_BASE = 'https://maps.googleapis.com/maps/api/place'
 
 async function getApiKey() {
-  const setting = await prisma.apiSetting.findFirst({
+  const setting = await prisma.adminApiSetting.findUnique({
     where: { key: 'GOOGLE_MAPS_API_KEY' },
   })
   return setting?.value || process.env.GOOGLE_MAPS_API_KEY

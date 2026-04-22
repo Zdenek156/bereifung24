@@ -123,8 +123,10 @@ export async function GET() {
           stripeAccountId: booking.workshop.stripeAccountId
         },
         customer: {
-          name: `${booking.customer.user.firstName} ${booking.customer.user.lastName}`,
-          email: booking.customer.user.email
+          name: booking.customer
+            ? `${booking.customer.user.firstName} ${booking.customer.user.lastName}`.trim()
+            : 'Gast / Gelöscht',
+          email: booking.customer?.user.email || '—'
         }
       }
     })

@@ -167,6 +167,7 @@ export async function POST(request: Request) {
             leadScore: prospect.leadScore || 0,
             status: 'NEW',
             priority: prospect.leadScore >= 70 ? 'HIGH' : prospect.leadScore >= 50 ? 'MEDIUM' : 'LOW',
+            source: 'google_places',
             // Admin hat keinen echten B24Employee-Datensatz → null, sonst FK-Verletzung
             assignedToId: (employee as any).isAdmin ? null : employee.id
           }

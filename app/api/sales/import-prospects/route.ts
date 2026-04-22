@@ -62,10 +62,12 @@ export async function POST(request: Request) {
         // Calculate lead score
         const leadScore = calculateLeadScore(details);
 
-        // Generate photo URLs
-        const photoUrls = details.photos?.slice(0, 5).map(photo => 
-          getPhotoUrl(photo.photo_reference)
-        ) || [];
+        // Generate photo URLs (getPhotoUrl is async)
+        const photoUrls = await Promise.all(
+          (details.photos?.slice(0, 5) || []).map((photo: any) =>
+            getPhotoUrl(photo.photo_reference)
+          )
+        );
 
         // Create prospect
         const prospect = await prisma.prospectWorkshop.create({

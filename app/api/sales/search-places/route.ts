@@ -68,10 +68,12 @@ export async function POST(request: Request) {
         // Calculate lead score with breakdown
         const scoreData = calculateLeadScoreBreakdown(details || place);
 
-        // Generate photo URLs
-        const photoUrls = (details?.photos || place.photos)?.slice(0, 3).map(photo => 
-          getPhotoUrl(photo.photo_reference)
-        ) || [];
+        // Generate photo URLs (getPhotoUrl is async)
+        const photoUrls = await Promise.all(
+          ((details?.photos || place.photos)?.slice(0, 3) || []).map((photo: any) =>
+            getPhotoUrl(photo.photo_reference)
+          )
+        );
 
         // Extract and translate opening hours to German
         const openingHoursRaw = details?.opening_hours?.weekday_text || [];

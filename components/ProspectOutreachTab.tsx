@@ -97,6 +97,19 @@ export default function ProspectOutreachTab({
   const [customNotes, setCustomNotes] = useState('')
   const [isAiDraft, setIsAiDraft] = useState(false)
 
+  // Reset Composer + Email-Anzeige bei Prospect-Wechsel (vermeidet "Stale-Data" aus vorherigem Prospect)
+  useEffect(() => {
+    setCurrentEmail(prospectEmail || null)
+    setEmails([])
+    setInsights(null)
+    setWebsiteAnalyzedAt(null)
+    setSubject('')
+    setBody('')
+    setCustomNotes('')
+    setIsAiDraft(false)
+    setError(null)
+  }, [placeId, prospectEmail])
+
   const load = useCallback(async () => {
     setLoading(true)
     setError(null)
@@ -108,7 +121,8 @@ export default function ProspectOutreachTab({
       if (data.prospect) {
         setInsights(data.prospect.insights || null)
         setWebsiteAnalyzedAt(data.prospect.websiteAnalyzedAt || null)
-        if (data.prospect.email) setCurrentEmail(data.prospect.email)
+        // Immer synchronisieren (auch null), damit nach Prospect-Wechsel keine alte Email hängenbleibt
+        setCurrentEmail(data.prospect.email || null)
       }
     } catch (e: any) {
       setError(`Laden fehlgeschlagen: ${e?.message || e}`)

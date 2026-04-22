@@ -169,32 +169,144 @@ export async function generateOutreachEmail(input: GenerateInput): Promise<Gener
 
 /**
  * Wandelt Plaintext-Body in versandfähiges HTML um (mit Tracking-Pixel + Link-Tracking).
- * Tracking-URLs werden vom Aufrufer (API-Route) ergänzt.
+ * Erzeugt ein professionell gebrandetes HTML-Template mit Logo, Signatur-Karte und Markenfarben.
  */
-export function bodyToHtml(body: string, opts: { trackingPixelUrl?: string; clickRedirectBase?: string }): string {
+export function bodyToHtml(
+  body: string,
+  opts: { trackingPixelUrl?: string; clickRedirectBase?: string; senderName?: string; senderRole?: string }
+): string {
   const escape = (s: string) =>
     s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
-  // Links erkennen und durch Click-Tracking ersetzen
+  // Body in "Inhalt" und "Signatur" splitten (Signatur beginnt bei Grußformel)
+  const greetingRegex = /\n\s*\n(?=(?:Beste Grüße|Mit freundlichen Grüßen|Viele Grüße|Freundliche Grüße)\b)/i
+  const split = body.split(greetingRegex)
+  const contentRaw = (split[0] || body).trim()
+  const signatureRaw = split.length > 1 ? split.slice(1).join('\n\n').trim() : ''
+
   const linkRegex = /(https?:\/\/[^\s<>"']+)/g
-  const html = escape(body)
-    .replace(/\n{2,}/g, '</p><p>')
-    .replace(/\n/g, '<br />')
-    .replace(linkRegex, (url) => {
-      if (opts.clickRedirectBase) {
-        const tracked = `${opts.clickRedirectBase}?u=${encodeURIComponent(url)}`
-        return `<a href="${tracked}" style="color:#2563eb;text-decoration:underline">${url}</a>`
-      }
-      return `<a href="${url}" style="color:#2563eb;text-decoration:underline">${url}</a>`
+  const renderLinks = (text: string) =>
+    escape(text).replace(linkRegex, (url) => {
+      const target = opts.clickRedirectBase
+        ? `${opts.clickRedirectBase}?u=${encodeURIComponent(url)}`
+        : url
+      return `<a href="${target}" style="color:#0284c7;text-decoration:underline">${url}</a>`
     })
+
+  const contentHtml = renderLinks(contentRaw)
+    .split(/\n{2,}/)
+    .map((para) => `<p style="margin:0 0 14px 0;color:#0f172a;font-size:15px;line-height:1.6">${para.replace(/\n/g, '<br />')}</p>`)
+    .join('')
+
+  // Signatur-Zeilen parsen: erste = Grußformel, zweite = Name, danach Rolle/Firma/Kontakt
+  const sigLines = signatureRaw.split('\n').map((l) => l.trim()).filter(Boolean)
+  const greeting = sigLines[0] || 'Beste Grüße'
+  const name = sigLines[1] || opts.senderName || 'Bereifung24-Team'
+  const restLines = sigLines.slice(2)
+  // Rolle = erste Zeile nach Name, falls nicht Firma/Email/URL ist
+  let role = opts.senderRole || ''
+  let contactLines = restLines
+  if (!role && restLines.length > 0 && !/@|https?:\/\/|GmbH|Bereifung24/i.test(restLines[0])) {
+    role = restLines[0]
+    contactLines = restLines.slice(1)
+  }
+
+  const renderContactLine = (line: string) => {
+    const escaped = escape(line)
+    if (/^https?:\/\//i.test(line)) {
+      return `<a href="${line}" style="color:#0284c7;text-decoration:none">${escaped}</a>`
+    }
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(line)) {
+      return `<a href="mailto:${line}" style="color:#0284c7;text-decoration:none">${escaped}</a>`
+    }
+    return escaped
+  }
+
+  const contactHtml = contactLines
+    .map((l) => `<div style="color:#475569;font-size:13px;line-height:1.5">${renderContactLine(l)}</div>`)
+    .join('')
 
   const pixel = opts.trackingPixelUrl
     ? `<img src="${opts.trackingPixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0" />`
     : ''
 
+  const logoUrl = 'https://bereifung24.de/B24%20Logo%20transparent.png'
+
   return `<!DOCTYPE html>
-<html lang="de"><head><meta charset="utf-8" /></head>
-<body style="margin:0;padding:0;background:#ffffff;color:#0f172a;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55">
-  <div style="max-width:620px;margin:0 auto;padding:24px"><p>${html}</p>${pixel}</div>
-</body></html>`
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bereifung24</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 12px">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,42,0.06)">
+          <!-- Header mit Brand-Bar -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);padding:24px 32px;text-align:left">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle">
+                    <div style="width:56px;height:56px;background:#ffffff;border-radius:50%;text-align:center;line-height:56px;box-shadow:0 2px 6px rgba(0,0,0,0.15)">
+                      <img src="${logoUrl}" alt="Bereifung24" width="40" height="40" style="vertical-align:middle;border:0;display:inline-block" />
+                    </div>
+                  </td>
+                  <td style="vertical-align:middle;padding-left:14px">
+                    <div style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.3px">Bereifung24</div>
+                    <div style="color:#bae6fd;font-size:12px;margin-top:2px">Reifenservice-Vermittlung für Werkstätten</div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Inhalt -->
+          <tr>
+            <td style="padding:32px">
+              ${contentHtml}
+            </td>
+          </tr>
+
+          <!-- Signatur-Karte -->
+          <tr>
+            <td style="padding:0 32px 32px 32px">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e2e8f0;padding-top:20px">
+                <tr>
+                  <td style="vertical-align:top;width:64px">
+                    <div style="width:56px;height:56px;background:#f0f9ff;border:2px solid #0284c7;border-radius:50%;text-align:center;line-height:56px">
+                      <img src="${logoUrl}" alt="" width="36" height="36" style="vertical-align:middle;border:0;display:inline-block" />
+                    </div>
+                  </td>
+                  <td style="vertical-align:top;padding-left:14px">
+                    <div style="color:#0f172a;font-size:15px;font-weight:600;line-height:1.3">${escape(name)}</div>
+                    ${role ? `<div style="color:#0284c7;font-size:13px;font-weight:500;margin-top:2px">${escape(role)}</div>` : ''}
+                    <div style="margin-top:8px">${contactHtml}</div>
+                  </td>
+                </tr>
+              </table>
+              <div style="color:#94a3b8;font-size:11px;margin-top:16px;font-style:italic">${escape(greeting)}</div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;padding:18px 32px;border-top:1px solid #e2e8f0">
+              <div style="color:#64748b;font-size:11px;line-height:1.5;text-align:center">
+                Bereifung24 GmbH · Reifenservice-Vermittlung &amp; Werkstattnetzwerk<br />
+                <a href="https://bereifung24.de" style="color:#0284c7;text-decoration:none">bereifung24.de</a>
+                · <a href="https://bereifung24.de/impressum" style="color:#64748b;text-decoration:none">Impressum</a>
+                · <a href="https://bereifung24.de/datenschutz" style="color:#64748b;text-decoration:none">Datenschutz</a>
+              </div>
+            </td>
+          </tr>
+        </table>
+        ${pixel}
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
 }

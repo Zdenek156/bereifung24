@@ -37,8 +37,7 @@ export interface GeneratedEmail {
 const SIGNATURE = (senderName?: string) => `
 
 Beste Grüße
-${senderName || 'Dein Bereifung24-Team'}
-Bereifung24 GmbH
+${senderName || 'Ihr Bereifung24-Team'}
 partner@bereifung24.de
 https://bereifung24.de`
 
@@ -156,9 +155,10 @@ export async function generateOutreachEmail(input: GenerateInput): Promise<Gener
     body = body || lines.slice(1).join('\n').trim() || raw.trim()
   }
 
-  // Signatur immer anhängen (vereinheitlicht)
-  if (!body.includes('Bereifung24')) {
-    body = body.replace(/\s+$/g, '') + SIGNATURE(input.senderName)
+  // Signatur immer anhängen, außer der KI-Body endet bereits mit einer Grußformel
+  const hasGreeting = /\n\s*(Beste Grüße|Mit freundlichen Grüßen|Viele Grüße|Freundliche Grüße)\b/i.test(body)
+  if (!hasGreeting) {
+    body = body.replace(/\s+$/g, '') + SIGNATURE()
   }
 
   return {
@@ -230,8 +230,6 @@ export function bodyToHtml(
     ? `<img src="${opts.trackingPixelUrl}" width="1" height="1" alt="" style="display:block;width:1px;height:1px;border:0" />`
     : ''
 
-  const logoUrl = 'https://bereifung24.de/B24%20Logo%20transparent.png'
-
   return `<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -240,26 +238,15 @@ export function bodyToHtml(
   <title>Bereifung24</title>
 </head>
 <body style="margin:0;padding:0;background:#f1f5f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:32px 12px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f5f9;padding:24px 12px">
     <tr>
       <td align="center">
         <table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(15,23,42,0.06)">
-          <!-- Header mit Brand-Bar -->
+          <!-- Header mit Brand-Bar (bgcolor für Outlook-Kompatibilität, gradient als Progressive Enhancement) -->
           <tr>
-            <td style="background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);padding:24px 32px;text-align:left">
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td style="vertical-align:middle">
-                    <div style="width:56px;height:56px;background:#ffffff;border-radius:50%;text-align:center;line-height:56px;box-shadow:0 2px 6px rgba(0,0,0,0.15)">
-                      <img src="${logoUrl}" alt="Bereifung24" width="40" height="40" style="vertical-align:middle;border:0;display:inline-block" />
-                    </div>
-                  </td>
-                  <td style="vertical-align:middle;padding-left:14px">
-                    <div style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:0.3px">Bereifung24</div>
-                    <div style="color:#bae6fd;font-size:12px;margin-top:2px">Reifenservice-Vermittlung für Werkstätten</div>
-                  </td>
-                </tr>
-              </table>
+            <td bgcolor="#0284c7" style="background:#0284c7;background:linear-gradient(135deg,#0284c7 0%,#0369a1 100%);padding:24px 32px;text-align:left;color:#ffffff">
+              <div style="color:#ffffff;font-size:24px;font-weight:700;letter-spacing:0.3px;line-height:1.1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">Bereifung24</div>
+              <div style="color:#e0f2fe;font-size:13px;margin-top:6px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif">Reifenservice-Vermittlung für Werkstätten</div>
             </td>
           </tr>
 
@@ -270,24 +257,14 @@ export function bodyToHtml(
             </td>
           </tr>
 
-          <!-- Signatur-Karte -->
+          <!-- Signatur (ohne Kreis-Avatar) -->
           <tr>
-            <td style="padding:0 32px 32px 32px">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e2e8f0;padding-top:20px">
-                <tr>
-                  <td style="vertical-align:top;width:64px">
-                    <div style="width:56px;height:56px;background:#f0f9ff;border:2px solid #0284c7;border-radius:50%;text-align:center;line-height:56px">
-                      <img src="${logoUrl}" alt="" width="36" height="36" style="vertical-align:middle;border:0;display:inline-block" />
-                    </div>
-                  </td>
-                  <td style="vertical-align:top;padding-left:14px">
-                    <div style="color:#0f172a;font-size:15px;font-weight:600;line-height:1.3">${escape(name)}</div>
-                    ${role ? `<div style="color:#0284c7;font-size:13px;font-weight:500;margin-top:2px">${escape(role)}</div>` : ''}
-                    <div style="margin-top:8px">${contactHtml}</div>
-                  </td>
-                </tr>
-              </table>
-              <div style="color:#94a3b8;font-size:11px;margin-top:16px;font-style:italic">${escape(greeting)}</div>
+            <td style="padding:0 32px 28px 32px">
+              <div style="border-top:3px solid #0284c7;padding-top:18px">
+                <div style="color:#0f172a;font-size:16px;font-weight:600;line-height:1.3">${escape(name)}</div>
+                ${role ? `<div style="color:#0284c7;font-size:13px;font-weight:500;margin-top:2px">${escape(role)}</div>` : ''}
+                <div style="margin-top:10px">${contactHtml}</div>
+              </div>
             </td>
           </tr>
 
@@ -295,7 +272,7 @@ export function bodyToHtml(
           <tr>
             <td style="background:#f8fafc;padding:18px 32px;border-top:1px solid #e2e8f0">
               <div style="color:#64748b;font-size:11px;line-height:1.5;text-align:center">
-                Bereifung24 GmbH · Reifenservice-Vermittlung &amp; Werkstattnetzwerk<br />
+                Bereifung24 · Reifenservice-Vermittlung &amp; Werkstattnetzwerk<br />
                 <a href="https://bereifung24.de" style="color:#0284c7;text-decoration:none">bereifung24.de</a>
                 · <a href="https://bereifung24.de/impressum" style="color:#64748b;text-decoration:none">Impressum</a>
                 · <a href="https://bereifung24.de/datenschutz" style="color:#64748b;text-decoration:none">Datenschutz</a>

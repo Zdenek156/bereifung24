@@ -1494,6 +1494,9 @@ model B24Employee {
   // Workshop Recommendations sent
   sentWorkshopRecommendations WorkshopRecommendation[] @relation("WorkshopRecommendationSender")
 
+  // Sales Outreach Emails sent
+  sentOutreachEmails ProspectOutreachEmail[] @relation("OutreachSender")
+
   // File Management Relations
   createdFolders FileFolder[]
   uploadedFiles  FileUpload[]
@@ -1905,10 +1908,18 @@ model ProspectWorkshop {
   // Loss Tracking
   lostReason String? @map("lost_reason") // Grund warum verloren
 
+  // Outreach: AI website analysis cache (services, brands, USPs etc.)
+  contactPerson    String?   @map("contact_person")
+  emailVerified    Boolean   @default(false) @map("email_verified")
+  websiteAnalyzedAt DateTime? @map("website_analyzed_at")
+  aiInsights       Json?     @map("ai_insights") // Gemini-generated insights JSON
+  websiteRawText   String?   @map("website_raw_text") @db.Text // Crawled raw text snapshot
+
   // Relations
-  interactions ProspectInteraction[]
-  tasks        ProspectTask[]
-  notes        ProspectNote[]
+  interactions    ProspectInteraction[]
+  tasks           ProspectTask[]
+  notes           ProspectNote[]
+  outreachEmails  ProspectOutreachEmail[]
 
   // Timestamps
   createdAt DateTime @default(now()) @map("created_at")
@@ -6725,4 +6736,68 @@ enum SocialMediaTrigger {
   WEEKLY_SCHEDULE
   MONTHLY_SCHEDULE
   MANUAL
+}
+
+
+// ─────────────────────────────────────────────────────────
+// Sales Outreach Emails (Cold-Outreach an Prospects)
+// ─────────────────────────────────────────────────────────
+model ProspectOutreachEmail {
+  id String @id @default(cuid())
+
+  // Prospect (target)
+  prospectId String          @map("prospect_id")
+  prospect   ProspectWorkshop @relation(fields: [prospectId], references: [id], onDelete: Cascade)
+
+  // Direction
+  direction String @default("OUTBOUND") // OUTBOUND | INBOUND
+
+  // Sequence type
+  templateType String @default("CUSTOM") @map("template_type")
+  // FIRST_CONTACT | FOLLOWUP | BREAKUP | CUSTOM | REPLY
+
+  // Sender (B24Employee)
+  sentById String?      @map("sent_by_id")
+  sentBy   B24Employee? @relation("OutreachSender", fields: [sentById], references: [id], onDelete: SetNull)
+
+  // Email envelope
+  fromEmail String @map("from_email")
+  toEmail   String @map("to_email")
+  subject   String @db.Text
+  body      String @db.Text   // Plain text (Gemini draft / inbound body)
+  bodyHtml  String? @map("body_html") @db.Text // Final HTML actually sent
+
+  // Threading (RFC 5322)
+  messageId  String  @unique @map("message_id")
+  inReplyTo  String? @map("in_reply_to")
+  threadId   String? @map("thread_id") // Convenience grouping (= first messageId in thread)
+
+  // Status
+  status      String   @default("DRAFT") // DRAFT | SCHEDULED | SENT | FAILED | RECEIVED
+  scheduledFor DateTime? @map("scheduled_for")
+  sentAt       DateTime? @map("sent_at")
+  errorMessage String?  @map("error_message") @db.Text
+
+  // Engagement
+  openedAt    DateTime?
+  openCount   Int       @default(0) @map("open_count")
+  clickedAt   DateTime?
+  clickCount  Int       @default(0) @map("click_count")
+  repliedAt   DateTime? @map("replied_at")
+
+  // AI tracking
+  aiGenerated   Boolean @default(false) @map("ai_generated")
+  aiPromptUsed  String? @map("ai_prompt_used") @db.Text
+  aiInsightsSnapshot Json? @map("ai_insights_snapshot")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([prospectId])
+  @@index([sentById])
+  @@index([status])
+  @@index([direction])
+  @@index([threadId])
+  @@index([sentAt])
+  @@map("prospect_outreach_emails")
 }

@@ -1,7 +1,8 @@
 'use client'
 
-import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity, Trash2, Send, Plus } from 'lucide-react'
+import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity, Trash2, Send, Plus, Mail } from 'lucide-react'
 import { useEffect, useState, useCallback } from 'react'
+import ProspectOutreachTab from './ProspectOutreachTab'
 
 interface ProspectDetail {
   placeId: string
@@ -85,7 +86,7 @@ export default function ProspectDetailDialog({
   onImport 
 }: ProspectDetailDialogProps) {
   // ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURNS
-  const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'tasks' | 'activity'>('info')
+  const [activeTab, setActiveTab] = useState<'info' | 'notes' | 'tasks' | 'activity' | 'outreach'>('info')
   
   // Notes State
   const [notes, setNotes] = useState<Note[]>([])
@@ -509,6 +510,7 @@ export default function ProspectDetailDialog({
 
   const tabs = [
     { id: 'info' as const, label: 'Informationen', icon: Info },
+    { id: 'outreach' as const, label: 'Outreach', icon: Mail },
     { id: 'notes' as const, label: 'Notizen', icon: FileText },
     { id: 'tasks' as const, label: 'Aufgaben', icon: CheckSquare },
     { id: 'activity' as const, label: 'Aktivitäten', icon: Activity },
@@ -1041,6 +1043,16 @@ export default function ProspectDetailDialog({
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === 'outreach' && (
+              <ProspectOutreachTab
+                placeId={prospect.placeId}
+                prospectName={prospect.name}
+                prospectEmail={emailValue || prospect.email}
+                prospectWebsite={prospect.website}
+                onEmailSaved={onImport}
+              />
             )}
 
             {activeTab === 'activity' && (

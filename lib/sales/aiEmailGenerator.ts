@@ -70,7 +70,7 @@ function buildPrompt(input: GenerateInput): string {
 - Persönlich (Stadt + ein konkreter Bezug aus den Insights)
 - Stelle Bereifung24 in 1-2 Sätzen vor: "Wir bringen reine Reifen-Aufträge aus eurer Region zu lokalen Werkstätten – die Plattform-Nutzung ist für Werkstätten kostenlos, wir verdienen nur eine kleine Provision pro tatsächlich vermitteltem Termin."
 - WICHTIG: Erwähne KEIN Telefonat, KEINE Probelistung, KEINE kostenlose Aufnahme (das ist Standard).
-- CTA: Verweise auf https://bereifung24.de/werkstatt-anmelden für unverbindliche Anmeldung und weitere Infos.
+- CTA: Verweise auf https://bereifung24.de/werkstatt für unverbindliche Anmeldung und weitere Infos.
 - Maximal 130 Wörter`
       break
     case 'FOLLOWUP':
@@ -78,7 +78,7 @@ function buildPrompt(input: GenerateInput): string {
 - Bezug auf die vorherige Email
 - Ein neuer Mehrwert-Punkt (z.B. konkrete Anzahl Anfragen aus PLZ-Bereich)
 - Sehr kurz (max 80 Wörter)
-- Soft CTA: Link zu https://bereifung24.de/werkstatt-anmelden
+- Soft CTA: Link zu https://bereifung24.de/werkstatt
 - KEIN Telefonat anbieten, KEINE Probelistung erwähnen.`
       break
     case 'BREAKUP':

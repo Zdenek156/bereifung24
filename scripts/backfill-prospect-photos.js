@@ -41,11 +41,11 @@ async function main() {
     process.exit(1)
   }
 
-  const prospects = await prisma.prospectWorkshop.findMany({
-    where: { photoUrls: { isEmpty: true } },
-    select: { id: true, googlePlaceId: true, name: true },
+  const allProspects = await prisma.prospectWorkshop.findMany({
+    select: { id: true, googlePlaceId: true, name: true, photoUrls: true },
   })
-  console.log(`Gefunden: ${prospects.length} Prospects ohne Fotos`)
+  const prospects = allProspects.filter((p) => !p.photoUrls || p.photoUrls.length === 0)
+  console.log(`Gefunden: ${prospects.length} Prospects ohne Fotos (von ${allProspects.length} gesamt)`)
 
   let updated = 0
   let skipped = 0

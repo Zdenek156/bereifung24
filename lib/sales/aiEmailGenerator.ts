@@ -69,16 +69,18 @@ function buildPrompt(input: GenerateInput): string {
     case 'FIRST_CONTACT':
       intent = `Schreibe eine ERSTE Cold-Outreach-Email an die Werkstatt.
 - Persönlich (Stadt + ein konkreter Bezug aus den Insights)
-- Stelle Bereifung24 in 1-2 Sätzen vor: "Wir bringen reine Reifen-Aufträge aus eurer Region zu lokalen Werkstätten – ohne monatliche Fixkosten, nur Provision pro vermitteltem Termin."
-- Klarer, niedrigschwelliger CTA: 15-Minuten-Telefonat oder kostenlose Probe-Listung
+- Stelle Bereifung24 in 1-2 Sätzen vor: "Wir bringen reine Reifen-Aufträge aus eurer Region zu lokalen Werkstätten – die Plattform-Nutzung ist für Werkstätten kostenlos, wir verdienen nur eine kleine Provision pro tatsächlich vermitteltem Termin."
+- WICHTIG: Erwähne KEIN Telefonat, KEINE Probelistung, KEINE kostenlose Aufnahme (das ist Standard).
+- CTA: Verweise auf https://bereifung24.de/werkstatt-anmelden für unverbindliche Anmeldung und weitere Infos.
 - Maximal 130 Wörter`
       break
     case 'FOLLOWUP':
       intent = `Schreibe eine FOLLOW-UP-Email (höfliches Nachhaken nach ~5-7 Tagen ohne Antwort).
 - Bezug auf die vorherige Email
-- Ein neuer Mehrwert-Punkt (z.B. konkrete Anzahl Anfragen aus PLZ-Bereich, kostenlose Aufnahme)
+- Ein neuer Mehrwert-Punkt (z.B. konkrete Anzahl Anfragen aus PLZ-Bereich)
 - Sehr kurz (max 80 Wörter)
-- Soft CTA`
+- Soft CTA: Link zu https://bereifung24.de/werkstatt-anmelden
+- KEIN Telefonat anbieten, KEINE Probelistung erwähnen.`
       break
     case 'BREAKUP':
       intent = `Schreibe eine BREAKUP-Email (letzter freundlicher Versuch).

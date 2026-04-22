@@ -69,15 +69,16 @@ function buildPrompt(input: GenerateInput): string {
       intent = `Schreibe eine ERSTE Cold-Outreach-Email an die Werkstatt.
 - Persönlich (Stadt + ein konkreter Bezug aus den Insights)
 - Stelle Bereifung24 in 1-2 Sätzen vor: "Wir bringen reine Reifen-Aufträge aus eurer Region zu lokalen Werkstätten – die Plattform-Nutzung ist für Werkstätten kostenlos, wir verdienen nur eine kleine Provision pro tatsächlich vermitteltem Termin."
+- Nimm 2-3 passende Mehrwerte aus der "WAS BEREIFUNG24 BIETET"-Liste und verpacke sie kurz im Fließtext.
 - WICHTIG: Erwähne KEIN Telefonat, KEINE Probelistung, KEINE kostenlose Aufnahme (das ist Standard).
 - CTA: Verweise auf https://bereifung24.de/werkstatt für unverbindliche Anmeldung und weitere Infos.
-- Maximal 130 Wörter`
+- Maximal 160 Wörter`
       break
     case 'FOLLOWUP':
       intent = `Schreibe eine FOLLOW-UP-Email (höfliches Nachhaken nach ~5-7 Tagen ohne Antwort).
 - Bezug auf die vorherige Email
-- Ein neuer Mehrwert-Punkt (z.B. konkrete Anzahl Anfragen aus PLZ-Bereich)
-- Sehr kurz (max 80 Wörter)
+- EIN neuer Mehrwert-Punkt aus der "WAS BEREIFUNG24 BIETET"-Liste, der in der Erstmail noch NICHT erwähnt wurde
+- Sehr kurz (max 90 Wörter)
 - Soft CTA: Link zu https://bereifung24.de/werkstatt
 - KEIN Telefonat anbieten, KEINE Probelistung erwähnen.`
       break
@@ -95,6 +96,21 @@ function buildPrompt(input: GenerateInput): string {
   return `Du bist Sales-Texter für Bereifung24 (B2B-Plattform für Reifenservice-Vermittlung).
 Schreibe auf DEUTSCH. Sprich die Werkstatt mit "Sie" an, freundlich, knapp, ohne Floskeln.
 KEINE Emojis, KEINE übertriebenen Versprechen, KEIN Markdown.
+
+WAS BEREIFUNG24 BIETET (kostenlos für die Werkstatt):
+- Reifenaufträge aus der Region (Reifenwechsel, Einlagerung, Neureifen)
+- Eigene SEO-optimierte Werkstatt-Landingpage mit Online-Buchung → mehr Sichtbarkeit bei Google
+- Kalender-Anbindung mit automatischer Blockierung & Eintrag von Terminen
+- Festpreis-Hinterlegung für Services + Reifen-Preiskalkulation (Fix- und Prozent-Marge)
+- Stripe-Integration: Geld liegt bereits VOR dem Termin bei der Werkstatt (kein Zahlungsausfall-Risiko)
+- Widget-Cards für die eigene Webseite (Buchung direkt einbinden)
+- Kundenbewertungen sammeln & öffentlich anzeigen
+- Komplett kostenlos – nur eine kleine Provision pro tatsächlich vermitteltem Termin
+
+WICHTIG zur Verwendung dieser Liste:
+- NIEMALS alle Punkte aufzählen – wirkt aufdringlich.
+- Wähle 2-3 Punkte aus, die zum Profil der Werkstatt passen (siehe Insights/USPs/Verbesserungspotenzial).
+- Verpacke sie natürlich im Fließtext, nicht als Bullet-Liste.
 
 Ziel: ${intent}
 

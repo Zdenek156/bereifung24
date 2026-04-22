@@ -114,8 +114,10 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    // Get total registered workshops count (all workshops, not just active)
-    const totalWorkshops = await prisma.workshop.count()
+    // Get total registered workshops count (gelöschte ausschließen)
+    const totalWorkshops = await prisma.workshop.count({
+      where: { NOT: { status: 'DELETED' } },
+    })
 
     // Get commissions from DirectBookings paid in current month (same source as /admin/commissions page)
     const now = new Date()
@@ -141,9 +143,11 @@ export async function GET(request: NextRequest) {
     }, 0)
 
     // Get count of not-verified workshops (nicht freigeschaltete Werkstätten)
+    // Wichtig: Gelöschte Werkstätten (status === 'DELETED') ausschließen
     const notActivatedWorkshops = await prisma.workshop.count({
       where: {
         isVerified: false,
+        NOT: { status: 'DELETED' },
       },
     })
 

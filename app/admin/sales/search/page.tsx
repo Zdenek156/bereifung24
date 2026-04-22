@@ -258,7 +258,14 @@ export default function SalesSearchPage() {
       })
 
       if (response.ok) {
-        alert(`${selectedPlaces.size} Werkstätten erfolgreich importiert!`)
+        const data = await response.json().catch(() => ({}))
+        const importedCount = data?.imported ?? 0
+        const errorCount = data?.errors ?? 0
+        if (importedCount === 0) {
+          alert(`Keine Werkstatt importiert (${errorCount} Fehler/bereits vorhanden). Details siehe Server-Log.`)
+          return
+        }
+        alert(`${importedCount} Werkstätten importiert${errorCount ? ` (${errorCount} übersprungen)` : ''}!`)
         router.push('/admin/sales/prospects')
       } else {
         alert('Fehler beim Import')

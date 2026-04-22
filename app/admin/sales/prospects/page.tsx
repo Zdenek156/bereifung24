@@ -156,8 +156,22 @@ export default function ProspectsListPage() {
                 key={prospect.id}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
+                <div className="flex items-start gap-4">
+                  {prospect.photoUrls && prospect.photoUrls.length > 0 ? (
+                    <img
+                      src={prospect.photoUrls[0]}
+                      alt={prospect.name}
+                      className="w-24 h-24 object-cover rounded-lg flex-shrink-0 border border-gray-200"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">
+                      <span className="text-3xl font-bold text-blue-600">
+                        {prospect.name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900">

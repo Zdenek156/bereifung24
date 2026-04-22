@@ -262,12 +262,11 @@ export default function ProspectsListPage() {
         )}
       </div>
 
-      {/* Detail Dialog */}
+      {/* Detail Dialog (kein onImport — Prospect existiert bereits) */}
       <ProspectDetailDialog
         isOpen={detailDialogOpen}
         onClose={() => setDetailDialogOpen(false)}
         prospect={selectedProspect}
-        onImport={fetchProspects}
       />
     </div>
   )

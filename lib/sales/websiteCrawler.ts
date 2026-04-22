@@ -114,19 +114,45 @@ function extractTextFromHtml(html: string): string {
     .slice(0, 12_000) // KI-Kontext begrenzen
 }
 
-const EMAIL_REGEX = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi
+const EMAIL_REGEX = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,24}/gi
 const PHONE_REGEX = /(?:\+?\d[\d\s\-/]{7,}\d)/g
+
+// Bekannte TLDs zum Trimmen falls Suffix angeklebt ist (z.B. "...gmail.cominformationen")
+const KNOWN_TLDS = ['com', 'net', 'org', 'info', 'shop', 'biz', 'eu', 'de', 'at', 'ch', 'co', 'io', 'app', 'dev']
+
+function cleanCandidateEmail(raw: string): string | null {
+  let e = raw.toLowerCase().trim().replace(/^[._%+\-]+/, '').replace(/[._%+\-]+$/, '')
+  const at = e.indexOf('@')
+  if (at < 1 || at === e.length - 1) return null
+  let local = e.slice(0, at)
+  let domain = e.slice(at + 1)
+  // Lokaler Teil: führende deutsche PLZ (5 Ziffern direkt vor Buchstaben) entfernen
+  local = local.replace(/^\d{5}(?=[a-z])/, '')
+  // Domain in Labels splitten und letzte Label = TLD ggf. zu bekanntem TLD trimmen
+  const labels = domain.split('.')
+  if (labels.length < 2) return null
+  const tld = labels[labels.length - 1]
+  if (tld.length > 4) {
+    const known = KNOWN_TLDS.find((k) => tld.startsWith(k))
+    if (known) labels[labels.length - 1] = known
+  }
+  domain = labels.join('.')
+  return `${local}@${domain}`
+}
 
 function extractEmails(text: string, html: string): string[] {
   const set = new Set<string>()
   for (const src of [text, html]) {
     const matches = src.match(EMAIL_REGEX) || []
     for (const m of matches) {
-      const e = m.toLowerCase().trim()
+      const cleaned = cleanCandidateEmail(m)
+      if (!cleaned) continue
       // Filter offensichtliche Bilddateien / Boilerplate
-      if (/\.(png|jpe?g|gif|webp|svg)$/i.test(e)) continue
-      if (e.startsWith('email@') || e.startsWith('beispiel@')) continue
-      set.add(e)
+      if (/\.(png|jpe?g|gif|webp|svg)$/i.test(cleaned)) continue
+      if (cleaned.startsWith('email@') || cleaned.startsWith('beispiel@')) continue
+      // Sanity: lokaler Teil mind. 2 Zeichen
+      if (cleaned.split('@')[0].length < 2) continue
+      set.add(cleaned)
     }
   }
   return Array.from(set).slice(0, 10)

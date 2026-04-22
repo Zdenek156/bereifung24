@@ -54,6 +54,7 @@ export default function ProspectsListPage() {
   const [loading, setLoading] = useState(true)
   const [selectedProspect, setSelectedProspect] = useState<Prospect | null>(null)
   const [detailDialogOpen, setDetailDialogOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<string>('ALL')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -120,6 +121,42 @@ export default function ProspectsListPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Status-Filter */}
+        {prospects.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <span className="text-sm text-gray-600 mr-2">Status:</span>
+            {(() => {
+              const counts: Record<string, number> = { ALL: prospects.length }
+              for (const p of prospects) counts[p.status] = (counts[p.status] || 0) + 1
+              const buttons: { key: string; label: string }[] = [
+                { key: 'ALL', label: 'Alle' },
+                { key: 'NEW', label: 'Neu' },
+                { key: 'CONTACTED', label: 'Kontaktiert' },
+                { key: 'QUALIFIED', label: 'Qualifiziert' },
+                { key: 'WON', label: 'Gewonnen' },
+                { key: 'LOST', label: 'Verloren' },
+              ]
+              return buttons.map((b) => {
+                const count = counts[b.key] || 0
+                const active = statusFilter === b.key
+                return (
+                  <button
+                    key={b.key}
+                    onClick={() => setStatusFilter(b.key)}
+                    className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                      active
+                        ? 'bg-primary-600 border-primary-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    {b.label} <span className={active ? 'text-white/80' : 'text-gray-500'}>({count})</span>
+                  </button>
+                )
+              })
+            })()}
+          </div>
+        )}
+
         {dueOnly && (
           <div className="mb-6 flex items-center justify-between bg-red-50 border border-red-200 rounded-lg px-4 py-3">
             <div className="flex items-center gap-2 text-red-800">
@@ -151,7 +188,9 @@ export default function ProspectsListPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {prospects.map((prospect) => (
+            {prospects
+              .filter((p) => statusFilter === 'ALL' || p.status === statusFilter)
+              .map((prospect) => (
               <div
                 key={prospect.id}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"

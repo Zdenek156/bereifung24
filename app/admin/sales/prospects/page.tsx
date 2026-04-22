@@ -163,6 +163,13 @@ export default function ProspectsListPage() {
                       alt={prospect.name}
                       className="w-24 h-24 object-cover rounded-lg flex-shrink-0 border border-gray-200"
                       loading="lazy"
+                      onError={(e) => {
+                        // Bei Lade-Fehler durch Fallback-Avatar ersetzen
+                        const fallback = document.createElement('div')
+                        fallback.className = 'w-24 h-24 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0'
+                        fallback.innerHTML = `<span class="text-3xl font-bold text-blue-600">${prospect.name.charAt(0).toUpperCase()}</span>`
+                        e.currentTarget.replaceWith(fallback)
+                      }}
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center flex-shrink-0">

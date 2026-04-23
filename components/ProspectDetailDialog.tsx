@@ -629,15 +629,17 @@ export default function ProspectDetailDialog({
                   Werkstatt-Analyse
                 </button>
               )}
-              <button
-                onClick={handleConvert}
-                disabled={converting || registeredCheck.registered}
-                className="h-10 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
-                title={registeredCheck.registered ? 'Werkstatt ist bereits registriert' : 'Prospect in aktive Werkstatt umwandeln'}
-              >
-                <CheckSquare className="h-4 w-4" />
-                {registeredCheck.registered ? 'Bereits registriert' : (converting ? 'Konvertiere...' : 'Konvertieren')}
-              </button>
+              {!registeredCheck.registered && (
+                <button
+                  onClick={handleConvert}
+                  disabled={converting}
+                  className="h-10 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
+                  title="Prospect in aktive Werkstatt umwandeln"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  {converting ? 'Konvertiere...' : 'Konvertieren'}
+                </button>
+              )}
               <button
                 onClick={handleDelete}
                 disabled={deleting}

@@ -30,6 +30,7 @@ export async function GET(
         name: true,
         email: true,
         leadScore: true,
+        status: true,
         convertedToWorkshopId: true,
         convertedAt: true,
         conversionValue: true
@@ -87,6 +88,24 @@ export async function GET(
         registered: false,
         prospect: { name: prospect.name, leadScore: prospect.leadScore }
       })
+    }
+
+    // Auto-link & auto-WON: if we matched a workshop (esp. by email = self-registration),
+    // update the prospect once so the pipeline reflects reality.
+    const needsLink = !prospect.convertedToWorkshopId
+    const needsWon = prospect.status !== 'WON'
+    if (needsLink || needsWon) {
+      try {
+        await prisma.prospectWorkshop.update({
+          where: { id: prospect.id },
+          data: {
+            ...(needsLink ? { convertedToWorkshopId: workshop.id, convertedAt: new Date() } : {}),
+            status: 'WON'
+          }
+        })
+      } catch (e) {
+        console.warn('Auto-WON update failed:', (e as any)?.message)
+      }
     }
 
     // Aggregations

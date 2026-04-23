@@ -93,11 +93,10 @@ export async function GET(request: Request) {
       ? prospects.reduce((sum, p) => sum + p.leadScore, 0) / prospects.length 
       : 0;
 
-    // Get active tasks count
+    // Get active tasks count (alle offenen Tasks, unabhängig vom Erstellungsdatum)
     const activeTasks = await prisma.prospectTask.count({
       where: {
-        completed: false,
-        createdAt: { gte: startDate }
+        completed: false
       }
     });
 

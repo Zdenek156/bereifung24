@@ -60,7 +60,20 @@ export default function SalesReportsPage() {
     switch (status) {
       case 'NEW': return 'bg-blue-100 text-blue-800'
       case 'CONTACTED': return 'bg-yellow-100 text-yellow-800'
+      case 'QUALIFIED': return 'bg-indigo-100 text-indigo-800'
+      case 'MEETING_SCHEDULED': return 'bg-purple-100 text-purple-800'
+      case 'DEMO_COMPLETED': return 'bg-purple-100 text-purple-800'
+      case 'PROPOSAL_SENT': return 'bg-orange-100 text-orange-800'
+      case 'NEGOTIATING': return 'bg-orange-100 text-orange-800'
+      case 'VERBAL_AGREEMENT': return 'bg-teal-100 text-teal-800'
+      case 'CONTRACT_SENT': return 'bg-teal-100 text-teal-800'
+      case 'WON':
       case 'CONVERTED': return 'bg-green-100 text-green-800'
+      case 'LOST': return 'bg-red-100 text-red-800'
+      case 'NOT_INTERESTED': return 'bg-red-100 text-red-700'
+      case 'NOT_REACHABLE': return 'bg-gray-100 text-gray-700'
+      case 'CALLBACK': return 'bg-yellow-100 text-yellow-700'
+      case 'ON_HOLD': return 'bg-gray-100 text-gray-600'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -69,7 +82,20 @@ export default function SalesReportsPage() {
     switch (status) {
       case 'NEW': return 'Neu'
       case 'CONTACTED': return 'Kontaktiert'
+      case 'QUALIFIED': return 'Qualifiziert'
+      case 'MEETING_SCHEDULED': return 'Termin vereinbart'
+      case 'DEMO_COMPLETED': return 'Demo durchgeführt'
+      case 'PROPOSAL_SENT': return 'Angebot verschickt'
+      case 'NEGOTIATING': return 'In Verhandlung'
+      case 'VERBAL_AGREEMENT': return 'Mündliche Zusage'
+      case 'CONTRACT_SENT': return 'Vertrag verschickt'
+      case 'WON': return 'Gewonnen'
       case 'CONVERTED': return 'Konvertiert'
+      case 'LOST': return 'Verloren'
+      case 'NOT_INTERESTED': return 'Kein Interesse'
+      case 'NOT_REACHABLE': return 'Nicht erreichbar'
+      case 'CALLBACK': return 'Rückruf'
+      case 'ON_HOLD': return 'Pausiert'
       default: return status
     }
   }

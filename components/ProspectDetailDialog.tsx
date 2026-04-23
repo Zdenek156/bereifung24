@@ -1,6 +1,6 @@
 'use client'
 
-import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity, Trash2, Send, Plus, Mail } from 'lucide-react'
+import { X, Star, MapPin, Phone, Globe, Clock, Euro, ExternalLink, TrendingUp, Info, FileText, CheckSquare, Activity, Trash2, Send, Plus, Mail, BarChart3, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useEffect, useState, useCallback } from 'react'
 import ProspectOutreachTab from './ProspectOutreachTab'
 
@@ -26,6 +26,8 @@ interface ProspectDetail {
     points: number
   }[]
   status?: string
+  convertedToWorkshopId?: string | null
+  convertedAt?: string | null
 }
 
 interface Note {
@@ -116,6 +118,13 @@ export default function ProspectDetailDialog({
   const [savingEmail, setSavingEmail] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [converting, setConverting] = useState(false)
+
+  // Workshop Analytics (for converted / self-registered prospects)
+  const [analyticsOpen, setAnalyticsOpen] = useState(false)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analytics, setAnalytics] = useState<any | null>(null)
+  const [analyticsError, setAnalyticsError] = useState<string | null>(null)
+  const [registeredCheck, setRegisteredCheck] = useState<{ checked: boolean; registered: boolean }>({ checked: false, registered: false })
 
   useEffect(() => {
     if (isOpen) {
@@ -225,6 +234,51 @@ export default function ProspectDetailDialog({
       setEmailValue(prospect.email || '')
     }
   }, [prospect])
+
+  // Detect registered/self-registered workshop (for analytics button visibility).
+  // Uses convertedToWorkshopId if present, otherwise probes the analytics API
+  // (which also matches by email -> covers self-registered workshops).
+  useEffect(() => {
+    if (!isOpen || !prospect?.placeId) {
+      setRegisteredCheck({ checked: false, registered: false })
+      setAnalytics(null)
+      setAnalyticsOpen(false)
+      return
+    }
+    if (prospect.convertedToWorkshopId) {
+      setRegisteredCheck({ checked: true, registered: true })
+      return
+    }
+    let cancelled = false
+    fetch(`/api/sales/prospects/${prospect.placeId}/workshop-analytics`)
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (cancelled) return
+        setRegisteredCheck({ checked: true, registered: !!data?.registered })
+      })
+      .catch(() => {
+        if (!cancelled) setRegisteredCheck({ checked: true, registered: false })
+      })
+    return () => { cancelled = true }
+  }, [isOpen, prospect?.placeId, prospect?.convertedToWorkshopId])
+
+  const openAnalytics = useCallback(async () => {
+    if (!prospect?.placeId) return
+    setAnalyticsOpen(true)
+    if (analytics) return
+    setAnalyticsLoading(true)
+    setAnalyticsError(null)
+    try {
+      const res = await fetch(`/api/sales/prospects/${prospect.placeId}/workshop-analytics`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json()
+      setAnalytics(data)
+    } catch (e: any) {
+      setAnalyticsError(e?.message || 'Fehler beim Laden')
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }, [prospect?.placeId, analytics])
 
   // NOW the conditional return AFTER all hooks
   if (!isOpen || !prospect) return null
@@ -565,13 +619,24 @@ export default function ProspectDetailDialog({
                 <ExternalLink className="h-4 w-4" />
                 Google Maps
               </button>
+              {registeredCheck.registered && (
+                <button
+                  onClick={openAnalytics}
+                  className="h-10 px-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
+                  title="Erweiterte Analyse basierend auf realen Plattformdaten"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  Werkstatt-Analyse
+                </button>
+              )}
               <button
                 onClick={handleConvert}
-                disabled={converting}
-                className="h-10 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
+                disabled={converting || registeredCheck.registered}
+                className="h-10 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors inline-flex items-center justify-center gap-2 text-sm font-medium whitespace-nowrap"
+                title={registeredCheck.registered ? 'Werkstatt ist bereits registriert' : 'Prospect in aktive Werkstatt umwandeln'}
               >
                 <CheckSquare className="h-4 w-4" />
-                {converting ? 'Konvertiere...' : 'Konvertieren'}
+                {registeredCheck.registered ? 'Bereits registriert' : (converting ? 'Konvertiere...' : 'Konvertieren')}
               </button>
               <button
                 onClick={handleDelete}
@@ -1201,6 +1266,199 @@ export default function ProspectDetailDialog({
           </div>
         </div>
       </div>
+
+      {/* Workshop Analytics Modal */}
+      {analyticsOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4" onClick={() => setAnalyticsOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <BarChart3 className="h-6 w-6" />
+                <div>
+                  <h3 className="text-lg font-bold">Werkstatt-Analyse</h3>
+                  <p className="text-xs text-purple-100">Reale Plattform-Daten</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAnalyticsOpen(false)}
+                className="h-9 w-9 inline-flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                aria-label="Schließen"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {analyticsLoading && (
+                <div className="text-center py-12 text-gray-500">Lade Analyse…</div>
+              )}
+              {analyticsError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 text-sm">
+                  Fehler: {analyticsError}
+                </div>
+              )}
+              {!analyticsLoading && !analyticsError && analytics && !analytics.registered && (
+                <div className="text-center py-8 text-gray-600">
+                  Diese Werkstatt ist noch nicht auf der Plattform registriert.
+                </div>
+              )}
+              {!analyticsLoading && !analyticsError && analytics?.registered && (
+                <div className="space-y-6">
+                  {/* Workshop Header */}
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h4 className="font-bold text-gray-900">{analytics.workshop.companyName}</h4>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {analytics.workshop.customerNumber} · {analytics.workshop.email}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Registriert vor {analytics.workshop.daysSinceRegistration} Tagen
+                          {analytics.matchedBy === 'email' && ' · automatisch erkannt (Email-Match)'}
+                          {analytics.matchedBy === 'conversion' && ' · manuell konvertiert'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                          analytics.workshop.status === 'ACTIVE' ? 'bg-green-100 text-green-700' :
+                          analytics.workshop.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          {analytics.workshop.status || 'UNKNOWN'}
+                        </span>
+                        {analytics.workshop.isVerified && (
+                          <span className="text-[10px] text-green-700 inline-flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> verifiziert
+                          </span>
+                        )}
+                        {analytics.workshop.stripeEnabled && (
+                          <span className="text-[10px] text-blue-700 inline-flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> Stripe aktiv
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Score Comparison */}
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 text-center">
+                      <div className="text-xs text-purple-700 font-medium">Real-Score</div>
+                      <div className="text-3xl font-bold text-purple-700 mt-1">{analytics.score.realScore}</div>
+                      <div className="text-[10px] text-purple-600">basierend auf KPIs</div>
+                    </div>
+                    <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-center">
+                      <div className="text-xs text-gray-600 font-medium">Lead-Score (alt)</div>
+                      <div className="text-3xl font-bold text-gray-700 mt-1">{analytics.score.originalLeadScore}</div>
+                      <div className="text-[10px] text-gray-500">vor Registrierung</div>
+                    </div>
+                    <div className={`border rounded-xl p-4 text-center ${
+                      analytics.score.delta >= 0 ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+                    }`}>
+                      <div className={`text-xs font-medium ${analytics.score.delta >= 0 ? 'text-green-700' : 'text-red-700'}`}>Differenz</div>
+                      <div className={`text-3xl font-bold mt-1 ${analytics.score.delta >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                        {analytics.score.delta >= 0 ? '+' : ''}{analytics.score.delta}
+                      </div>
+                      <div className="text-[10px] text-gray-500">Punkte</div>
+                    </div>
+                  </div>
+
+                  {/* Profile Completion */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-sm font-semibold text-gray-900">Profil-Vollständigkeit</h5>
+                      <span className="text-sm font-bold text-gray-900">{analytics.profile.completionPercent}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mb-3">
+                      <div
+                        className={`h-2 rounded-full ${
+                          analytics.profile.completionPercent >= 80 ? 'bg-green-500' :
+                          analytics.profile.completionPercent >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${analytics.profile.completionPercent}%` }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 text-xs">
+                      {[
+                        ['Logo', analytics.profile.hasLogo],
+                        ['Card-Foto', analytics.profile.hasCardImage],
+                        ['Beschreibung', analytics.profile.hasDescription],
+                        ['Website', analytics.profile.hasWebsite],
+                        ['Öffnungszeiten', analytics.profile.hasOpeningHours],
+                        ['Zahlungsarten', analytics.profile.hasPaymentMethods],
+                        ['Standort/Geo', analytics.profile.hasLocation],
+                        [`${analytics.profile.servicesCount} Services`, analytics.profile.servicesCount > 0],
+                        [`${analytics.profile.employeesCount} Mitarbeiter`, analytics.profile.employeesCount > 0],
+                      ].map(([label, ok]) => (
+                        <div key={label as string} className="flex items-center gap-1.5">
+                          {ok ? (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-green-600 flex-shrink-0" />
+                          ) : (
+                            <AlertCircle className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" />
+                          )}
+                          <span className={ok ? 'text-gray-700' : 'text-gray-400'}>{label as string}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Activity */}
+                  <div>
+                    <h5 className="text-sm font-semibold text-gray-900 mb-2">Aktivität</h5>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-blue-50 rounded-lg p-3">
+                        <div className="text-xs text-blue-600">Buchungen</div>
+                        <div className="text-xl font-bold text-blue-700">{analytics.activity.totalBookings}</div>
+                        <div className="text-[10px] text-blue-500">{analytics.activity.directBookings} direkt</div>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3">
+                        <div className="text-xs text-green-600">Abgeschlossen</div>
+                        <div className="text-xl font-bold text-green-700">{analytics.activity.completedBookings}</div>
+                        <div className="text-[10px] text-green-500">{analytics.activity.cancellationRate}% Stornorate</div>
+                      </div>
+                      <div className="bg-yellow-50 rounded-lg p-3">
+                        <div className="text-xs text-yellow-700">Bewertungen</div>
+                        <div className="text-xl font-bold text-yellow-700">{analytics.activity.reviewsCount}</div>
+                        <div className="text-[10px] text-yellow-600">
+                          {analytics.activity.averageRating != null ? `Ø ${analytics.activity.averageRating}★` : 'noch keine'}
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-3">
+                        <div className="text-xs text-purple-700">Tage aktiv</div>
+                        <div className="text-xl font-bold text-purple-700">{analytics.workshop.daysSinceRegistration}</div>
+                        <div className="text-[10px] text-purple-600">seit Registrierung</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Finance */}
+                  <div>
+                    <h5 className="text-sm font-semibold text-gray-900 mb-2">Finanzen</h5>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-xs text-gray-600">Umsatz</div>
+                        <div className="text-lg font-bold text-gray-900">{analytics.finance.totalRevenue.toFixed(2)} €</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-xs text-gray-600">Provision</div>
+                        <div className="text-lg font-bold text-gray-900">{analytics.finance.platformCommission.toFixed(2)} €</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-xs text-gray-600">Auszahlung</div>
+                        <div className="text-lg font-bold text-gray-900">{analytics.finance.workshopPayout.toFixed(2)} €</div>
+                      </div>
+                      <div className="bg-gray-50 rounded-lg p-3">
+                        <div className="text-xs text-gray-600">Ø pro Buchung</div>
+                        <div className="text-lg font-bold text-gray-900">{analytics.finance.avgRevenuePerBooking.toFixed(2)} €</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

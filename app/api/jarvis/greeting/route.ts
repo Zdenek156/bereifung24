@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
   // Berlin-Zeit (Server läuft UTC)
   const berlin = new Date(new Date().toLocaleString('en-US', { timeZone: 'Europe/Berlin' }))
   const hour = berlin.getHours()
-  const minutes = berlin.getMinutes().toString().padStart(2, '0')
   const weekday = WEEKDAYS[berlin.getDay()]
   const day = berlin.getDate()
   const month = MONTHS[berlin.getMonth()]
@@ -45,7 +44,11 @@ export async function POST(request: NextRequest) {
   const salutation = 'Sir'
 
   const greeting = timeOfDayGreeting(hour)
-  const timeStr = `${hour}:${minutes} Uhr`
+  // Deutsche Sprechweise: "14 Uhr 30" statt "14:30 Uhr" (TTS liest das natürlicher vor)
+  const minutesNum = berlin.getMinutes()
+  const timeStr = minutesNum === 0
+    ? `${hour} Uhr`
+    : `${hour} Uhr ${minutesNum}`
 
   // Karten-Daten aufbereiten
   const unread = num(stats.unreadEmails)

@@ -3,7 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { getApiSetting } from '@/lib/api-settings'
 
-const FALLBACK_VOICE_ID = 'onwK4e9ZLuTAKqWW03F9' // Daniel — closest to JARVIS tone
+// George — warm, mature British male, closest to the German Iron Man JARVIS dub (Bodo Wolf).
+// Override via API-Setting "JARVIS_ELEVENLABS_VOICE_ID".
+const FALLBACK_VOICE_ID = 'JBFqnCBsd6RMkjVDRZzb'
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions)
@@ -25,7 +27,7 @@ export async function POST(request: NextRequest) {
 
   const [apiKey, voiceId] = await Promise.all([
     getApiSetting('ELEVENLABS_API_KEY'),
-    getApiSetting('ELEVENLABS_VOICE_ID'),
+    getApiSetting('JARVIS_ELEVENLABS_VOICE_ID'),
   ])
 
   if (!apiKey) {
@@ -45,12 +47,13 @@ export async function POST(request: NextRequest) {
           Accept: 'audio/mpeg',
         },
         body: JSON.stringify({
-          text: text.trim().slice(0, 500), // guard against runaway length
+          text: text.trim().slice(0, 1500), // guard against runaway length (Briefing kann ~600-800 Zeichen sein)
           model_id: 'eleven_multilingual_v2',
           voice_settings: {
-            stability: 0.4,
-            similarity_boost: 0.8,
-            style: 0.2,
+            stability: 0.55,
+            similarity_boost: 0.75,
+            style: 0.35,
+            use_speaker_boost: true,
           },
         }),
       }

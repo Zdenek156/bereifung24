@@ -317,6 +317,7 @@ export default function AdminApiSettings() {
             <li>• <strong>GEMINI_API_KEY</strong> - Google Gemini API Key für KI-Reifen-Berater (ca. 0,50€/Monat bei 1000 Beratungen)</li>
             <li>• <strong>ELEVENLABS_API_KEY</strong> - ElevenLabs API Key für KI-Sprachausgabe "Rollo" (Text-to-Speech)</li>
             <li>• <strong>ELEVENLABS_VOICE_ID</strong> - ElevenLabs Voice ID für die Stimme von "Rollo" (Standard: pNInz6obpgDQGcFmaJgB)</li>
+            <li>• <strong>JARVIS_ELEVENLABS_VOICE_ID</strong> - ElevenLabs Voice ID für die Stimme von "Jarvis" (Standard: JBFqnCBsd6RMkjVDRZzb = George)</li>
             <li>• <strong>META_APP_ID</strong> - Meta/Facebook App ID für Social Media Integration</li>
             <li>• <strong>META_APP_SECRET</strong> - Meta/Facebook App Secret für Long-Lived Token Konvertierung</li>
             <li>• <strong>INSTAGRAM_APP_SECRET</strong> - Instagram App-Geheimnis (Instagram Business Login API)</li>

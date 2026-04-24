@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import EmployeeSidebar from '@/components/EmployeeSidebar'
+import JarvisOverlay from '@/components/jarvis/JarvisOverlay'
 
 export default function MitarbeiterLayout({
   children,
@@ -42,6 +43,8 @@ export default function MitarbeiterLayout({
   return (
     <div className="min-h-screen bg-gray-50">
       <EmployeeSidebar />
+      {/* easter egg — type "jarvis" anywhere */}
+      <JarvisOverlay />
       
       {/* Main Content - with left margin for sidebar */}
       <div className="lg:ml-64">

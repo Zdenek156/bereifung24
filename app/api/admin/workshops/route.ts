@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
           select: { googleCalendarId: true, googleAccessToken: true }
         },
         landingPage: {
-          select: { id: true, isActive: true }
+          select: { id: true, isActive: true, slug: true }
         },
         pricingSettings: {
           select: { id: true }
@@ -102,6 +102,7 @@ export async function GET(req: NextRequest) {
       const hasSupplier = (workshop as any).suppliers?.length > 0
       const hasLandingPage = !!(workshop as any).landingPage?.isActive
       const hasLandingPageExists = !!(workshop as any).landingPage
+      const landingPageSlug = (workshop as any).landingPage?.slug || null
       const profileScore = [hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage].filter(Boolean).length
 
       return {
@@ -116,7 +117,7 @@ export async function GET(req: NextRequest) {
         offersCount,
         revenue,
         profileScore,
-        profileDetails: { hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage, hasLandingPageExists },
+        profileDetails: { hasCalendar, hasStripe, hasServices, hasPricing, hasSupplier, hasLandingPage, hasLandingPageExists, landingPageSlug },
         freelancer: workshop.freelancer ? {
           id: workshop.freelancer.id,
           name: `${workshop.freelancer.user.firstName} ${workshop.freelancer.user.lastName}`

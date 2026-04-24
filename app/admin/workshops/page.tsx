@@ -14,6 +14,7 @@ interface ProfileDetails {
   hasSupplier: boolean
   hasLandingPage: boolean
   hasLandingPageExists: boolean
+  landingPageSlug?: string | null
 }
 
 interface Workshop {
@@ -462,6 +463,17 @@ export default function WorkshopManagementPage() {
                       >
                         CRM / Notizen
                       </button>
+                      {workshop.profileDetails?.hasLandingPageExists && workshop.profileDetails?.landingPageSlug && (
+                        <a
+                          href={`/lp/${workshop.profileDetails.landingPageSlug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-4 py-2 rounded-lg font-medium bg-purple-500 text-white hover:bg-purple-600 transition-colors text-center text-sm inline-flex items-center justify-center gap-1.5"
+                          title={`Landing Page öffnen: /lp/${workshop.profileDetails.landingPageSlug}`}
+                        >
+                          ↗ Landing Page
+                        </a>
+                      )}
                       {workshop.profileDetails?.hasLandingPageExists && (
                         <button
                           onClick={() => deleteLandingPage(workshop.id, workshop.companyName)}

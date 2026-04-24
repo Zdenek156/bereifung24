@@ -92,9 +92,14 @@ export async function POST(request: NextRequest) {
 
   let commissionSentence = ''
   if (commissions !== null) {
-    const formatted = commissions.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    // Deutsche Sprechweise: "1234 Euro und 56 Cent" (ohne Tausenderpunkt, da TTS sonst stockt)
+    const euros = Math.floor(commissions)
+    const cents = Math.round((commissions - euros) * 100)
+    const amountSpoken = cents === 0
+      ? `${euros} Euro`
+      : `${euros} Euro und ${cents} Cent`
     commissionSentence = commissions > 0
-      ? `Die Provision für den laufenden Monat beläuft sich auf ${formatted} Euro.`
+      ? `Die Provision für den laufenden Monat beläuft sich auf ${amountSpoken}.`
       : `Im laufenden Monat wurde noch keine Provision verbucht.`
   }
 

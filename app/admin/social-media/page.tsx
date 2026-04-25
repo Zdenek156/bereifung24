@@ -66,6 +66,11 @@ import {
   Upload,
   X,
   Image as ImageIcon,
+  TrendingUp,
+  Lightbulb,
+  Plus,
+  Star,
+  RefreshCw,
 } from 'lucide-react'
 
 // ============================================
@@ -252,6 +257,21 @@ export default function SocialMediaPage() {
   const [showAutomationDialog, setShowAutomationDialog] = useState(false)
   const [editingAutomation, setEditingAutomation] = useState<Automation | null>(null)
 
+  // Trends
+  const [defaultMockupUrl, setDefaultMockupUrl] = useState('')
+  const [favoriteKeywords, setFavoriteKeywords] = useState<string[]>([])
+  const [trendKeywords, setTrendKeywords] = useState<string[]>([])
+  const [trendKeywordInput, setTrendKeywordInput] = useState('')
+  const [trendAudience, setTrendAudience] = useState<'CUSTOMER' | 'WORKSHOP' | 'BOTH'>('BOTH')
+  const [trendStyle, setTrendStyle] = useState<'INFORMATIVE' | 'FUNNY' | 'PROVOCATIVE' | 'STORY' | 'EMOTIONAL'>('INFORMATIVE')
+  const [trendCount, setTrendCount] = useState(3)
+  const [trendInspirations, setTrendInspirations] = useState<{ saisonal: any[]; news: any[]; ki: any[] } | null>(null)
+  const [loadingInspirations, setLoadingInspirations] = useState(false)
+  const [generatingTrendPosts, setGeneratingTrendPosts] = useState(false)
+  const [generatedTrendPosts, setGeneratedTrendPosts] = useState<Array<{ title: string; content: string; hashtags: string }>>([])
+  const [uploadingMockup, setUploadingMockup] = useState(false)
+  const [savingMockup, setSavingMockup] = useState(false)
+
   // Post form
   const [postForm, setPostForm] = useState({
     title: '',
@@ -310,7 +330,168 @@ export default function SocialMediaPage() {
     if (activeTab === 'accounts') fetchAccounts()
     if (activeTab === 'templates') fetchTemplates()
     if (activeTab === 'automations') fetchAutomations()
+    if (activeTab === 'trends') {
+      fetchSettings()
+      if (!trendInspirations) fetchTrendInspirations()
+    }
   }, [activeTab])
+
+  // ============================================
+  // TRENDS
+  // ============================================
+
+  async function fetchSettings() {
+    try {
+      const res = await fetch('/api/admin/social-media/settings')
+      if (res.ok) {
+        const data = await res.json()
+        setDefaultMockupUrl(data.defaultMockupUrl || '')
+        setFavoriteKeywords(Array.isArray(data.favoriteKeywords) ? data.favoriteKeywords : [])
+      }
+    } catch (err) {
+      console.error('fetchSettings', err)
+    }
+  }
+
+  async function fetchTrendInspirations() {
+    setLoadingInspirations(true)
+    try {
+      const res = await fetch('/api/admin/social-media/trends/inspirations')
+      if (res.ok) {
+        const data = await res.json()
+        setTrendInspirations(data)
+      } else {
+        const err = await res.json()
+        alert(err.error || 'Inspirationen konnten nicht geladen werden')
+      }
+    } catch {
+      alert('Inspirationen konnten nicht geladen werden')
+    } finally {
+      setLoadingInspirations(false)
+    }
+  }
+
+  async function handleMockupUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingMockup(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      const res = await fetch('/api/admin/social-media/upload', { method: 'POST', body: formData })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.error || 'Upload fehlgeschlagen')
+        return
+      }
+      const data = await res.json()
+      // Direkt persistieren
+      setSavingMockup(true)
+      const saveRes = await fetch('/api/admin/social-media/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ defaultMockupUrl: data.imageUrl })
+      })
+      if (saveRes.ok) {
+        setDefaultMockupUrl(data.imageUrl)
+      } else {
+        alert('Mockup hochgeladen, Speichern fehlgeschlagen')
+      }
+    } catch {
+      alert('Upload fehlgeschlagen')
+    } finally {
+      setUploadingMockup(false)
+      setSavingMockup(false)
+    }
+  }
+
+  async function handleRemoveMockup() {
+    if (!confirm('Standard-Mockup wirklich entfernen?')) return
+    setSavingMockup(true)
+    try {
+      const res = await fetch('/api/admin/social-media/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ defaultMockupUrl: '' })
+      })
+      if (res.ok) setDefaultMockupUrl('')
+    } finally {
+      setSavingMockup(false)
+    }
+  }
+
+  function addTrendKeyword(kw: string) {
+    const v = kw.trim()
+    if (!v) return
+    if (trendKeywords.includes(v)) return
+    setTrendKeywords([...trendKeywords, v])
+    setTrendKeywordInput('')
+  }
+
+  function removeTrendKeyword(kw: string) {
+    setTrendKeywords(trendKeywords.filter(k => k !== kw))
+  }
+
+  async function toggleFavoriteKeyword(kw: string) {
+    const exists = favoriteKeywords.includes(kw)
+    const next = exists ? favoriteKeywords.filter(k => k !== kw) : [...favoriteKeywords, kw]
+    setFavoriteKeywords(next)
+    try {
+      await fetch('/api/admin/social-media/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ favoriteKeywords: next })
+      })
+    } catch (err) {
+      console.error('toggleFavoriteKeyword', err)
+    }
+  }
+
+  async function handleGenerateTrendPosts() {
+    if (trendKeywords.length === 0) {
+      alert('Bitte mindestens ein Keyword/Trend hinzufügen')
+      return
+    }
+    setGeneratingTrendPosts(true)
+    setGeneratedTrendPosts([])
+    try {
+      const res = await fetch('/api/admin/social-media/trends/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keywords: trendKeywords,
+          audience: trendAudience,
+          style: trendStyle,
+          count: trendCount,
+        })
+      })
+      if (!res.ok) {
+        const err = await res.json()
+        alert(err.error || 'Generierung fehlgeschlagen')
+        return
+      }
+      const data = await res.json()
+      setGeneratedTrendPosts(data.posts || [])
+    } catch {
+      alert('Generierung fehlgeschlagen')
+    } finally {
+      setGeneratingTrendPosts(false)
+    }
+  }
+
+  function takeTrendPostToEditor(p: { title: string; content: string; hashtags: string }) {
+    resetPostForm()
+    setPostForm({
+      title: p.title,
+      content: p.content,
+      hashtags: p.hashtags,
+      imageUrl: defaultMockupUrl || '',
+      postType: 'CUSTOM',
+      scheduledAt: '',
+      accountIds: [],
+    })
+    setShowPostDialog(true)
+  }
 
   async function fetchStats() {
     try {
@@ -755,6 +936,9 @@ export default function SocialMediaPage() {
               <Badge variant="secondary" className="ml-1 text-xs">{stats.posts.total}</Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="trends" className="flex items-center gap-1">
+            <TrendingUp className="h-4 w-4" /> Trends
+          </TabsTrigger>
           <TabsTrigger value="templates" className="flex items-center gap-1">
             <FileText className="h-4 w-4" /> Vorlagen
           </TabsTrigger>
@@ -1018,6 +1202,293 @@ export default function SocialMediaPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ============ TRENDS TAB ============ */}
+        <TabsContent value="trends">
+          <div className="grid gap-4 lg:grid-cols-3">
+            {/* Left/Main: Generator */}
+            <div className="lg:col-span-2 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-pink-500" /> Trend-Generator
+                  </CardTitle>
+                  <CardDescription>
+                    Trage Keywords aus Google Trends oder eigene Themen ein. Die KI erstellt mehrere abwechslungsreiche Posts daraus.
+                    <a
+                      href="https://trends.google.de/trends/explore?geo=DE"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-1 text-blue-600 hover:underline"
+                    >
+                      Google Trends öffnen ↗
+                    </a>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Keyword Input */}
+                  <div>
+                    <Label>Keywords / Trends</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Input
+                        value={trendKeywordInput}
+                        onChange={e => setTrendKeywordInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            addTrendKeyword(trendKeywordInput)
+                          }
+                        }}
+                        placeholder='z.B. "Sommerreifen 2026", "E-Auto Reifenverschleiß"...'
+                      />
+                      <Button onClick={() => addTrendKeyword(trendKeywordInput)} variant="outline">
+                        <Plus className="h-4 w-4 mr-1" /> Hinzufügen
+                      </Button>
+                    </div>
+                    {trendKeywords.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {trendKeywords.map(kw => {
+                          const isFav = favoriteKeywords.includes(kw)
+                          return (
+                            <Badge key={kw} variant="secondary" className="pl-2 pr-1 py-1 gap-1 text-sm">
+                              {kw}
+                              <button
+                                onClick={() => toggleFavoriteKeyword(kw)}
+                                title={isFav ? 'Aus Favoriten entfernen' : 'Zu Favoriten hinzufügen'}
+                                className="ml-1 hover:text-yellow-500"
+                              >
+                                <Star className={`h-3.5 w-3.5 ${isFav ? 'fill-yellow-400 text-yellow-500' : ''}`} />
+                              </button>
+                              <button
+                                onClick={() => removeTrendKeyword(kw)}
+                                className="ml-0.5 hover:text-red-500"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    )}
+                    {favoriteKeywords.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs text-muted-foreground mb-1">⭐ Favoriten (Klick zum Hinzufügen):</p>
+                        <div className="flex flex-wrap gap-1">
+                          {favoriteKeywords.map(kw => (
+                            <Button
+                              key={kw}
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={() => addTrendKeyword(kw)}
+                              disabled={trendKeywords.includes(kw)}
+                            >
+                              {kw}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Audience + Style + Count */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <Label>Zielgruppe</Label>
+                      <Select value={trendAudience} onValueChange={v => setTrendAudience(v as any)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="CUSTOMER">🚗 Endkunden</SelectItem>
+                          <SelectItem value="WORKSHOP">🔧 Werkstätten</SelectItem>
+                          <SelectItem value="BOTH">🤝 Beide</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Stil</Label>
+                      <Select value={trendStyle} onValueChange={v => setTrendStyle(v as any)}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="INFORMATIVE">📋 Sachlich</SelectItem>
+                          <SelectItem value="FUNNY">😄 Humorvoll</SelectItem>
+                          <SelectItem value="PROVOCATIVE">⚡ Provokant</SelectItem>
+                          <SelectItem value="STORY">📖 Story-Telling</SelectItem>
+                          <SelectItem value="EMOTIONAL">❤️ Emotional</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Anzahl Posts</Label>
+                      <Select value={String(trendCount)} onValueChange={v => setTrendCount(parseInt(v, 10))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1">1 Post</SelectItem>
+                          <SelectItem value="2">2 Posts</SelectItem>
+                          <SelectItem value="3">3 Posts</SelectItem>
+                          <SelectItem value="4">4 Posts</SelectItem>
+                          <SelectItem value="5">5 Posts</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleGenerateTrendPosts}
+                    disabled={generatingTrendPosts || trendKeywords.length === 0}
+                    className="w-full"
+                  >
+                    {generatingTrendPosts
+                      ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generiere {trendCount} Beiträge...</>
+                      : <><Sparkles className="h-4 w-4 mr-2" /> {trendCount} Beiträge generieren</>}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Generated Posts */}
+              {generatedTrendPosts.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Generierte Beiträge ({generatedTrendPosts.length})</CardTitle>
+                    <CardDescription>Klicke auf &quot;Übernehmen&quot;, um den Beitrag in den Editor zu laden.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {generatedTrendPosts.map((p, i) => (
+                      <div key={i} className="border rounded-lg p-3 space-y-2 bg-card">
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="font-semibold text-sm">{p.title}</h4>
+                          <Button size="sm" onClick={() => takeTrendPostToEditor(p)}>
+                            <Send className="h-3.5 w-3.5 mr-1" /> Übernehmen
+                          </Button>
+                        </div>
+                        <p className="text-sm whitespace-pre-wrap text-muted-foreground">{p.content}</p>
+                        <p className="text-xs text-blue-600 break-words">{p.hashtags}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {/* Right Sidebar: Mockup + Inspirations */}
+            <div className="space-y-4">
+              {/* Default Mockup */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <ImageIcon className="h-4 w-4" /> Standard-Mockup
+                  </CardTitle>
+                  <CardDescription>Wird automatisch bei generierten Posts eingehängt.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {defaultMockupUrl ? (
+                    <div className="space-y-2">
+                      <img src={defaultMockupUrl} alt="Standard-Mockup" className="w-full rounded-lg border object-cover max-h-48" />
+                      <div className="flex gap-2">
+                        <label className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full" asChild>
+                            <span>
+                              {uploadingMockup
+                                ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                                : <Upload className="h-3.5 w-3.5 mr-1" />}
+                              Ersetzen
+                            </span>
+                          </Button>
+                          <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleMockupUpload} disabled={uploadingMockup || savingMockup} />
+                        </label>
+                        <Button variant="ghost" size="sm" onClick={handleRemoveMockup} disabled={savingMockup}>
+                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-1 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:border-primary hover:bg-primary/5 transition">
+                      {uploadingMockup
+                        ? <Loader2 className="h-5 w-5 animate-spin" />
+                        : <Upload className="h-5 w-5 text-muted-foreground" />}
+                      <span className="text-xs text-center text-muted-foreground">
+                        {uploadingMockup ? 'Wird hochgeladen...' : 'Mockup hochladen (JPG/PNG, max 8MB)'}
+                      </span>
+                      <input type="file" accept="image/jpeg,image/png" className="hidden" onChange={handleMockupUpload} disabled={uploadingMockup} />
+                    </label>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Inspirations */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Lightbulb className="h-4 w-4 text-amber-500" /> KI-Inspiration
+                    </CardTitle>
+                    <CardDescription>Klick = ins Trend-Feld übernehmen</CardDescription>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={fetchTrendInspirations} disabled={loadingInspirations}>
+                    {loadingInspirations
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      : <RefreshCw className="h-3.5 w-3.5" />}
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {!trendInspirations && !loadingInspirations && (
+                    <p className="text-xs text-muted-foreground">Noch keine Inspirationen geladen.</p>
+                  )}
+                  {trendInspirations?.saisonal?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">🌸 Saisonal</p>
+                      <div className="space-y-1">
+                        {trendInspirations.saisonal.slice(0, 6).map((it, i) => (
+                          <button
+                            key={`s-${i}`}
+                            onClick={() => addTrendKeyword(it.title)}
+                            className="block w-full text-left text-xs p-2 rounded hover:bg-muted transition"
+                          >
+                            <span className="font-medium">{it.title}</span>
+                            {it.hint && <span className="block text-muted-foreground text-[10px] mt-0.5">{it.hint}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {trendInspirations?.ki?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">✨ KI-Vorschläge</p>
+                      <div className="space-y-1">
+                        {trendInspirations.ki.map((it, i) => (
+                          <button
+                            key={`k-${i}`}
+                            onClick={() => addTrendKeyword(it.title)}
+                            className="block w-full text-left text-xs p-2 rounded hover:bg-muted transition"
+                          >
+                            <span className="font-medium">{it.title}</span>
+                            {it.hint && <span className="block text-muted-foreground text-[10px] mt-0.5">{it.hint}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {trendInspirations?.news?.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">📰 News-Schlagzeilen</p>
+                      <div className="space-y-1">
+                        {trendInspirations.news.slice(0, 6).map((it, i) => (
+                          <button
+                            key={`n-${i}`}
+                            onClick={() => addTrendKeyword(it.title)}
+                            className="block w-full text-left text-xs p-2 rounded hover:bg-muted transition"
+                          >
+                            <span className="font-medium line-clamp-2">{it.title}</span>
+                            {it.source && <span className="block text-muted-foreground text-[10px] mt-0.5">{it.source}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* ============ TEMPLATES TAB ============ */}

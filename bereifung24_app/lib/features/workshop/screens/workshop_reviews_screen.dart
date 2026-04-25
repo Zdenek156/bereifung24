@@ -18,7 +18,8 @@ class WorkshopReviewsScreen extends ConsumerWidget {
         bottom: false,
         child: reviewsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
+          error: (e, _) =>
+              Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
           data: (state) => RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(workshopReviewsProvider);
@@ -69,7 +70,9 @@ class WorkshopReviewsScreen extends ConsumerWidget {
                                       rating: state.averageRating, size: 18),
                                   const SizedBox(height: 4),
                                   Text(
-                                    S.of(context)!.reviewsCountLabel(state.totalReviews),
+                                    S
+                                        .of(context)!
+                                        .reviewsCountLabel(state.totalReviews),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: isDark
@@ -235,8 +238,9 @@ class _ReviewTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dateStr = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
-        .format(review.createdAt);
+    final dateStr =
+        DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
+            .format(review.createdAt);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),

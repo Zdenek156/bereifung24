@@ -24,7 +24,8 @@ class WorkshopProfileScreen extends ConsumerWidget {
         bottom: false,
         child: profileAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
+          error: (e, _) =>
+              Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
           data: (profile) => ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             children: [
@@ -79,9 +80,11 @@ class WorkshopProfileScreen extends ConsumerWidget {
                   children: [
                     _legalLink(context, 'AGB', '/profile/agb'),
                     _dot(isDark),
-                    _legalLink(context, S.of(context)!.datenschutz, '/profile/datenschutz'),
+                    _legalLink(context, S.of(context)!.datenschutz,
+                        '/profile/datenschutz'),
                     _dot(isDark),
-                    _legalLink(context, S.of(context)!.imprint, '/profile/impressum'),
+                    _legalLink(
+                        context, S.of(context)!.imprint, '/profile/impressum'),
                   ],
                 ),
               ),
@@ -499,7 +502,8 @@ class _VacationSection extends ConsumerWidget {
               Expanded(
                 child: Text(
                   S.of(context)!.vacation,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 15),
                 ),
               ),
               IconButton(
@@ -611,8 +615,8 @@ class _VacationSection extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(S.of(context)!.errorLabel(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(S.of(context)!.errorLabel(e.toString()))));
       }
     }
   }
@@ -650,8 +654,8 @@ class _VacationSection extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(S.of(context)!.errorLabel(e.toString()))));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(S.of(context)!.errorLabel(e.toString()))));
       }
     }
   }
@@ -665,7 +669,8 @@ class _VacationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final dateFormat = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag());
+    final dateFormat =
+        DateFormat.yMd(Localizations.localeOf(context).toLanguageTag());
     final isActive = vacation.isActive;
 
     return Container(
@@ -765,7 +770,8 @@ class _OpeningHoursCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 S.of(context)!.openingHours,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ],
           ),
@@ -849,7 +855,8 @@ class _AppearanceCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Text(
                 S.of(context)!.appearance,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ],
           ),
@@ -950,7 +957,8 @@ class _AppearanceCard extends ConsumerWidget {
                       Icon(
                         Icons.expand_more,
                         size: 16,
-                        color: isDark ? Colors.white54 : const Color(0xFF64748B),
+                        color:
+                            isDark ? Colors.white54 : const Color(0xFF64748B),
                       ),
                     ],
                   ),

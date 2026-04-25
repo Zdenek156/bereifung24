@@ -29,12 +29,14 @@ export interface TrendPostInput {
   style: Style
   count: number
   platform?: string
+  threadsCompatible?: boolean
 }
 
 export interface GeneratedTrendPost {
   title: string
   content: string
   hashtags: string
+  imagePrompt: string
 }
 
 // --------------------------------------------------------------------------
@@ -270,7 +272,7 @@ const STYLE_DESC: Record<Style, string> = {
 }
 
 export async function generateTrendPosts(input: TrendPostInput): Promise<GeneratedTrendPost[]> {
-  const { keywords, audience, style, count, platform } = input
+  const { keywords, audience, style, count, platform, threadsCompatible } = input
 
   if (!keywords.length) throw new Error('Mindestens ein Keyword erforderlich')
 
@@ -287,11 +289,16 @@ export async function generateTrendPosts(input: TrendPostInput): Promise<Generat
 
   const today = new Date().toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 
+  const lengthRule = threadsCompatible
+    ? 'KRITISCH: Text + Hashtags zusammen MAXIMAL 480 Zeichen (Threads-Limit ist 500). Lieber knackig & pointiert als lang. Mind. 60 Wörter.'
+    : 'Text mindestens 150 Wörter, mit Absätzen.'
+
   const prompt = `Du bist der Social-Media-Manager von Bereifung24.de – einer Online-Plattform, die Autofahrer mit Reifenwerkstätten in Deutschland verbindet. Heute ist: ${today}
 
 ZIELGRUPPE: ${AUDIENCE_DESC[audience]}
 STIL: ${STYLE_DESC[style]}
-PLATTFORM: ${platform || 'Facebook/Instagram/LinkedIn'}
+PLATTFORM: ${platform || (threadsCompatible ? 'Threads/Instagram/Facebook (max 500 Zeichen)' : 'Facebook/Instagram/LinkedIn')}
+LÄNGEN-VORGABE: ${lengthRule}
 
 KEYWORDS / TRENDS (vom Marketing-Team aus Google Trends ausgewählt):
 ${keywords.map((k, i) => `${i + 1}. ${k}`).join('\n')}
@@ -305,12 +312,13 @@ ANTWORTE EXAKT IN DIESEM FORMAT (für jeden Post genau dieser Block, getrennt du
 
 ===POST===
 TITEL: [Kurzer, knackiger Titel, max 8 Wörter, mit 1-2 Emojis]
-TEXT: [Vollständiger Post-Text, mindestens 150 Wörter, mit Absätzen, Emojis, professioneller aber freundlicher Ton, klares Call-to-Action am Ende]
-HASHTAGS: [Mindestens 12 themenrelevante Hashtags, mit # beginnend, durch Leerzeichen getrennt. Immer dabei: #Bereifung24 #Reifen]
+TEXT: [Post-Text gemäß Längen-Vorgabe, mit Emojis, professioneller aber freundlicher Ton, klares Call-to-Action am Ende]
+HASHTAGS: [Mindestens 10 themenrelevante Hashtags, mit # beginnend, durch Leerzeichen getrennt. Immer dabei: #Bereifung24 #Reifen]
+BILD_PROMPT: [Detaillierter englischer Prompt für externe Bild-KI (z.B. Midjourney, DALL·E, Stable Diffusion). Beschreibe Szene, Kamera-Perspektive, Beleuchtung, Stil. z.B. "photorealistic, 4k, golden hour, German auto workshop, mechanic mounting summer tire on BMW, shallow depth of field, professional automotive photography, clean modern look"]
 ===POST===
 [nächster Post]
 
-Schreibe alles auf Deutsch. Erstelle GENAU ${count} Posts. Sei wirklich abwechslungsreich – verschiedene Tonality-Variationen innerhalb des gewählten Stils.`
+Schreibe Texte und Hashtags auf Deutsch. BILD_PROMPT auf Englisch (bessere KI-Ergebnisse). Erstelle GENAU ${count} Posts. Sei wirklich abwechslungsreich – verschiedene Tonality-Variationen innerhalb des gewählten Stils.`
 
   const text = await callGemini(prompt, 4096)
 
@@ -319,12 +327,14 @@ Schreibe alles auf Deutsch. Erstelle GENAU ${count} Posts. Sei wirklich abwechsl
 
   const posts: GeneratedTrendPost[] = blocks.map(block => {
     const titleMatch = block.match(/TITEL:\s*(.+?)(?:\n|TEXT:)/si)
-    const textMatch = block.match(/TEXT:\s*([\s\S]+?)(?:HASHTAGS:|$)/si)
-    const hashMatch = block.match(/HASHTAGS:\s*([\s\S]+?)$/si)
+    const textMatch = block.match(/TEXT:\s*([\s\S]+?)(?:HASHTAGS:|BILD_PROMPT:|$)/si)
+    const hashMatch = block.match(/HASHTAGS:\s*([\s\S]+?)(?:BILD_PROMPT:|$)/si)
+    const imgMatch = block.match(/BILD_PROMPT:\s*([\s\S]+?)$/si)
 
     const title = titleMatch?.[1]?.trim() || ''
     let content = textMatch?.[1]?.trim() || ''
     const hashLine = hashMatch?.[1]?.trim() || ''
+    const imagePrompt = imgMatch?.[1]?.trim().replace(/^\[|\]$/g, '') || ''
 
     const hashtagsArray = hashLine.match(/#[\wäöüÄÖÜß]+/g) || []
     const hashtags = hashtagsArray.length > 0
@@ -334,7 +344,7 @@ Schreibe alles auf Deutsch. Erstelle GENAU ${count} Posts. Sei wirklich abwechsl
     // Hashtags aus content entfernen
     content = content.replace(/#[\wäöüÄÖÜß]+/g, '').replace(/\n{3,}/g, '\n\n').trim()
 
-    return { title, content, hashtags }
+    return { title, content, hashtags, imagePrompt }
   }).filter(p => p.content.length > 20)
 
   if (posts.length === 0) {

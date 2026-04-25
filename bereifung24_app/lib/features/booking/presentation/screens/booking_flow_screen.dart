@@ -246,7 +246,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
       appBar: _currentStep < 5
           ? AppBar(
               title: Text(_currentStep < 4
-              ? S.of(context)!.booking
+                  ? S.of(context)!.booking
                   : S.of(context)!.payment),
               leading: IconButton(
                 icon: const Icon(Icons.close),
@@ -332,9 +332,9 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                               )
                             : Text(
                                 _currentStep == 4
-                                ? S.of(context)!.payButtonLabel
+                                    ? S.of(context)!.payButtonLabel
                                     : _currentStep == 3
-                                  ? S.of(context)!.bookNow
+                                        ? S.of(context)!.bookNow
                                         : S.of(context)!.next,
                                 style: const TextStyle(fontSize: 16),
                               ),
@@ -599,7 +599,7 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
           leading:
               const Icon(Icons.calendar_today, color: B24Colors.primaryBlue),
           title: Text(_selectedDate != null
-            ? _formatDate(context, _selectedDate!)
+              ? _formatDate(context, _selectedDate!)
               : S.of(context)!.selectDate),
           trailing: const Icon(Icons.chevron_right),
           shape: RoundedRectangleBorder(
@@ -677,25 +677,26 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
                 ?.copyWith(fontWeight: FontWeight.bold)),
         const SizedBox(height: 24),
         _SummaryRow(
-          label: S.of(context)!.service,
+            label: S.of(context)!.service,
             value: _serviceLabel(context, _serviceType)),
         _SummaryRow(
-          label: S.of(context)!.vehicleType,
+            label: S.of(context)!.vehicleType,
             value: _vehicleType == 'CAR'
-            ? S.of(context)!.vehicleTypeCar
+                ? S.of(context)!.vehicleTypeCar
                 : _vehicleType == 'MOTORCYCLE'
-              ? S.of(context)!.vehicleTypeMotorcycle
-              : S.of(context)!.vehicleTypeTrailer),
+                    ? S.of(context)!.vehicleTypeMotorcycle
+                    : S.of(context)!.vehicleTypeTrailer),
         if (_selectedVehicle != null)
           _SummaryRow(
-            label: S.of(context)!.vehicle,
+              label: S.of(context)!.vehicle,
               value: '${_selectedVehicle!.brand} ${_selectedVehicle!.model}'),
         _SummaryRow(label: S.of(context)!.licensePlate, value: _licensePlate),
         if (_tireSize.isNotEmpty)
           _SummaryRow(label: S.of(context)!.tireSizeOptional, value: _tireSize),
         _SummaryRow(
           label: S.of(context)!.appointment,
-          value: '${_formatDate(context, _selectedDate!)} · ${S.of(context)!.timeLabel(_selectedTime ?? '')}',
+          value:
+              '${_formatDate(context, _selectedDate!)} · ${S.of(context)!.timeLabel(_selectedTime ?? '')}',
         ),
         const SizedBox(height: 24),
         TextField(
@@ -808,26 +809,26 @@ class _BookingFlowScreenState extends ConsumerState<BookingFlowScreen> {
             child: Icon(Icons.check, size: 64, color: Colors.green.shade700),
           ),
           const SizedBox(height: 24),
-            Text(S.of(context)!.bookingSuccessful,
+          Text(S.of(context)!.bookingSuccessful,
               style: Theme.of(context)
                   .textTheme
                   .headlineSmall
                   ?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
           Text(
-              S.of(context)!.appointmentConfirmed,
+            S.of(context)!.appointmentConfirmed,
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[600]),
           ),
           const SizedBox(height: 32),
           FilledButton(
             onPressed: () => context.go('/bookings'),
-              child: Text(S.of(context)!.goToBookings),
+            child: Text(S.of(context)!.goToBookings),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: () => context.go('/home'),
-              child: Text(S.of(context)!.goToHome),
+            child: Text(S.of(context)!.goToHome),
           ),
         ],
       ),

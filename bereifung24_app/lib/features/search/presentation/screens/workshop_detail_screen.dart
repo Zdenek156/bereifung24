@@ -1277,8 +1277,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                         prefBrand,
                                         prefModel,
                                         effectiveService == 'MOTORCYCLE_TIRE'
-                                        ? S.of(context)!.frontWheel
-                                        : S.of(context)!.frontAxleFull),
+                                            ? S.of(context)!.frontWheel
+                                            : S.of(context)!.frontAxleFull),
                                   if (hasFrontPref && hasRearPref)
                                     const SizedBox(height: 8),
                                   if (hasRearPref)
@@ -1287,8 +1287,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                         prefRearBrand,
                                         prefRearModel,
                                         effectiveService == 'MOTORCYCLE_TIRE'
-                                        ? S.of(context)!.rearWheel
-                                        : S.of(context)!.rearAxleFull),
+                                            ? S.of(context)!.rearWheel
+                                            : S.of(context)!.rearAxleFull),
                                 ] else ...[
                                   // Single tire
                                   buildTireRow(
@@ -1319,8 +1319,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 workshopId: widget.workshopId,
                                 axleFilter: 'front',
                                 axleLabel: effectiveService == 'MOTORCYCLE_TIRE'
-                                  ? S.of(context)!.frontWheel
-                                  : '${S.of(context)!.frontAxleFull} (${S.of(context)!.frontAxle})',
+                                    ? S.of(context)!.frontWheel
+                                    : '${S.of(context)!.frontAxleFull} (${S.of(context)!.frontAxle})',
                                 preselected: _tireAutoSelected,
                                 isMotorcycle:
                                     effectiveService == 'MOTORCYCLE_TIRE',
@@ -1330,8 +1330,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 workshopId: widget.workshopId,
                                 axleFilter: 'rear',
                                 axleLabel: effectiveService == 'MOTORCYCLE_TIRE'
-                                  ? S.of(context)!.rearWheel
-                                  : '${S.of(context)!.rearAxleFull} (${S.of(context)!.rearAxle})',
+                                    ? S.of(context)!.rearWheel
+                                    : '${S.of(context)!.rearAxleFull} (${S.of(context)!.rearAxle})',
                                 preselected: _tireAutoSelected,
                                 isMotorcycle:
                                     effectiveService == 'MOTORCYCLE_TIRE',

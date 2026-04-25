@@ -181,7 +181,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return S.of(context)!.requiredField;
+                    if (v == null || v.isEmpty)
+                      return S.of(context)!.requiredField;
                     return null;
                   },
                 ),
@@ -615,8 +616,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
                         labelText: '${S.of(context)!.firstName} *'),
-                    validator: (v) =>
-                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? S.of(context)!.requiredField
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -624,8 +626,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     textCapitalization: TextCapitalization.words,
                     decoration: InputDecoration(
                         labelText: '${S.of(context)!.lastName} *'),
-                    validator: (v) =>
-                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? S.of(context)!.requiredField
+                        : null,
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -646,8 +649,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       labelText: S.of(context)!.street,
                       prefixIcon: Icon(Icons.home_outlined),
                     ),
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? S.of(context)!.requiredField
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   Row(

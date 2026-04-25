@@ -162,8 +162,8 @@ class WorkshopBooking {
       id: json['id']?.toString() ?? '',
       appointmentDate:
           (json['appointmentDate'] ?? json['date'] ?? '').toString(),
-      appointmentTime: json['appointmentTime']?.toString() ??
-          json['time']?.toString(),
+      appointmentTime:
+          json['appointmentTime']?.toString() ?? json['time']?.toString(),
       estimatedDuration:
           (json['estimatedDuration'] ?? json['durationMinutes'] ?? 60) as int,
       status: json['status']?.toString() ?? '',

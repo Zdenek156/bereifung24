@@ -167,8 +167,7 @@ class StripeService {
           .presentPaymentSheet()
           .timeout(const Duration(seconds: 120), onTimeout: () {
         RemoteLogger.error('stripe', 'step 3: TIMEOUT after 120s');
-        throw Exception(
-            'Payment took too long. Please try again.');
+        throw Exception('Payment took too long. Please try again.');
       });
       await RemoteLogger.log(
           'stripe', 'step 3: presentPaymentSheet DONE — payment succeeded');

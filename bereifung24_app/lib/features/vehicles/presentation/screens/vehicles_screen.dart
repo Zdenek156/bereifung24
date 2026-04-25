@@ -399,8 +399,8 @@ class _VehicleCard extends ConsumerWidget {
     );
   }
 
-  Widget _tireSection(
-      BuildContext context, String emoji, String label, TireSpec spec, bool isDark) {
+  Widget _tireSection(BuildContext context, String emoji, String label,
+      TireSpec spec, bool isDark) {
     final front = _formatSpec(spec);
     final hasRear = spec.hasDifferentSizes && spec.rearWidth != null;
     final rear = hasRear

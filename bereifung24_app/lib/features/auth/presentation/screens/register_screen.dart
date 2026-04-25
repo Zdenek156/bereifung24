@@ -111,7 +111,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error ?? S.of(context)!.googleRegisterFailed)),
+            SnackBar(
+                content: Text(error ?? S.of(context)!.googleRegisterFailed)),
           );
         }
         return;
@@ -191,7 +192,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         if (mounted) {
           final error = ref.read(authStateProvider).error;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(error ?? S.of(context)!.appleRegisterFailed)),
+            SnackBar(
+                content: Text(error ?? S.of(context)!.appleRegisterFailed)),
           );
         }
         return;
@@ -317,19 +319,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   TextFormField(
                     controller: firstNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration:
-                        InputDecoration(labelText: '${S.of(context)!.firstName} *'),
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                    decoration: InputDecoration(
+                        labelText: '${S.of(context)!.firstName} *'),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? S.of(context)!.requiredField
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: lastNameCtrl,
                     textCapitalization: TextCapitalization.words,
-                    decoration:
-                        InputDecoration(labelText: '${S.of(context)!.lastName} *'),
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                    decoration: InputDecoration(
+                        labelText: '${S.of(context)!.lastName} *'),
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? S.of(context)!.requiredField
+                        : null,
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -350,8 +354,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       labelText: S.of(context)!.street,
                       prefixIcon: const Icon(Icons.home_outlined),
                     ),
-                    validator: (v) =>
-                        v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                    validator: (v) => v == null || v.trim().isEmpty
+                        ? S.of(context)!.requiredField
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -379,7 +384,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         child: TextFormField(
                           controller: cityCtrl,
                           textCapitalization: TextCapitalization.words,
-                          decoration: InputDecoration(labelText: S.of(context)!.city),
+                          decoration:
+                              InputDecoration(labelText: S.of(context)!.city),
                           validator: (v) => v == null || v.trim().isEmpty
                               ? S.of(context)!.requiredField
                               : null,
@@ -573,7 +579,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         decoration: InputDecoration(
                             labelText: S.of(context)!.firstName),
                         validator: (v) => v == null || v.trim().isEmpty
-                          ? S.of(context)!.requiredField
+                            ? S.of(context)!.requiredField
                             : null,
                       ),
                     ),
@@ -585,7 +591,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         decoration:
                             InputDecoration(labelText: S.of(context)!.lastName),
                         validator: (v) => v == null || v.trim().isEmpty
-                          ? S.of(context)!.requiredField
+                            ? S.of(context)!.requiredField
                             : null,
                       ),
                     ),
@@ -669,8 +675,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     labelText: S.of(context)!.street,
                     prefixIcon: const Icon(Icons.home_outlined),
                   ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? S.of(context)!.requiredField : null,
+                  validator: (v) => v == null || v.trim().isEmpty
+                      ? S.of(context)!.requiredField
+                      : null,
                 ),
 
                 const SizedBox(height: 16),
@@ -687,7 +694,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         validator: (v) {
                           if (v == null || v.trim().isEmpty)
                             return S.of(context)!.requiredField;
-                          if (v.trim().length != 5) return S.of(context)!.requiredField;
+                          if (v.trim().length != 5)
+                            return S.of(context)!.requiredField;
                           return null;
                         },
                       ),
@@ -724,7 +732,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return S.of(context)!.requiredField;
+                    if (v == null || v.isEmpty)
+                      return S.of(context)!.requiredField;
                     if (v.length < 8) return S.of(context)!.requiredField;
                     return null;
                   },

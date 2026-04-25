@@ -268,7 +268,9 @@ export default function SocialMediaPage() {
   const [trendInspirations, setTrendInspirations] = useState<{ saisonal: any[]; news: any[]; ki: any[] } | null>(null)
   const [loadingInspirations, setLoadingInspirations] = useState(false)
   const [generatingTrendPosts, setGeneratingTrendPosts] = useState(false)
-  const [generatedTrendPosts, setGeneratedTrendPosts] = useState<Array<{ title: string; content: string; hashtags: string }>>([])
+  const [generatedTrendPosts, setGeneratedTrendPosts] = useState<Array<{ title: string; content: string; hashtags: string; imagePrompt: string }>>([])
+  const [threadsCompatible, setThreadsCompatible] = useState(false)
+  const [copiedPromptIdx, setCopiedPromptIdx] = useState<number | null>(null)
   const [uploadingMockup, setUploadingMockup] = useState(false)
   const [savingMockup, setSavingMockup] = useState(false)
 
@@ -463,6 +465,7 @@ export default function SocialMediaPage() {
           audience: trendAudience,
           style: trendStyle,
           count: trendCount,
+          threadsCompatible,
         })
       })
       if (!res.ok) {
@@ -479,7 +482,7 @@ export default function SocialMediaPage() {
     }
   }
 
-  function takeTrendPostToEditor(p: { title: string; content: string; hashtags: string }) {
+  function takeTrendPostToEditor(p: { title: string; content: string; hashtags: string; imagePrompt: string }) {
     resetPostForm()
     setPostForm({
       title: p.title,
@@ -491,6 +494,16 @@ export default function SocialMediaPage() {
       accountIds: [],
     })
     setShowPostDialog(true)
+  }
+
+  async function copyImagePrompt(prompt: string, idx: number) {
+    try {
+      await navigator.clipboard.writeText(prompt)
+      setCopiedPromptIdx(idx)
+      setTimeout(() => setCopiedPromptIdx(null), 2000)
+    } catch {
+      alert('Kopieren fehlgeschlagen')
+    }
   }
 
   async function fetchStats() {
@@ -555,6 +568,23 @@ export default function SocialMediaPage() {
   // ============================================
 
   async function handleSavePost() {
+    // Block Threads posting if total length > 500
+    const threadsAccountIds = accounts
+      .filter(a => a.platform === 'THREADS' && postForm.accountIds.includes(a.id))
+      .map(a => a.id)
+    if (threadsAccountIds.length > 0) {
+      const totalLength = postForm.content.length + (postForm.hashtags ? postForm.hashtags.length + 2 : 0)
+      if (totalLength > 500) {
+        alert(
+          `❌ Beitrag zu lang für Threads (${totalLength}/500 Zeichen).\n\n` +
+          `Bitte entweder:\n` +
+          `• Text & Hashtags kürzen, oder\n` +
+          `• Threads-Account aus den Plattformen entfernen.`
+        )
+        return
+      }
+    }
+
     const method = editingPost ? 'PUT' : 'POST'
     const url = editingPost
       ? `/api/admin/social-media/posts/${editingPost.id}`
@@ -1342,6 +1372,24 @@ export default function SocialMediaPage() {
                       ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generiere {trendCount} Beiträge...</>
                       : <><Sparkles className="h-4 w-4 mr-2" /> {trendCount} Beiträge generieren</>}
                   </Button>
+
+                  {/* Threads-Compatible Toggle */}
+                  <label className="flex items-start gap-2 p-3 rounded-lg border cursor-pointer hover:bg-muted/50">
+                    <input
+                      type="checkbox"
+                      checked={threadsCompatible}
+                      onChange={e => setThreadsCompatible(e.target.checked)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium flex items-center gap-1">
+                        <AtSign className="h-3.5 w-3.5" /> Threads-kompatibel (max 500 Zeichen)
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Erzeugt kurze Beiträge die auch auf Threads gepostet werden können. Ohne Haken: längere Beiträge – dann aber kein Threads-Posting möglich.
+                      </p>
+                    </div>
+                  </label>
                 </CardContent>
               </Card>
 
@@ -1353,18 +1401,64 @@ export default function SocialMediaPage() {
                     <CardDescription>Klicke auf &quot;Übernehmen&quot;, um den Beitrag in den Editor zu laden.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {generatedTrendPosts.map((p, i) => (
-                      <div key={i} className="border rounded-lg p-3 space-y-2 bg-card">
-                        <div className="flex items-start justify-between gap-2">
-                          <h4 className="font-semibold text-sm">{p.title}</h4>
-                          <Button size="sm" onClick={() => takeTrendPostToEditor(p)}>
-                            <Send className="h-3.5 w-3.5 mr-1" /> Übernehmen
-                          </Button>
+                    {generatedTrendPosts.map((p, i) => {
+                      const totalLen = p.content.length + (p.hashtags ? p.hashtags.length + 2 : 0)
+                      const overThreads = totalLen > 500
+                      return (
+                        <div key={i} className="border rounded-lg p-3 space-y-2 bg-card">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-semibold text-sm">{p.title}</h4>
+                            <Button size="sm" onClick={() => takeTrendPostToEditor(p)}>
+                              <Send className="h-3.5 w-3.5 mr-1" /> Übernehmen
+                            </Button>
+                          </div>
+                          <p className="text-sm whitespace-pre-wrap text-muted-foreground">{p.content}</p>
+                          <p className="text-xs text-blue-600 break-words">{p.hashtags}</p>
+
+                          {/* Char count */}
+                          <div className="flex items-center gap-2 text-xs flex-wrap">
+                            <Badge variant="outline" className="font-mono">
+                              Text: {p.content.length}
+                            </Badge>
+                            <Badge variant="outline" className="font-mono">
+                              Hashtags: {p.hashtags.length}
+                            </Badge>
+                            <Badge
+                              variant={overThreads ? 'destructive' : 'secondary'}
+                              className="font-mono"
+                              title="Gesamt-Zeichen (Text + Hashtags)"
+                            >
+                              <AtSign className="h-3 w-3 mr-1" />
+                              {totalLen} / 500 {overThreads ? '— zu lang für Threads' : '— Threads OK'}
+                            </Badge>
+                          </div>
+
+                          {/* Image Prompt */}
+                          {p.imagePrompt && (
+                            <div className="mt-2 p-2 rounded bg-muted/50 border-l-2 border-purple-400">
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <p className="text-xs font-semibold flex items-center gap-1">
+                                  <ImageIcon className="h-3 w-3 text-purple-500" />
+                                  Bild-Prompt (für Midjourney / DALL·E / Stable Diffusion)
+                                </p>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={() => copyImagePrompt(p.imagePrompt, i)}
+                                >
+                                  {copiedPromptIdx === i ? <CheckCircle2 className="h-3 w-3 mr-1 text-green-500" /> : null}
+                                  {copiedPromptIdx === i ? 'Kopiert!' : 'Kopieren'}
+                                </Button>
+                              </div>
+                              <p className="text-xs text-muted-foreground font-mono whitespace-pre-wrap leading-relaxed">
+                                {p.imagePrompt}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <p className="text-sm whitespace-pre-wrap text-muted-foreground">{p.content}</p>
-                        <p className="text-xs text-blue-600 break-words">{p.hashtags}</p>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </CardContent>
                 </Card>
               )}

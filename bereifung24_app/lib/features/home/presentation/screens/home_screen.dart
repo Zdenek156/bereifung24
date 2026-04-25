@@ -542,9 +542,9 @@ class _NextAppointmentCard extends ConsumerWidget {
       if (upcoming.isEmpty) return const SizedBox.shrink();
 
       final next = upcoming.first;
-        final localeTag = Localizations.localeOf(context).toLanguageTag();
-        final dateStr =
-          DateFormat('EEE, d. MMM yyyy', localeTag).format(next.appointmentDate);
+      final localeTag = Localizations.localeOf(context).toLanguageTag();
+      final dateStr = DateFormat('EEE, d. MMM yyyy', localeTag)
+          .format(next.appointmentDate);
       final timeStr = next.appointmentTime ?? '';
       final today = DateTime(now.year, now.month, now.day);
       final apptDay = DateTime(next.appointmentDate.year,
@@ -1078,8 +1078,7 @@ class _ServicesGrid extends ConsumerWidget {
                     service: s,
                     isDisabled: isTrailer &&
                         !_trailerAllowedServices.contains(s.serviceType),
-                    disabledMessage:
-                        S.of(context)!.trailerServiceOnly,
+                    disabledMessage: S.of(context)!.trailerServiceOnly,
                   ),
                 ))
             .toList(),
@@ -1107,7 +1106,10 @@ class _ServiceTile extends StatelessWidget {
   final bool isTablet;
   final String? disabledMessage;
   const _ServiceTile(
-      {required this.service, this.isDisabled = false, this.isTablet = false, this.disabledMessage});
+      {required this.service,
+      this.isDisabled = false,
+      this.isTablet = false,
+      this.disabledMessage});
 
   @override
   Widget build(BuildContext context) {
@@ -1196,7 +1198,8 @@ class _ServiceTile extends StatelessWidget {
                     ),
                   const SizedBox(height: 8),
                   Text(
-                    _getLocalizedServiceLabel(context, service.serviceType) ?? service.name,
+                    _getLocalizedServiceLabel(context, service.serviceType) ??
+                        service.name,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 11,

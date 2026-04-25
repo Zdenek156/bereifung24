@@ -97,8 +97,7 @@ Future<WorkshopStats?> _buildStatsFromAppointments(String period) async {
   for (final entry in list) {
     if (entry is! Map) continue;
     try {
-      bookings.add(
-          WorkshopBooking.fromJson(Map<String, dynamic>.from(entry)));
+      bookings.add(WorkshopBooking.fromJson(Map<String, dynamic>.from(entry)));
     } catch (e) {
       failures++;
       // ignore: avoid_print
@@ -121,7 +120,8 @@ Future<WorkshopStats?> _buildStatsFromAppointments(String period) async {
     if (date == null) return false;
     return _isSameLocalDay(date, today) && b.status != 'CANCELLED';
   }).toList()
-    ..sort((a, b) => (a.appointmentTime ?? '').compareTo(b.appointmentTime ?? ''));
+    ..sort(
+        (a, b) => (a.appointmentTime ?? '').compareTo(b.appointmentTime ?? ''));
 
   final upcoming = bookings.where((b) {
     final date = _parseAppointmentDate(b.appointmentDate);
@@ -137,8 +137,8 @@ Future<WorkshopStats?> _buildStatsFromAppointments(String period) async {
     return inPeriod && billable && (b.totalPrice ?? 0) > 0;
   }).toList();
 
-  final revenueTotal = revenueBookings.fold<double>(
-      0, (sum, b) => sum + (b.totalPrice ?? 0));
+  final revenueTotal =
+      revenueBookings.fold<double>(0, (sum, b) => sum + (b.totalPrice ?? 0));
 
   final todaysList = activeToday
       .take(10)
@@ -209,8 +209,7 @@ WorkshopStats _mergeStats(WorkshopStats backend, WorkshopStats? fallback) {
     todaysBookings: backend.todaysBookings + fallback.todaysBookings,
     upcomingBookings: backend.upcomingBookings + fallback.upcomingBookings,
     revenue7Days: backend.revenue7Days + fallback.revenue7Days,
-    revenue7DaysCount:
-        backend.revenue7DaysCount + fallback.revenue7DaysCount,
+    revenue7DaysCount: backend.revenue7DaysCount + fallback.revenue7DaysCount,
     averageRating: backend.averageRating,
     totalReviews: backend.totalReviews,
     todaysBookingsList: mergedTodaysList,
@@ -222,7 +221,8 @@ final workshopStatsProvider =
     FutureProvider.autoDispose<WorkshopStats>((ref) async {
   try {
     final response = await ApiClient().dio.get('/workshop/dashboard-stats');
-    final stats = WorkshopStats.fromJson(_extractMapFromResponse(response.data));
+    final stats =
+        WorkshopStats.fromJson(_extractMapFromResponse(response.data));
     final fallback = await _safeBuildStatsFromAppointments('7d');
     return _mergeStats(stats, fallback);
   } catch (_) {
@@ -239,7 +239,8 @@ final workshopStatsPeriodProvider = FutureProvider.autoDispose
       '/workshop/dashboard-stats',
       queryParameters: {'period': period},
     );
-    final stats = WorkshopStats.fromJson(_extractMapFromResponse(response.data));
+    final stats =
+        WorkshopStats.fromJson(_extractMapFromResponse(response.data));
     // ignore: avoid_print
     print(
         '[DASH] backend stats today=${stats.todaysBookings} upcoming=${stats.upcomingBookings} revenue=${stats.revenue7Days}');
@@ -282,9 +283,8 @@ final workshopDirectBookingsProvider = FutureProvider.autoDispose
     .family<List<WorkshopBooking>, String?>((ref, status) async {
   final params = <String, String>{};
   if (status != null && status != 'all') params['status'] = status;
-  final response = await ApiClient()
-      .dio
-      .get('/workshop/bookings', queryParameters: params);
+  final response =
+      await ApiClient().dio.get('/workshop/bookings', queryParameters: params);
   final list = _extractListFromResponse(response.data,
       keys: const ['bookings', 'appointments', 'data']);
   return list.map((e) => WorkshopBooking.fromJson(e)).toList();

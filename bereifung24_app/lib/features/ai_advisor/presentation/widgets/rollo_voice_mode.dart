@@ -489,8 +489,8 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
                   onPressed: () =>
                       widget.onTireSearch?.call(widget.selectedTire),
                   icon: const Icon(Icons.search, size: 16),
-                  label:
-                    Text(S.of(context)!.findWorkshop, style: const TextStyle(fontSize: 13)),
+                  label: Text(S.of(context)!.findWorkshop,
+                      style: const TextStyle(fontSize: 13)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: B24Colors.primaryBlue,
                     foregroundColor: Colors.white,
@@ -513,11 +513,11 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
     final rearTires =
         widget.recommendedTires!.where((t) => t.axle == 'rear').toList();
     final frontLabel = widget.isMotorcycle
-      ? S.of(context)!.frontWheel
-      : S.of(context)!.frontAxleFull;
+        ? S.of(context)!.frontWheel
+        : S.of(context)!.frontAxleFull;
     final rearLabel = widget.isMotorcycle
-      ? S.of(context)!.rearWheel
-      : S.of(context)!.rearAxleFull;
+        ? S.of(context)!.rearWheel
+        : S.of(context)!.rearAxleFull;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -602,8 +602,8 @@ class _RolloVoiceModeState extends State<RolloVoiceMode>
                 child: ElevatedButton.icon(
                   onPressed: () => widget.onTireSearch?.call(null),
                   icon: const Icon(Icons.search, size: 16),
-                  label:
-                      Text(S.of(context)!.findWorkshop, style: const TextStyle(fontSize: 13)),
+                  label: Text(S.of(context)!.findWorkshop,
+                      style: const TextStyle(fontSize: 13)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: B24Colors.primaryBlue,
                     foregroundColor: Colors.white,

@@ -3977,11 +3977,15 @@ class _WorkshopCard extends ConsumerWidget {
                                   ),
                                   child: Text(
                                     tireLabel == 'Günstigster'
-                                      ? S.of(context)!.categoryCheapestBadge
+                                        ? S.of(context)!.categoryCheapestBadge
                                         : tireLabel == 'Testsieger'
-                                        ? S.of(context)!.categoryPremiumBadge
+                                            ? S
+                                                .of(context)!
+                                                .categoryPremiumBadge
                                             : tireLabel == 'Beliebt'
-                                          ? S.of(context)!.categoryBestBadge
+                                                ? S
+                                                    .of(context)!
+                                                    .categoryBestBadge
                                                 : tireLabel,
                                     style: const TextStyle(
                                       fontSize: 10,

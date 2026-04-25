@@ -92,7 +92,8 @@ class _WorkshopCalendarScreenState
                     _focusedDay = focusedDay;
                   },
                   availableCalendarFormats: {
-                    CalendarFormat.month: _calendarFormatLabel(context, 'month'),
+                    CalendarFormat.month:
+                        _calendarFormatLabel(context, 'month'),
                     CalendarFormat.twoWeeks:
                         _calendarFormatLabel(context, 'twoWeeks'),
                     CalendarFormat.week: _calendarFormatLabel(context, 'week'),
@@ -356,7 +357,8 @@ class _WorkshopCalendarScreenState
     for (final b in bookings) {
       final d = DateTime.tryParse(b.appointmentDate);
       if (d == null) continue;
-      final localDay = DateTime(d.toLocal().year, d.toLocal().month, d.toLocal().day);
+      final localDay =
+          DateTime(d.toLocal().year, d.toLocal().month, d.toLocal().day);
       final key = _dayKey(localDay);
       map.putIfAbsent(key, () => []).add(b);
     }
@@ -395,8 +397,9 @@ class _WorkshopCalendarScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final statusColor = _statusColor(b.status);
     final isDe = Localizations.localeOf(context).languageCode == 'de';
-    final dateStr = DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
-        .format(DateTime.tryParse(b.appointmentDate) ?? DateTime.now());
+    final dateStr =
+        DateFormat.yMd(Localizations.localeOf(context).toLanguageTag())
+            .format(DateTime.tryParse(b.appointmentDate) ?? DateTime.now());
 
     showModalBottomSheet(
       context: context,
@@ -678,13 +681,16 @@ class _WorkshopCalendarScreenState
       return deLabels[key] ?? serviceType ?? 'Service';
     }
     return switch (key) {
-      'WHEEL_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
+      'WHEEL_CHANGE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
       'TIRE_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceTireChange),
       'TIRE_REPAIR' => S.of(context)!.foreignObjectRepair,
       'MOTORCYCLE_TIRE' =>
         _normalizeServiceLabel(S.of(context)!.serviceMotorcycleTire),
-      'ALIGNMENT_BOTH' => _normalizeServiceLabel(S.of(context)!.serviceAlignment),
-      'CLIMATE_SERVICE' => _normalizeServiceLabel(S.of(context)!.serviceClimate),
+      'ALIGNMENT_BOTH' =>
+        _normalizeServiceLabel(S.of(context)!.serviceAlignment),
+      'CLIMATE_SERVICE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceClimate),
       _ => serviceType ?? 'Service',
     };
   }
@@ -875,13 +881,16 @@ class _BookingCard extends StatelessWidget {
       return deLabels[key] ?? serviceType ?? 'Service';
     }
     return switch (key) {
-      'WHEEL_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
+      'WHEEL_CHANGE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
       'TIRE_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceTireChange),
       'TIRE_REPAIR' => S.of(context)!.foreignObjectRepair,
       'MOTORCYCLE_TIRE' =>
         _normalizeServiceLabel(S.of(context)!.serviceMotorcycleTire),
-      'ALIGNMENT_BOTH' => _normalizeServiceLabel(S.of(context)!.serviceAlignment),
-      'CLIMATE_SERVICE' => _normalizeServiceLabel(S.of(context)!.serviceClimate),
+      'ALIGNMENT_BOTH' =>
+        _normalizeServiceLabel(S.of(context)!.serviceAlignment),
+      'CLIMATE_SERVICE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceClimate),
       _ => serviceType ?? 'Service',
     };
   }

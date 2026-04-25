@@ -22,8 +22,9 @@ export async function POST(req: NextRequest) {
     const style: Style = ['INFORMATIVE', 'FUNNY', 'PROVOCATIVE', 'STORY', 'EMOTIONAL'].includes(body.style) ? body.style : 'INFORMATIVE'
     const count = Math.min(Math.max(parseInt(String(body.count || 3), 10) || 3, 1), 5)
     const platform = typeof body.platform === 'string' ? body.platform : undefined
+    const threadsCompatible = body.threadsCompatible === true
 
-    const posts = await generateTrendPosts({ keywords, audience, style, count, platform })
+    const posts = await generateTrendPosts({ keywords, audience, style, count, platform, threadsCompatible })
 
     return NextResponse.json({ posts })
   } catch (error) {

@@ -110,7 +110,8 @@ class _BookingDetailContent extends StatelessWidget {
   }
 
   String _paymentMethodLabel() {
-    switch ((booking.paymentMethodDetail ?? booking.paymentMethod ?? '').toLowerCase()) {
+    switch ((booking.paymentMethodDetail ?? booking.paymentMethod ?? '')
+        .toLowerCase()) {
       case 'card':
         return 'Card';
       case 'google_pay':
@@ -359,8 +360,7 @@ class _BookingDetailContent extends StatelessWidget {
                   const SizedBox(height: 6),
                 ],
                 if (booking.paymentStatus != null) ...[
-                  _PriceRow(
-                      S.of(context)!.paymentStatusLabel,
+                  _PriceRow(S.of(context)!.paymentStatusLabel,
                       _paymentStatusLabel(context)),
                   const Divider(height: 16),
                 ],

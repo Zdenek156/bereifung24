@@ -161,7 +161,9 @@ class _WorkshopDashboardScreenState
                           value: stats.totalReviews > 0
                               ? stats.averageRating.toStringAsFixed(1)
                               : '-',
-                          subtitle: S.of(context)!.reviewsCountLabel(stats.totalReviews),
+                          subtitle: S
+                              .of(context)!
+                              .reviewsCountLabel(stats.totalReviews),
                           color: const Color(0xFFEF4444),
                         ),
                       ),

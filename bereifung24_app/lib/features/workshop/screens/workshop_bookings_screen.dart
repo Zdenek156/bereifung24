@@ -83,7 +83,8 @@ class _WorkshopBookingsScreenState
             Expanded(
               child: bookingsAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text(S.of(context)!.errorLabel(e.toString()))),
+                error: (e, _) => Center(
+                    child: Text(S.of(context)!.errorLabel(e.toString()))),
                 data: (bookings) {
                   if (bookings.isEmpty) {
                     return Center(
@@ -513,13 +514,16 @@ class _BookingListTile extends StatelessWidget {
       return deLabels[key] ?? serviceType ?? 'Service';
     }
     return switch (key) {
-      'WHEEL_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
+      'WHEEL_CHANGE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceWheelChange),
       'TIRE_CHANGE' => _normalizeServiceLabel(S.of(context)!.serviceTireChange),
       'TIRE_REPAIR' => S.of(context)!.foreignObjectRepair,
       'MOTORCYCLE_TIRE' =>
         _normalizeServiceLabel(S.of(context)!.serviceMotorcycleTire),
-      'ALIGNMENT_BOTH' => _normalizeServiceLabel(S.of(context)!.serviceAlignment),
-      'CLIMATE_SERVICE' => _normalizeServiceLabel(S.of(context)!.serviceClimate),
+      'ALIGNMENT_BOTH' =>
+        _normalizeServiceLabel(S.of(context)!.serviceAlignment),
+      'CLIMATE_SERVICE' =>
+        _normalizeServiceLabel(S.of(context)!.serviceClimate),
       _ => serviceType ?? 'Service',
     };
   }

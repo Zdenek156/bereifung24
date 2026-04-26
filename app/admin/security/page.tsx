@@ -46,6 +46,44 @@ export default function SecurityPage() {
   // 2FA
   const [twoFAEnabled, setTwoFAEnabled] = useState(false)
 
+  // Backups
+  interface BackupDump { name: string; size: number; createdAt: string }
+  interface BackupStatus {
+    backupDir: string
+    dirError: string | null
+    count: number
+    totalBytes: number
+    latest: BackupDump | null
+    dumps: BackupDump[]
+    lastLogLine: string | null
+  }
+  const [backupStatus, setBackupStatus] = useState<BackupStatus | null>(null)
+  const [backupLoading, setBackupLoading] = useState(false)
+
+  const fetchBackupStatus = async () => {
+    setBackupLoading(true)
+    try {
+      const res = await fetch('/api/admin/security/backups')
+      if (res.ok) setBackupStatus(await res.json())
+    } catch {
+      // ignore
+    } finally {
+      setBackupLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'backup' && !backupStatus) fetchBackupStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab])
+
+  const formatBytes = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
+  }
+
   useEffect(() => {
     if (status === 'loading') return
 
@@ -100,28 +138,6 @@ export default function SecurityPage() {
       }
     } catch (error) {
       alert('Fehler beim Ändern des Passworts')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleCreateBackup = async () => {
-    if (!confirm('Möchten Sie jetzt ein manuelles Backup erstellen?')) return
-
-    setLoading(true)
-    try {
-      const response = await fetch('/api/admin/security/create-backup', {
-        method: 'POST'
-      })
-
-      if (response.ok) {
-        alert('Backup erfolgreich erstellt')
-        fetchSecurityData()
-      } else {
-        alert('Fehler beim Erstellen des Backups')
-      }
-    } catch (error) {
-      alert('Fehler beim Erstellen des Backups')
     } finally {
       setLoading(false)
     }
@@ -602,79 +618,144 @@ export default function SecurityPage() {
             {/* Tab: Backup & Restore */}
             {activeTab === 'backup' && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Backup & Wiederherstellung</h2>
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-xl font-semibold text-gray-900">Backup &amp; Wiederherstellung</h2>
+                  <button
+                    onClick={fetchBackupStatus}
+                    disabled={backupLoading}
+                    className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
+                  >
+                    {backupLoading ? 'Lade…' : '↻ Aktualisieren'}
+                  </button>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Manuelles Backup */}
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">💾 Manuelles Backup</h3>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Sofortiges Backup der gesamten Datenbank erstellen
+                  {/* Hetzner Cloud Backups */}
+                  <div className="bg-gradient-to-br from-red-50 to-orange-50 border border-red-100 rounded-lg p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">☁️</span>
+                      <h3 className="text-lg font-semibold text-gray-900">Hetzner Cloud Backups</h3>
+                      <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">aktiv</span>
+                    </div>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Vollständige Server-Snapshots (gesamte Festplatte inkl. Datenbank, Uploads, Configs).
                     </p>
-                    <button 
-                      onClick={handleCreateBackup}
-                      disabled={loading}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50"
+                    <ul className="text-xs text-gray-600 space-y-1 mb-4">
+                      <li>• Täglich automatisch um ~06:22 UTC</li>
+                      <li>• 7 Snapshots rollierend (jeweils ~6&nbsp;GB)</li>
+                      <li>• Verwaltet von Hetzner, getrennt vom Server</li>
+                      <li>• Disaster-Recovery: One-Click-Restore</li>
+                    </ul>
+                    <a
+                      href="https://console.hetzner.cloud/projects/12479579/servers/backups"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
                     >
-                      {loading ? 'Wird erstellt...' : 'Backup jetzt erstellen'}
-                    </button>
+                      Hetzner Console öffnen →
+                    </a>
                   </div>
 
-                  {/* Automatische Backups */}
-                  <div className="bg-gray-50 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">⏰ Automatische Backups</h3>
-                    <div className="space-y-3">
-                      <label className="flex items-center gap-3">
-                        <input type="checkbox" className="rounded" defaultChecked />
-                        <span className="text-sm">Täglich um 02:00 Uhr</span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input type="checkbox" className="rounded" defaultChecked />
-                        <span className="text-sm">Wöchentlich sonntags</span>
-                      </label>
-                      <label className="flex items-center gap-3">
-                        <input type="checkbox" className="rounded" />
-                        <span className="text-sm">Monatlich am 1.</span>
-                      </label>
+                  {/* Lokale DB-Dumps */}
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-lg p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-2xl">💾</span>
+                      <h3 className="text-lg font-semibold text-gray-900">PostgreSQL Dumps</h3>
+                      {backupStatus && !backupStatus.dirError && backupStatus.count > 0 && (
+                        <span className="ml-auto px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded">aktiv</span>
+                      )}
+                      {backupStatus?.dirError && (
+                        <span className="ml-auto px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded">eingeschränkt</span>
+                      )}
                     </div>
+                    <p className="text-sm text-gray-700 mb-3">
+                      Tägliche <code className="px-1 bg-gray-100 rounded text-xs">pg_dump</code>-Exporte für granulare
+                      Wiederherstellung einzelner Tabellen oder Datensätze.
+                    </p>
+                    <ul className="text-xs text-gray-600 space-y-1 mb-2">
+                      <li>• Täglich um 03:00 Uhr (Cron)</li>
+                      <li>• Aufbewahrung: 30 Tage</li>
+                      <li>• Pfad: <code className="px-1 bg-gray-100 rounded">{backupStatus?.backupDir || '/var/backups/postgresql'}</code></li>
+                      <li>• Rechte: <code className="px-1 bg-gray-100 rounded">root</code> only (chmod 600)</li>
+                    </ul>
+                    {backupStatus && (
+                      <div className="mt-3 pt-3 border-t border-blue-200 text-xs text-gray-600">
+                        <div><strong>Anzahl:</strong> {backupStatus.count} Dateien</div>
+                        <div><strong>Gesamtgröße:</strong> {formatBytes(backupStatus.totalBytes)}</div>
+                        {backupStatus.latest && (
+                          <div>
+                            <strong>Neuestes:</strong>{' '}
+                            {new Date(backupStatus.latest.createdAt).toLocaleString('de-DE')}{' '}
+                            ({formatBytes(backupStatus.latest.size)})
+                          </div>
+                        )}
+                        {backupStatus.lastLogLine && (
+                          <div className="mt-1 text-gray-500 truncate" title={backupStatus.lastLogLine}>
+                            <strong>Log:</strong> {backupStatus.lastLogLine}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
                 {/* Backup-Liste */}
                 <div className="bg-gray-50 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Verfügbare Backups</h3>
-                  <div className="space-y-2">
-                    {[
-                      { date: '21.12.2025 02:00', size: '245 MB', type: 'Automatisch' },
-                      { date: '20.12.2025 02:00', size: '243 MB', type: 'Automatisch' },
-                      { date: '19.12.2025 15:30', size: '241 MB', type: 'Manuell' },
-                    ].map((backup, i) => (
-                      <div key={i} className="bg-white rounded-lg p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <span className="text-2xl">💾</span>
-                          <div>
-                            <div className="font-medium text-gray-900">{backup.date}</div>
-                            <div className="text-sm text-gray-600">{backup.size} • {backup.type}</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">Vorhandene PostgreSQL-Dumps</h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Read-only Übersicht. Wiederherstellung erfolgt aus Sicherheitsgründen ausschließlich per SSH durch einen Administrator.
+                  </p>
+
+                  {backupLoading && !backupStatus && (
+                    <div className="text-sm text-gray-500">Lade Backup-Status…</div>
+                  )}
+
+                  {backupStatus?.dirError === 'permission-denied' && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-900">
+                      Backup-Verzeichnis ist nicht lesbar (Permission denied). Das ist normal — die Dumps
+                      sind absichtlich nur für <code>root</code> lesbar. Liste verfügbar via SSH:{' '}
+                      <code className="block mt-2 px-2 py-1 bg-yellow-100 rounded text-xs">ls -la /var/backups/postgresql/</code>
+                    </div>
+                  )}
+
+                  {backupStatus?.dirError && backupStatus.dirError !== 'permission-denied' && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-900">
+                      Backup-Verzeichnis nicht lesbar (Fehler: {backupStatus.dirError}).
+                    </div>
+                  )}
+
+                  {backupStatus && !backupStatus.dirError && backupStatus.dumps.length === 0 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm text-yellow-900">
+                      Noch keine Dumps vorhanden. Der nächste Cron-Lauf erstellt das erste Backup um 03:00 Uhr.
+                    </div>
+                  )}
+
+                  {backupStatus && !backupStatus.dirError && backupStatus.dumps.length > 0 && (
+                    <div className="space-y-2">
+                      {backupStatus.dumps.map((b) => (
+                        <div key={b.name} className="bg-white rounded-lg p-3 flex items-center justify-between border border-gray-100">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="text-xl">💾</span>
+                            <div className="min-w-0">
+                              <div className="font-medium text-gray-900 text-sm truncate">{b.name}</div>
+                              <div className="text-xs text-gray-500">
+                                {new Date(b.createdAt).toLocaleString('de-DE')} • {formatBytes(b.size)}
+                              </div>
+                            </div>
                           </div>
+                          <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">read-only</span>
                         </div>
-                        <div className="flex gap-2">
-                          <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                            Herunterladen
-                          </button>
-                          <button 
-                            onClick={() => {
-                              if (confirm('Backup wiederherstellen? Aktuelle Daten gehen verloren!')) {
-                                alert('Wiederherstellung würde gestartet (Demo)')
-                              }
-                            }}
-                            className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
-                          >
-                            Wiederherstellen
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sicherheits-Hinweise */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-900">
+                  <strong>🔒 Sicherheitshinweis:</strong> Backup-Dumps enthalten alle Kunden- und Geschäftsdaten
+                  (DSGVO-relevant). Sie sind daher nicht über das Web-Interface herunter- oder hochladbar.
+                  Wiederherstellung und Download erfolgen ausschließlich per SSH durch berechtigte
+                  Administratoren.
                 </div>
               </div>
             )}

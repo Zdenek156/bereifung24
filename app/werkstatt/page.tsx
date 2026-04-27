@@ -398,123 +398,161 @@ export default function WerkstattInfoPage() {
                 In über 100 Städten verfügbar – finde heraus, wie Bereifung24 in deiner Stadt funktioniert.
               </p>
             </AnimatedSection>
-            
-            {/* Top Städte nach Region */}
-            {[
-              {
-                region: 'Baden-Württemberg',
-                cities: [
-                  { name: 'Stuttgart', slug: 'stuttgart' },
-                  { name: 'Karlsruhe', slug: 'karlsruhe' },
-                  { name: 'Mannheim', slug: 'mannheim' },
-                  { name: 'Freiburg', slug: 'freiburg' },
-                  { name: 'Heidelberg', slug: 'heidelberg' },
-                  { name: 'Ulm', slug: 'ulm' },
-                  { name: 'Heilbronn', slug: 'heilbronn' },
-                  { name: 'Pforzheim', slug: 'pforzheim' },
-                  { name: 'Reutlingen', slug: 'reutlingen' },
-                  { name: 'Esslingen', slug: 'esslingen' },
-                ]
-              },
-              {
-                region: 'Bayern',
-                cities: [
-                  { name: 'München', slug: 'muenchen' },
-                  { name: 'Nürnberg', slug: 'nuernberg' },
-                  { name: 'Augsburg', slug: 'augsburg' },
-                  { name: 'Regensburg', slug: 'regensburg' },
-                  { name: 'Ingolstadt', slug: 'ingolstadt' },
-                  { name: 'Würzburg', slug: 'wuerzburg' },
-                  { name: 'Fürth', slug: 'fuerth' },
-                  { name: 'Erlangen', slug: 'erlangen' },
-                ]
-              },
-              {
-                region: 'Nordrhein-Westfalen',
-                cities: [
-                  { name: 'Köln', slug: 'koeln' },
-                  { name: 'Düsseldorf', slug: 'duesseldorf' },
-                  { name: 'Dortmund', slug: 'dortmund' },
-                  { name: 'Essen', slug: 'essen' },
-                  { name: 'Duisburg', slug: 'duisburg' },
-                  { name: 'Bochum', slug: 'bochum' },
-                  { name: 'Bonn', slug: 'bonn' },
-                  { name: 'Münster', slug: 'muenster' },
-                  { name: 'Bielefeld', slug: 'bielefeld' },
-                  { name: 'Aachen', slug: 'aachen' },
-                ]
-              },
-              {
-                region: 'Niedersachsen & Bremen',
-                cities: [
-                  { name: 'Hannover', slug: 'hannover' },
-                  { name: 'Braunschweig', slug: 'braunschweig' },
-                  { name: 'Oldenburg', slug: 'oldenburg' },
-                  { name: 'Osnabrück', slug: 'osnabrueck' },
-                  { name: 'Wolfsburg', slug: 'wolfsburg' },
-                  { name: 'Bremen', slug: 'bremen' },
-                ]
-              },
-              {
-                region: 'Hessen',
-                cities: [
-                  { name: 'Frankfurt am Main', slug: 'frankfurt-am-main' },
-                  { name: 'Wiesbaden', slug: 'wiesbaden' },
-                  { name: 'Kassel', slug: 'kassel' },
-                  { name: 'Darmstadt', slug: 'darmstadt' },
-                  { name: 'Offenbach', slug: 'offenbach-am-main' },
-                ]
-              },
-              {
-                region: 'Sachsen & Thüringen',
-                cities: [
-                  { name: 'Leipzig', slug: 'leipzig' },
-                  { name: 'Dresden', slug: 'dresden' },
-                  { name: 'Chemnitz', slug: 'chemnitz' },
-                  { name: 'Erfurt', slug: 'erfurt' },
-                  { name: 'Jena', slug: 'jena' },
-                ]
-              },
-              {
-                region: 'Nord- & Ostdeutschland',
-                cities: [
-                  { name: 'Berlin', slug: 'berlin' },
-                  { name: 'Hamburg', slug: 'hamburg' },
-                  { name: 'Kiel', slug: 'kiel' },
-                  { name: 'Lübeck', slug: 'luebeck' },
-                  { name: 'Rostock', slug: 'rostock' },
-                  { name: 'Potsdam', slug: 'potsdam' },
-                  { name: 'Magdeburg', slug: 'magdeburg' },
-                ]
-              },
-              {
-                region: 'Rheinland-Pfalz & Saarland',
-                cities: [
-                  { name: 'Mainz', slug: 'mainz' },
-                  { name: 'Koblenz', slug: 'koblenz' },
-                  { name: 'Trier', slug: 'trier' },
-                  { name: 'Kaiserslautern', slug: 'kaiserslautern' },
-                  { name: 'Saarbrücken', slug: 'saarbruecken' },
-                ]
-              },
-            ].map((group) => (
-              <div key={group.region} className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">{group.region}</h3>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {group.cities.map((city) => (
-                    <Link
-                      key={city.slug}
-                      href={`/werkstatt-werden/${city.slug}`}
-                      className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors"
-                    >
-                      {city.name}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
 
-            <div className="text-center mt-8">
+            {/* Top-Städte sichtbar (kompakt) */}
+            <div className="flex flex-wrap justify-center gap-2 mb-6">
+              {[
+                { name: 'Berlin', slug: 'berlin' },
+                { name: 'Hamburg', slug: 'hamburg' },
+                { name: 'München', slug: 'muenchen' },
+                { name: 'Köln', slug: 'koeln' },
+                { name: 'Frankfurt am Main', slug: 'frankfurt-am-main' },
+                { name: 'Stuttgart', slug: 'stuttgart' },
+                { name: 'Düsseldorf', slug: 'duesseldorf' },
+                { name: 'Leipzig', slug: 'leipzig' },
+              ].map((city) => (
+                <Link
+                  key={city.slug}
+                  href={`/werkstatt-werden/${city.slug}`}
+                  className="px-4 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-700 rounded-full text-sm font-medium text-gray-700 transition-colors"
+                >
+                  {city.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Alle Regionen — aufklappbar (SEO-freundlich, da Inhalt im DOM bleibt) */}
+            <details className="group bg-gray-50 rounded-xl border border-gray-200 mb-6 overflow-hidden">
+              <summary className="cursor-pointer list-none px-6 py-4 flex items-center justify-between hover:bg-gray-100 transition-colors">
+                <span className="font-semibold text-gray-800">Alle Regionen &amp; Städte anzeigen</span>
+                <svg
+                  className="w-5 h-5 text-gray-500 transition-transform group-open:rotate-180"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </summary>
+
+              <div className="px-6 pb-6 pt-2">
+                {[
+                  {
+                    region: 'Baden-Württemberg',
+                    cities: [
+                      { name: 'Stuttgart', slug: 'stuttgart' },
+                      { name: 'Karlsruhe', slug: 'karlsruhe' },
+                      { name: 'Mannheim', slug: 'mannheim' },
+                      { name: 'Freiburg', slug: 'freiburg' },
+                      { name: 'Heidelberg', slug: 'heidelberg' },
+                      { name: 'Ulm', slug: 'ulm' },
+                      { name: 'Heilbronn', slug: 'heilbronn' },
+                      { name: 'Pforzheim', slug: 'pforzheim' },
+                      { name: 'Reutlingen', slug: 'reutlingen' },
+                      { name: 'Esslingen', slug: 'esslingen' },
+                    ]
+                  },
+                  {
+                    region: 'Bayern',
+                    cities: [
+                      { name: 'München', slug: 'muenchen' },
+                      { name: 'Nürnberg', slug: 'nuernberg' },
+                      { name: 'Augsburg', slug: 'augsburg' },
+                      { name: 'Regensburg', slug: 'regensburg' },
+                      { name: 'Ingolstadt', slug: 'ingolstadt' },
+                      { name: 'Würzburg', slug: 'wuerzburg' },
+                      { name: 'Fürth', slug: 'fuerth' },
+                      { name: 'Erlangen', slug: 'erlangen' },
+                    ]
+                  },
+                  {
+                    region: 'Nordrhein-Westfalen',
+                    cities: [
+                      { name: 'Köln', slug: 'koeln' },
+                      { name: 'Düsseldorf', slug: 'duesseldorf' },
+                      { name: 'Dortmund', slug: 'dortmund' },
+                      { name: 'Essen', slug: 'essen' },
+                      { name: 'Duisburg', slug: 'duisburg' },
+                      { name: 'Bochum', slug: 'bochum' },
+                      { name: 'Bonn', slug: 'bonn' },
+                      { name: 'Münster', slug: 'muenster' },
+                      { name: 'Bielefeld', slug: 'bielefeld' },
+                      { name: 'Aachen', slug: 'aachen' },
+                    ]
+                  },
+                  {
+                    region: 'Niedersachsen & Bremen',
+                    cities: [
+                      { name: 'Hannover', slug: 'hannover' },
+                      { name: 'Braunschweig', slug: 'braunschweig' },
+                      { name: 'Oldenburg', slug: 'oldenburg' },
+                      { name: 'Osnabrück', slug: 'osnabrueck' },
+                      { name: 'Wolfsburg', slug: 'wolfsburg' },
+                      { name: 'Bremen', slug: 'bremen' },
+                    ]
+                  },
+                  {
+                    region: 'Hessen',
+                    cities: [
+                      { name: 'Frankfurt am Main', slug: 'frankfurt-am-main' },
+                      { name: 'Wiesbaden', slug: 'wiesbaden' },
+                      { name: 'Kassel', slug: 'kassel' },
+                      { name: 'Darmstadt', slug: 'darmstadt' },
+                      { name: 'Offenbach', slug: 'offenbach-am-main' },
+                    ]
+                  },
+                  {
+                    region: 'Sachsen & Thüringen',
+                    cities: [
+                      { name: 'Leipzig', slug: 'leipzig' },
+                      { name: 'Dresden', slug: 'dresden' },
+                      { name: 'Chemnitz', slug: 'chemnitz' },
+                      { name: 'Erfurt', slug: 'erfurt' },
+                      { name: 'Jena', slug: 'jena' },
+                    ]
+                  },
+                  {
+                    region: 'Nord- & Ostdeutschland',
+                    cities: [
+                      { name: 'Berlin', slug: 'berlin' },
+                      { name: 'Hamburg', slug: 'hamburg' },
+                      { name: 'Kiel', slug: 'kiel' },
+                      { name: 'Lübeck', slug: 'luebeck' },
+                      { name: 'Rostock', slug: 'rostock' },
+                      { name: 'Potsdam', slug: 'potsdam' },
+                      { name: 'Magdeburg', slug: 'magdeburg' },
+                    ]
+                  },
+                  {
+                    region: 'Rheinland-Pfalz & Saarland',
+                    cities: [
+                      { name: 'Mainz', slug: 'mainz' },
+                      { name: 'Koblenz', slug: 'koblenz' },
+                      { name: 'Trier', slug: 'trier' },
+                      { name: 'Kaiserslautern', slug: 'kaiserslautern' },
+                      { name: 'Saarbrücken', slug: 'saarbruecken' },
+                    ]
+                  },
+                ].map((group) => (
+                  <div key={group.region} className="mb-5 last:mb-0">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">{group.region}</h3>
+                    <div className="flex flex-wrap gap-1.5">
+                      {group.cities.map((city) => (
+                        <Link
+                          key={city.slug}
+                          href={`/werkstatt-werden/${city.slug}`}
+                          className="px-3 py-1 bg-white hover:bg-primary-50 hover:text-primary-700 rounded-full text-xs font-medium text-gray-600 border border-gray-200 transition-colors"
+                        >
+                          {city.name}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+
+            <div className="text-center">
               <Link
                 href="/werkstatt-werden"
                 className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors"

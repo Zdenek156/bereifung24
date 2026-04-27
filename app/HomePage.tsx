@@ -4237,12 +4237,12 @@ export default function NewHomePage({
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { href: '/services/raederwechsel', emoji: '🔧', title: 'Räderwechsel', desc: 'Kompletter Radwechsel vom Winter- auf Sommerreifen oder umgekehrt', price: '19,90 €' },
-              { href: '/services/reifenwechsel', emoji: '🔄', title: 'Reifenwechsel', desc: 'Reifen von Felge ab- und aufziehen mit professioneller Montage', price: '39,90 €' },
-              { href: '/services/reifenreparatur', emoji: '🔨', title: 'Reifenreparatur', desc: 'Professionelle Reparatur von Reifenschäden mit Vulkanisierung', price: '29,90 €' },
-              { href: '/services/motorradreifen', emoji: '🏍️', title: 'Motorradreifen', desc: 'Spezialisierte Montage für Motorrad-Vorder- und Hinterreifen', price: '24,90 €' },
-              { href: '/services/achsvermessung', emoji: '📏', title: 'Achsvermessung', desc: '3D-Vermessung und Einstellung für optimalen Geradeauslauf', price: '49,90 €' },
-              { href: '/services/klimaservice', emoji: '❄️', title: 'Klimaservice', desc: 'Wartung, Desinfektion und Befüllung der Auto-Klimaanlage', price: '59,90 €' },
+              { href: '/services/raederwechsel', emoji: '🔧', title: 'Räderwechsel', desc: 'Kompletter Radwechsel vom Winter- auf Sommerreifen oder umgekehrt' },
+              { href: '/services/reifenwechsel', emoji: '🔄', title: 'Reifenwechsel', desc: 'Reifen von Felge ab- und aufziehen mit professioneller Montage' },
+              { href: '/services/reifenreparatur', emoji: '🔨', title: 'Reifenreparatur', desc: 'Professionelle Reparatur von Reifenschäden mit Vulkanisierung' },
+              { href: '/services/motorradreifen', emoji: '🏍️', title: 'Motorradreifen', desc: 'Spezialisierte Montage für Motorrad-Vorder- und Hinterreifen' },
+              { href: '/services/achsvermessung', emoji: '📏', title: 'Achsvermessung', desc: '3D-Vermessung und Einstellung für optimalen Geradeauslauf' },
+              { href: '/services/klimaservice', emoji: '❄️', title: 'Klimaservice', desc: 'Wartung, Desinfektion und Befüllung der Auto-Klimaanlage' },
             ].map((service, index) => (
               <Link
                 key={service.href}
@@ -4252,7 +4252,6 @@ export default function NewHomePage({
                 onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 20px 40px rgba(0,112,186,0.15)' }}
                 onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '' }}
               >
-                <span className="price-badge">{service.price}</span>
                 <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 rounded-xl flex items-center justify-center text-3xl mb-4 group-hover:scale-110 transition-transform">
                   {service.emoji}
                 </div>

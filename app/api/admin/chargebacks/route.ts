@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     where.liability = liabilityFilter
   }
 
-  const disputes = await prisma.dispute.findMany({
+  const disputesRaw = await prisma.dispute.findMany({
     where,
     orderBy: [{ disputeCreatedAt: 'desc' }],
     include: {
@@ -36,12 +36,48 @@ export async function GET(req: NextRequest) {
           totalPrice: true,
           status: true,
           paymentStatus: true,
-          customer: { select: { id: true, firstName: true, lastName: true, email: true } },
-          workshop: { select: { id: true, companyName: true, email: true } },
+          customer: {
+            select: {
+              id: true,
+              user: { select: { firstName: true, lastName: true, email: true } },
+            },
+          },
+          workshop: {
+            select: {
+              id: true,
+              companyName: true,
+              user: { select: { email: true } },
+            },
+          },
         },
       },
     },
   })
+
+  // Flatten user fields so the UI can keep its existing shape
+  const disputes = disputesRaw.map((d) => ({
+    ...d,
+    directBooking: d.directBooking
+      ? {
+          ...d.directBooking,
+          customer: d.directBooking.customer
+            ? {
+                id: d.directBooking.customer.id,
+                firstName: d.directBooking.customer.user?.firstName ?? '',
+                lastName: d.directBooking.customer.user?.lastName ?? '',
+                email: d.directBooking.customer.user?.email ?? '',
+              }
+            : null,
+          workshop: d.directBooking.workshop
+            ? {
+                id: d.directBooking.workshop.id,
+                companyName: d.directBooking.workshop.companyName ?? '',
+                email: d.directBooking.workshop.user?.email ?? '',
+              }
+            : null,
+        }
+      : null,
+  }))
 
   // Stats
   const allDisputes = await prisma.dispute.findMany({

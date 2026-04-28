@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, AlertTriangle, RefreshCw, ExternalLink, Search, X, Save, Clock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { AlertTriangle, RefreshCw, ExternalLink, Search, X, Save, Clock } from 'lucide-react'
 
 interface DisputeListItem {
   id: string
@@ -86,6 +87,7 @@ function daysUntil(d: string | null): number | null {
 }
 
 export default function ChargebacksPage() {
+  const router = useRouter()
   const [disputes, setDisputes] = useState<DisputeListItem[]>([])
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -167,9 +169,12 @@ export default function ChargebacksPage() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <Link href="/admin" className="text-gray-600 hover:text-gray-900">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
+          <button
+            onClick={() => router.back()}
+            className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900"
+          >
+            ← Zurück
+          </button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <AlertTriangle className="w-6 h-6 text-red-600" />

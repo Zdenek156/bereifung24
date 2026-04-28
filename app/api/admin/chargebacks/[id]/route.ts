@@ -13,20 +13,61 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
   const authError = await requireAdminOrEmployee()
   if (authError) return authError
 
-  const dispute = await prisma.dispute.findUnique({
+  const disputeRaw = await prisma.dispute.findUnique({
     where: { id: params.id },
     include: {
       directBooking: {
         include: {
-          customer: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } },
-          workshop: { select: { id: true, companyName: true, email: true, phone: true, stripeAccountId: true } },
+          customer: {
+            select: {
+              id: true,
+              user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+            },
+          },
+          workshop: {
+            select: {
+              id: true,
+              companyName: true,
+              stripeAccountId: true,
+              user: { select: { email: true, phone: true } },
+            },
+          },
           vehicle: true,
         },
       },
     },
   })
 
-  if (!dispute) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  if (!disputeRaw) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  // Flatten user fields
+  const dispute = {
+    ...disputeRaw,
+    directBooking: disputeRaw.directBooking
+      ? {
+          ...disputeRaw.directBooking,
+          customer: disputeRaw.directBooking.customer
+            ? {
+                id: disputeRaw.directBooking.customer.id,
+                firstName: disputeRaw.directBooking.customer.user?.firstName ?? '',
+                lastName: disputeRaw.directBooking.customer.user?.lastName ?? '',
+                email: disputeRaw.directBooking.customer.user?.email ?? '',
+                phone: disputeRaw.directBooking.customer.user?.phone ?? null,
+              }
+            : null,
+          workshop: disputeRaw.directBooking.workshop
+            ? {
+                id: disputeRaw.directBooking.workshop.id,
+                companyName: disputeRaw.directBooking.workshop.companyName ?? '',
+                email: disputeRaw.directBooking.workshop.user?.email ?? '',
+                phone: disputeRaw.directBooking.workshop.user?.phone ?? null,
+                stripeAccountId: disputeRaw.directBooking.workshop.stripeAccountId,
+              }
+            : null,
+        }
+      : null,
+  }
+
   return NextResponse.json({ dispute })
 }
 

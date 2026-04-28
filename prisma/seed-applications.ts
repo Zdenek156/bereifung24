@@ -426,6 +426,18 @@ const defaultApplications = [
     category: 'GENERAL',
     sortOrder: 87
   },
+
+  // CHARGEBACKS
+  {
+    key: 'chargebacks',
+    name: 'Chargebacks',
+    description: 'Stripe-Chargebacks/Disputes verwalten — automatische Beweispflicht-Zuordnung (Werkstatt vs. Kunde)',
+    icon: 'AlertTriangle',
+    adminRoute: '/admin/chargebacks',
+    color: 'red',
+    category: 'ACCOUNTING',
+    sortOrder: 88
+  },
 ]
 
 async function main() {

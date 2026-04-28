@@ -18,6 +18,11 @@ import { notifyBookingUpdate } from '@/lib/pushNotificationService'
  * - charge.updated  (for stripeFee backfill)
  * - charge.refunded
  * - account.updated (for Stripe Connect)
+ * - charge.dispute.created (Chargeback)
+ * - charge.dispute.updated
+ * - charge.dispute.closed
+ * - charge.dispute.funds_withdrawn
+ * - charge.dispute.funds_reinstated
  */
 export async function POST(request: NextRequest) {
   try {
@@ -77,6 +82,20 @@ export async function POST(request: NextRequest) {
 
       case 'account.updated':
         await handleAccountUpdated(event.data.object as Stripe.Account)
+        break
+
+      case 'charge.dispute.created':
+      case 'charge.dispute.updated':
+      case 'charge.dispute.closed':
+        await handleDisputeEvent(event.data.object as Stripe.Dispute, event.type)
+        break
+
+      case 'charge.dispute.funds_withdrawn':
+        await handleDisputeFundsWithdrawn(event.data.object as Stripe.Dispute)
+        break
+
+      case 'charge.dispute.funds_reinstated':
+        await handleDisputeFundsReinstated(event.data.object as Stripe.Dispute)
         break
 
       default:
@@ -1143,5 +1162,126 @@ async function handleChargeUpdated(charge: Stripe.Charge, stripe: Stripe) {
     console.log(`✅ charge.updated → booking ${booking.id}: stripeFee=${feeInEuros}€, method=${paymentMethodDetail}`)
   } catch (error) {
     console.error('❌ Error handling charge.updated:', error)
+  }
+}
+
+/**
+ * Compute liability for a dispute based on booking date vs dispute date.
+ * - Dispute BEFORE appointment → BEFORE_APPOINTMENT (Kunde hätte stornieren müssen, AGB §5.1)
+ * - Dispute AFTER (or during) appointment → AFTER_APPOINTMENT (Werkstatt in Beweispflicht)
+ * - No booking found → UNKNOWN
+ */
+function computeLiability(
+  bookingDate: Date | null | undefined,
+  bookingTime: string | null | undefined,
+  disputeCreatedAt: Date
+): 'BEFORE_APPOINTMENT' | 'AFTER_APPOINTMENT' | 'UNKNOWN' {
+  if (!bookingDate) return 'UNKNOWN'
+  const appointmentDateTime = new Date(bookingDate)
+  if (bookingTime && /^\d{2}:\d{2}$/.test(bookingTime)) {
+    const [h, m] = bookingTime.split(':').map(Number)
+    appointmentDateTime.setHours(h, m, 0, 0)
+  }
+  return disputeCreatedAt < appointmentDateTime ? 'BEFORE_APPOINTMENT' : 'AFTER_APPOINTMENT'
+}
+
+/**
+ * Handle charge.dispute.created / updated / closed
+ * Upserts the Dispute record and links it to the related DirectBooking.
+ */
+async function handleDisputeEvent(dispute: Stripe.Dispute, eventType: string) {
+  try {
+    console.log(`⚠️  ${eventType}: ${dispute.id} (${dispute.status}, ${dispute.reason})`)
+
+    const chargeId = typeof dispute.charge === 'string' ? dispute.charge : dispute.charge.id
+    const paymentIntentId = dispute.payment_intent
+      ? (typeof dispute.payment_intent === 'string' ? dispute.payment_intent : dispute.payment_intent.id)
+      : null
+
+    // Find related DirectBooking via stripePaymentId (PaymentIntent) or stripeSessionId fallback
+    let booking = null
+    if (paymentIntentId) {
+      booking = await prisma.directBooking.findFirst({
+        where: { stripePaymentId: paymentIntentId }
+      })
+    }
+    if (!booking) {
+      // Fallback: try by charge id stored in stripePaymentId field (legacy)
+      booking = await prisma.directBooking.findFirst({
+        where: { stripePaymentId: chargeId }
+      })
+    }
+
+    const disputeCreatedAt = new Date(dispute.created * 1000)
+    const evidenceDueBy = dispute.evidence_details?.due_by
+      ? new Date(dispute.evidence_details.due_by * 1000)
+      : null
+
+    const liability = computeLiability(
+      booking?.date ?? null,
+      booking?.time ?? null,
+      disputeCreatedAt
+    )
+
+    // Determine outcome on closed events
+    let outcome: string | null = null
+    if (dispute.status === 'won' || dispute.status === 'lost' || dispute.status === 'warning_closed') {
+      outcome = dispute.status
+    }
+
+    const baseData = {
+      stripeChargeId: chargeId,
+      stripePaymentIntentId: paymentIntentId,
+      directBookingId: booking?.id ?? null,
+      workshopId: booking?.workshopId ?? null,
+      customerId: booking?.customerId ?? null,
+      bookingDate: booking?.date ?? null,
+      bookingTime: booking?.time ?? null,
+      amount: dispute.amount,
+      currency: dispute.currency,
+      reason: dispute.reason,
+      status: dispute.status,
+      evidenceDueBy,
+      disputeCreatedAt,
+      liability,
+      ...(outcome ? { outcome } : {}),
+    }
+
+    await prisma.dispute.upsert({
+      where: { stripeDisputeId: dispute.id },
+      create: { stripeDisputeId: dispute.id, ...baseData },
+      update: baseData,
+    })
+
+    console.log(`✅ Dispute ${dispute.id} stored (liability=${liability}, booking=${booking?.id ?? 'none'})`)
+  } catch (error) {
+    console.error('❌ Error handling dispute event:', error)
+  }
+}
+
+async function handleDisputeFundsWithdrawn(dispute: Stripe.Dispute) {
+  try {
+    await prisma.dispute.update({
+      where: { stripeDisputeId: dispute.id },
+      data: { fundsWithdrawnAt: new Date(), status: dispute.status },
+    }).catch(() => {
+      // Dispute not yet stored - create via main handler first
+      return handleDisputeEvent(dispute, 'charge.dispute.funds_withdrawn')
+    })
+    console.log(`💸 Dispute funds withdrawn: ${dispute.id}`)
+  } catch (error) {
+    console.error('❌ Error handling dispute.funds_withdrawn:', error)
+  }
+}
+
+async function handleDisputeFundsReinstated(dispute: Stripe.Dispute) {
+  try {
+    await prisma.dispute.update({
+      where: { stripeDisputeId: dispute.id },
+      data: { fundsReinstatedAt: new Date(), status: dispute.status, outcome: 'won' },
+    }).catch(() => handleDisputeEvent(dispute, 'charge.dispute.funds_reinstated'))
+    console.log(`💰 Dispute funds reinstated: ${dispute.id}`)
+  } catch (error) {
+    console.error('❌ Error handling dispute.funds_reinstated:', error)
   }
 }

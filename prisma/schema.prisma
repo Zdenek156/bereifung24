@@ -5966,6 +5966,9 @@ model DirectBooking {
   review       Review?
   reviewPrompt ReviewPrompt?
 
+  // Disputes / Chargebacks (Stripe)
+  disputes Dispute[]
+
   // Metadata
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -5989,6 +5992,70 @@ enum DirectBookingPaymentStatus {
   PAID
   FAILED
   REFUNDED
+}
+
+// ============================================
+// CHARGEBACKS / DISPUTES (Stripe)
+// ============================================
+// Automatisch via Stripe Webhook (charge.dispute.*) erfasst.
+// Beweispflicht-Logik:
+//   - Dispute VOR Termin -> Schuld Kunde (AGB §5.1: Stornierung nur via Werkstatt)
+//   - Dispute NACH Termin -> Werkstatt in Beweispflicht (Leistung erbracht)
+
+model Dispute {
+  id              String   @id @default(cuid())
+
+  // Stripe IDs
+  stripeDisputeId String   @unique @map("stripe_dispute_id")
+  stripeChargeId  String   @map("stripe_charge_id")
+  stripePaymentIntentId String? @map("stripe_payment_intent_id")
+
+  // Linked Booking (optional - dispute may arrive before we can resolve)
+  directBookingId String?        @map("direct_booking_id")
+  directBooking   DirectBooking? @relation(fields: [directBookingId], references: [id], onDelete: SetNull)
+
+  // Snapshot of booking context at dispute time
+  workshopId String? @map("workshop_id")
+  customerId String? @map("customer_id")
+  bookingDate DateTime? @map("booking_date") @db.Date
+  bookingTime String?   @map("booking_time") @db.VarChar(5)
+
+  // Dispute details from Stripe
+  amount     Int      // in cents
+  currency   String   @default("eur") @db.VarChar(3)
+  reason     String   // duplicate, fraudulent, subscription_canceled, product_unacceptable, ...
+  status     String   // warning_needs_response, warning_under_review, warning_closed,
+                      // needs_response, under_review, charge_refunded, won, lost
+
+  evidenceDueBy DateTime? @map("evidence_due_by")
+  disputeCreatedAt DateTime @map("dispute_created_at")
+
+  // Liability resolution (auto-computed)
+  // BEFORE_APPOINTMENT = Kunde hätte stornieren müssen -> Werkstatt nicht haftbar
+  // AFTER_APPOINTMENT  = Werkstatt in Beweispflicht
+  // UNKNOWN            = Booking konnte nicht zugeordnet werden
+  liability  String   @default("UNKNOWN") // BEFORE_APPOINTMENT | AFTER_APPOINTMENT | UNKNOWN
+
+  // Outcome (set when status = won/lost)
+  outcome    String?  // won | lost | warning_closed
+  fundsWithdrawnAt   DateTime? @map("funds_withdrawn_at")
+  fundsReinstatedAt  DateTime? @map("funds_reinstated_at")
+
+  // Manual resolution / handling
+  internalNotes      String?   @db.Text @map("internal_notes")
+  evidenceSubmittedAt DateTime? @map("evidence_submitted_at")
+  handledById        String?   @map("handled_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([liability])
+  @@index([workshopId])
+  @@index([directBookingId])
+  @@index([evidenceDueBy])
+  @@index([disputeCreatedAt])
+  @@map("disputes")
 }
 
 // ============================================

@@ -37,6 +37,8 @@ export async function POST(request: NextRequest) {
     // Get Stripe keys from database
     const stripeSecretKey = await getApiSetting('STRIPE_SECRET_KEY', 'STRIPE_SECRET_KEY')
     const webhookSecret = await getApiSetting('STRIPE_WEBHOOK_SECRET', 'STRIPE_WEBHOOK_SECRET')
+    // Optional second secret for the Snapshot-style endpoint (dispute events)
+    const webhookSecretDisputes = await getApiSetting('STRIPE_WEBHOOK_SECRET_DISPUTES', 'STRIPE_WEBHOOK_SECRET_DISPUTES')
 
     if (!stripeSecretKey || !webhookSecret) {
       console.error('❌ Stripe keys not configured')
@@ -47,13 +49,22 @@ export async function POST(request: NextRequest) {
       apiVersion: '2024-12-18.acacia',
     })
 
-    // Verify webhook signature
+    // Verify webhook signature - try primary secret first, then dispute secret as fallback
     let event: Stripe.Event
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
     } catch (err) {
-      console.error('❌ Webhook signature verification failed:', err)
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+      if (webhookSecretDisputes) {
+        try {
+          event = stripe.webhooks.constructEvent(body, signature, webhookSecretDisputes)
+        } catch (err2) {
+          console.error('❌ Webhook signature verification failed (both secrets):', err2)
+          return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+        }
+      } else {
+        console.error('❌ Webhook signature verification failed:', err)
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+      }
     }
 
     console.log('📬 Stripe Webhook received:', event.type)

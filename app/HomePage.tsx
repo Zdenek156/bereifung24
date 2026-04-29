@@ -3682,61 +3682,8 @@ export default function NewHomePage({
                                 )
                               })()}
 
-                              {/* ⭐ ACHS-SET CARD (replaces both axle panels when matched) */}
-                              {showTires && workshop.isMixedTires && workshop.axleSetMatched && workshop.tireFront && workshop.tireRear && (
-                                <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl border-2 border-amber-300 p-4 mb-3 shadow-sm">
-                                  <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-lg">⭐</span>
-                                      <p className="text-xs font-bold text-amber-900 uppercase tracking-wider">
-                                        Achs-Set
-                                      </p>
-                                    </div>
-                                    <span className="text-[10px] text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200 hidden sm:inline">
-                                      Vom Hersteller empfohlen
-                                    </span>
-                                  </div>
-
-                                  <div className="bg-white rounded-lg p-3 border border-amber-200">
-                                    <p className="text-base font-bold text-gray-900 mb-3">
-                                      {workshop.tireFront.brand} <span className="font-medium text-gray-700">{workshop.tireFront.model}</span>
-                                    </p>
-
-                                    <div className="space-y-2 text-sm">
-                                      <div className="flex items-center justify-between gap-3 pb-2 border-b border-gray-100">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-blue-600">🔹</span>
-                                          <span className="text-gray-600">Vorne</span>
-                                          <span className="text-xs text-gray-400">{workshop.tireFront.dimensions}</span>
-                                        </div>
-                                        <span className="font-semibold text-gray-900 tabular-nums">
-                                          {Number(workshop.tireFront.totalPrice).toFixed(2).replace('.', ',')} €
-                                        </span>
-                                      </div>
-                                      <div className="flex items-center justify-between gap-3">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-orange-600">🔸</span>
-                                          <span className="text-gray-600">Hinten</span>
-                                          <span className="text-xs text-gray-400">{workshop.tireRear.dimensions}</span>
-                                        </div>
-                                        <span className="font-semibold text-gray-900 tabular-nums">
-                                          {Number(workshop.tireRear.totalPrice).toFixed(2).replace('.', ',')} €
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    <div className="mt-3 pt-3 border-t-2 border-amber-200 flex items-center justify-between">
-                                      <span className="text-sm font-semibold text-amber-900">Set-Preis</span>
-                                      <span className="text-lg font-bold text-amber-900 tabular-nums">
-                                        {(Number(workshop.tireFront.totalPrice) + Number(workshop.tireRear.totalPrice)).toFixed(2).replace('.', ',')} €
-                                      </span>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
-
                               {/* Mixed Tire Recommendations Panel - Front */}
-                              {showTires && workshop.isMixedTires && !workshop.axleSetMatched && workshop.tireFrontRecommendations?.length > 0 && (() => {
+                              {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-front`
                                 const filteredTires = filterAndSortTires(workshop.tireFrontRecommendations, workshopKey)
                                 const visibleAdditionalCount = expandedTireWorkshops[workshopKey] || 0
@@ -3884,7 +3831,7 @@ export default function NewHomePage({
                               })()}
 
                               {/* Mixed Tire Recommendations Panel - Rear */}
-                              {showTires && workshop.isMixedTires && !workshop.axleSetMatched && workshop.tireRearRecommendations?.length > 0 && (() => {
+                              {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-rear`
                                 const filteredTires = filterAndSortTires(workshop.tireRearRecommendations, workshopKey)
                                 const visibleAdditionalCount = expandedTireWorkshops[workshopKey] || 0

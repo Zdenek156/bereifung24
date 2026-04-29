@@ -820,40 +820,62 @@ export async function POST(request: NextRequest) {
 
                     console.log(`âœ… [sameBrand Filter] Workshop ${workshop.id}: Filtered to ${allFrontTiresResult.length} front, ${allRearTiresResult.length} rear tires`)
 
-                    // Re-pick recommendations from filtered lists so the displayed Top-Picks (Günstigster/Beste/Premium)
-                    // also respect the sameBrand filter. Without this, frontRec/rearRec would still come from the
-                    // unfiltered recommendation arrays and could show different brands per axle.
-                    const rebuildRecs = (
-                      original: any,
-                      filteredAll: any[],
-                      qty: number
-                    ) => {
-                      if (!original) return original
-                      const filteredOriginal = (original.recommendations || []).filter((rec: any) =>
-                        matchingBrands.includes(String(rec.tire?.brand || '').toLowerCase())
-                      )
-                      let recs = filteredOriginal
-                      if (recs.length === 0 && filteredAll.length > 0) {
-                        const cheapest = [...filteredAll].sort((a, b) =>
-                          parseFloat(a.sellingPrice) - parseFloat(b.sellingPrice)
-                        )[0]
-                        recs = [{
-                          label: 'Günstigster',
-                          tire: cheapest,
-                          pricePerTire: parseFloat(parseFloat(cheapest.sellingPrice).toFixed(2)),
-                          totalPrice: parseFloat((parseFloat(cheapest.sellingPrice) * qty).toFixed(2)),
-                          quantity: qty,
-                        }]
-                      }
-                      return {
-                        ...original,
-                        available: recs.length > 0,
-                        recommendations: recs,
+                    // Pick a coordinated cheapest PAIR per matching brand, then choose the overall cheapest
+                    // brand pair as the displayed Top-Pick. This ensures frontRec and rearRec are from the
+                    // SAME brand (otherwise each axle would independently pick its own cheapest brand).
+                    const cheapestPerBrandFront = new Map<string, any>()
+                    const cheapestPerBrandRear = new Map<string, any>()
+                    for (const t of allFrontTiresResult) {
+                      const b = String(t.brand || '').toLowerCase()
+                      const price = parseFloat(t.sellingPrice)
+                      const cur = cheapestPerBrandFront.get(b)
+                      if (!cur || price < parseFloat(cur.sellingPrice)) cheapestPerBrandFront.set(b, t)
+                    }
+                    for (const t of allRearTiresResult) {
+                      const b = String(t.brand || '').toLowerCase()
+                      const price = parseFloat(t.sellingPrice)
+                      const cur = cheapestPerBrandRear.get(b)
+                      if (!cur || price < parseFloat(cur.sellingPrice)) cheapestPerBrandRear.set(b, t)
+                    }
+
+                    let bestPairBrand: string | null = null
+                    let bestPairTotal = Number.POSITIVE_INFINITY
+                    for (const b of matchingBrands) {
+                      const f = cheapestPerBrandFront.get(b)
+                      const r = cheapestPerBrandRear.get(b)
+                      if (!f || !r) continue
+                      const total = parseFloat(f.sellingPrice) * frontTireCount + parseFloat(r.sellingPrice) * rearTireCount
+                      if (total < bestPairTotal) {
+                        bestPairTotal = total
+                        bestPairBrand = b
                       }
                     }
 
-                    frontRecsResult = rebuildRecs(frontRecsResult, allFrontTiresResult, frontTireCount)
-                    rearRecsResult = rebuildRecs(rearRecsResult, allRearTiresResult, rearTireCount)
+                    const buildRecFromTire = (tire: any, qty: number, label: string) => ({
+                      label,
+                      tire,
+                      pricePerTire: parseFloat(parseFloat(tire.sellingPrice).toFixed(2)),
+                      totalPrice: parseFloat((parseFloat(tire.sellingPrice) * qty).toFixed(2)),
+                      quantity: qty,
+                    })
+
+                    if (bestPairBrand) {
+                      const fTire = cheapestPerBrandFront.get(bestPairBrand)
+                      const rTire = cheapestPerBrandRear.get(bestPairBrand)
+                      frontRecsResult = {
+                        ...(frontRecsResult || {}),
+                        available: true,
+                        recommendations: [buildRecFromTire(fTire, frontTireCount, 'Günstigster')],
+                      }
+                      rearRecsResult = {
+                        ...(rearRecsResult || {}),
+                        available: true,
+                        recommendations: [buildRecFromTire(rTire, rearTireCount, 'Günstigster')],
+                      }
+                    } else {
+                      frontRecsResult = { ...(frontRecsResult || {}), available: false, recommendations: [] }
+                      rearRecsResult = { ...(rearRecsResult || {}), available: false, recommendations: [] }
+                    }
 
                     frontAvailable = !searchFront || (frontRecsResult?.available && frontRecsResult?.recommendations?.length > 0)
                     rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)

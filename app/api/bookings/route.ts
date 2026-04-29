@@ -244,6 +244,7 @@ export async function GET(req: NextRequest) {
         tireModel: booking.tireModel || null,
         tireSize: booking.tireSize || tireDimensions || null,
         tireQuantity: booking.tireQuantity || booking.quantity || 4,
+        tireData: booking.tireData || null,
         // Pricing
         basePrice: Number(booking.basePrice),
         totalPrice: Number(booking.totalPrice),

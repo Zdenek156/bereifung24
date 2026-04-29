@@ -276,7 +276,7 @@ export async function GET(req: NextRequest) {
                   vehicleType: booking.vehicleSnapshot.vehicleType || null,
                 }
               : null),
-        vehicleDeleted: !booking.vehicle && booking.vehicleId != null,
+        vehicleDeleted: !booking.vehicle,
         tireRequest: {
           season: seasonMap[booking.season || 's'] || 'Sommerreifen',
           width: width,

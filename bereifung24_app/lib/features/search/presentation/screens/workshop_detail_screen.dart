@@ -196,7 +196,11 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
     switch (serviceType) {
       case 'TIRE_CHANGE':
         return TireChangeFilters(
-            state: state, notifier: notifier, vehicle: vehicle, padding: _wp);
+            state: state,
+            notifier: notifier,
+            vehicle: vehicle,
+            padding: _wp,
+            hideBrandDropdown: true);
       case 'WHEEL_CHANGE':
         return WheelChangeFilters(
           state: state,
@@ -993,8 +997,14 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                             child: Center(child: CircularProgressIndicator()),
                           );
                         }
-                        // Show error if search failed
-                        if (currentSearch.error != null) {
+                        // Show error if search failed.
+                        // Suppress vehicle/service-mismatch errors here, because
+                        // the red "Bitte wähle ein Motorrad als Fahrzeug" /
+                        // "nur für PKW" banner above already covers them.
+                        if (currentSearch.error != null &&
+                            currentSearch.error != 'error_need_motorcycle' &&
+                            currentSearch.error != 'error_service_car_only' &&
+                            currentSearch.error != 'error_trailer_tire_only') {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             child: Container(
@@ -1315,17 +1325,24 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                           final hasAnySelected =
                               frontTire != null || rearTire != null;
                           // Motorcycle Achs-Set: combined picker (front+rear as one card)
+                          // Car Mischbereifung Achs-Set: same combined picker but with 2x quantity per axle
                           final isMotoAchsSet =
                               effectiveService == 'MOTORCYCLE_TIRE' &&
                                   searchState.requireSameModel;
+                          final isCarAchsSet =
+                              effectiveService == 'TIRE_CHANGE' &&
+                                  searchState.requireSameModel &&
+                                  searchState.tireCount == 4;
+                          final isAchsSetMode = isMotoAchsSet || isCarAchsSet;
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (rolloCard != null) rolloCard,
-                              if (isMotoAchsSet)
+                              if (isAchsSetMode)
                                 _AchsSetRecommendationsSection(
                                   workshopId: widget.workshopId,
                                   preselected: _tireAutoSelected,
+                                  perAxleQuantity: isCarAchsSet ? 2 : 1,
                                 )
                               else ...[
                                 _TireRecommendationsSection(
@@ -1666,8 +1683,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 navSearchWs!.estimatedDuration.toString(),
                         };
 
-                        // Pass disposal/runflat fees for booking summary
-                        if (!searchState.includeTires && navSearchWs != null) {
+                        // Pass disposal/runflat fees for booking summary (always, both for Nur Montage AND Mit Reifen)
+                        if (navSearchWs != null) {
                           if (navSearchWs.disposalFeeApplied != null &&
                               navSearchWs.disposalFeeApplied! > 0) {
                             params['disposalFeeApplied'] = navSearchWs
@@ -2485,9 +2502,11 @@ class _TireRecommendationsSectionState
 class _AchsSetRecommendationsSection extends ConsumerStatefulWidget {
   final String workshopId;
   final bool preselected;
+  final int perAxleQuantity;
   const _AchsSetRecommendationsSection({
     required this.workshopId,
     this.preselected = false,
+    this.perAxleQuantity = 1,
   });
 
   @override
@@ -2502,6 +2521,7 @@ class _AchsSetRecommendationsSectionState
   int _visibleCount = _initialLimit;
   String? _selectedBrand;
   String? _lastCategory;
+  bool _hasInitialPreselect = false;
 
   @override
   Widget build(BuildContext context) {
@@ -2564,9 +2584,14 @@ class _AchsSetRecommendationsSectionState
     final categoryFilteredPairs =
         allPairs.where((p) => filteredFronts.contains(p.front)).toList();
 
-    // Auto-select first pair when category changes
-    if (selectedCategory != _lastCategory && categoryFilteredPairs.isNotEmpty) {
+    // Auto-select first pair when category changes OR on initial mount
+    final shouldAutoSelect = (selectedCategory != _lastCategory) ||
+        (!_hasInitialPreselect &&
+            selectedFront == null &&
+            selectedRear == null);
+    if (shouldAutoSelect && categoryFilteredPairs.isNotEmpty) {
       _lastCategory = selectedCategory;
+      _hasInitialPreselect = true;
       _selectedBrand = null;
       final firstPair = categoryFilteredPairs.first;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2684,6 +2709,7 @@ class _AchsSetRecommendationsSectionState
             pair: pair,
             isSelected: isSelected,
             categoryOverride: selectedCategory,
+            perAxleQuantity: widget.perAxleQuantity,
             onTap: () {
               if (isSelected) {
                 ref.read(selectedTireFrontProvider.notifier).state = null;
@@ -2735,11 +2761,13 @@ class _AchsSetPairCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final String? categoryOverride;
+  final int perAxleQuantity;
   const _AchsSetPairCard({
     required this.pair,
     required this.isSelected,
     required this.onTap,
     this.categoryOverride,
+    this.perAxleQuantity = 1,
   });
 
   @override
@@ -2747,6 +2775,15 @@ class _AchsSetPairCard extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final f = pair.front;
     final r = pair.rear;
+    // Per-axle effective quantity & price (e.g. 2x VA + 2x HA for cars)
+    final frontQty = perAxleQuantity > 1 ? perAxleQuantity : f.quantity;
+    final rearQty = perAxleQuantity > 1 ? perAxleQuantity : r.quantity;
+    final frontTotal =
+        perAxleQuantity > 1 ? f.pricePerTire * perAxleQuantity : f.totalPrice;
+    final rearTotal =
+        perAxleQuantity > 1 ? r.pricePerTire * perAxleQuantity : r.totalPrice;
+    final setTotal =
+        perAxleQuantity > 1 ? frontTotal + rearTotal : pair.totalPrice;
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(
@@ -2816,7 +2853,7 @@ class _AchsSetPairCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${pair.totalPrice.toStringAsFixed(2)}€',
+                      '${setTotal.toStringAsFixed(2)}€',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -2831,8 +2868,8 @@ class _AchsSetPairCard extends StatelessWidget {
                   context,
                   'VR',
                   f.dimensions ?? '',
-                  f.totalPrice,
-                  f.quantity,
+                  frontTotal,
+                  frontQty,
                   f.pricePerTire,
                 ),
                 const SizedBox(height: 4),
@@ -2841,8 +2878,8 @@ class _AchsSetPairCard extends StatelessWidget {
                   context,
                   'HR',
                   r.dimensions ?? '',
-                  r.totalPrice,
-                  r.quantity,
+                  rearTotal,
+                  rearQty,
                   r.pricePerTire,
                 ),
                 if (isSelected) ...[
@@ -2888,7 +2925,7 @@ class _AchsSetPairCard extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: Text(
-            dimensions,
+            qty > 1 ? '${qty}× $dimensions' : dimensions,
             style: TextStyle(
                 fontSize: 11,
                 color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),

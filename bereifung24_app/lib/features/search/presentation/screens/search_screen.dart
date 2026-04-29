@@ -449,9 +449,12 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
 
     try {
       // Auto-switch to MOTORCYCLE_TIRE when vehicle is a motorcycle
+      // (also when no service preselected, so the search tab works directly)
       var effectiveServiceType = serviceType;
-      if (serviceType == 'TIRE_CHANGE' &&
-          _lastVehicle?.vehicleType == 'MOTORCYCLE') {
+      if (_lastVehicle?.vehicleType == 'MOTORCYCLE' &&
+          (serviceType == null ||
+              serviceType.isEmpty ||
+              serviceType == 'TIRE_CHANGE')) {
         effectiveServiceType = 'MOTORCYCLE_TIRE';
       }
 
@@ -910,6 +913,11 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
       }
     }
 
+    // Auto-Mischbereifung: require same brand for front and rear when Achs-Set toggle is active
+    if (hasMixed && state.tireCount == 4 && state.includeTires) {
+      body['sameBrand'] = state.requireSameModel;
+    }
+
     debugPrint('🔍 Tire search body: $body');
     final response = await _api.searchWorkshopsWithTires(body);
     debugPrint('✅ Tire search response status: ${response.statusCode}');
@@ -1005,6 +1013,11 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     if (city != null && city.isNotEmpty) body['city'] = city;
     if (lat != null) body['customerLat'] = lat;
     if (lng != null) body['customerLon'] = lng;
+
+    // Auto-Mischbereifung: require same brand for front and rear when Achs-Set toggle is active
+    if (hasMixed && state.tireCount == 4 && state.includeTires) {
+      body['sameBrand'] = state.requireSameModel;
+    }
 
     debugPrint('🔍 AI override tire search body: $body');
     final response = await _api.searchWorkshopsWithTires(body);
@@ -1614,11 +1627,13 @@ class TireChangeFilters extends StatelessWidget {
   final WorkshopSearchNotifier notifier;
   final Vehicle? vehicle;
   final EdgeInsetsGeometry? padding;
+  final bool hideBrandDropdown;
   const TireChangeFilters(
       {required this.state,
       required this.notifier,
       this.vehicle,
-      this.padding});
+      this.padding,
+      this.hideBrandDropdown = false});
 
   bool get _vehicleHasMixedTires {
     if (vehicle == null) return false;
@@ -1772,6 +1787,161 @@ class TireChangeFilters extends StatelessWidget {
               ],
             ),
           ],
+          // Auto-Mischbereifung: Achs-Set toggle (only when vehicle has different sizes + 4 tires + Mit Reifen)
+          if (state.includeTires &&
+              _vehicleHasMixedTires &&
+              state.tireCount == 4) ...[
+            const SizedBox(height: 8),
+            _achsSetToggleCar(context),
+            // Brand dropdown (collected from search results) - hidden in workshop detail
+            if (!hideBrandDropdown)
+              Builder(builder: (ctx) {
+              final brands = <String>{};
+              for (final w in state.workshops) {
+                final fb = w.tireFront?['brand']?.toString();
+                if (fb != null && fb.isNotEmpty) brands.add(fb);
+                final rb = w.tireRear?['brand']?.toString();
+                if (rb != null && rb.isNotEmpty) brands.add(rb);
+                for (final rec in w.tireRecommendationsRaw) {
+                  final b = rec['brand']?.toString();
+                  if (b != null && b.isNotEmpty) brands.add(b);
+                }
+              }
+              final sorted = brands.toList()
+                ..sort(
+                    (a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+              if (sorted.isEmpty) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: _brandDropdownCar(ctx, sorted),
+              );
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _achsSetToggleCar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final active = state.requireSameModel;
+    return GestureDetector(
+      onTap: () => notifier.setRequireSameModel(!active),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: active
+              ? const Color(0xFFD97706)
+              : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(10),
+          border: active
+              ? null
+              : Border.all(
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              active ? Icons.check_circle : Icons.circle_outlined,
+              size: 18,
+              color: active
+                  ? Colors.white
+                  : (isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '⭐ Achs-Set: gleicher Hersteller',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: active
+                          ? Colors.white
+                          : (isDark
+                              ? const Color(0xFFF9FAFB)
+                              : Colors.grey[800]),
+                    ),
+                  ),
+                  Text(
+                    active
+                        ? 'Vorder- und Hinterachse vom gleichen Hersteller (2× VA + 2× HA)'
+                        : 'Antippen, um nur Sets vom gleichen Hersteller anzuzeigen',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: active
+                          ? Colors.white70
+                          : (isDark
+                              ? const Color(0xFF94A3B8)
+                              : Colors.grey[600]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _brandDropdownCar(BuildContext context, List<String> brands) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selected = state.selectedBrand;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.filter_list,
+              size: 18,
+              color: isDark ? const Color(0xFF94A3B8) : Colors.grey[700]),
+          const SizedBox(width: 8),
+          Text(
+            'Hersteller:',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFFF9FAFB) : Colors.grey[800],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String?>(
+                value: selected,
+                isExpanded: true,
+                isDense: true,
+                hint: Text('Alle (${brands.length})',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color:
+                          isDark ? const Color(0xFFCBD5E1) : Colors.grey[700],
+                    )),
+                items: <DropdownMenuItem<String?>>[
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Alle Hersteller (${brands.length})',
+                        style: const TextStyle(fontSize: 12)),
+                  ),
+                  ...brands.map((b) => DropdownMenuItem<String?>(
+                        value: b,
+                        child: Text(b, style: const TextStyle(fontSize: 12)),
+                      )),
+                ],
+                onChanged: (val) => notifier.setSelectedBrand(val),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -3263,9 +3433,15 @@ class _WorkshopCard extends ConsumerWidget {
             .map((r) => TireRecommendation.fromJson(r))
             .toList();
 
-        // Apply brand filter (motorcycle Hersteller-Dropdown) before picking
+        // Apply brand filter (Hersteller-Dropdown) before picking.
+        // For motorcycle: applies whenever a brand is selected.
+        // For car (Mischbereifung): applies when Achs-Set toggle is ON.
         final brandFilter = searchState.selectedBrand;
-        if (isMotorcycleTire && brandFilter != null && brandFilter.isNotEmpty) {
+        final brandFilterApplies = brandFilter != null &&
+            brandFilter.isNotEmpty &&
+            (isMotorcycleTire ||
+                (isTireChange && searchState.requireSameModel));
+        if (brandFilterApplies) {
           final needle = brandFilter.toLowerCase();
           final filteredFront =
               frontRecs.where((t) => t.brand.toLowerCase() == needle).toList();
@@ -3275,15 +3451,19 @@ class _WorkshopCard extends ConsumerWidget {
           if (filteredRear.isNotEmpty) rearRecs = filteredRear;
         }
 
-        // Achs-Set: ensure front+rear share brand+model.
-        // Pick the cheapest matching pair (after category + brand filtering).
-        if (isMotorcycleTire &&
-            searchState.requireSameModel &&
+        // Achs-Set: pick coordinated pair so VA+HA share brand (and model for moto).
+        // Motorcycle: brand+model match required (sameModel).
+        // Car Mischbereifung: brand-only match (sameBrand) — different models per axle allowed.
+        final isCarAchsSet = isTireChange && searchState.requireSameModel;
+        final isMotoAchsSet = isMotorcycleTire && searchState.requireSameModel;
+        if ((isMotoAchsSet || isCarAchsSet) &&
             frontRecs.isNotEmpty &&
             rearRecs.isNotEmpty) {
           final rearByKey = <String, TireRecommendation>{};
+          String keyOf(TireRecommendation t) =>
+              '${t.brand.toLowerCase()}|${t.model.toLowerCase()}';
           for (final r in rearRecs) {
-            final key = '${r.brand.toLowerCase()}|${r.model.toLowerCase()}';
+            final key = keyOf(r);
             final existing = rearByKey[key];
             if (existing == null || r.totalPrice < existing.totalPrice) {
               rearByKey[key] = r;
@@ -3295,8 +3475,7 @@ class _WorkshopCard extends ConsumerWidget {
           TireRecommendation? bestRear;
           double bestSum = double.infinity;
           for (final f in pool) {
-            final r = rearByKey[
-                '${f.brand.toLowerCase()}|${f.model.toLowerCase()}'];
+            final r = rearByKey[keyOf(f)];
             if (r == null) continue;
             final sum = f.totalPrice + r.totalPrice;
             if (sum < bestSum) {

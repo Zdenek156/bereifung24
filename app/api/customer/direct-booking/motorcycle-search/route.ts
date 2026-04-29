@@ -62,10 +62,13 @@ export async function POST(request: NextRequest) {
       tireDimensionsFront,
       tireDimensionsRear,
       tireFilters,
+      sameModel = false, // Achs-Set: only match tires where front+rear share brand AND model
       includeDisposal = true, // Default: include disposal fee
       forcedWorkshopId,
       forcedWorkshopSlug,
     } = body
+
+    console.log('🏍️ [MOTORCYCLE-SEARCH] sameModel (Achs-Set):', sameModel)
 
     console.log('🏍️ [MOTORCYCLE-SEARCH] tireFilters received:', JSON.stringify(tireFilters))
     console.log('🏍️ [MOTORCYCLE-SEARCH] tireFilters?.construction:', tireFilters?.construction)
@@ -534,6 +537,93 @@ export async function POST(request: NextRequest) {
               }
             }
             
+            // ============================================================
+            // ACHS-SET FILTER: only keep tires where front+rear share brand AND model
+            // Picks the matching set with the lowest combined price.
+            // ============================================================
+            let axleSetMatched = false
+            if (
+              sameModel &&
+              needsFrontTires &&
+              needsRearTires &&
+              availableFront &&
+              availableRear &&
+              allFrontTires.length > 0 &&
+              allRearTires.length > 0
+            ) {
+              const keyOf = (t: { brand: string; model: string }) =>
+                `${t.brand}|${t.model}`.toLowerCase().trim()
+
+              const frontKeys = new Set(allFrontTires.map(keyOf))
+              const matchingKeys = new Set(
+                allRearTires.map(keyOf).filter((k) => frontKeys.has(k))
+              )
+
+              if (matchingKeys.size === 0) {
+                console.log(
+                  `❌ [Achs-Set] Workshop ${workshop.id}: keine passenden Sets (${frontKeys.size} front / ${new Set(allRearTires.map(keyOf)).size} rear brand+model) - workshop ausgeschlossen`
+                )
+                return null
+              }
+
+              // Filter both lists to matching tires only
+              const matchedFront = allFrontTires.filter((t) => matchingKeys.has(keyOf(t)))
+              const matchedRear = allRearTires.filter((t) => matchingKeys.has(keyOf(t)))
+
+              // Find best (cheapest combined) matching set
+              let bestSet: {
+                key: string
+                front: typeof matchedFront[0]
+                rear: typeof matchedRear[0]
+                total: number
+              } | null = null
+
+              for (const key of matchingKeys) {
+                const f = matchedFront
+                  .filter((t) => keyOf(t) === key)
+                  .sort((a, b) => a.sellingPrice - b.sellingPrice)[0]
+                const r = matchedRear
+                  .filter((t) => keyOf(t) === key)
+                  .sort((a, b) => a.sellingPrice - b.sellingPrice)[0]
+                if (f && r) {
+                  const total = f.sellingPrice + r.sellingPrice
+                  if (!bestSet || total < bestSet.total) {
+                    bestSet = { key, front: f, rear: r, total }
+                  }
+                }
+              }
+
+              if (!bestSet) {
+                return null
+              }
+
+              // Override list + selected recs to the matched set
+              allFrontTires = matchedFront
+              allRearTires = matchedRear
+
+              const setLabel = '⭐ Achs-Set'
+              frontRec = {
+                label: setLabel,
+                tire: bestSet.front,
+                pricePerTire: bestSet.front.sellingPrice,
+                totalPrice: bestSet.front.sellingPrice,
+                quantity: 1,
+              }
+              rearRec = {
+                label: setLabel,
+                tire: bestSet.rear,
+                pricePerTire: bestSet.rear.sellingPrice,
+                totalPrice: bestSet.rear.sellingPrice,
+                quantity: 1,
+              }
+              totalTirePrice = bestSet.total
+              axleSetMatched = true
+
+              console.log(
+                `✅ [Achs-Set] Workshop ${workshop.id}: ${matchingKeys.size} Set(s) verfügbar, best: ${bestSet.front.brand} ${bestSet.front.model} @ €${bestSet.total.toFixed(2)}`
+              )
+            }
+
             // Only include workshop if ALL requested tires are available
             const allRequiredTiresAvailable = 
               (!needsFrontTires || availableFront) && 
@@ -601,10 +691,59 @@ export async function POST(request: NextRequest) {
               )
             }
 
+            // If Achs-Set matched: filter recommendation lists to ONLY matching brand+model
+            // so the dropdown can't suggest mismatched alternatives.
+            if (axleSetMatched && frontRec && rearRec) {
+              const matchKey = `${frontRec.tire.brand}|${frontRec.tire.model}`.toLowerCase().trim()
+              const keyOfRec = (r: any) =>
+                `${r.tire.brand}|${r.tire.model}`.toLowerCase().trim()
+
+              if (frontRecsResult) {
+                frontRecsResult = {
+                  ...frontRecsResult,
+                  recommendations: frontRecsResult.recommendations.filter(
+                    (r) => keyOfRec(r) === matchKey
+                  ),
+                }
+                if (frontRecsResult.recommendations.length === 0) {
+                  // Synthesize one rec so the response payload still renders
+                  frontRecsResult.recommendations = [
+                    {
+                      label: '⭐ Achs-Set',
+                      tire: frontRec.tire as any,
+                      pricePerTire: frontRec.pricePerTire,
+                      totalPrice: frontRec.totalPrice,
+                      quantity: 1,
+                    },
+                  ] as any
+                }
+              }
+              if (rearRecsResult) {
+                rearRecsResult = {
+                  ...rearRecsResult,
+                  recommendations: rearRecsResult.recommendations.filter(
+                    (r) => keyOfRec(r) === matchKey
+                  ),
+                }
+                if (rearRecsResult.recommendations.length === 0) {
+                  rearRecsResult.recommendations = [
+                    {
+                      label: '⭐ Achs-Set',
+                      tire: rearRec.tire as any,
+                      pricePerTire: rearRec.pricePerTire,
+                      totalPrice: rearRec.totalPrice,
+                      quantity: 1,
+                    },
+                  ] as any
+                }
+              }
+            }
+
             return {
               ...workshop,
               tireAvailable: true,
               isMixedTires: true,
+              axleSetMatched, // ⭐ true if sameModel filter matched a complete set
               tirePrice: totalTirePrice,
               ...(frontRec && frontRecsResult && {
                 tireFront: {

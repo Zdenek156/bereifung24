@@ -312,6 +312,7 @@ export default function NewHomePage({
   const [showDOTTires, setShowDOTTires] = useState(false) // Default: DOT tires hidden
   const [tireConstruction, setTireConstruction] = useState<'radial' | 'diagonal' | ''>('radial') // Default: Radial for motorcycle
   const [requireSameBrand, setRequireSameBrand] = useState(false) // For mixed 4 tires: same brand
+  const [requireSameModel, setRequireSameModel] = useState(false) // For motorcycle: Achs-Set (same brand AND model front+rear)
   const [selectedBrandFilter, setSelectedBrandFilter] = useState<string>('') // Global brand filter for tire recommendations
   const [selectedVehicleId, setSelectedVehicleId] = useState(initialState?.selectedVehicleId || '')
   const [customerVehicles, setCustomerVehicles] = useState<any[]>([])
@@ -1306,7 +1307,9 @@ export default function NewHomePage({
             threePMSF: require3PMSF || undefined,
             showDOTTires: showDOTTires,
             construction: tireConstruction || undefined
-          } : undefined
+          } : undefined,
+          // Achs-Set: only show workshops where front+rear share brand AND model
+          sameModel: includeTires && parsedFront && parsedRear && selectedPackages.includes('both') ? requireSameModel : false
         }
         
         console.log('🏍️ [searchWorkshops] Motorcycle payload:', {
@@ -2949,6 +2952,41 @@ export default function NewHomePage({
                         </div>
                       )}
 
+                      {/* Achs-Set Filter (only for MOTORCYCLE_TIRE + Mit Reifen + Beide Reifen) */}
+                      {selectedService === 'MOTORCYCLE_TIRE' &&
+                        includeTires &&
+                        selectedPackages.includes('both') && (
+                          <div className="p-5 border-b border-gray-200 lg:border-b-0">
+                            <h4 className="font-semibold mb-3 flex items-center gap-2">
+                              ⭐ Achs-Set
+                            </h4>
+                            <label className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                              <input
+                                type="checkbox"
+                                checked={requireSameModel}
+                                onChange={(e) => {
+                                  const newValue = e.target.checked
+                                  console.log('⭐ [Achs-Set] Toggled:', newValue)
+                                  setRequireSameModel(newValue)
+                                  if (hasSearched && customerLocation) {
+                                    searchWorkshops(customerLocation)
+                                  }
+                                }}
+                                className="w-4 h-4 mt-0.5 text-primary-600 focus:ring-primary-500 rounded"
+                              />
+                              <div className="flex-1">
+                                <span className="text-sm font-medium">
+                                  Nur gleicher Hersteller & Modell
+                                </span>
+                                <p className="text-xs text-gray-500 mt-0.5">
+                                  Vorne und hinten dasselbe Profil (z. B. Metzeler Sportec M5
+                                  Interact) – vom Hersteller empfohlen für optimales Fahrverhalten.
+                                </p>
+                              </div>
+                            </label>
+                          </div>
+                        )}
+
                       {/* EU Labels (only for TIRE_CHANGE with tires) */}
                       {selectedService === 'TIRE_CHANGE' && includeTires && (
                         <div className="p-5 border-b border-gray-200 lg:border-b-0">
@@ -3178,9 +3216,29 @@ export default function NewHomePage({
                         <h3 className="text-2xl font-bold text-gray-900 mb-2">
                           Keine Werkstätten gefunden
                         </h3>
-                        <p className="text-gray-600">
-                          Versuchen Sie einen größeren Umkreis oder eine andere PLZ
-                        </p>
+                        {selectedService === 'MOTORCYCLE_TIRE' && requireSameModel ? (
+                          <>
+                            <p className="text-gray-600 mb-4">
+                              Im gewählten Umkreis ist kein passendes <strong>Achs-Set</strong> (gleicher Hersteller &amp; Modell für vorne und hinten) verfügbar.
+                            </p>
+                            <button
+                              onClick={() => {
+                                setRequireSameModel(false)
+                                if (customerLocation) searchWorkshops(customerLocation)
+                              }}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
+                            >
+                              ⭐ Achs-Set Filter deaktivieren
+                            </button>
+                            <p className="text-gray-500 text-xs mt-3">
+                              Oder versuchen Sie einen größeren Umkreis.
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-gray-600">
+                            Versuchen Sie einen größeren Umkreis oder eine andere PLZ
+                          </p>
+                        )}
                       </>
                     )}
                   </div>
@@ -3374,6 +3432,14 @@ export default function NewHomePage({
                                   {workshop.city && (
                                     <span className="inline-flex items-center px-2.5 py-0.5 bg-gray-100 text-gray-700 text-xs font-medium rounded-md">
                                       {workshop.city}
+                                    </span>
+                                  )}
+                                  {workshop.axleSetMatched && (
+                                    <span
+                                      className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 text-amber-800 text-xs font-semibold rounded-md border border-amber-200"
+                                      title="Vorder- und Hinterreifen vom selben Hersteller und Modell – vom Hersteller empfohlen"
+                                    >
+                                      ⭐ Achs-Set
                                     </span>
                                   )}
                                 </div>

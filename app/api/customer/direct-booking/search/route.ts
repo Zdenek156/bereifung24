@@ -748,8 +748,8 @@ export async function POST(request: NextRequest) {
                 }
                 
                 // Check if required searches found tires
-                const frontAvailable = !searchFront || (frontRecsResult?.available && frontRecsResult?.recommendations?.length > 0)
-                const rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
+                let frontAvailable = !searchFront || (frontRecsResult?.available && frontRecsResult?.recommendations?.length > 0)
+                let rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
                 
                 // Get ALL available tires for front and rear (not just top 3 recommendations)
                 let allFrontTiresResult: any[] = []
@@ -817,8 +817,46 @@ export async function POST(request: NextRequest) {
                     // Filter both lists to only tires from matching brands
                     allFrontTiresResult = allFrontTiresResult.filter(t => matchingBrands.includes(t.brand.toLowerCase()))
                     allRearTiresResult = allRearTiresResult.filter(t => matchingBrands.includes(t.brand.toLowerCase()))
-                    
+
                     console.log(`âœ… [sameBrand Filter] Workshop ${workshop.id}: Filtered to ${allFrontTiresResult.length} front, ${allRearTiresResult.length} rear tires`)
+
+                    // Re-pick recommendations from filtered lists so the displayed Top-Picks (Günstigster/Beste/Premium)
+                    // also respect the sameBrand filter. Without this, frontRec/rearRec would still come from the
+                    // unfiltered recommendation arrays and could show different brands per axle.
+                    const rebuildRecs = (
+                      original: any,
+                      filteredAll: any[],
+                      qty: number
+                    ) => {
+                      if (!original) return original
+                      const filteredOriginal = (original.recommendations || []).filter((rec: any) =>
+                        matchingBrands.includes(String(rec.tire?.brand || '').toLowerCase())
+                      )
+                      let recs = filteredOriginal
+                      if (recs.length === 0 && filteredAll.length > 0) {
+                        const cheapest = [...filteredAll].sort((a, b) =>
+                          parseFloat(a.sellingPrice) - parseFloat(b.sellingPrice)
+                        )[0]
+                        recs = [{
+                          label: 'Günstigster',
+                          tire: cheapest,
+                          pricePerTire: parseFloat(parseFloat(cheapest.sellingPrice).toFixed(2)),
+                          totalPrice: parseFloat((parseFloat(cheapest.sellingPrice) * qty).toFixed(2)),
+                          quantity: qty,
+                        }]
+                      }
+                      return {
+                        ...original,
+                        available: recs.length > 0,
+                        recommendations: recs,
+                      }
+                    }
+
+                    frontRecsResult = rebuildRecs(frontRecsResult, allFrontTiresResult, frontTireCount)
+                    rearRecsResult = rebuildRecs(rearRecsResult, allRearTiresResult, rearTireCount)
+
+                    frontAvailable = !searchFront || (frontRecsResult?.available && frontRecsResult?.recommendations?.length > 0)
+                    rearAvailable = !searchRear || (rearRecsResult?.available && rearRecsResult?.recommendations?.length > 0)
                   } else {
                     console.log(`âŒ [sameBrand Filter] Workshop ${workshop.id}: No matching brands found, skipping workshop`)
                     return null

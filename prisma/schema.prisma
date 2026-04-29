@@ -5899,6 +5899,9 @@ model DirectBooking {
   tire3PMSF             Boolean  @default(false) @map("tire_3pmsf")
   tireData              Json?    @map("tire_data")
 
+  // Vehicle Snapshot (preserved even if Vehicle gets deleted)
+  vehicleSnapshot       Json?    @map("vehicle_snapshot") // { brand, model, year, licensePlate, vehicleType }
+
   // Supplier Auto-Order Tracking
   supplierOrderNumber   String?   @map("supplier_order_number")
   supplierOrderedAt     DateTime? @map("supplier_ordered_at")

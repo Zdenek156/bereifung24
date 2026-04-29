@@ -110,10 +110,10 @@ class _BookingDetailContent extends StatelessWidget {
   }
 
   String _paymentMethodLabel() {
-    switch ((booking.paymentMethodDetail ?? booking.paymentMethod ?? '')
-        .toLowerCase()) {
+    final detail = (booking.paymentMethodDetail ?? '').toLowerCase();
+    switch (detail) {
       case 'card':
-        return 'Card';
+        return 'Kreditkarte';
       case 'google_pay':
         return 'Google Pay';
       case 'apple_pay':
@@ -128,6 +128,14 @@ class _BookingDetailContent extends StatelessWidget {
         return 'Amazon Pay';
       case 'link':
         return 'Link';
+    }
+    switch ((booking.paymentMethod ?? '').toUpperCase()) {
+      case 'STRIPE':
+        return 'Kreditkarte';
+      case 'PAYPAL':
+        return 'PayPal';
+      case 'CASH':
+        return 'Bar vor Ort';
       default:
         return booking.paymentMethod ?? '';
     }
@@ -281,21 +289,45 @@ class _BookingDetailContent extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Vehicle
-          _DetailCard(
-            icon: Icons.directions_car,
-            title: S.of(context)!.vehicle,
-            children: [
-              Text(booking.vehicleDisplay,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              if (booking.licensePlate != null &&
-                  booking.licensePlate!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(S.of(context)!.licensePlateLabel(booking.licensePlate!),
-                    style: TextStyle(color: Colors.grey[600])),
+          // Vehicle (only when actually set or deleted)
+          if (booking.vehicleBrand != null ||
+              booking.vehicleModel != null ||
+              (booking.licensePlate != null &&
+                  booking.licensePlate!.isNotEmpty) ||
+              booking.vehicleDeleted) ...[
+            _DetailCard(
+              icon: Icons.directions_car,
+              title: S.of(context)!.vehicle,
+              children: [
+                if (booking.vehicleBrand != null ||
+                    booking.vehicleModel != null)
+                  Text(booking.vehicleDisplay,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                if (booking.licensePlate != null &&
+                    booking.licensePlate!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(S.of(context)!.licensePlateLabel(booking.licensePlate!),
+                      style: TextStyle(color: Colors.grey[600])),
+                ],
+                if (booking.vehicleDeleted) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    (booking.vehicleBrand != null ||
+                            booking.vehicleModel != null ||
+                            (booking.licensePlate != null &&
+                                booking.licensePlate!.isNotEmpty))
+                        ? 'Fahrzeug wurde aus Ihrer Fahrzeugverwaltung gelöscht'
+                        : 'Fahrzeug nicht mehr vorhanden (gelöscht)',
+                    style: TextStyle(
+                      color: Colors.orange[700],
+                      fontStyle: FontStyle.italic,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ],
-            ],
-          ),
+            ),
+          ],
 
           // Tire details (only for tire change services)
           if (booking.isTireChangeService && _hasTireInfo) ...[
@@ -303,23 +335,27 @@ class _BookingDetailContent extends StatelessWidget {
             _DetailCard(
               icon: Icons.tire_repair,
               title: S.of(context)!.tireDetails,
-              children: [
-                if (booking.tireBrand != null || booking.tireModel != null)
-                  Text(
-                    [booking.tireBrand, booking.tireModel]
-                        .where((e) => e != null)
-                        .join(' '),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                if (booking.tireSize != null) ...[
-                  const SizedBox(height: 4),
-                  Text(S.of(context)!.tireSizeLabel(booking.tireSize!)),
-                ],
-                if (booking.tireQuantity != null) ...[
-                  const SizedBox(height: 2),
-                  Text(S.of(context)!.tireQuantityLabel(booking.tireQuantity!)),
-                ],
-              ],
+              children: booking.isMixedTires
+                  ? _buildMixedTireRows(context)
+                  : [
+                      if (booking.tireBrand != null || booking.tireModel != null)
+                        Text(
+                          [booking.tireBrand, booking.tireModel]
+                              .where((e) => e != null)
+                              .join(' '),
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      if (booking.tireSize != null) ...[
+                        const SizedBox(height: 4),
+                        Text(S.of(context)!.tireSizeLabel(booking.tireSize!)),
+                      ],
+                      if (booking.tireQuantity != null) ...[
+                        const SizedBox(height: 2),
+                        Text(S
+                            .of(context)!
+                            .tireQuantityLabel(booking.tireQuantity!)),
+                      ],
+                    ],
             ),
           ],
 
@@ -357,16 +393,12 @@ class _BookingDetailContent extends StatelessWidget {
               children: [
                 if (booking.paymentMethod != null) ...[
                   _PriceRow(S.of(context)!.paymentType, _paymentMethodLabel()),
-                  const SizedBox(height: 6),
-                ],
-                if (booking.paymentStatus != null) ...[
-                  _PriceRow(S.of(context)!.paymentStatusLabel,
-                      _paymentStatusLabel(context)),
                   const Divider(height: 16),
                 ],
                 if (booking.basePrice != null)
-                  _PriceRow(S.of(context)!.basePrice,
+                  _PriceRow(_serviceLabel(context),
                       '${booking.basePrice!.toStringAsFixed(2)} €'),
+                ..._buildTirePriceRows(context),
                 if (booking.balancingPrice != null &&
                     booking.balancingPrice! > 0)
                   _PriceRow(S.of(context)!.balancingX4,
@@ -466,7 +498,74 @@ class _BookingDetailContent extends StatelessWidget {
   bool get _hasTireInfo =>
       booking.tireBrand != null ||
       booking.tireModel != null ||
-      booking.tireSize != null;
+      booking.tireSize != null ||
+      booking.isMixedTires;
+
+  List<Widget> _buildMixedTireRows(BuildContext context) {
+    final s = S.of(context)!;
+    final isMoto = booking.isMotorcycleService;
+    final frontLabel = isMoto ? s.frontAxleMoto : s.frontAxle;
+    final rearLabel = isMoto ? s.rearAxleMoto : s.rearAxle;
+    final rows = <Widget>[];
+    void addAxle(String label, Map<String, dynamic>? t) {
+      if (t == null) return;
+      if (rows.isNotEmpty) rows.add(const SizedBox(height: 10));
+      final brandModel = [t['brand'], t['model']]
+          .where((e) => e != null && e.toString().isNotEmpty)
+          .join(' ');
+      final size = t['size']?.toString();
+      final qty = t['quantity'] is int
+          ? t['quantity'] as int
+          : int.tryParse(t['quantity']?.toString() ?? '');
+      rows.add(Text('$label: $brandModel',
+          style: const TextStyle(fontWeight: FontWeight.w600)));
+      if (size != null && size.isNotEmpty) {
+        rows.add(const SizedBox(height: 2));
+        rows.add(Text(s.tireSizeLabel(size)));
+      }
+      if (qty != null) {
+        rows.add(const SizedBox(height: 2));
+        rows.add(Text(s.tireQuantityLabel(qty)));
+      }
+    }
+
+    addAxle(frontLabel, booking.frontTire);
+    addAxle(rearLabel, booking.rearTire);
+    return rows;
+  }
+
+  List<Widget> _buildTirePriceRows(BuildContext context) {
+    final s = S.of(context)!;
+    final isMoto = booking.isMotorcycleService;
+    final frontLabel = isMoto ? s.frontAxleMoto : s.frontAxle;
+    final rearLabel = isMoto ? s.rearAxleMoto : s.rearAxle;
+    final rows = <Widget>[];
+    double? readPrice(Map<String, dynamic>? t) {
+      if (t == null) return null;
+      final v = t['totalPrice'] ?? t['purchasePrice'];
+      if (v is num) return v.toDouble();
+      if (v is String) return double.tryParse(v);
+      return null;
+    }
+
+    if (booking.isMixedTires) {
+      final fp = readPrice(booking.frontTire);
+      final rp = readPrice(booking.rearTire);
+      if (fp != null && fp > 0) {
+        rows.add(const SizedBox(height: 6));
+        rows.add(_PriceRow(
+            '$frontLabel: ${booking.frontTire?['brand'] ?? ''}'.trim(),
+            '${fp.toStringAsFixed(2)} €'));
+      }
+      if (rp != null && rp > 0) {
+        rows.add(const SizedBox(height: 6));
+        rows.add(_PriceRow(
+            '$rearLabel: ${booking.rearTire?['brand'] ?? ''}'.trim(),
+            '${rp.toStringAsFixed(2)} €'));
+      }
+    }
+    return rows;
+  }
 
   String _formatDate(BuildContext context, DateTime date) {
     final locale = Localizations.localeOf(context).toString();

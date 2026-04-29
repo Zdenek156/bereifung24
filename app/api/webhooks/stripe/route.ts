@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { buildVehicleSnapshot } from '@/lib/vehicle-snapshot'
 import { getApiSetting } from '@/lib/api-settings'
 import Stripe from 'stripe'
 import { notifyBookingUpdate } from '@/lib/pushNotificationService'
@@ -414,11 +415,13 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       }
 
       // Create DirectBooking record
+      const vehicleSnapshot = await buildVehicleSnapshot(vehicleId)
       const booking = await prisma.directBooking.create({
         data: {
           workshopId,
           customerId,
           vehicleId: vehicleId!,
+          ...(vehicleSnapshot ? { vehicleSnapshot } : {}),
           serviceType: serviceType!,
           date: new Date(date),
           time,

@@ -206,7 +206,10 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
         );
       case 'MOTORCYCLE_TIRE':
         return MotorcycleTireFilters(
-            state: state, notifier: notifier, padding: _wp);
+            state: state,
+            notifier: notifier,
+            padding: _wp,
+            hideBrandDropdown: true);
       case 'TIRE_REPAIR':
         return ServiceToggleFilter(
           state: state,
@@ -1311,31 +1314,44 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                               frontTire != null && rearTire != null;
                           final hasAnySelected =
                               frontTire != null || rearTire != null;
+                          // Motorcycle Achs-Set: combined picker (front+rear as one card)
+                          final isMotoAchsSet =
+                              effectiveService == 'MOTORCYCLE_TIRE' &&
+                                  searchState.requireSameModel;
                           return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               if (rolloCard != null) rolloCard,
-                              _TireRecommendationsSection(
-                                workshopId: widget.workshopId,
-                                axleFilter: 'front',
-                                axleLabel: effectiveService == 'MOTORCYCLE_TIRE'
-                                    ? S.of(context)!.frontWheel
-                                    : '${S.of(context)!.frontAxleFull} (${S.of(context)!.frontAxle})',
-                                preselected: _tireAutoSelected,
-                                isMotorcycle:
-                                    effectiveService == 'MOTORCYCLE_TIRE',
-                              ),
-                              const SizedBox(height: 16),
-                              _TireRecommendationsSection(
-                                workshopId: widget.workshopId,
-                                axleFilter: 'rear',
-                                axleLabel: effectiveService == 'MOTORCYCLE_TIRE'
-                                    ? S.of(context)!.rearWheel
-                                    : '${S.of(context)!.rearAxleFull} (${S.of(context)!.rearAxle})',
-                                preselected: _tireAutoSelected,
-                                isMotorcycle:
-                                    effectiveService == 'MOTORCYCLE_TIRE',
-                              ),
+                              if (isMotoAchsSet)
+                                _AchsSetRecommendationsSection(
+                                  workshopId: widget.workshopId,
+                                  preselected: _tireAutoSelected,
+                                )
+                              else ...[
+                                _TireRecommendationsSection(
+                                  workshopId: widget.workshopId,
+                                  axleFilter: 'front',
+                                  axleLabel:
+                                      effectiveService == 'MOTORCYCLE_TIRE'
+                                          ? S.of(context)!.frontWheel
+                                          : '${S.of(context)!.frontAxleFull} (${S.of(context)!.frontAxle})',
+                                  preselected: _tireAutoSelected,
+                                  isMotorcycle:
+                                      effectiveService == 'MOTORCYCLE_TIRE',
+                                ),
+                                const SizedBox(height: 16),
+                                _TireRecommendationsSection(
+                                  workshopId: widget.workshopId,
+                                  axleFilter: 'rear',
+                                  axleLabel:
+                                      effectiveService == 'MOTORCYCLE_TIRE'
+                                          ? S.of(context)!.rearWheel
+                                          : '${S.of(context)!.rearAxleFull} (${S.of(context)!.rearAxle})',
+                                  preselected: _tireAutoSelected,
+                                  isMotorcycle:
+                                      effectiveService == 'MOTORCYCLE_TIRE',
+                                ),
+                              ],
                               // Combined Preisübersicht for Mischbereifung
                               if (hasAnySelected &&
                                   ws!.searchBasePrice != null) ...[
@@ -1538,6 +1554,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
         data: (workshop) {
           final effectiveService = widget.serviceType ?? _selectedServiceType;
           final isTireChange = effectiveService == 'TIRE_CHANGE';
+          final isMotorcycleTire = effectiveService == 'MOTORCYCLE_TIRE';
           final selectedTire = ref.watch(selectedTireProvider);
           final frontTire = ref.watch(selectedTireFrontProvider);
           final rearTire = ref.watch(selectedTireRearProvider);
@@ -1548,7 +1565,8 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
           final hasAxleData = ws != null &&
               ws.tireRecommendationsRaw
                   .any((r) => r['axle'] == 'front' || r['axle'] == 'rear');
-          final isTireWithPurchase = isTireChange && searchState.includeTires;
+          final isTireWithPurchase =
+              (isTireChange || isMotorcycleTire) && searchState.includeTires;
           final needsTire = isTireWithPurchase &&
               (hasAxleData
                   ? (frontTire == null || rearTire == null)
@@ -2032,8 +2050,25 @@ class _TireRecommendationsSectionState
             .toList()
         : workshop.tireRecommendationsRaw;
 
-    final allRecommendations =
+    final allRecommendationsUnfiltered =
         rawRecs.map((r) => TireRecommendation.fromJson(r)).toList();
+
+    // Achs-Set: when active, restrict to tires whose brand+model exists on the OTHER axle
+    List<TireRecommendation> allRecommendations = allRecommendationsUnfiltered;
+    if (widget.isMotorcycle &&
+        searchState.requireSameModel &&
+        widget.axleFilter != null) {
+      final otherAxle = widget.axleFilter == 'front' ? 'rear' : 'front';
+      final otherKeys = workshop.tireRecommendationsRaw
+          .where((r) => r['axle'] == otherAxle)
+          .map((r) =>
+              '${r['brand']?.toString().toLowerCase() ?? ''}|${r['model']?.toString().toLowerCase() ?? ''}')
+          .toSet();
+      allRecommendations = allRecommendationsUnfiltered.where((t) {
+        final key = '${t.brand.toLowerCase()}|${t.model.toLowerCase()}';
+        return otherKeys.contains(key);
+      }).toList();
+    }
 
     // Apply web-style category filter
     final categoryFiltered =
@@ -2138,9 +2173,16 @@ class _TireRecommendationsSectionState
                     );
                   }),
                 ],
-                onChanged: (value) => setState(() {
-                  _selectedBrand = value;
-                }),
+                onChanged: (value) {
+                  if (value != null) {
+                    ref
+                        .read(workshopSearchProvider.notifier)
+                        .setTireCategory(null);
+                  }
+                  setState(() {
+                    _selectedBrand = value;
+                  });
+                },
               ),
             ),
             const SizedBox(height: 8),
@@ -2302,10 +2344,17 @@ class _TireRecommendationsSectionState
                   );
                 }),
               ],
-              onChanged: (value) => setState(() {
-                _selectedBrand = value;
-                _visibleCount = _initialLimit;
-              }),
+              onChanged: (value) {
+                if (value != null) {
+                  ref
+                      .read(workshopSearchProvider.notifier)
+                      .setTireCategory(null);
+                }
+                setState(() {
+                  _selectedBrand = value;
+                  _visibleCount = _initialLimit;
+                });
+              },
             ),
           ),
           const SizedBox(height: 12),
@@ -2426,6 +2475,469 @@ class _TireRecommendationsSectionState
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Achs-Set tire picker for motorcycles: pairs front+rear by brand+model
+/// and shows each pair as a single tappable card. Tapping selects both
+/// front and rear tire providers.
+class _AchsSetRecommendationsSection extends ConsumerStatefulWidget {
+  final String workshopId;
+  final bool preselected;
+  const _AchsSetRecommendationsSection({
+    required this.workshopId,
+    this.preselected = false,
+  });
+
+  @override
+  ConsumerState<_AchsSetRecommendationsSection> createState() =>
+      _AchsSetRecommendationsSectionState();
+}
+
+class _AchsSetRecommendationsSectionState
+    extends ConsumerState<_AchsSetRecommendationsSection> {
+  static const _initialLimit = 5;
+  static const _pageSize = 5;
+  int _visibleCount = _initialLimit;
+  String? _selectedBrand;
+  String? _lastCategory;
+
+  @override
+  Widget build(BuildContext context) {
+    final searchState = ref.watch(workshopSearchProvider);
+    final selectedFront = ref.watch(selectedTireFrontProvider);
+    final selectedRear = ref.watch(selectedTireRearProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selectedCategory = searchState.selectedTireCategory;
+
+    final workshop = searchState.workshops
+        .where((w) => w.id == widget.workshopId)
+        .firstOrNull;
+    if (workshop == null || workshop.tireRecommendationsRaw.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // Split into front/rear lists
+    final frontRecs = workshop.tireRecommendationsRaw
+        .where((r) => r['axle'] == 'front')
+        .map((r) => TireRecommendation.fromJson(r))
+        .toList();
+    final rearRecs = workshop.tireRecommendationsRaw
+        .where((r) => r['axle'] == 'rear')
+        .map((r) => TireRecommendation.fromJson(r))
+        .toList();
+
+    // Build rear lookup keyed by brand|model (cheapest rear per pair)
+    final rearByKey = <String, TireRecommendation>{};
+    for (final r in rearRecs) {
+      final key = '${r.brand.toLowerCase()}|${r.model.toLowerCase()}';
+      final existing = rearByKey[key];
+      if (existing == null || r.totalPrice < existing.totalPrice) {
+        rearByKey[key] = r;
+      }
+    }
+
+    // Pair each front with cheapest matching rear; deduplicate per brand|model
+    final pairsByKey = <String, _AchsSetPair>{};
+    for (final f in frontRecs) {
+      final key = '${f.brand.toLowerCase()}|${f.model.toLowerCase()}';
+      final r = rearByKey[key];
+      if (r == null) continue;
+      final existing = pairsByKey[key];
+      final pair = _AchsSetPair(front: f, rear: r);
+      if (existing == null ||
+          pair.totalPrice < existing.totalPrice) {
+        pairsByKey[key] = pair;
+      }
+    }
+
+    final allPairs = pairsByKey.values.toList()
+      ..sort((a, b) => a.totalPrice.compareTo(b.totalPrice));
+
+    if (allPairs.isEmpty) return const SizedBox.shrink();
+
+    // Apply category filter using front tires of pairs as proxy
+    final filteredFronts =
+        filterByCategory(allPairs.map((p) => p.front).toList(), selectedCategory)
+            .toSet();
+    final categoryFilteredPairs =
+        allPairs.where((p) => filteredFronts.contains(p.front)).toList();
+
+    // Auto-select first pair when category changes
+    if (selectedCategory != _lastCategory && categoryFilteredPairs.isNotEmpty) {
+      _lastCategory = selectedCategory;
+      _selectedBrand = null;
+      final firstPair = categoryFilteredPairs.first;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(selectedTireFrontProvider.notifier).state = firstPair.front;
+          ref.read(selectedTireRearProvider.notifier).state = firstPair.rear;
+        }
+      });
+    }
+
+    // Brand dropdown options (from category-filtered pairs)
+    final brands = categoryFilteredPairs.map((p) => p.front.brand).toSet().toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
+
+    // Apply brand filter
+    final filteredPairs = _selectedBrand != null
+        ? categoryFilteredPairs
+            .where((p) => p.front.brand == _selectedBrand)
+            .toList()
+        : categoryFilteredPairs;
+
+    final visible = filteredPairs.take(_visibleCount).toList();
+    final hasMore = filteredPairs.length > _visibleCount;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          S.of(context)!.tireRecommendations,
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${filteredPairs.length} Achs-Sets verfügbar',
+          style: TextStyle(
+              color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
+              fontSize: 13),
+        ),
+        const SizedBox(height: 8),
+
+        // Brand filter dropdown
+        if (brands.length > 1) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                  color:
+                      isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+            ),
+            child: DropdownButton<String?>(
+              value: _selectedBrand,
+              isExpanded: true,
+              underline: const SizedBox.shrink(),
+              icon: Icon(Icons.filter_list,
+                  size: 18,
+                  color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
+              hint: Text(S.of(context)!.allManufacturers,
+                  style: TextStyle(
+                      fontSize: 13,
+                      color:
+                          isDark ? const Color(0xFFF9FAFB) : Colors.grey[800])),
+              dropdownColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              items: [
+                DropdownMenuItem<String?>(
+                  value: null,
+                  child: Text(
+                      S.of(context)!.allManufacturersCount(
+                          categoryFilteredPairs.length),
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: isDark
+                              ? const Color(0xFFF9FAFB)
+                              : Colors.grey[800])),
+                ),
+                ...brands.map((brand) {
+                  final count = categoryFilteredPairs
+                      .where((p) => p.front.brand == brand)
+                      .length;
+                  return DropdownMenuItem<String?>(
+                    value: brand,
+                    child: Text('$brand ($count)',
+                        style: TextStyle(
+                            fontSize: 13,
+                            color: isDark
+                                ? const Color(0xFFF9FAFB)
+                                : Colors.grey[800])),
+                  );
+                }),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  ref
+                      .read(workshopSearchProvider.notifier)
+                      .setTireCategory(null);
+                }
+                setState(() {
+                  _selectedBrand = value;
+                  _visibleCount = _initialLimit;
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        ...visible.map((pair) {
+          final isSelected = selectedFront?.articleId == pair.front.articleId &&
+              selectedRear?.articleId == pair.rear.articleId;
+          return _AchsSetPairCard(
+            pair: pair,
+            isSelected: isSelected,
+            categoryOverride: selectedCategory,
+            onTap: () {
+              if (isSelected) {
+                ref.read(selectedTireFrontProvider.notifier).state = null;
+                ref.read(selectedTireRearProvider.notifier).state = null;
+              } else {
+                ref.read(selectedTireFrontProvider.notifier).state = pair.front;
+                ref.read(selectedTireRearProvider.notifier).state = pair.rear;
+              }
+            },
+          );
+        }),
+
+        if (hasMore) ...[
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() => _visibleCount += _pageSize),
+              icon: const Icon(Icons.expand_more, size: 18),
+              label: Text(S
+                  .of(context)!
+                  .showMore(filteredPairs.length - _visibleCount)),
+            ),
+          ),
+        ],
+        if (_visibleCount > _initialLimit) ...[
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() => _visibleCount = _initialLimit),
+              icon: const Icon(Icons.expand_less, size: 18),
+              label: Text(S.of(context)!.showLess),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _AchsSetPair {
+  final TireRecommendation front;
+  final TireRecommendation rear;
+  const _AchsSetPair({required this.front, required this.rear});
+  double get totalPrice => front.totalPrice + rear.totalPrice;
+}
+
+class _AchsSetPairCard extends StatelessWidget {
+  final _AchsSetPair pair;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final String? categoryOverride;
+  const _AchsSetPairCard({
+    required this.pair,
+    required this.isSelected,
+    required this.onTap,
+    this.categoryOverride,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final f = pair.front;
+    final r = pair.rear;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: isSelected
+            ? const Color(0xFF0284C7).withValues(alpha: 0.08)
+            : (isDark ? const Color(0xFF1E293B) : Colors.white),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isSelected
+                    ? const Color(0xFF0284C7)
+                    : (isDark ? const Color(0xFF334155) : Colors.grey.shade200),
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Achs-Set badge + optional category badge
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD97706),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text('⭐ ACHS-SET',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ),
+                    if (categoryOverride != null &&
+                        categoryOverride!.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      _categoryBadge(context, categoryOverride!),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Brand + Model + Total price
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(f.brand,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 15)),
+                          Text(f.model,
+                              style: TextStyle(
+                                  color: isDark
+                                      ? const Color(0xFF94A3B8)
+                                      : Colors.grey[600],
+                                  fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      '${pair.totalPrice.toStringAsFixed(2)}€',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: Color(0xFF0284C7),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // VR row
+                _axleRow(
+                  context,
+                  'VR',
+                  f.dimensions ?? '',
+                  f.totalPrice,
+                  f.quantity,
+                  f.pricePerTire,
+                ),
+                const SizedBox(height: 4),
+                // HR row
+                _axleRow(
+                  context,
+                  'HR',
+                  r.dimensions ?? '',
+                  r.totalPrice,
+                  r.quantity,
+                  r.pricePerTire,
+                ),
+                if (isSelected) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(Icons.check_circle,
+                          size: 16, color: Color(0xFF0284C7)),
+                      const SizedBox(width: 6),
+                      Text(S.of(context)!.selected,
+                          style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF0284C7),
+                              fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _axleRow(BuildContext context, String label, String dimensions,
+      double total, int qty, double perTire) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0284C7),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(label,
+              style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white)),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            dimensions,
+            style: TextStyle(
+                fontSize: 11,
+                color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
+          ),
+        ),
+        Text('${total.toStringAsFixed(2)}€',
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w700)),
+      ],
+    );
+  }
+
+  Widget _categoryBadge(BuildContext context, String category) {
+    Color color;
+    IconData icon;
+    String text;
+    switch (category.toLowerCase()) {
+      case 'günstigster':
+      case 'cheapest':
+        color = Colors.green;
+        icon = Icons.savings;
+        text = S.of(context)!.categoryCheapest;
+        break;
+      case 'testsieger':
+        color = Colors.amber.shade800;
+        icon = Icons.star;
+        text = S.of(context)!.categoryPremium;
+        break;
+      default:
+        color = Colors.grey;
+        icon = Icons.label;
+        text = category;
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(text,
+              style: TextStyle(
+                  fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+        ],
+      ),
     );
   }
 }

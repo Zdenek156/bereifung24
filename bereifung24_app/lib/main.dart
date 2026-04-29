@@ -45,6 +45,9 @@ class LocaleNotifier extends StateNotifier<Locale> {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Use modern edge-to-edge mode to align with current Android UI guidance.
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
   // Lock to portrait
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

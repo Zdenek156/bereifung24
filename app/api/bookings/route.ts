@@ -265,7 +265,18 @@ export async function GET(req: NextRequest) {
           phone: booking.workshop.user.phone || '',
           email: booking.workshop.user.email || '',
         },
-        vehicle: booking.vehicle || null,
+        vehicle: booking.vehicle
+          ? booking.vehicle
+          : (booking.vehicleSnapshot
+              ? {
+                  make: booking.vehicleSnapshot.brand || null,
+                  model: booking.vehicleSnapshot.model || null,
+                  year: booking.vehicleSnapshot.year || null,
+                  licensePlate: booking.vehicleSnapshot.licensePlate || null,
+                  vehicleType: booking.vehicleSnapshot.vehicleType || null,
+                }
+              : null),
+        vehicleDeleted: !booking.vehicle && booking.vehicleId != null,
         tireRequest: {
           season: seasonMap[booking.season || 's'] || 'Sommerreifen',
           width: width,

@@ -312,6 +312,36 @@ class _BookingsScreenState extends ConsumerState<BookingsScreen>
   }
 }
 
+List<Widget> _buildMixedTireListRows(BuildContext context, Booking booking) {
+  final s = S.of(context)!;
+  final isMoto = booking.isMotorcycleService;
+  final frontLabel = isMoto ? s.frontAxleMoto : s.frontAxle;
+  final rearLabel = isMoto ? s.rearAxleMoto : s.rearAxle;
+  final out = <Widget>[];
+  void addAxle(String label, Map<String, dynamic>? t) {
+    if (t == null) return;
+    if (out.isNotEmpty) out.add(const SizedBox(height: 4));
+    final brand = (t['brand'] ?? '').toString();
+    final model = (t['model'] ?? '').toString();
+    final size = (t['size'] ?? '').toString();
+    final qty = t['quantity'] is int
+        ? t['quantity'] as int
+        : int.tryParse(t['quantity']?.toString() ?? '');
+    out.add(Text(
+      '$label: ${qty != null ? '${qty}× ' : ''}$brand $model'.trim(),
+      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+    ));
+    if (size.isNotEmpty) {
+      out.add(Text(size,
+          style: TextStyle(color: Colors.grey[600], fontSize: 12)));
+    }
+  }
+
+  addAxle(frontLabel, booking.frontTire);
+  addAxle(rearLabel, booking.rearTire);
+  return out;
+}
+
 class _EmptyBookings extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -632,42 +662,70 @@ class _BookingCard extends StatelessWidget {
                     ),
                   if (booking.workshopName != null) const SizedBox(height: 10),
 
-                  // ── Vehicle ──
-                  Row(
-                    children: [
-                      Icon(Icons.directions_car,
-                          size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: booking.vehicleDisplay,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w500, fontSize: 13),
-                              ),
-                              if (booking.licensePlate != null) ...[
-                                const TextSpan(text: '  '),
-                                TextSpan(
-                                  text: booking.licensePlate!,
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
+                  // ── Vehicle (only when set or deleted) ──
+                  if (booking.vehicleBrand != null ||
+                      booking.vehicleModel != null ||
+                      (booking.licensePlate != null &&
+                          booking.licensePlate!.isNotEmpty) ||
+                      booking.vehicleDeleted) ...[
+                    Row(
+                      children: [
+                        Icon(Icons.directions_car,
+                            size: 16, color: Colors.grey[600]),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              children: [
+                                if (booking.vehicleBrand != null ||
+                                    booking.vehicleModel != null)
+                                  TextSpan(
+                                    text: booking.vehicleDisplay,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 13),
                                   ),
-                                ),
+                                if (booking.licensePlate != null &&
+                                    booking.licensePlate!.isNotEmpty) ...[
+                                  if (booking.vehicleBrand != null ||
+                                      booking.vehicleModel != null)
+                                    const TextSpan(text: '  '),
+                                  TextSpan(
+                                    text: booking.licensePlate!,
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                                if (booking.vehicleDeleted)
+                                  TextSpan(
+                                    text: (booking.vehicleBrand != null ||
+                                            booking.vehicleModel != null ||
+                                            (booking.licensePlate != null &&
+                                                booking.licensePlate!
+                                                    .isNotEmpty))
+                                        ? '  (gelöscht)'
+                                        : 'Fahrzeug nicht mehr vorhanden',
+                                    style: TextStyle(
+                                      color: Colors.orange[700],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
                               ],
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                  ],
 
                   // ── Tire info ──
                   if (booking.tireBrand != null ||
-                      booking.tireSize != null) ...[
+                      booking.tireSize != null ||
+                      booking.isMixedTires) ...[
                     const SizedBox(height: 10),
                     Container(
                       width: double.infinity,
@@ -691,25 +749,28 @@ class _BookingCard extends StatelessWidget {
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (booking.tireBrand != null ||
-                                    booking.tireModel != null)
-                                  Text(
-                                    '${booking.tireQuantity != null ? '${booking.tireQuantity}× ' : ''}'
-                                            '${booking.tireBrand ?? ''} ${booking.tireModel ?? ''}'
-                                        .trim(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-                                if (booking.tireSize != null)
-                                  Text(
-                                    booking.tireSize!,
-                                    style: TextStyle(
-                                        color: Colors.grey[600], fontSize: 12),
-                                  ),
-                              ],
+                              children: booking.isMixedTires
+                                  ? _buildMixedTireListRows(context, booking)
+                                  : [
+                                      if (booking.tireBrand != null ||
+                                          booking.tireModel != null)
+                                        Text(
+                                          '${booking.tireQuantity != null ? '${booking.tireQuantity}× ' : ''}'
+                                                  '${booking.tireBrand ?? ''} ${booking.tireModel ?? ''}'
+                                              .trim(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                      if (booking.tireSize != null)
+                                        Text(
+                                          booking.tireSize!,
+                                          style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12),
+                                        ),
+                                    ],
                             ),
                           ),
                         ],

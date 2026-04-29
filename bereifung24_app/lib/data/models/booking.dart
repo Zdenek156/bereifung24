@@ -12,12 +12,14 @@ class Booking {
   final String? vehicleBrand;
   final String? vehicleModel;
   final String? licensePlate;
+  final bool vehicleDeleted;
   final String serviceType;
   final String? serviceSubtype;
   final String? tireSize;
   final String? tireBrand;
   final String? tireModel;
   final int? tireQuantity;
+  final Map<String, dynamic>? tireData;
   final bool hasBalancing;
   final bool hasStorage;
   final bool hasWashing;
@@ -53,12 +55,14 @@ class Booking {
     this.vehicleBrand,
     this.vehicleModel,
     this.licensePlate,
+    this.vehicleDeleted = false,
     this.serviceType = 'TIRE_CHANGE',
     this.serviceSubtype,
     this.tireSize,
     this.tireBrand,
     this.tireModel,
     this.tireQuantity,
+    this.tireData,
     this.hasBalancing = false,
     this.hasStorage = false,
     this.hasWashing = false,
@@ -206,6 +210,14 @@ class Booking {
       serviceType == 'WHEEL_CHANGE' ||
       serviceType == 'MOTORCYCLE_TIRE';
 
+  bool get isMotorcycleService => serviceType == 'MOTORCYCLE_TIRE';
+
+  bool get isMixedTires => tireData?['isMixedTires'] == true;
+  Map<String, dynamic>? get frontTire =>
+      tireData?['front'] is Map ? Map<String, dynamic>.from(tireData!['front'] as Map) : null;
+  Map<String, dynamic>? get rearTire =>
+      tireData?['rear'] is Map ? Map<String, dynamic>.from(tireData!['rear'] as Map) : null;
+
   /// Additional services as list of strings
   List<String> get additionalServices {
     final list = <String>[];
@@ -264,6 +276,7 @@ class Booking {
           vehicle?['make'] ?? vehicle?['brand'] ?? json['vehicleBrand'],
       vehicleModel: vehicle?['model'] ?? json['vehicleModel'],
       licensePlate: vehicle?['licensePlate'] ?? json['licensePlate'],
+      vehicleDeleted: json['vehicleDeleted'] == true,
       serviceType: json['serviceType'] ?? 'TIRE_CHANGE',
       serviceSubtype: json['serviceSubtype'],
       tireSize: tireSize,
@@ -271,6 +284,9 @@ class Booking {
       tireModel: json['tireModel'],
       tireQuantity:
           json['tireQuantity'] as int? ?? tireRequest?['quantity'] as int?,
+      tireData: json['tireData'] is Map
+          ? Map<String, dynamic>.from(json['tireData'] as Map)
+          : null,
       hasBalancing: json['hasBalancing'] ?? false,
       hasStorage: json['hasStorage'] ?? false,
       hasWashing: json['hasWashing'] ?? false,

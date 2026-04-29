@@ -45,9 +45,7 @@ class _SplashScreenState extends State<SplashScreen>
     super.initState();
 
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: _bgDark,
       statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: _bgDark,
       systemNavigationBarIconBrightness: Brightness.light,
     ));
 
@@ -121,9 +119,7 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed && mounted) {
         SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-          statusBarColor: _bgLight,
           statusBarIconBrightness: Brightness.light,
-          systemNavigationBarColor: Colors.white,
           systemNavigationBarIconBrightness: Brightness.dark,
         ));
         Future.delayed(const Duration(milliseconds: 100), () {

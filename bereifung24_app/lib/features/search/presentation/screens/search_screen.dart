@@ -52,6 +52,10 @@ class WorkshopSearchState {
   final String? selectedTireCategory;
   // Construction type for motorcycle: 'radial', 'diagonal', or null (= both)
   final String? tireConstruction;
+  // Motorcycle Achs-Set: same brand+model for front+rear (default true when 'both')
+  final bool requireSameModel;
+  // Brand filter (motorcycle): show only workshops with this brand on Achs-Set
+  final String? selectedBrand;
   // Article ID from AI recommendation — forces display of that specific tire
   final String? aiArticleId;
   final String? aiRearArticleId;
@@ -96,6 +100,8 @@ class WorkshopSearchState {
     this.needsAxleSelection = false,
     this.selectedTireCategory = 'Günstigster',
     this.tireConstruction,
+    this.requireSameModel = true,
+    this.selectedBrand,
     this.aiArticleId,
     this.aiRearArticleId,
     this.aiFrontBrand,
@@ -133,6 +139,9 @@ class WorkshopSearchState {
     bool clearSelectedTireCategory = false,
     String? tireConstruction,
     bool clearTireConstruction = false,
+    bool? requireSameModel,
+    String? selectedBrand,
+    bool clearSelectedBrand = false,
     String? aiArticleId,
     bool clearAiArticleId = false,
     String? aiRearArticleId,
@@ -180,6 +189,9 @@ class WorkshopSearchState {
         tireConstruction: clearTireConstruction
             ? null
             : (tireConstruction ?? this.tireConstruction),
+        requireSameModel: requireSameModel ?? this.requireSameModel,
+        selectedBrand:
+            clearSelectedBrand ? null : (selectedBrand ?? this.selectedBrand),
         aiArticleId:
             clearAiArticleId ? null : (aiArticleId ?? this.aiArticleId),
         aiRearArticleId: clearAiRearArticleId
@@ -296,8 +308,11 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
 
   void setTireCategory(String? category) {
     state = state.copyWith(
-        selectedTireCategory: category,
-        clearSelectedTireCategory: category == null);
+      selectedTireCategory: category,
+      clearSelectedTireCategory: category == null,
+      // Mutual exclusivity: picking a category resets the brand filter
+      clearSelectedBrand: category != null,
+    );
   }
 
   void setTireConstruction(String? construction) {
@@ -311,6 +326,24 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     state =
         state.copyWith(selectedPackage: pkg, clearSelectedPackage: pkg == null);
     _reSearch();
+  }
+
+  void setRequireSameModel(bool value) {
+    state = state.copyWith(
+        requireSameModel: value,
+        // Reset brand filter when toggling Achs-Set
+        clearSelectedBrand: true);
+    _reSearch();
+  }
+
+  void setSelectedBrand(String? brand) {
+    state = state.copyWith(
+      selectedBrand: brand,
+      clearSelectedBrand: brand == null,
+      // Mutual exclusivity: picking a brand deselects category badges
+      clearSelectedTireCategory: brand != null,
+    );
+    // No re-search needed: client-side filter only
   }
 
   void _applySorting() {
@@ -681,6 +714,11 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
         motorcycleTireFilters['construction'] = state.tireConstruction;
       }
       body['tireFilters'] = motorcycleTireFilters;
+
+      // Achs-Set: only when both tires selected → match same brand+model
+      final isBothTires = (state.selectedPackage ?? 'both') == 'both';
+      body['sameModel'] =
+          isBothTires && state.includeTires && state.requireSameModel;
 
       debugPrint('🏍️ Motorcycle search body: $body');
       final response = await _api.searchMotorcycleTires(body);
@@ -2272,12 +2310,34 @@ class MotorcycleTireFilters extends StatelessWidget {
   final WorkshopSearchState state;
   final WorkshopSearchNotifier notifier;
   final EdgeInsetsGeometry? padding;
+  final bool hideBrandDropdown;
 
   const MotorcycleTireFilters(
-      {required this.state, required this.notifier, this.padding});
+      {required this.state,
+      required this.notifier,
+      this.padding,
+      this.hideBrandDropdown = false});
 
   @override
   Widget build(BuildContext context) {
+    final isBothTires = (state.selectedPackage ?? 'both') == 'both';
+    // Collect all available brands across ALL recommendations of all workshops
+    // (front + rear + matched set tireFront/tireRear). Independent of Achs-Set.
+    final availableBrands = <String>{};
+    if (state.includeTires && isBothTires) {
+      for (final w in state.workshops) {
+        final fb = w.tireFront?['brand']?.toString();
+        if (fb != null && fb.isNotEmpty) availableBrands.add(fb);
+        final rb = w.tireRear?['brand']?.toString();
+        if (rb != null && rb.isNotEmpty) availableBrands.add(rb);
+        for (final rec in w.tireRecommendationsRaw) {
+          final b = rec['brand']?.toString();
+          if (b != null && b.isNotEmpty) availableBrands.add(b);
+        }
+      }
+    }
+    final sortedBrands = availableBrands.toList()
+      ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
     return Container(
       width: double.infinity,
       padding: padding ?? const EdgeInsets.fromLTRB(16, 4, 16, 12),
@@ -2360,6 +2420,149 @@ class MotorcycleTireFilters extends StatelessWidget {
               ],
             ),
           ],
+          // Achs-Set Toggle (only when 'beide Reifen' + Mit Reifen)
+          if (state.includeTires && isBothTires) ...[
+            const SizedBox(height: 8),
+            _achsSetToggle(context),
+          ],
+          // Hersteller-Dropdown (immer sichtbar bei beide Reifen + Mit Reifen)
+          if (!hideBrandDropdown &&
+              state.includeTires &&
+              isBothTires &&
+              sortedBrands.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            _brandDropdown(context, sortedBrands),
+          ],
+          // Hint: Preise gelten nur für ausgebaute Räder
+          const SizedBox(height: 8),
+          _hintBox(context,
+              '💡 Preise gelten nur für Räder im ausgebauten Zustand.'),
+        ],
+      ),
+    );
+  }
+
+  Widget _achsSetToggle(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final active = state.requireSameModel;
+    return GestureDetector(
+      onTap: () => notifier.setRequireSameModel(!active),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: active
+              ? const Color(0xFFD97706)
+              : (isDark ? const Color(0xFF1E293B) : Colors.grey.shade100),
+          borderRadius: BorderRadius.circular(10),
+          border: active
+              ? null
+              : Border.all(
+                  color: isDark
+                      ? const Color(0xFF334155)
+                      : Colors.grey.shade300),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              active ? Icons.check_circle : Icons.circle_outlined,
+              size: 18,
+              color: active
+                  ? Colors.white
+                  : (isDark ? const Color(0xFF94A3B8) : Colors.grey[600]),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '⭐ Achs-Set: gleicher Hersteller & Modell',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: active
+                          ? Colors.white
+                          : (isDark
+                              ? const Color(0xFFF9FAFB)
+                              : Colors.grey[800]),
+                    ),
+                  ),
+                  Text(
+                    active
+                        ? 'Vorder- und Hinterreifen werden als Set angezeigt'
+                        : 'Antippen, um Vorder- und Hinterreifen zu kombinieren',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: active
+                          ? Colors.white70
+                          : (isDark
+                              ? const Color(0xFF94A3B8)
+                              : Colors.grey[600]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _brandDropdown(BuildContext context, List<String> brands) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final selected = state.selectedBrand;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+            color: isDark ? const Color(0xFF334155) : Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.filter_list,
+              size: 18,
+              color: isDark ? const Color(0xFF94A3B8) : Colors.grey[700]),
+          const SizedBox(width: 8),
+          Text(
+            'Hersteller:',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFFF9FAFB) : Colors.grey[800],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String?>(
+                value: selected,
+                isExpanded: true,
+                isDense: true,
+                hint: Text('Alle (${brands.length})',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color:
+                          isDark ? const Color(0xFFCBD5E1) : Colors.grey[700],
+                    )),
+                items: <DropdownMenuItem<String?>>[
+                  DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('Alle Hersteller (${brands.length})',
+                        style: const TextStyle(fontSize: 12)),
+                  ),
+                  ...brands.map((b) => DropdownMenuItem<String?>(
+                        value: b,
+                        child:
+                            Text(b, style: const TextStyle(fontSize: 12)),
+                      )),
+                ],
+                onChanged: (val) => notifier.setSelectedBrand(val),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -2934,20 +3137,32 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
-class _WorkshopList extends StatelessWidget {
+class _WorkshopList extends ConsumerWidget {
   final List<Workshop> workshops;
   final String? serviceType;
   const _WorkshopList({required this.workshops, this.serviceType});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedBrand = ref.watch(workshopSearchProvider).selectedBrand;
+    final filtered = (selectedBrand == null || selectedBrand.isEmpty)
+        ? workshops
+        : workshops.where((w) {
+            final needle = selectedBrand.toLowerCase();
+            final fb = w.tireFront?['brand']?.toString().toLowerCase();
+            if (fb == needle) return true;
+            final rb = w.tireRear?['brand']?.toString().toLowerCase();
+            if (rb == needle) return true;
+            return w.tireRecommendationsRaw.any((r) =>
+                r['brand']?.toString().toLowerCase() == needle);
+          }).toList();
     return ListView.separated(
       // Extra bottom space so last card is never hidden behind floating tab bar.
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 124),
-      itemCount: workshops.length,
+      itemCount: filtered.length,
       separatorBuilder: (_, __) => const SizedBox(height: 16),
       itemBuilder: (context, index) =>
-          _WorkshopCard(workshop: workshops[index], serviceType: serviceType),
+          _WorkshopCard(workshop: filtered[index], serviceType: serviceType),
     );
   }
 }
@@ -3039,14 +3254,62 @@ class _WorkshopCard extends ConsumerWidget {
           .any((r) => r['axle'] == 'front' || r['axle'] == 'rear');
       if (hasFrontRear) {
         // Mischbereifung / Motorcycle: filter per axle
-        final frontRecs = workshop.tireRecommendationsRaw
+        var frontRecs = workshop.tireRecommendationsRaw
             .where((r) => r['axle'] == 'front')
             .map((r) => TireRecommendation.fromJson(r))
             .toList();
-        final rearRecs = workshop.tireRecommendationsRaw
+        var rearRecs = workshop.tireRecommendationsRaw
             .where((r) => r['axle'] == 'rear')
             .map((r) => TireRecommendation.fromJson(r))
             .toList();
+
+        // Apply brand filter (motorcycle Hersteller-Dropdown) before picking
+        final brandFilter = searchState.selectedBrand;
+        if (isMotorcycleTire && brandFilter != null && brandFilter.isNotEmpty) {
+          final needle = brandFilter.toLowerCase();
+          final filteredFront =
+              frontRecs.where((t) => t.brand.toLowerCase() == needle).toList();
+          final filteredRear =
+              rearRecs.where((t) => t.brand.toLowerCase() == needle).toList();
+          if (filteredFront.isNotEmpty) frontRecs = filteredFront;
+          if (filteredRear.isNotEmpty) rearRecs = filteredRear;
+        }
+
+        // Achs-Set: ensure front+rear share brand+model.
+        // Pick the cheapest matching pair (after category + brand filtering).
+        if (isMotorcycleTire &&
+            searchState.requireSameModel &&
+            frontRecs.isNotEmpty &&
+            rearRecs.isNotEmpty) {
+          final rearByKey = <String, TireRecommendation>{};
+          for (final r in rearRecs) {
+            final key = '${r.brand.toLowerCase()}|${r.model.toLowerCase()}';
+            final existing = rearByKey[key];
+            if (existing == null || r.totalPrice < existing.totalPrice) {
+              rearByKey[key] = r;
+            }
+          }
+          final candidateFront = filterByCategory(frontRecs, category);
+          final pool = candidateFront.isNotEmpty ? candidateFront : frontRecs;
+          TireRecommendation? bestFront;
+          TireRecommendation? bestRear;
+          double bestSum = double.infinity;
+          for (final f in pool) {
+            final r = rearByKey[
+                '${f.brand.toLowerCase()}|${f.model.toLowerCase()}'];
+            if (r == null) continue;
+            final sum = f.totalPrice + r.totalPrice;
+            if (sum < bestSum) {
+              bestSum = sum;
+              bestFront = f;
+              bestRear = r;
+            }
+          }
+          if (bestFront != null && bestRear != null) {
+            frontRecs = [bestFront];
+            rearRecs = [bestRear];
+          }
+        }
 
         // Front: prefer AI-recommended tire
         TireRecommendation? chosenFront;
@@ -3442,6 +3705,23 @@ class _WorkshopCard extends ConsumerWidget {
     final hasBreakdown = breakdown.length > 1;
     final hasAnyBreakdown =
         breakdown.isNotEmpty; // for post-API services show even single entry
+    // Achs-Set detection (motorcycle): both selected, sameModel, brand+model identical
+    bool isMotorcycleAchsSet = false;
+    if (isMotorcycleTire && workshop.tireAvailable) {
+      final dispFront = selectedFrontRec ?? workshop.tireFront;
+      final dispRear = selectedRearRec ?? workshop.tireRear;
+      final fBrand = dispFront?['brand']?.toString().toLowerCase() ?? '';
+      final fModel = dispFront?['model']?.toString().toLowerCase() ?? '';
+      final rBrand = dispRear?['brand']?.toString().toLowerCase() ?? '';
+      final rModel = dispRear?['model']?.toString().toLowerCase() ?? '';
+      isMotorcycleAchsSet = searchState.requireSameModel &&
+          (searchState.selectedPackage ?? 'both') == 'both' &&
+          dispFront != null &&
+          dispRear != null &&
+          fBrand.isNotEmpty &&
+          fBrand == rBrand &&
+          fModel == rModel;
+    }
     // For search cards, prefer reliable images (card/logo) over heroImage
     // which may reference deleted files from landing pages
     final img =
@@ -4119,10 +4399,157 @@ class _WorkshopCard extends ConsumerWidget {
                     const SizedBox(height: 8),
                   ],
 
-                  // Motorcycle tire info (front/rear) — separate containers
+                  // Motorcycle tire info (front/rear)
                   if (isMotorcycleTire && workshop.tireAvailable) ...[
-                    // VR (Front) container - use category-filtered rec
-                    if ((selectedFrontRec ?? workshop.tireFront) != null) ...[
+                    if (isMotorcycleAchsSet)
+                      Builder(builder: (context) {
+                        final dispFront =
+                            selectedFrontRec ?? workshop.tireFront!;
+                        final dispRear =
+                            selectedRearRec ?? workshop.tireRear!;
+                        final fPerTire =
+                            (dispFront['pricePerTire'] as num?)?.toDouble();
+                        final rPerTire =
+                            (dispRear['pricePerTire'] as num?)?.toDouble();
+                        final fTotal =
+                            (dispFront['totalPrice'] as num?)?.toDouble() ?? 0;
+                        final rTotal =
+                            (dispRear['totalPrice'] as num?)?.toDouble() ?? 0;
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0284C7)
+                                .withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: const Color(0xFF0284C7)
+                                    .withValues(alpha: 0.25),
+                                width: 1.5),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFD97706),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text('⭐ ACHS-SET',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white)),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  if (dispFront['label'] != null &&
+                                      (dispFront['label'] as String)
+                                          .isNotEmpty)
+                                    _TireCategoryBadge(
+                                        label: dispFront['label'] as String),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  const Icon(Icons.tire_repair,
+                                      size: 18, color: Color(0xFF0284C7)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      '${dispFront['brand'] ?? ''} ${dispFront['model'] ?? ''}',
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w700),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0284C7),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text('VR',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white)),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      dispFront['dimensions']?.toString() ??
+                                          '',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? const Color(0xFF94A3B8)
+                                              : Colors.grey[600]),
+                                    ),
+                                  ),
+                                  Text(
+                                      fPerTire != null
+                                          ? '${fPerTire.toStringAsFixed(2)}€'
+                                          : '${fTotal.toStringAsFixed(2)}€',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF0284C7),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text('HR',
+                                        style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white)),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      dispRear['dimensions']?.toString() ?? '',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: isDark
+                                              ? const Color(0xFF94A3B8)
+                                              : Colors.grey[600]),
+                                    ),
+                                  ),
+                                  Text(
+                                      rPerTire != null
+                                          ? '${rPerTire.toStringAsFixed(2)}€'
+                                          : '${rTotal.toStringAsFixed(2)}€',
+                                      style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    if (isMotorcycleAchsSet) const SizedBox(height: 6),
+                    // Original separate VR/HR cards (when Achs-Set is OFF)
+                    if (!isMotorcycleAchsSet) ...[
                       Builder(builder: (context) {
                         final displayFront =
                             selectedFrontRec ?? workshop.tireFront!;
@@ -4196,7 +4623,8 @@ class _WorkshopCard extends ConsumerWidget {
                       const SizedBox(height: 6),
                     ],
                     // HR (Rear) container - use category-filtered rec
-                    if ((selectedRearRec ?? workshop.tireRear) != null) ...[
+                    if (!isMotorcycleAchsSet &&
+                        (selectedRearRec ?? workshop.tireRear) != null) ...[
                       Builder(builder: (context) {
                         final displayRear =
                             selectedRearRec ?? workshop.tireRear!;
@@ -4270,7 +4698,8 @@ class _WorkshopCard extends ConsumerWidget {
                       const SizedBox(height: 6),
                     ],
                     // Fallback: flat tire info
-                    if (workshop.tireFront == null &&
+                    if (!isMotorcycleAchsSet &&
+                        workshop.tireFront == null &&
                         workshop.tireRear == null &&
                         workshop.tireBrand != null) ...[
                       Container(

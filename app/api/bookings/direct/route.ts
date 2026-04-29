@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { buildVehicleSnapshot } from '@/lib/vehicle-snapshot'
 import { sendEmail, createICSFile, directBookingConfirmationCustomerEmail, directBookingNotificationWorkshopEmail } from '@/lib/email'
 import { createCalendarEvent, refreshAccessToken } from '@/lib/google-calendar'
 import { createBerlinDate, isDSTInBerlin } from '@/lib/timezone-utils'
@@ -202,11 +203,13 @@ export async function POST(req: NextRequest) {
       const workshopPayout = totalPrice - platformCommission
       
       // Create new DirectBooking
+      const vehicleSnapshot = await buildVehicleSnapshot(vehicleId)
       directBooking = await prisma.directBooking.create({
         data: {
           customerId: customer.user.id,
           workshopId,
           vehicleId,
+          ...(vehicleSnapshot ? { vehicleSnapshot } : {}),
           serviceType,
           date: new Date(`${dateOnly}T00:00:00Z`), // Parse as UTC midnight (same as reservation API)
           time,

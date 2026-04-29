@@ -9,6 +9,7 @@ import { createBerlinDate } from '@/lib/timezone-utils'
 import { Decimal } from '@prisma/client/runtime/library'
 import Stripe from 'stripe'
 import { getApiSetting } from '@/lib/api-settings'
+import { buildVehicleSnapshot } from '@/lib/vehicle-snapshot'
 
 /**
  * POST /api/customer/direct-booking/book
@@ -180,13 +181,15 @@ export async function POST(request: NextRequest) {
       const platformCommissionCents = Math.round(platformCommission * 100)
       const stripeFeesEstimate = (totalPriceNum * 0.015) + 0.25
       const platformNetCommission = platformCommission - stripeFeesEstimate
-      
+      const vehicleSnapshot = await buildVehicleSnapshot(vehicleId)
+
       const booking = await prisma.directBooking.create({
         data: {
           workshopId,
           serviceType,
           ...(serviceSubtype ? { serviceSubtype } : {}),
           vehicleId,
+          ...(vehicleSnapshot ? { vehicleSnapshot } : {}),
           customerId: customer.id,
           date: new Date(date + 'T00:00:00'), // Convert YYYY-MM-DD to Date at midnight
           time,

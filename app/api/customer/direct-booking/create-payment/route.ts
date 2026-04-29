@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { buildVehicleSnapshot } from '@/lib/vehicle-snapshot'
 import Stripe from 'stripe'
 
 /**
@@ -113,11 +114,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create DirectBooking record
+    const vehicleSnapshot = await buildVehicleSnapshot(vehicleId)
     const directBooking = await prisma.directBooking.create({
       data: {
         customerId: session.user.id,
         workshopId,
         vehicleId,
+        ...(vehicleSnapshot ? { vehicleSnapshot } : {}),
         serviceType,
         hasBalancing,
         hasStorage,

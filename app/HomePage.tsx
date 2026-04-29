@@ -3682,8 +3682,185 @@ export default function NewHomePage({
                                 )
                               })()}
 
+                              {/* ⭐ ACHS-SET Panel: combined cards (replaces both axle panels when matched) */}
+                              {showTires && workshop.isMixedTires && workshop.axleSetMatched && workshop.tireFrontRecommendations?.length > 0 && workshop.tireRearRecommendations?.length > 0 && (() => {
+                                const workshopKey = `${workshop.id}-set`
+                                const currentFilter = tireQualityFilter[workshopKey] || 'all'
+                                const currentSort = tireSortBy[workshopKey] || 'price'
+                                const visibleAdditionalCount = expandedTireWorkshops[workshopKey] || 0
+
+                                // Build axle-sets by pairing front+rear with same brand+model (cheapest each)
+                                const keyOf = (r: any) => `${(r.tire?.brand || '').toLowerCase().trim()}|${(r.tire?.model || '').toLowerCase().trim()}`
+                                const cheapestByKey = (recs: any[]) => {
+                                  const map: Record<string, any> = {}
+                                  for (const r of recs) {
+                                    const k = keyOf(r)
+                                    const price = r.totalPrice || r.pricePerTire || 0
+                                    if (!map[k] || (map[k].totalPrice || map[k].pricePerTire || 0) > price) map[k] = r
+                                  }
+                                  return map
+                                }
+                                const frontMap = cheapestByKey(workshop.tireFrontRecommendations)
+                                const rearMap = cheapestByKey(workshop.tireRearRecommendations)
+                                const sets = Object.keys(frontMap)
+                                  .filter((k) => rearMap[k])
+                                  .map((k) => {
+                                    const f = frontMap[k]
+                                    const r = rearMap[k]
+                                    const total = (f.totalPrice || f.pricePerTire || 0) + (r.totalPrice || r.pricePerTire || 0)
+                                    return { key: k, front: f, rear: r, totalPrice: total, tire: f.tire }
+                                  })
+
+                                // Premium-Brand Check (same logic as filterAndSortTires)
+                                const premiumBrandsMotorrad = ['Michelin', 'Continental', 'Pirelli', 'Bridgestone', 'Dunlop', 'Metzeler', 'Heidenau']
+                                const isPremium = (s: any) => {
+                                  const b = (s.tire?.brand || '').toLowerCase()
+                                  return premiumBrandsMotorrad.some((p) => b.includes(p.toLowerCase()))
+                                }
+                                const sortedAsc = [...sets].sort((a, b) => a.totalPrice - b.totalPrice)
+                                const cheapThreshold = sortedAsc.length > 0 ? sortedAsc[Math.floor(sortedAsc.length * 0.33)].totalPrice : 0
+
+                                // Filter
+                                let filteredSets = sets
+                                if (selectedBrandFilter) {
+                                  filteredSets = filteredSets.filter((s) => (s.tire?.brand || '').toLowerCase() === selectedBrandFilter.toLowerCase())
+                                }
+                                if (currentFilter === 'premium') filteredSets = filteredSets.filter(isPremium)
+                                else if (currentFilter === 'cheap') filteredSets = filteredSets.filter((s) => s.totalPrice <= cheapThreshold)
+
+                                // Sort
+                                if (currentSort === 'brand') {
+                                  filteredSets.sort((a, b) => (a.tire?.brand || '').localeCompare(b.tire?.brand || ''))
+                                } else {
+                                  filteredSets.sort((a, b) => a.totalPrice - b.totalPrice)
+                                }
+
+                                // Auto-Labels
+                                const labelFor = (s: any, idx: number): string => {
+                                  if (s === sortedAsc[0]) return 'Günstigster'
+                                  if (isPremium(s) && filteredSets.filter(isPremium)[0] === s) return 'Premium'
+                                  return ''
+                                }
+
+                                const displayedSets = filteredSets.slice(0, 3 + visibleAdditionalCount)
+                                const remainingCount = filteredSets.length - displayedSets.length
+                                const selectedSetIdx = selectedTireFrontIndices[workshop.id] ?? 0
+
+                                // Sync rear selection when set is selected (find rear index that matches front's brand+model)
+                                const selectSet = (setKey: string) => {
+                                  const frontIdx = workshop.tireFrontRecommendations.findIndex((r: any) => keyOf(r) === setKey)
+                                  const rearIdx = workshop.tireRearRecommendations.findIndex((r: any) => keyOf(r) === setKey)
+                                  if (frontIdx >= 0) setSelectedTireFrontIndices((prev) => ({ ...prev, [workshop.id]: frontIdx }))
+                                  if (rearIdx >= 0) setSelectedTireRearIndices((prev) => ({ ...prev, [workshop.id]: rearIdx }))
+                                }
+
+                                const selectedKey = keyOf(workshop.tireFrontRecommendations[selectedSetIdx] || workshop.tireFrontRecommendations[0])
+
+                                return (
+                                  <div className="bg-gray-50 rounded-xl border border-gray-200 p-3 mb-3">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between mb-2">
+                                      <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                        ⭐ Achs-Set · {workshop.tireFront?.dimensions} + {workshop.tireRear?.dimensions} <span className="text-gray-400">({filteredSets.length} Sets)</span>
+                                      </p>
+                                    </div>
+
+                                    {/* Quick Filters + Sorting */}
+                                    <div className="flex flex-wrap items-center gap-2 mb-3">
+                                      <div className="flex gap-1.5">
+                                        <button
+                                          onClick={() => setTireQualityFilter((prev) => ({ ...prev, [workshopKey]: 'all' }))}
+                                          className={`px-3 py-2.5 text-xs rounded-md transition min-h-[44px] ${currentFilter === 'all' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                                        >
+                                          🔍 Alle
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter((prev) => ({ ...prev, [workshopKey]: 'cheap' }))}
+                                          className={`px-3 py-2.5 text-xs rounded-md transition min-h-[44px] ${currentFilter === 'cheap' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                                        >
+                                          💰 Günstige
+                                        </button>
+                                        <button
+                                          onClick={() => setTireQualityFilter((prev) => ({ ...prev, [workshopKey]: 'premium' }))}
+                                          className={`px-3 py-2.5 text-xs rounded-md transition min-h-[44px] ${currentFilter === 'premium' ? 'bg-primary-600 text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                                        >
+                                          ⭐ Premium
+                                        </button>
+                                      </div>
+                                      <select
+                                        value={currentSort}
+                                        onChange={(e) => setTireSortBy((prev) => ({ ...prev, [workshopKey]: e.target.value as 'price' | 'brand' | 'label' }))}
+                                        className="px-3 py-2.5 text-xs border border-gray-300 rounded-md bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 min-h-[44px]"
+                                      >
+                                        <option value="price">Set-Preis ↑</option>
+                                        <option value="brand">Marke A-Z</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Set Cards Grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                      {displayedSets.map((s, idx) => {
+                                        const label = labelFor(s, idx)
+                                        const isSelected = selectedKey === s.key
+                                        return (
+                                          <button
+                                            key={s.key}
+                                            onClick={() => selectSet(s.key)}
+                                            className={`text-left p-2.5 rounded-lg border-2 transition-all ${isSelected ? 'border-primary-500 bg-white shadow-sm' : 'border-transparent bg-white hover:border-gray-300'}`}
+                                          >
+                                            {label && <p className="text-xs font-bold text-primary-600 mb-0.5">{label}</p>}
+                                            <p className="text-sm font-bold text-gray-900 truncate">{s.tire?.brand}</p>
+                                            <p className="text-xs text-gray-500 truncate mb-1.5">{s.tire?.model}</p>
+                                            <div className="space-y-0.5 mb-1.5 text-xs text-gray-600">
+                                              <div className="flex justify-between gap-2">
+                                                <span className="truncate">🔹 Vorne</span>
+                                                <span className="font-medium tabular-nums">{formatEUR(s.front.pricePerTire)}</span>
+                                              </div>
+                                              <div className="flex justify-between gap-2">
+                                                <span className="truncate">🔸 Hinten</span>
+                                                <span className="font-medium tabular-nums">{formatEUR(s.rear.pricePerTire)}</span>
+                                              </div>
+                                            </div>
+                                            <p className="text-sm font-semibold text-gray-900 pt-1.5 border-t border-gray-100">
+                                              Set: {formatEUR(s.totalPrice)}
+                                            </p>
+                                          </button>
+                                        )
+                                      })}
+                                    </div>
+
+                                    {/* Show more/less buttons */}
+                                    {filteredSets.length > 3 && (
+                                      <div className="flex gap-2 mt-2">
+                                        {remainingCount > 0 && (
+                                          <button
+                                            onClick={() => setExpandedTireWorkshops((prev) => ({ ...prev, [workshopKey]: (prev[workshopKey] || 0) + 9 }))}
+                                            className="flex-1 px-3 py-2.5 text-xs font-medium text-primary-600 bg-white border border-primary-200 rounded-lg hover:bg-primary-50 transition min-h-[44px]"
+                                          >
+                                            {Math.min(remainingCount, 9)} weitere Sets anzeigen
+                                          </button>
+                                        )}
+                                        {visibleAdditionalCount > 0 && (
+                                          <button
+                                            onClick={() => {
+                                              setExpandedTireWorkshops((prev) => ({ ...prev, [workshopKey]: 0 }))
+                                              setTimeout(() => {
+                                                document.getElementById(`workshop-card-${workshop.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                                              }, 50)
+                                            }}
+                                            className="flex-1 px-3 py-2.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition min-h-[44px]"
+                                          >
+                                            Weniger anzeigen
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                )
+                              })()}
+
                               {/* Mixed Tire Recommendations Panel - Front */}
-                              {showTires && workshop.isMixedTires && workshop.tireFrontRecommendations?.length > 0 && (() => {
+                              {showTires && workshop.isMixedTires && !workshop.axleSetMatched && workshop.tireFrontRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-front`
                                 const filteredTires = filterAndSortTires(workshop.tireFrontRecommendations, workshopKey)
                                 const visibleAdditionalCount = expandedTireWorkshops[workshopKey] || 0
@@ -3831,7 +4008,7 @@ export default function NewHomePage({
                               })()}
 
                               {/* Mixed Tire Recommendations Panel - Rear */}
-                              {showTires && workshop.isMixedTires && workshop.tireRearRecommendations?.length > 0 && (() => {
+                              {showTires && workshop.isMixedTires && !workshop.axleSetMatched && workshop.tireRearRecommendations?.length > 0 && (() => {
                                 const workshopKey = `${workshop.id}-rear`
                                 const filteredTires = filterAndSortTires(workshop.tireRearRecommendations, workshopKey)
                                 const visibleAdditionalCount = expandedTireWorkshops[workshopKey] || 0

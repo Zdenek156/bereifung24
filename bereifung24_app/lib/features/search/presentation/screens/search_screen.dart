@@ -66,6 +66,9 @@ class WorkshopSearchState {
   final String? aiRearModel;
   // Effective service type (set by notifier after auto-switch, e.g. TIRE_CHANGE → MOTORCYCLE_TIRE)
   final String? effectiveServiceType;
+  // True once a search() call has been issued — keeps the filter bar visible
+  // even when the result is empty so the user can clear filters again.
+  final bool hasSearched;
 
   // Services that use the POST API with packageTypes
   static const postApiServices = {
@@ -109,6 +112,7 @@ class WorkshopSearchState {
     this.aiRearBrand,
     this.aiRearModel,
     this.effectiveServiceType,
+    this.hasSearched = false,
   });
 
   WorkshopSearchState copyWith({
@@ -156,6 +160,7 @@ class WorkshopSearchState {
     bool clearAiRearModel = false,
     String? effectiveServiceType,
     bool clearEffectiveServiceType = false,
+    bool? hasSearched,
   }) =>
       WorkshopSearchState(
         workshops: workshops ?? this.workshops,
@@ -208,6 +213,7 @@ class WorkshopSearchState {
         effectiveServiceType: clearEffectiveServiceType
             ? null
             : (effectiveServiceType ?? this.effectiveServiceType),
+        hasSearched: hasSearched ?? this.hasSearched,
       );
 }
 
@@ -289,10 +295,18 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
   }
 
   void setSelectedAxle(String? axle) {
+    // When the user picks a single axle (front/rear) while Achs-Set is active,
+    // auto-deselect Achs-Set so the per-axle view is shown cleanly.
+    final disableAchsSet = axle != null && state.requireSameModel;
+    // Always reset brand filter when switching between front/rear, because a
+    // brand only available on one axle would otherwise return 0 tires on the
+    // other axle.
     state = state.copyWith(
         selectedAxle: axle,
         clearSelectedAxle: axle == null,
-        needsAxleSelection: false);
+        needsAxleSelection: false,
+        requireSameModel: disableAchsSet ? false : null,
+        clearSelectedBrand: true);
     _reSearch();
   }
 
@@ -323,8 +337,23 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
   }
 
   void setSelectedPackage(String? pkg) {
-    state =
-        state.copyWith(selectedPackage: pkg, clearSelectedPackage: pkg == null);
+    // For motorcycle: when the user picks 'front' or 'rear' while Achs-Set
+    // (requireSameModel) is active, auto-deselect Achs-Set so the per-axle
+    // view is shown cleanly and stale brand-pair selections are cleared.
+    final disableAchsSet = pkg != null &&
+        pkg != 'both' &&
+        (pkg == 'front' || pkg == 'rear') &&
+        state.requireSameModel;
+    // Always reset brand filter when switching between front/rear/both, because
+    // a brand only available on one axle would otherwise yield 0 tires on the
+    // other axle.
+    final resetBrand = pkg == 'front' || pkg == 'rear' || pkg == 'both';
+    state = state.copyWith(
+      selectedPackage: pkg,
+      clearSelectedPackage: pkg == null,
+      requireSameModel: disableAchsSet ? false : null,
+      clearSelectedBrand: resetBrand,
+    );
     _reSearch();
   }
 
@@ -428,6 +457,7 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     state = state.copyWith(
       isLoading: true,
       error: null,
+      hasSearched: true,
       query: zipCode ?? city ?? state.query,
       clearSelectedTireCategory: hasAiTire,
       aiArticleId: aiArtId,
@@ -1262,7 +1292,12 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
 
             // ── Filters ──
+            // Show the filter bar whenever the user has either results OR has
+            // already issued a search (so filters like Diagonal / Runflat stay
+            // visible even when the current selection produced 0 results and
+            // the user needs to deselect them again).
             if (searchState.workshops.isNotEmpty ||
+                searchState.hasSearched ||
                 searchState.query.isNotEmpty)
               SliverToBoxAdapter(
                   child: _FilterBar(
@@ -1291,7 +1326,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                                   },
                                 )
                               : _EmptyView(
-                                  hasSearched: searchState.query.isNotEmpty))
+                                  hasSearched: searchState.hasSearched ||
+                                      searchState.query.isNotEmpty))
                       : _WorkshopList(
                           workshops: searchState.workshops,
                           serviceType: searchState.effectiveServiceType ??
@@ -1793,9 +1829,15 @@ class TireChangeFilters extends StatelessWidget {
               state.tireCount == 4) ...[
             const SizedBox(height: 8),
             _achsSetToggleCar(context),
-            // Brand dropdown (collected from search results) - hidden in workshop detail
-            if (!hideBrandDropdown)
-              Builder(builder: (ctx) {
+          ],
+          // Brand dropdown (collected from search results) - hidden in workshop detail.
+          // Show for Mischbereifung whenever Mit Reifen is active (4 tires OR
+          // 2 tires/Einzelachse) so the user can also filter when picking only
+          // one axle.
+          if (!hideBrandDropdown &&
+              state.includeTires &&
+              _vehicleHasMixedTires) ...[
+            Builder(builder: (ctx) {
               final brands = <String>{};
               for (final w in state.workshops) {
                 final fb = w.tireFront?['brand']?.toString();
@@ -2491,18 +2533,32 @@ class MotorcycleTireFilters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isBothTires = (state.selectedPackage ?? 'both') == 'both';
-    // Collect all available brands across ALL recommendations of all workshops
-    // (front + rear + matched set tireFront/tireRear). Independent of Achs-Set.
+    final isFront = (state.selectedPackage ?? 'both') == 'front';
+    final isRear = (state.selectedPackage ?? 'both') == 'rear';
+    // Collect available brands per axle so the dropdown stays useful regardless
+    // of front/rear/both selection. Only keep brands that exist on the
+    // selected axle, otherwise filtering by them would yield 0 tires.
     final availableBrands = <String>{};
-    if (state.includeTires && isBothTires) {
+    if (state.includeTires) {
       for (final w in state.workshops) {
-        final fb = w.tireFront?['brand']?.toString();
-        if (fb != null && fb.isNotEmpty) availableBrands.add(fb);
-        final rb = w.tireRear?['brand']?.toString();
-        if (rb != null && rb.isNotEmpty) availableBrands.add(rb);
+        if (isBothTires || isFront) {
+          final fb = w.tireFront?['brand']?.toString();
+          if (fb != null && fb.isNotEmpty) availableBrands.add(fb);
+        }
+        if (isBothTires || isRear) {
+          final rb = w.tireRear?['brand']?.toString();
+          if (rb != null && rb.isNotEmpty) availableBrands.add(rb);
+        }
         for (final rec in w.tireRecommendationsRaw) {
-          final b = rec['brand']?.toString();
-          if (b != null && b.isNotEmpty) availableBrands.add(b);
+          final axle = rec['axle']?.toString();
+          if (isBothTires ||
+              (isFront && axle == 'front') ||
+              (isRear && axle == 'rear') ||
+              axle == null ||
+              axle.isEmpty) {
+            final b = rec['brand']?.toString();
+            if (b != null && b.isNotEmpty) availableBrands.add(b);
+          }
         }
       }
     }
@@ -2595,10 +2651,9 @@ class MotorcycleTireFilters extends StatelessWidget {
             const SizedBox(height: 8),
             _achsSetToggle(context),
           ],
-          // Hersteller-Dropdown (immer sichtbar bei beide Reifen + Mit Reifen)
+          // Hersteller-Dropdown (immer sichtbar bei Mit Reifen, gefiltert nach gewählter Achse)
           if (!hideBrandDropdown &&
               state.includeTires &&
-              isBothTires &&
               sortedBrands.isNotEmpty) ...[
             const SizedBox(height: 8),
             _brandDropdown(context, sortedBrands),
@@ -3434,13 +3489,12 @@ class _WorkshopCard extends ConsumerWidget {
             .toList();
 
         // Apply brand filter (Hersteller-Dropdown) before picking.
-        // For motorcycle: applies whenever a brand is selected.
-        // For car (Mischbereifung): applies when Achs-Set toggle is ON.
+        // Applies whenever a brand is selected (motorcycle OR car Mischbereifung,
+        // both with and without Achs-Set).
         final brandFilter = searchState.selectedBrand;
         final brandFilterApplies = brandFilter != null &&
             brandFilter.isNotEmpty &&
-            (isMotorcycleTire ||
-                (isTireChange && searchState.requireSameModel));
+            (isMotorcycleTire || isTireChange);
         if (brandFilterApplies) {
           final needle = brandFilter.toLowerCase();
           final filteredFront =
@@ -4728,7 +4782,8 @@ class _WorkshopCard extends ConsumerWidget {
                       }),
                     if (isMotorcycleAchsSet) const SizedBox(height: 6),
                     // Original separate VR/HR cards (when Achs-Set is OFF)
-                    if (!isMotorcycleAchsSet) ...[
+                    if (!isMotorcycleAchsSet &&
+                        (selectedFrontRec ?? workshop.tireFront) != null) ...[
                       Builder(builder: (context) {
                         final displayFront =
                             selectedFrontRec ?? workshop.tireFront!;

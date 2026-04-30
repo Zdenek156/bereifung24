@@ -290,6 +290,45 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
     final selectedVehicle = ref.watch(selectedVehicleProvider);
     final selectedDate = ref.watch(selectedDateProvider);
 
+    // Clear stale Achs-Set selection when the user switches to a single axle.
+    // Without this, the previously chosen pair (front+rear) keeps influencing
+    // the price card and overlay rendering.
+    ref.listen<String?>(
+      workshopSearchProvider.select((s) => s.selectedAxle),
+      (prev, next) {
+        if (prev == next) return;
+        if (next != null) {
+          ref.read(selectedTireFrontProvider.notifier).state = null;
+          ref.read(selectedTireRearProvider.notifier).state = null;
+          ref.read(selectedTireProvider.notifier).state = null;
+        }
+      },
+    );
+    // Same for motorcycle: selectedPackage 'front'/'rear' also resets the
+    // pair, since the moto axle picker uses setSelectedPackage (not
+    // setSelectedAxle).
+    ref.listen<String?>(
+      workshopSearchProvider.select((s) => s.selectedPackage),
+      (prev, next) {
+        if (prev == next) return;
+        if (next == 'front' || next == 'rear') {
+          ref.read(selectedTireFrontProvider.notifier).state = null;
+          ref.read(selectedTireRearProvider.notifier).state = null;
+          ref.read(selectedTireProvider.notifier).state = null;
+        }
+      },
+    );
+    // Same when the Achs-Set toggle itself changes.
+    ref.listen<bool>(
+      workshopSearchProvider.select((s) => s.requireSameModel),
+      (prev, next) {
+        if (prev == next) return;
+        ref.read(selectedTireFrontProvider.notifier).state = null;
+        ref.read(selectedTireRearProvider.notifier).state = null;
+        ref.read(selectedTireProvider.notifier).state = null;
+      },
+    );
+
     // Auto-select first vehicle if none selected but vehicles exist
     if (selectedVehicle == null) {
       final vehiclesAsync = ref.watch(vehiclesProvider);
@@ -1627,7 +1666,37 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
               padding: const EdgeInsets.all(16),
               child: FilledButton.icon(
                 onPressed: canBook
-                    ? () {
+                    ? () async {
+                        // Motorcycle: ask the customer to confirm tire fit
+                        // and the "ausgebaute Räder only" rule before
+                        // proceeding to the booking summary.
+                        if (isMotorcycleTire) {
+                          final confirmed = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Bitte bestätigen'),
+                              content: const Text(
+                                'Bitte stelle sicher, dass der gewählte Reifen für dein Motorrad geeignet ist (z. B. Sport, Tourer, Cross, Enduro).\n\n'
+                                'Die Montage erfolgt ausschließlich an zur Werkstatt gebrachten, bereits ausgebauten Rädern. Der Aus- und Einbau am Motorrad ist nicht enthalten.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(ctx).pop(false),
+                                  child: const Text('Abbrechen'),
+                                ),
+                                FilledButton(
+                                  onPressed: () =>
+                                      Navigator.of(ctx).pop(true),
+                                  child: const Text('Bestätigen & Buchen'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirmed != true) return;
+                          if (!context.mounted) return;
+                        }
+
                         final dateStr =
                             DateFormat('yyyy-MM-dd').format(selectedDate!);
                         // Get search price and selected package for this workshop
@@ -2012,6 +2081,39 @@ class _TimeSlotsSection extends ConsumerWidget {
 
 // ── Tire Recommendations ──
 
+/// When the user has selected Radial/Diagonal but the workshop has no
+/// matching tires in the requested size, render a hint instead of an empty
+/// section so the user understands the cause and can deselect the filter.
+Widget _maybeConstructionEmptyHint(
+    BuildContext context, WorkshopSearchState state) {
+  final c = state.tireConstruction;
+  if (c == null || c.isEmpty) return const SizedBox.shrink();
+  final label = c == 'diagonal' ? 'Diagonal' : 'Radial';
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 12),
+    child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline, color: Colors.orange[800], size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Keine $label-Reifen in dieser Größe verfügbar.',
+              style: TextStyle(fontSize: 13, color: Colors.orange[900]),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class _TireRecommendationsSection extends ConsumerStatefulWidget {
   final String workshopId;
   final String? axleFilter; // 'front', 'rear', or null (all)
@@ -2057,7 +2159,7 @@ class _TireRecommendationsSectionState
         .where((w) => w.id == widget.workshopId)
         .firstOrNull;
     if (workshop == null || workshop.tireRecommendationsRaw.isEmpty) {
-      return const SizedBox.shrink();
+      return _maybeConstructionEmptyHint(context, searchState);
     }
 
     // Filter by axle if specified
@@ -2112,7 +2214,9 @@ class _TireRecommendationsSectionState
       }
     }
 
-    if (allRecommendations.isEmpty) return const SizedBox.shrink();
+    if (allRecommendations.isEmpty) {
+      return _maybeConstructionEmptyHint(context, searchState);
+    }
 
     final sectionTitle = widget.axleLabel != null
         ? S.of(context)!.tireRecommendationsAxle(widget.axleLabel!)
@@ -2535,7 +2639,7 @@ class _AchsSetRecommendationsSectionState
         .where((w) => w.id == widget.workshopId)
         .firstOrNull;
     if (workshop == null || workshop.tireRecommendationsRaw.isEmpty) {
-      return const SizedBox.shrink();
+      return _maybeConstructionEmptyHint(context, searchState);
     }
 
     // Split into front/rear lists
@@ -2548,20 +2652,32 @@ class _AchsSetRecommendationsSectionState
         .map((r) => TireRecommendation.fromJson(r))
         .toList();
 
-    // Build rear lookup keyed by brand|model (cheapest rear per pair)
+    // Pairing strategy:
+    // - Motorcycle Achs-Set (perAxleQuantity == 1): same brand AND model
+    //   (front and rear are usually the same size on a motorcycle).
+    // - Car Mischbereifung Achs-Set (perAxleQuantity == 2): same brand only,
+    //   because front and rear typically have different sizes and a single
+    //   model name often does not exist for both sizes (matches backend
+    //   sameBrand behaviour).
+    final brandOnly = widget.perAxleQuantity == 2;
+    String pairKey(TireRecommendation t) => brandOnly
+        ? t.brand.toLowerCase()
+        : '${t.brand.toLowerCase()}|${t.model.toLowerCase()}';
+
+    // Build rear lookup keyed by pairing key (cheapest rear per pair)
     final rearByKey = <String, TireRecommendation>{};
     for (final r in rearRecs) {
-      final key = '${r.brand.toLowerCase()}|${r.model.toLowerCase()}';
+      final key = pairKey(r);
       final existing = rearByKey[key];
       if (existing == null || r.totalPrice < existing.totalPrice) {
         rearByKey[key] = r;
       }
     }
 
-    // Pair each front with cheapest matching rear; deduplicate per brand|model
+    // Pair each front with cheapest matching rear; deduplicate per key
     final pairsByKey = <String, _AchsSetPair>{};
     for (final f in frontRecs) {
-      final key = '${f.brand.toLowerCase()}|${f.model.toLowerCase()}';
+      final key = pairKey(f);
       final r = rearByKey[key];
       if (r == null) continue;
       final existing = pairsByKey[key];
@@ -2575,7 +2691,7 @@ class _AchsSetRecommendationsSectionState
     final allPairs = pairsByKey.values.toList()
       ..sort((a, b) => a.totalPrice.compareTo(b.totalPrice));
 
-    if (allPairs.isEmpty) return const SizedBox.shrink();
+    if (allPairs.isEmpty) return _maybeConstructionEmptyHint(context, searchState);
 
     // Apply category filter using front tires of pairs as proxy
     final filteredFronts =

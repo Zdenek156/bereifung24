@@ -1389,15 +1389,15 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 )
                               else ...[
                                 // Only show the axle sections that match the
-                                // user's package selection (Vorderreifen /
-                                // Hinterreifen / Beide). Otherwise an empty
-                                // section for the unselected axle would render
-                                // the "keine Radial-Reifen" hint by mistake.
+                                // user's package (moto) or axle (car) choice.
                                 Builder(builder: (_) {
                                   final pkg =
                                       searchState.selectedPackage ?? 'both';
-                                  final showFront = pkg != 'rear';
-                                  final showRear = pkg != 'front';
+                                  final axle = searchState.selectedAxle;
+                                  final showFront =
+                                      pkg != 'rear' && axle != 'rear';
+                                  final showRear =
+                                      pkg != 'front' && axle != 'front';
                                   return Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -1647,9 +1647,12 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                   .any((r) => r['axle'] == 'front' || r['axle'] == 'rear');
           final isTireWithPurchase =
               (isTireChange || isMotorcycleTire) && searchState.includeTires;
+          // Single-axle selection comes from selectedPackage (motorcycle)
+          // or selectedAxle (car Mischbereifung).
           final selPkg = searchState.selectedPackage;
-          final isFrontOnly = selPkg == 'front';
-          final isRearOnly = selPkg == 'rear';
+          final selAxle = searchState.selectedAxle;
+          final isFrontOnly = selPkg == 'front' || selAxle == 'front';
+          final isRearOnly = selPkg == 'rear' || selAxle == 'rear';
           final needsTire = isTireWithPurchase &&
               (hasAxleData
                   ? (isFrontOnly
@@ -1675,7 +1678,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
           if (effectiveService == null) {
             buttonLabel = S.of(context)!.pleaseSelectService;
           } else if (isTireWithPurchase && needsTire) {
-            buttonLabel = hasAxleData && !isFrontOnly && !isRearOnly
+            buttonLabel = (hasAxleData && !isFrontOnly && !isRearOnly)
                 ? S.of(context)!.pleaseSelectBothTires
                 : S.of(context)!.pleaseSelectTires;
           } else if (selectedVehicle == null) {
@@ -1800,7 +1803,14 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         }
                         // Add tire data for TIRE_CHANGE
                         if (isTireWithPurchase) {
+                          // Single-axle selection (front-only or rear-only):
+                          // forward the chosen tire as the primary tire so
+                          // the booking summary picks it up.
+                          final singleTire = isFrontOnly
+                              ? frontTire
+                              : (isRearOnly ? rearTire : null);
                           if (hasAxleData &&
+                              singleTire == null &&
                               frontTire != null &&
                               rearTire != null) {
                             // Mischbereifung — pass both tires separately
@@ -1840,6 +1850,25 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                             params['tireRearArticleId'] = rearTire.articleId;
                             if (rearTire.ean != null)
                               params['tireRearEan'] = rearTire.ean!;
+                          } else if (singleTire != null) {
+                            // Front-only or rear-only axle selection:
+                            // pass the chosen tire as the main tire.
+                            params['tireBrand'] = singleTire.brand;
+                            params['tireModel'] = singleTire.model;
+                            params['tireArticleId'] = singleTire.articleId;
+                            params['tireQuantity'] =
+                                singleTire.quantity.toString();
+                            params['tirePricePerUnit'] =
+                                singleTire.pricePerTire.toStringAsFixed(2);
+                            params['tireTotalPrice'] =
+                                singleTire.totalPrice.toStringAsFixed(2);
+                            if (singleTire.dimensions != null) {
+                              params['tireDimensions'] =
+                                  singleTire.dimensions!;
+                            }
+                            if (singleTire.ean != null) {
+                              params['tireEan'] = singleTire.ean!;
+                            }
                           } else if (selectedTire != null) {
                             params['tireBrand'] = selectedTire.brand;
                             params['tireModel'] = selectedTire.model;

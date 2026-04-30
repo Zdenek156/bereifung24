@@ -1024,8 +1024,12 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                     ],
 
                     // ── Tire Recommendations for TIRE_CHANGE & MOTORCYCLE_TIRE ──
-                    if (effectiveService == 'TIRE_CHANGE' ||
-                        effectiveService == 'MOTORCYCLE_TIRE') ...[
+                    // Only when the user actually wants to buy tires ("Mit Reifen").
+                    // In "Nur Montage" mode the recommendation list and the
+                    // Radial/Diagonal hint are irrelevant and must not appear.
+                    if ((effectiveService == 'TIRE_CHANGE' ||
+                            effectiveService == 'MOTORCYCLE_TIRE') &&
+                        searchState.includeTires) ...[
                       const SizedBox(height: 16),
                       Builder(builder: (context) {
                         final currentSearch = ref.watch(workshopSearchProvider);
@@ -1384,29 +1388,49 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                   perAxleQuantity: isCarAchsSet ? 2 : 1,
                                 )
                               else ...[
-                                _TireRecommendationsSection(
-                                  workshopId: widget.workshopId,
-                                  axleFilter: 'front',
-                                  axleLabel:
-                                      effectiveService == 'MOTORCYCLE_TIRE'
-                                          ? S.of(context)!.frontWheel
-                                          : '${S.of(context)!.frontAxleFull} (${S.of(context)!.frontAxle})',
-                                  preselected: _tireAutoSelected,
-                                  isMotorcycle:
-                                      effectiveService == 'MOTORCYCLE_TIRE',
-                                ),
-                                const SizedBox(height: 16),
-                                _TireRecommendationsSection(
-                                  workshopId: widget.workshopId,
-                                  axleFilter: 'rear',
-                                  axleLabel:
-                                      effectiveService == 'MOTORCYCLE_TIRE'
-                                          ? S.of(context)!.rearWheel
-                                          : '${S.of(context)!.rearAxleFull} (${S.of(context)!.rearAxle})',
-                                  preselected: _tireAutoSelected,
-                                  isMotorcycle:
-                                      effectiveService == 'MOTORCYCLE_TIRE',
-                                ),
+                                // Only show the axle sections that match the
+                                // user's package selection (Vorderreifen /
+                                // Hinterreifen / Beide). Otherwise an empty
+                                // section for the unselected axle would render
+                                // the "keine Radial-Reifen" hint by mistake.
+                                Builder(builder: (_) {
+                                  final pkg =
+                                      searchState.selectedPackage ?? 'both';
+                                  final showFront = pkg != 'rear';
+                                  final showRear = pkg != 'front';
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (showFront)
+                                        _TireRecommendationsSection(
+                                          workshopId: widget.workshopId,
+                                          axleFilter: 'front',
+                                          axleLabel: effectiveService ==
+                                                  'MOTORCYCLE_TIRE'
+                                              ? S.of(context)!.frontWheel
+                                              : '${S.of(context)!.frontAxleFull} (${S.of(context)!.frontAxle})',
+                                          preselected: _tireAutoSelected,
+                                          isMotorcycle: effectiveService ==
+                                              'MOTORCYCLE_TIRE',
+                                        ),
+                                      if (showFront && showRear)
+                                        const SizedBox(height: 16),
+                                      if (showRear)
+                                        _TireRecommendationsSection(
+                                          workshopId: widget.workshopId,
+                                          axleFilter: 'rear',
+                                          axleLabel: effectiveService ==
+                                                  'MOTORCYCLE_TIRE'
+                                              ? S.of(context)!.rearWheel
+                                              : '${S.of(context)!.rearAxleFull} (${S.of(context)!.rearAxle})',
+                                          preselected: _tireAutoSelected,
+                                          isMotorcycle: effectiveService ==
+                                              'MOTORCYCLE_TIRE',
+                                        ),
+                                    ],
+                                  );
+                                }),
                               ],
                               // Combined Preisübersicht for Mischbereifung
                               if (hasAnySelected &&
@@ -1623,9 +1647,16 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                   .any((r) => r['axle'] == 'front' || r['axle'] == 'rear');
           final isTireWithPurchase =
               (isTireChange || isMotorcycleTire) && searchState.includeTires;
+          final selPkg = searchState.selectedPackage;
+          final isFrontOnly = selPkg == 'front';
+          final isRearOnly = selPkg == 'rear';
           final needsTire = isTireWithPurchase &&
               (hasAxleData
-                  ? (frontTire == null || rearTire == null)
+                  ? (isFrontOnly
+                      ? frontTire == null
+                      : isRearOnly
+                          ? rearTire == null
+                          : (frontTire == null || rearTire == null))
                   : selectedTire == null);
           final vehicleTypeMismatch = selectedVehicle != null &&
               effectiveService != null &&
@@ -1644,7 +1675,7 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
           if (effectiveService == null) {
             buttonLabel = S.of(context)!.pleaseSelectService;
           } else if (isTireWithPurchase && needsTire) {
-            buttonLabel = hasAxleData
+            buttonLabel = hasAxleData && !isFrontOnly && !isRearOnly
                 ? S.of(context)!.pleaseSelectBothTires
                 : S.of(context)!.pleaseSelectTires;
           } else if (selectedVehicle == null) {

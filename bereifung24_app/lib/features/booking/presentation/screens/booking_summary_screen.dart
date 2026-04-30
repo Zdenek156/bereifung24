@@ -29,6 +29,10 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
   // Package-based service data
   final double? searchBasePrice;
   final String? selectedPackage;
+  // Car Mischbereifung axle filter ('front' / 'rear' / null) — used to mark
+  // single-axle bookings so emails + calendar can label them "Vorderachse" /
+  // "Hinterachse" instead of a generic single tire entry.
+  final String? selectedAxle;
   // Nur Montage surcharges
   final double? disposalFeeApplied;
   final double? runFlatSurchargeApplied;
@@ -72,6 +76,7 @@ class BookingSummaryScreen extends ConsumerStatefulWidget {
     this.withWashing = false,
     this.searchBasePrice,
     this.selectedPackage,
+    this.selectedAxle,
     this.disposalFeeApplied,
     this.runFlatSurchargeApplied,
     this.estimatedDuration,
@@ -350,6 +355,7 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
         if (widget.tireFrontBrand != null && widget.tireRearBrand != null)
           'tireData': {
             'isMixedTires': true,
+            'axleContext': 'both',
             'front': {
               'brand': widget.tireFrontBrand,
               'model': widget.tireFrontModel ?? '',
@@ -370,7 +376,34 @@ class _BookingSummaryScreenState extends ConsumerState<BookingSummaryScreen> {
               'purchasePrice': widget.tireRearPricePerUnit ?? 0,
               'totalPrice': widget.tireRearPrice ?? 0,
             },
-          },
+          }
+        // Single-axle Mischbereifung (car: selectedAxle, moto: selectedPackage):
+        // wrap the chosen tire as front/rear so emails and the calendar can
+        // show "Vorderachse" / "Hinterachse" (or "Vorderrad" / "Hinterrad" for
+        // motorcycles) instead of an unlabelled generic single tire.
+        else if (widget.tireBrand != null &&
+            (widget.selectedAxle == 'front' ||
+                widget.selectedAxle == 'rear' ||
+                widget.selectedPackage == 'front' ||
+                widget.selectedPackage == 'rear'))
+          'tireData': () {
+            final axle = widget.selectedAxle ?? widget.selectedPackage;
+            final tireBlock = {
+              'brand': widget.tireBrand,
+              'model': widget.tireModel ?? '',
+              'size': widget.tireDimensions ?? '',
+              'articleId': widget.tireArticleId ?? '',
+              'quantity': widget.tireQuantity ?? 2,
+              'purchasePrice': widget.tirePricePerUnit ?? 0,
+              'totalPrice': widget.tireTotalPrice ?? 0,
+            };
+            return {
+              'isMixedTires': false,
+              'axleContext': axle,
+              if (axle == 'front') 'front': tireBlock,
+              if (axle == 'rear') 'rear': tireBlock,
+            };
+          }(),
       };
 
       // Add customer notes if provided

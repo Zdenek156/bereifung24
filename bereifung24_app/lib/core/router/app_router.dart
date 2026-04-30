@@ -366,6 +366,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 ? double.tryParse(params['searchBasePrice']!)
                 : null,
             selectedPackage: params['selectedPackage'],
+            selectedAxle: params['selectedAxle'],
             tireBrand: params['tireBrand'],
             tireModel: params['tireModel'],
             tireArticleId: params['tireArticleId'],

@@ -1706,7 +1706,31 @@ export function directBookingConfirmationCustomerEmail(data: {
                 ${data.tireData.rear.threePMSF ? '<br>❄️ <span style="color: #2563eb;">Winterreifen (3PMSF)</span>' : ''}
               </div>
             </div>
-            ` : data.tireBrand && data.tireModel ? `
+            ` : (data.tireData?.axleContext === 'front' || data.tireData?.axleContext === 'rear') ? (() => {
+              const isMoto = data.serviceType === 'MOTORCYCLE_TIRE'
+              const block = data.tireData.axleContext === 'front' ? data.tireData.front : data.tireData.rear
+              const axleLabel = data.tireData.axleContext === 'front'
+                ? (isMoto ? 'Vorderrad' : 'Vorderachse')
+                : (isMoto ? 'Hinterrad' : 'Hinterachse')
+              const brand = block?.brand || data.tireBrand || ''
+              const model = block?.model || data.tireModel || ''
+              const size = block?.size || data.tireSize
+              const qty = block?.quantity || data.tireQuantity || 2
+              const perUnit = block?.purchasePrice
+              const total = block?.totalPrice
+              return `
+            <div style="margin-top: 15px;">
+              <strong>🛞 Ausgewählte Reifen (${axleLabel}):</strong><br>
+              <div style="background: #f3f4f6; padding: 12px; border-radius: 6px; margin-top: 8px;">
+                <strong>${axleLabel}:</strong><br>
+                ${brand} ${model}<br>
+                Größe: ${size || 'nicht angegeben'}<br>
+                Menge: ${qty} Stück<br>
+                ${perUnit ? `Preis pro Reifen: ${Number(perUnit).toFixed(2)}€<br>` : ''}
+                ${total ? `<strong>Gesamt: ${Number(total).toFixed(2)}€</strong>` : ''}
+              </div>
+            </div>`
+            })() : data.tireBrand && data.tireModel ? `
             <div style="margin-top: 15px;">
               <strong>🛞 Ausgewählte Reifen:</strong><br>
               ${data.tireBrand} ${data.tireModel}<br>
@@ -1753,7 +1777,23 @@ export function directBookingConfirmationCustomerEmail(data: {
             `}
             ${data.totalTirePurchasePrice && data.totalTirePurchasePrice > 0 ? `
             <div class="detail-row">
-              <span class="detail-label">${data.tireData?.isMixedTires ? 'Reifen (Mischbereifung)' : `Reifen (${data.tireQuantity || 4}x ${data.tireBrand || ''} ${data.tireModel || ''})`}:</span>
+              <span class="detail-label">${
+                data.tireData?.isMixedTires
+                  ? 'Reifen (Mischbereifung)'
+                  : (data.tireData?.axleContext === 'front' || data.tireData?.axleContext === 'rear')
+                    ? (() => {
+                        const isMoto = data.serviceType === 'MOTORCYCLE_TIRE'
+                        const block = data.tireData.axleContext === 'front' ? data.tireData.front : data.tireData.rear
+                        const axleLabel = data.tireData.axleContext === 'front'
+                          ? (isMoto ? 'Vorderrad' : 'Vorderachse')
+                          : (isMoto ? 'Hinterrad' : 'Hinterachse')
+                        const qty = block?.quantity || data.tireQuantity || 2
+                        const brand = block?.brand || data.tireBrand || ''
+                        const model = block?.model || data.tireModel || ''
+                        return `Reifen (${axleLabel}, ${qty}x ${brand} ${model})`.trim()
+                      })()
+                    : `Reifen (${data.tireQuantity || 4}x ${data.tireBrand || ''} ${data.tireModel || ''})`
+              }:</span>
               <span class="detail-value">+${data.totalTirePurchasePrice?.toFixed(2) || '0.00'}€</span>
             </div>
             ` : ''}
@@ -1932,7 +1972,7 @@ export function directBookingNotificationWorkshopEmail(data: {
 }) {
   const isTireServiceType = data.serviceType === 'TIRE_CHANGE' || data.serviceType === 'TIRE_MOUNT' || data.serviceType === 'MOTORCYCLE_TIRE'
   // Only show tire ordering when tires were actually purchased (not for "Nur Montage")
-  const hasTirePurchase = !!(data.tireBrand || data.tireData?.isMixedTires)
+  const hasTirePurchase = !!(data.tireBrand || data.tireData?.isMixedTires || data.tireData?.axleContext === 'front' || data.tireData?.axleContext === 'rear')
   const isTireService = isTireServiceType && hasTirePurchase
   const isAPISupplier = data.supplierConnectionType === 'API'
   const isCSVSupplier = data.supplierConnectionType === 'CSV'
@@ -2180,7 +2220,78 @@ export function directBookingNotificationWorkshopEmail(data: {
             </div>
             ` : ''}
           </div>
-          ` : data.tireBrand && data.tireModel ? `
+          ` : (data.tireData?.axleContext === 'front' || data.tireData?.axleContext === 'rear') ? (() => {
+            const isMoto = data.serviceType === 'MOTORCYCLE_TIRE'
+            const block = data.tireData.axleContext === 'front' ? data.tireData.front : data.tireData.rear
+            const axleLabel = data.tireData.axleContext === 'front'
+              ? (isMoto ? 'Vorderrad' : 'Vorderachse')
+              : (isMoto ? 'Hinterrad' : 'Hinterachse')
+            const brand = block?.brand || data.tireBrand || ''
+            const model = block?.model || data.tireModel || ''
+            const size = block?.size || data.tireSize || ''
+            const qty = block?.quantity || data.tireQuantity || 2
+            const ean = block?.ean
+            const articleId = block?.articleId || data.tireArticleId
+            const perUnit = block?.purchasePrice
+            const total = block?.totalPrice
+            return `
+          <!-- Single-axle Mischbereifung -->
+          <div class="section">
+            <div class="section-header">🛞 Reifeninformationen (${axleLabel})</div>
+            <table style="width: 100%; margin: 10px 0;">
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;"><strong>Achse:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;"><strong>${axleLabel}</strong></td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;"><strong>Marke & Modell:</strong></td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;"><strong>${brand} ${model}</strong></td>
+              </tr>
+              ${size ? `
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Größe:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${size}</td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Menge:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;"><strong>${qty} Stück</strong></td>
+              </tr>
+              ${ean ? `
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">EAN:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;"><code style="background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-size: 13px;">${ean}</code></td>
+              </tr>
+              ` : ''}
+              ${articleId ? `
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">Artikel-Nr.:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;"><code style="background: #dbeafe; padding: 4px 8px; border-radius: 4px; font-size: 13px; font-weight: bold; color: #1e40af;">${articleId}</code></td>
+              </tr>
+              ` : ''}
+              ${perUnit ? `
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;">VK-Preis pro Reifen:</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; text-align: right;">${Number(perUnit).toFixed(2)}€</td>
+              </tr>
+              ` : ''}
+              ${total ? `
+              <tr style="background: #fef3c7;">
+                <td style="padding: 12px 0; font-weight: bold;">Gesamt-VK:</td>
+                <td style="padding: 12px 0; text-align: right; font-weight: bold; font-size: 16px;">${Number(total).toFixed(2)}€</td>
+              </tr>
+              ` : ''}
+            </table>
+            ${articleId && !isAutoOrdered ? `
+            <div style="text-align: center; margin: 15px 0;">
+              <a href="https://www.tyresystem.de/s?suche=id${articleId}" target="_blank" style="display: inline-block; background: #10b981; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                🛒 Bei Tyresystem bestellen
+              </a>
+            </div>
+            ` : ''}
+          </div>
+          `
+          })() : data.tireBrand && data.tireModel ? `
           <!-- Tire Information (always show if tires are included) -->
           <div class="section">
             <div class="section-header">🛞 Reifeninformationen</div>

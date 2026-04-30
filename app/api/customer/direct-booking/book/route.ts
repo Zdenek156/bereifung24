@@ -376,6 +376,21 @@ export async function POST(request: NextRequest) {
               calDescription.push(`HA: ${tireData.rear.quantity || 2}× ${tireData.rear.brand} ${tireData.rear.model}`)
               if (tireData.rear.size) calDescription.push(`   Größe: ${tireData.rear.size}`)
             }
+          } else if (tireData?.axleContext === 'front' || tireData?.axleContext === 'rear') {
+            // Single-axle Mischbereifung selection: explicit axle label so the
+            // workshop knows whether the customer booked Vorder- oder Hinterachse.
+            const isMoto = booking.serviceType === 'MOTORCYCLE_TIRE'
+            const block = tireData.axleContext === 'front' ? tireData.front : tireData.rear
+            const axleLabel = tireData.axleContext === 'front'
+              ? (isMoto ? 'Vorderrad' : 'Vorderachse (VA)')
+              : (isMoto ? 'Hinterrad' : 'Hinterachse (HA)')
+            const qty = block?.quantity || tireQuantity || 2
+            const brand = block?.brand || tireBrand || ''
+            const model = block?.model || tireModel || ''
+            const size = block?.size || tireSize
+            calDescription.push('', `🛞 Reifen — ${axleLabel}:`)
+            calDescription.push(`${qty}× ${brand} ${model}`.trim())
+            if (size) calDescription.push(`   Größe: ${size}`)
           } else if (tireBrand) {
             calDescription.push('', `🛞 Reifen: ${tireQuantity || 4}× ${tireBrand} ${tireModel || ''}`)
             if (tireSize) calDescription.push(`   Größe: ${tireSize}`)
@@ -409,7 +424,9 @@ export async function POST(request: NextRequest) {
           
           const calSummaryTire = tireData?.isMixedTires
             ? ` - ${tireData.front?.brand || ''} / ${tireData.rear?.brand || ''}`
-            : tireBrand ? ` - ${tireBrand}` : ''
+            : (tireData?.axleContext === 'front' || tireData?.axleContext === 'rear')
+              ? ` - ${(tireData.axleContext === 'front' ? tireData.front?.brand : tireData.rear?.brand) || tireBrand || ''}`
+              : tireBrand ? ` - ${tireBrand}` : ''
           
           await createCalendarEvent(
             accessToken,

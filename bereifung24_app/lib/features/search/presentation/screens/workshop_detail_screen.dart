@@ -1781,6 +1781,11 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                                 effectivePrice.toStringAsFixed(2),
                           if (navSelectedPkg != null)
                             'selectedPackage': navSelectedPkg,
+                          // Forward axle selection so booking summary + emails
+                          // + calendar can label single-axle Mischbereifung
+                          // bookings as "Vorderachse" / "Hinterachse".
+                          if (searchState.selectedAxle != null)
+                            'selectedAxle': searchState.selectedAxle!,
                           if (navSearchWs?.estimatedDuration != null)
                             'estimatedDuration':
                                 navSearchWs!.estimatedDuration.toString(),

@@ -2,13 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import prisma from '@/lib/prisma';
+import { hasApplication } from '@/lib/applications';
+
+const APP_KEY = 'app-versions';
+
+async function requireAccess() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return { ok: false as const, status: 401 };
+  if (session.user.role === 'ADMIN') return { ok: true as const, session };
+  if (session.user.role === 'B24_EMPLOYEE') {
+    const allowed = await hasApplication(session.user.id, APP_KEY);
+    if (allowed) return { ok: true as const, session };
+  }
+  return { ok: false as const, status: 403 };
+}
 
 // GET /api/admin/app-versions — list all platform configs
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireAccess();
+    if (!auth.ok) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
     }
 
     const configs = await prisma.appVersionConfig.findMany({
@@ -25,10 +39,11 @@ export async function GET() {
 // Body: { platform, minVersion, latestVersion, forceUpdate, storeUrl, message? }
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const auth = await requireAccess();
+    if (!auth.ok) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: auth.status });
     }
+    const session = auth.session;
 
     const body = await request.json();
     const platform = String(body.platform || '').toLowerCase();

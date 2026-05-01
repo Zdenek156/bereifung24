@@ -166,7 +166,7 @@ export default function AppVersionsPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.push('/admin')}
+          onClick={() => router.back()}
           aria-label="Zurück"
         >
           <ArrowLeft className="h-5 w-5" />

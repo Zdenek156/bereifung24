@@ -324,8 +324,9 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     state = state.copyWith(
       selectedTireCategory: category,
       clearSelectedTireCategory: category == null,
-      // Mutual exclusivity: picking a category resets the brand filter
-      clearSelectedBrand: category != null,
+      // Reset brand filter when category changes so the workshop cards always
+      // show the cheapest tire of the newly selected category.
+      clearSelectedBrand: true,
     );
   }
 
@@ -369,8 +370,6 @@ class WorkshopSearchNotifier extends StateNotifier<WorkshopSearchState> {
     state = state.copyWith(
       selectedBrand: brand,
       clearSelectedBrand: brand == null,
-      // Mutual exclusivity: picking a brand deselects category badges
-      clearSelectedTireCategory: brand != null,
     );
     // No re-search needed: client-side filter only
   }
@@ -1831,22 +1830,34 @@ class TireChangeFilters extends StatelessWidget {
             _achsSetToggleCar(context),
           ],
           // Brand dropdown (collected from search results) - hidden in workshop detail.
-          // Show for Mischbereifung whenever Mit Reifen is active (4 tires OR
-          // 2 tires/Einzelachse) so the user can also filter when picking only
-          // one axle.
-          if (!hideBrandDropdown &&
-              state.includeTires &&
-              _vehicleHasMixedTires) ...[
+          // Show whenever Mit Reifen is active so the user can filter by brand
+          // for both standard sizes and Mischbereifung (4 tires or 2 tires/Einzelachse).
+          if (!hideBrandDropdown && state.includeTires) ...[
             Builder(builder: (ctx) {
+              final category = state.selectedTireCategory;
               final brands = <String>{};
               for (final w in state.workshops) {
-                final fb = w.tireFront?['brand']?.toString();
-                if (fb != null && fb.isNotEmpty) brands.add(fb);
-                final rb = w.tireRear?['brand']?.toString();
-                if (rb != null && rb.isNotEmpty) brands.add(rb);
+                // Build a per-workshop tire list from front/rear/recs, then
+                // apply the active category filter so the dropdown only
+                // contains brands that actually appear after filtering.
+                final wsRecs = <TireRecommendation>[];
+                final fb = w.tireFront;
+                if (fb != null && (fb['brand']?.toString().isNotEmpty ?? false)) {
+                  wsRecs.add(TireRecommendation.fromJson(fb));
+                }
+                final rb = w.tireRear;
+                if (rb != null && (rb['brand']?.toString().isNotEmpty ?? false)) {
+                  wsRecs.add(TireRecommendation.fromJson(rb));
+                }
                 for (final rec in w.tireRecommendationsRaw) {
                   final b = rec['brand']?.toString();
-                  if (b != null && b.isNotEmpty) brands.add(b);
+                  if (b != null && b.isNotEmpty) {
+                    wsRecs.add(TireRecommendation.fromJson(rec));
+                  }
+                }
+                final filtered = filterByCategory(wsRecs, category);
+                for (final t in filtered) {
+                  if (t.brand.isNotEmpty) brands.add(t.brand);
                 }
               }
               final sorted = brands.toList()
@@ -2540,14 +2551,20 @@ class MotorcycleTireFilters extends StatelessWidget {
     // selected axle, otherwise filtering by them would yield 0 tires.
     final availableBrands = <String>{};
     if (state.includeTires) {
+      final category = state.selectedTireCategory;
       for (final w in state.workshops) {
+        final wsRecs = <TireRecommendation>[];
         if (isBothTires || isFront) {
-          final fb = w.tireFront?['brand']?.toString();
-          if (fb != null && fb.isNotEmpty) availableBrands.add(fb);
+          final fb = w.tireFront;
+          if (fb != null && (fb['brand']?.toString().isNotEmpty ?? false)) {
+            wsRecs.add(TireRecommendation.fromJson(fb));
+          }
         }
         if (isBothTires || isRear) {
-          final rb = w.tireRear?['brand']?.toString();
-          if (rb != null && rb.isNotEmpty) availableBrands.add(rb);
+          final rb = w.tireRear;
+          if (rb != null && (rb['brand']?.toString().isNotEmpty ?? false)) {
+            wsRecs.add(TireRecommendation.fromJson(rb));
+          }
         }
         for (final rec in w.tireRecommendationsRaw) {
           final axle = rec['axle']?.toString();
@@ -2557,8 +2574,15 @@ class MotorcycleTireFilters extends StatelessWidget {
               axle == null ||
               axle.isEmpty) {
             final b = rec['brand']?.toString();
-            if (b != null && b.isNotEmpty) availableBrands.add(b);
+            if (b != null && b.isNotEmpty) {
+              wsRecs.add(TireRecommendation.fromJson(rec));
+            }
           }
+        }
+        final filtered =
+            filterByCategory(wsRecs, category, isMotorcycle: true);
+        for (final t in filtered) {
+          if (t.brand.isNotEmpty) availableBrands.add(t.brand);
         }
       }
     }
@@ -3628,19 +3652,32 @@ class _WorkshopCard extends ConsumerWidget {
             .map((r) => TireRecommendation.fromJson(r))
             .toList();
 
+        // Apply Hersteller-Dropdown brand filter (coexists with category)
+        final brandFilter = searchState.selectedBrand;
+        final brandApplies = brandFilter != null && brandFilter.isNotEmpty;
+        final brandFilteredRecs = brandApplies
+            ? allRecs
+                .where((t) => t.brand.toLowerCase() == brandFilter.toLowerCase())
+                .toList()
+            : allRecs;
+        final pickPool =
+            brandFilteredRecs.isNotEmpty ? brandFilteredRecs : allRecs;
+
         TireRecommendation? chosen;
-        // 1) Match by articleId from AI recommendation
-        if (aiArticleId != null && aiArticleId.isNotEmpty) {
-          final match = allRecs.where((t) => t.articleId == aiArticleId);
+        // 1) Match by articleId from AI recommendation (only if no brand filter)
+        if (!brandApplies &&
+            aiArticleId != null &&
+            aiArticleId.isNotEmpty) {
+          final match = pickPool.where((t) => t.articleId == aiArticleId);
           if (match.isNotEmpty) chosen = match.first;
         }
         // 2) Fallback to category filter
         if (chosen == null) {
-          final filtered = filterByCategory(allRecs, category);
+          final filtered = filterByCategory(pickPool, category);
           if (filtered.isNotEmpty) chosen = filtered.first;
         }
         // 3) Fallback to first available
-        chosen ??= allRecs.isNotEmpty ? allRecs.first : null;
+        chosen ??= pickPool.isNotEmpty ? pickPool.first : null;
 
         if (chosen != null) {
           final t = chosen;
@@ -3660,6 +3697,12 @@ class _WorkshopCard extends ConsumerWidget {
           };
         }
       }
+
+      // For non-Mischbereifung bookings the API still returns axle metadata
+      // (front == rear). Make sure the workshop card's "single tire" display
+      // (brand/model/dimensions) reflects the category-filtered front pick so
+      // that switching the category in the filter bar updates the shown tire.
+      selectedRec ??= selectedFrontRec;
     }
 
     if (isTireChange && workshop.tireAvailable) {

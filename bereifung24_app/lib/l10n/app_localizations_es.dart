@@ -2409,4 +2409,21 @@ class SEs extends S {
   @override
   String get workshopNotifAppointmentReminderDesc =>
       'Recordatorio un día antes de las citas próximas';
+
+  @override
+  String get manufacturerFilterLabel => 'Fabricante:';
+
+  @override
+  String get pricesUnmountedHint =>
+      '💡 Los precios se aplican solo a ruedas desmontadas del vehículo.';
+
+  @override
+  String get confirmMotorcycleBookingTitle => 'Por favor confirma';
+
+  @override
+  String get confirmMotorcycleBookingBody =>
+      'Asegúrate de que el neumático seleccionado sea adecuado para tu motocicleta (p. ej. Sport, Tourer, Cross, Enduro).\n\nEl montaje se realiza únicamente en ruedas ya desmontadas y entregadas al taller. El desmontaje y montaje en la moto no está incluido.';
+
+  @override
+  String get confirmAndBook => 'Confirmar y reservar';
 }

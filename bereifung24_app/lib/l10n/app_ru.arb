@@ -1,8 +1,6 @@
-﻿{
+{
   "@@locale": "ru",
-
   "appTitle": "Bereifung24",
-
   "login": "Войти",
   "register": "Регистрация",
   "logout": "Выйти",
@@ -20,7 +18,6 @@
   "loading": "Загрузка...",
   "error": "Ошибка",
   "ok": "OK",
-
   "email": "Эл. почта",
   "password": "Пароль",
   "firstName": "Имя",
@@ -32,10 +29,8 @@
   "zipLabel": "Почтовый индекс *",
   "city": "Город *",
   "emailRequired": "Адрес эл. почты *",
-
   "invalidEmail": "Неверный адрес эл. почты",
   "passwordsNoMatch": "Пароли не совпадают",
-
   "loginWithGoogle": "Войти через Google",
   "loginWithApple": "Войти через Apple",
   "loginWithBiometric": "Войти по биометрии",
@@ -45,20 +40,17 @@
   "noAccount": "Нет аккаунта?",
   "hasAccount": "Уже есть аккаунт?",
   "backToLogin": "Вернуться к входу",
-
   "resetPassword": "Сбросить пароль",
   "resetPasswordDesc": "Введите адрес эл. почты, и мы отправим вам ссылку для сброса пароля.",
   "sendLink": "Отправить ссылку",
   "checkInbox": "Проверьте почту и перейдите по ссылке для сброса пароля.",
   "enterValidEmail": "Введите действительный адрес эл. почты",
-
   "googleLoginFailed": "Вход через Google не удался",
   "appleLoginFailed": "Вход через Apple не удался",
   "googleRegisterFailed": "Регистрация через Google не удалась",
   "appleRegisterFailed": "Регистрация через Apple не удалась",
   "acceptTerms": "Примите условия использования",
   "privacyPolicy": "Политика конфиденциальности",
-
   "completeAddress": "Укажите адрес",
   "completeProfile": "Заполните профиль",
   "addressNeeded": "Укажите адрес, чтобы мы могли найти мастерские рядом с вами.",
@@ -66,13 +58,11 @@
   "appleNameNotProvided": "Apple не передал ваше имя. Заполните профиль.",
   "addressInfoText": "Ваш адрес нужен для поиска мастерских поблизости и расчёта расстояния.",
   "confirmPassword": "Подтвердите пароль",
-
   "welcomeTitle1": "Шиномонтаж по фиксированной цене",
   "welcomeDesc1": "Найдите подходящий шиномонтаж рядом и забронируйте онлайн — по гарантированной фиксированной цене.",
   "welcomeTitle2": "Быстрое и простое бронирование",
   "welcomeDesc2": "Выберите удобное время, сравните мастерские и забронируйте за 2 минуты — всё в одном приложении.",
   "welcomeTitle3": "Ваш персональный ИИ-консультант",
-
   "account": "Аккаунт",
   "editProfile": "Редактировать профиль",
   "notifications": "Уведомления",
@@ -82,38 +72,31 @@
   "giveFeedback": "Оставить отзыв",
   "dangerZone": "Опасная зона",
   "deleteAccount": "Удалить аккаунт",
-
   "changePasswordTitle": "Сменить пароль",
   "currentPassword": "Текущий пароль",
   "newPassword": "Новый пароль",
   "confirmNewPassword": "Подтвердите пароль",
   "passwordChanged": "Пароль успешно изменён",
   "change": "Изменить",
-
   "logoutConfirm": "Выйти?",
   "logoutConfirmText": "Вы действительно хотите выйти?",
-
   "deleteAccountConfirm": "Удалить аккаунт?",
   "deleteAccountDone": "Аккаунт удалён",
   "deletePermanently": "Удалить навсегда",
-
   "appearance": "Оформление",
   "system": "Система",
   "light": "Светлый",
   "dark": "Тёмный",
-
   "personalData": "Личные данные",
   "phoneNumber": "Номер телефона *",
   "address": "Адрес",
   "profileUpdated": "Профиль обновлён",
   "errorSaving": "Ошибка сохранения",
-
   "feedback": "Отзыв",
   "giveFeedbackTitle": "Оставить отзыв",
   "feedbackHint": "Что мы можем улучшить? Что вам нравится?",
   "selectRating": "Выберите оценку",
   "errorSending": "Ошибка отправки. Попробуйте снова.",
-
   "settingsSaved": "Настройки сохранены",
   "appointmentReminder": "Напоминание о записи",
   "appointmentReminderDesc": "Напоминание за 24 часа до записи",
@@ -121,16 +104,13 @@
   "seasonHintDesc": "Напоминание о смене шин в начале сезона",
   "bookingUpdates": "Обновления бронирований",
   "bookingUpdatesDesc": "Изменения статуса ваших бронирований",
-
   "agb": "Условия использования",
   "datenschutz": "Политика конфиденциальности",
   "impressum": "Правовая информация",
-
   "review": "Отзыв",
   "rateWorkshop": "Оценить мастерскую",
   "backToBookings": "Назад к бронированиям",
   "reviewHint": "Опишите ваш опыт...",
-
   "selectService": "Выберите услугу",
   "whatService": "Что вы хотите сделать?",
   "tireChange": "Замена шин",
@@ -144,7 +124,6 @@
   "axleAlignment": "Развал-схождение",
   "axleAlignmentDesc": "Регулировка углов колёс",
   "climateService": "Обслуживание кондиционера",
-
   "vehicleType": "Тип транспорта",
   "trailer": "Прицеп",
   "vehicleData": "Данные автомобиля",
@@ -155,34 +134,27 @@
   "licensePlateHint": "напр. M-AB 1234",
   "tireSizeOptional": "Размер шин (необязательно)",
   "tireSizeHint": "напр. 205/55 R16",
-
   "selectDate": "Выберите дату",
   "selectDateDesc": "Выберите дату и время.",
   "time": "Время",
-
   "summary": "Итого",
   "notesOptional": "Примечания (необязательно)",
   "notesHint": "напр. Шины в багажнике",
-
   "payment": "Оплата",
   "completePayment": "Завершите оплату.",
   "totalAmount": "Общая сумма",
   "totalPrice": "Общая стоимость",
   "total": "Итого",
   "paymentMethods": "Visa, Mastercard, SEPA",
-
   "bookingSuccessful": "Бронирование подтверждено!",
   "goToBookings": "К моим записям",
   "goToHome": "На главную",
-
   "cancelBooking": "Отменить бронирование?",
   "progressLost": "Ваш прогресс будет утерян.",
   "yesCancel": "Да, отменить",
-
   "bookingFailed": "Бронирование не удалось. Попробуйте снова.",
   "paymentCancelled": "Оплата отменена.",
   "paymentFailed": "Оплата не удалась. Попробуйте снова.",
-
   "bookingOverview": "Обзор бронирования",
   "workshop": "Мастерская",
   "service": "Услуга",
@@ -199,13 +171,11 @@
   "frontAxleMoto": "ПК",
   "rearAxleMoto": "ЗК",
   "myBookings": "Мои бронирования",
-
   "upcoming": "Предстоящие",
   "past": "Прошедшие",
   "noBookings": "Нет бронирований",
   "couldNotLoadBookings": "Не удалось загрузить записи",
   "searchWorkshop": "Поиск мастерской",
-
   "bookingDetails": "Детали бронирования",
   "couldNotLoadDetails": "Не удалось загрузить детали",
   "bookingNotFound": "Бронирование не найдено",
@@ -220,13 +190,11 @@
   "paymentDetails": "Детали оплаты",
   "remarks": "Примечания",
   "yourMessageToWorkshop": "Ваше сообщение мастерской",
-
   "bookTireAndMontage": "Забронировать шины и монтаж",
   "bookNow": "Забронировать",
   "couldNotLoadVehicles": "Не удалось загрузить автомобили",
   "selectVehicleTitle": "Выберите автомобиль",
   "addVehicleTitle": "Добавить автомобиль",
-
   "zipOrCity": "Индекс или город...",
   "useLocation": "Использовать местоположение",
   "locatingPosition": "Определение местоположения...",
@@ -248,7 +216,6 @@
   "selected": "Выбрано",
   "priceOverview": "Обзор цен",
   "confirmed": "Подтверждено",
-
   "aboutWorkshop": "О мастерской",
   "addressLabel": "Адрес",
   "yourVehicle": "Ваш автомобиль",
@@ -257,7 +224,6 @@
   "noReviewsYet": "Отзывов пока нет.",
   "workshopLoadError": "Не удалось загрузить мастерскую",
   "clockSuffix": "",
-
   "vehicles": "Автомобили",
   "addVehicleButton": "Добавить",
   "noVehicles": "Нет автомобилей",
@@ -265,7 +231,6 @@
   "deleteVehicleConfirm": "Удалить «{brand} {model}»?",
   "vehicleDeleted": "Автомобиль удалён",
   "deleteFailed": "Удаление не удалось",
-
   "editVehicle": "Редактировать автомобиль",
   "manufacturer": "Производитель *",
   "manufacturerHint": "напр. Yamaha, Kawasaki",
@@ -292,7 +257,6 @@
   "tireSizeSelected": "Размер шин выбран",
   "otherSize": "Другой размер",
   "noCameraAvailable": "Камера недоступна",
-
   "aiAdvisorSpeechInitError": "Не удалось инициализировать распознавание речи.",
   "aiAdvisorVoiceModeError": "Ошибка запуска голосового режима: {error}",
   "speechOutputOn": "Озвучивание включено",
@@ -316,18 +280,14 @@
   "recommendTires": "Хочу рекомендацию по шинам",
   "showNearbyWorkshops": "Покажите мастерские поблизости",
   "tireNotStored": "не сохранено",
-
   "locationCouldNotBeDetermined": "Не удалось определить местоположение. Проверьте настройки GPS.",
   "stripeNotConfigured": "Stripe не настроен. Попробуйте позже.",
   "notificationsDescription": "Уведомления о бронированиях и обновлениях",
-
   "workshopBookings": "Бронирования",
   "noBookingsEmoji": "📋",
   "errorLabel": "Ошибка: {error}",
-
   "workshopCalendar": "Календарь",
   "noAppointments": "📭",
-
   "workshopDashboard": "Панель управления",
   "workshopNext7Days": "Следующие 7 дней",
   "workshopTodayAppointments": "Записи на сегодня",
@@ -343,14 +303,19 @@
   "rotateScreen": "Поверните экран",
   "tapToSwitch": "Нажмите для переключения ›",
   "reviewsCount": "{count} отзывов",
-
   "workshopProfile": "Профиль",
   "landingPageTitle": "Ваша лендинг-страница",
   "activeStatus": "Активна",
   "inactiveStatus": "Неактивна",
   "shareLink": "Поделиться страницей",
   "landingPageShareMessage": "Посетите нашу страницу и бронируйте онлайн напрямую: {url}",
-  "@landingPageShareMessage": { "placeholders": { "url": { "type": "String" } } },
+  "@landingPageShareMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "qrCode": "QR-код",
   "noLandingPage": "Нет лендинг-страницы",
   "noLandingPageDescription": "Ваша лендинг-страница создаётся и управляется через админ-портал.",
@@ -368,194 +333,259 @@
   "replySaved": "Ответ сохранён ✅",
   "sendReply": "Отправить ответ",
   "reply": "Ответить",
-
   "serviceNotAvailable": "Услуга недоступна",
   "completeProfileButton": "Заполнить профиль",
-
   "locationSettings": "Настройки геолокации",
   "callNow": "Позвонить",
-
   "wheelWash": "Мойка колёс",
   "foreignObjectRepair": "Удаление инородного предмета",
   "confirmed_status": "Подтверждено",
-
   "madeInDeutschland": "Made with ❤️ в Германии",
   "openSourceLicenses": "Лицензии с открытым кодом",
   "contact": "Контакт",
   "companyInfo": "Информация о компании",
   "followUs": "Подписывайтесь",
   "mission": "Наша миссия",
-  "language": "\u042F\u0437\u044B\u043A",
-  "homeTitle": "\u0413\u043B\u0430\u0432\u043D\u0430\u044F",
-  "profile": "\u041F\u0440\u043E\u0444\u0438\u043B\u044C",
-  "reviews": "\u041E\u0442\u0437\u044B\u0432\u044B",
-  "voiceMode": "\u0413\u043E\u043B\u043E\u0441\u043E\u0432\u043E\u0439 \u0440\u0435\u0436\u0438\u043C",
-  "scanDocument": "\u0421\u043A\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u0430\u0432\u0442\u043E",
-  "mixedTires": "\u0421\u043C\u0435\u0448\u0430\u043D\u043D\u044B\u0435 \u0448\u0438\u043D\u044B",
-  "welcomeDesc3": "\u041D\u0430\u0448 \u0438\u043D\u0442\u0435\u043B\u043B\u0435\u043A\u0442\u0443\u0430\u043B\u044C\u043D\u044B\u0439 \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043D\u0442 \u043F\u043E\u043C\u043E\u0436\u0435\u0442 \u0432\u0430\u043C \u0432\u044B\u0431\u0440\u0430\u0442\u044C \u0448\u0438\u043D\u044B \u0438 \u043E\u0442\u0432\u0435\u0442\u0438\u0442 \u043D\u0430 \u0432\u0441\u0435 \u0432\u043E\u043F\u0440\u043E\u0441\u044B \u043E \u0432\u0430\u0448\u0435\u043C \u0430\u0432\u0442\u043E.",
-  "emergencyTitle": "\u0420\u0435\u0436\u0438\u043C \u0430\u0432\u0430\u0440\u0438\u0438",
-  "nearbyWorkshops": "\u0411\u043B\u0438\u0436\u0430\u0439\u0448\u0438\u0435 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0438\u0435",
-  "haveAccount": "\u0423 \u043C\u0435\u043D\u044F \u0443\u0436\u0435 \u0435\u0441\u0442\u044C \u0430\u043A\u043A\u0430\u0443\u043D\u0442",
-  "registerAtB24": "\u0417\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C\u0441\u044F \u043D\u0430 Bereifung24",
-  "vehicleRecognized": "\u0410\u0432\u0442\u043E\u043C\u043E\u0431\u0438\u043B\u044C \u0440\u0430\u0441\u043F\u043E\u0437\u043D\u0430\u043D!",
-  "acceptData": "\u041F\u0440\u0438\u043D\u044F\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435",
-  "serviceOffers": "\u0423\u0441\u043B\u0443\u0433\u0438",
-  "viewAll": "\u0412\u0441\u0435 \u2192",
-  "whatIsPlanned": "\u0427\u0442\u043E \u0437\u0430\u043F\u043B\u0430\u043D\u0438\u0440\u043E\u0432\u0430\u043D\u043E \u043D\u0430 \u0441\u0435\u0433\u043E\u0434\u043D\u044F?",
-  "emergencyHelp": "\u041F\u043E\u043C\u043E\u0449\u044C \u043D\u0430 \u0434\u043E\u0440\u043E\u0433\u0435",
-  "findWorkshopNow": "\u041D\u0430\u0439\u0442\u0438 \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0443\u044E \u0441\u0435\u0439\u0447\u0430\u0441",
-  "locationFound": "\u041C\u0435\u0441\u0442\u043E\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E!",
-  "locatingPosition2": "\u041E\u043F\u0440\u0435\u0434\u0435\u043B\u0435\u043D\u0438\u0435 \u043C\u0435\u0441\u0442\u043E\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u044F...",
-  "searchingNearby": "\u041F\u043E\u0438\u0441\u043A \u043C\u0430\u0441\u0442\u0435\u0440\u0441\u043A\u0438\u0445 \u043F\u043E\u0431\u043B\u0438\u0437\u043E\u0441\u0442\u0438...",
-  "retryLocating": "\u041F\u043E\u043F\u0440\u043E\u0431\u043E\u0432\u0430\u0442\u044C \u0441\u043D\u043E\u0432\u0430",
-  "manualEntry": "\u0412\u0432\u0435\u0441\u0442\u0438 \u0432\u0440\u0443\u0447\u043D\u0443\u044E \u2192",
-  "flatLay": "\u041F\u043E\u043B\u043E\u0436\u0438\u0442\u0435 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442 \u0430\u0432\u0442\u043E \u0440\u043E\u0432\u043D\u043E",
-  "addressMissing": "\u0410\u0434\u0440\u0435\u0441 \u043e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442",
-  "addressMissingDesc": "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u0430\u0434\u0440\u0435\u0441, \u0447\u0442\u043e\u0431\u044b \u043d\u0430\u0439\u0442\u0438 \u043c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0438\u0435 \u043f\u043e\u0431\u043b\u0438\u0437\u043e\u0441\u0442\u0438.",
-  "yourAiAdvisor": "\u0412\u0430\u0448 \u0418\u0418-\u043a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u043d\u0442!",
-  "serviceTireChange": "\u0417\u0430\u043c\u0435\u043d\u0430\n\u0448\u0438\u043d",
-  "serviceWheelChange": "\u0417\u0430\u043c\u0435\u043d\u0430\n\u043a\u043e\u043b\u0451\u0441",
-  "serviceTireRepair": "\u0420\u0435\u043c\u043e\u043d\u0442\n\u0448\u0438\u043d",
-  "serviceAlignment": "\u0420\u0430\u0437\u0432\u0430\u043b-\n\u0441\u0445\u043e\u0436\u0434\u0435\u043d\u0438\u0435",
-  "serviceMotorcycleTire": "\u041c\u043e\u0442\u043e-\n\u0448\u0438\u043d\u044b",
-  "serviceClimate": "\u041a\u043b\u0438\u043c\u0430\u0442-\n\u0441\u0435\u0440\u0432\u0438\u0441",
-  "winterTireSeason": "\u0421\u0435\u0437\u043e\u043d \u0437\u0438\u043c\u043d\u0438\u0445 \u0448\u0438\u043d",
-  "summerTireSeason": "\u0421\u0435\u0437\u043e\u043d \u043b\u0435\u0442\u043d\u0438\u0445 \u0448\u0438\u043d",
-  "winterSeasonTip": "\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u0435 \u0437\u0438\u043c\u043d\u0438\u0435 \u0448\u0438\u043d\u044b \u0441\u0435\u0439\u0447\u0430\u0441!",
-  "summerSeasonTip": "\u0412\u0440\u0435\u043c\u044f \u043c\u0435\u043d\u044f\u0442\u044c! \u0417\u0430\u043f\u0438\u0448\u0438\u0442\u0435\u0441\u044c \u043f\u043e\u043a\u0430 \u0435\u0441\u0442\u044c \u043c\u0435\u0441\u0442\u0430.",
-  "co2SavingsTitle": "\u042d\u043a\u043e\u043d\u043e\u043c\u0438\u044f CO2 \u0447\u0435\u0440\u0435\u0437 \u043e\u043d\u043b\u0430\u0439\u043d-\u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
-  "co2BasedOnVehicle": "\u041d\u0430 \u043e\u0441\u043d\u043e\u0432\u0435 \u0434\u0430\u043d\u043d\u044b\u0445 \u0432\u0430\u0448\u0435\u0433\u043e \u0430\u0432\u0442\u043e",
-  "co2TripsSaved": "\u041f\u043e\u0435\u0437\u0434\u043e\u043a\n\u0441\u044d\u043a\u043e\u043d\u043e\u043c\u043b\u0435\u043d\u043e",
-  "co2KmAvoided": "\u041a\u043c\n\u0441\u044d\u043a\u043e\u043d\u043e\u043c\u043b\u0435\u043d\u043e",
-  "co2Saved": "CO2\n\u0441\u044d\u043a\u043e\u043d\u043e\u043c\u043b\u0435\u043d\u043e",
-  "co2FuelSaved": "\u0422\u043e\u043f\u043b\u0438\u0432\u043e\n\u0441\u044d\u043a\u043e\u043d\u043e\u043c\u043b\u0435\u043d\u043e",
-  "switchVehicle": "\u0421\u043c\u0435\u043d\u0438\u0442\u044c \u0430\u0432\u0442\u043e",
-  "addAVehicle": "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u0430\u0432\u0442\u043e",
-  "forPersonalizedRec": "\u0434\u043b\u044f \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u044b\u0445 \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0430\u0446\u0438\u0439",
-  "appForCustomersOnly": "\u042d\u0442\u043e \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u0434\u043b\u044f \u043a\u043b\u0438\u0435\u043d\u0442\u043e\u0432.",
-  "trailerServiceOnly": "\u0414\u043b\u044f \u043f\u0440\u0438\u0446\u0435\u043f\u043e\u0432 \u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u0442\u043e\u043b\u044c\u043a\u043e \u0448\u0438\u043d\u043e\u043c\u043e\u043d\u0442\u0430\u0436.",
-  "sortUpcoming": "\u0411\u043b\u0438\u0436\u0430\u0439\u0448\u0438\u0439 \u0437\u0430\u043f\u0438\u0441",
-  "sortPrice": "\u0426\u0435\u043d\u0430",
-  "sortBookedDate": "\u0414\u0430\u0442\u0430 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u044f",
-  "bookingsLoadError": "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0437\u0430\u043f\u0438\u0441\u0438",
-  "noBookingsDesc": "\u0423 \u0432\u0430\u0441 \u043d\u0435\u0442 \u0437\u0430\u043f\u0438\u0441\u0435\u0439. \u041d\u0430\u0439\u0434\u0438\u0442\u0435 \u043c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0443\u044e!",
-  "myVehicles": "\u041c\u043e\u0438 \u0430\u0432\u0442\u043e",
-  "vehiclesLoadError": "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0430\u0432\u0442\u043e",
-  "noVehiclesDesc": "\u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u043f\u0435\u0440\u0432\u043e\u0435 \u0430\u0432\u0442\u043e.",
-  "buildYear": "\u0413\u043e\u0434 {year}",
-  "@buildYear": {"placeholders": {"year": {"type": "String"}}},
-  "tireSummer": "\u041b\u0435\u0442\u043e",
-  "tireWinter": "\u0417\u0438\u043c\u0430",
-  "tireAllSeason": "\u0412\u0441\u0435\u0441\u0435\u0437\u043e\u043d",
-  "daysCount": "{count} \u0434\u043d\u0435\u0439",
-  "@daysCount": {"placeholders": {"count": {"type": "String"}}},
-  "locationFailedPermission": "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0438\u0442\u044c \u043c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435.",
-  "errorOccurred": "\u041f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430.",
-  "workshopsFoundNearby": "{count} \u043c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0430\u044f \u043f\u043e\u0431\u043b\u0438\u0437\u043e\u0441\u0442\u0438",
-  "@workshopsFoundNearby": {"placeholders": {"count": {"type": "String"}}},
-  "workshopsFoundNearbyPlural": "{count} \u043c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0438\u0445 \u043f\u043e\u0431\u043b\u0438\u0437\u043e\u0441\u0442\u0438",
-  "@workshopsFoundNearbyPlural": {"placeholders": {"count": {"type": "String"}}},
-  "noWorkshopsNearby": "\u041c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0438\u0445 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u043e",
-  "emergencyBottomHint": "\u041f\u043e\u0437\u0432\u043e\u043d\u0438\u0442\u0435 \u0432 \u043c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0443\u044e \u0438 \u0434\u043e\u0433\u043e\u0432\u043e\u0440\u0438\u0442\u0435\u0441\u044c \u043e \u043f\u043e\u043c\u043e\u0449\u0438.",
-  "noWorkshopsIn25km": "\u041c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0438\u0445 \u0432 \u0440\u0430\u0434\u0438\u0443\u0441\u0435 25 \u043a\u043c \u043d\u0435\u0442.",
-  "emergencyNumbers": "\u042d\u043a\u0441\u0442\u0440\u0435\u043d\u043d\u044b\u0435 \u043d\u043e\u043c\u0435\u0440\u0430",
-  "policeEmergency": "\u041f\u043e\u043b\u0438\u0446\u0438\u044f / \u0421\u043b\u0443\u0436\u0431\u0430 \u0441\u043f\u0430\u0441\u0435\u043d\u0438\u044f",
-  "openStatus": "\u041e\u0442\u043a\u0440\u044b\u0442\u043e",
-  "closedStatus": "\u0417\u0430\u043a\u0440\u044b\u0442\u043e",
-  "callAnyway": "\u041f\u043e\u0437\u0432\u043e\u043d\u0438\u0442\u044c",
-  "legal": "\u041f\u0440\u0430\u0432\u043e\u0432\u0430\u044f \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u044f",
-  "termsOfService": "\u0423\u0441\u043b\u043e\u0432\u0438\u044f",
-  "imprint": "\u041e \u043a\u043e\u043c\u043f\u0430\u043d\u0438\u0438",
-  "noName": "\u0411\u0435\u0437 \u0438\u043c\u0435\u043d\u0438",
-  "requiredField": "\u041e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e\u0435 \u043f\u043e\u043b\u0435",
-  "minEightChars": "\u041c\u0438\u043d\u0438\u043c\u0443\u043c 8 \u0441\u0438\u043c\u0432\u043e\u043b\u043e\u0432",
-  "confirmPasswordLabel": "\u041f\u043e\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044c \u043f\u0430\u0440\u043e\u043b\u044c",
-  "passwordsDoNotMatch": "\u041f\u0430\u0440\u043e\u043b\u0438 \u043d\u0435 \u0441\u043e\u0432\u043f\u0430\u0434\u0430\u044e\u0442",
-  "currentPasswordWrong": "\u0422\u0435\u043a\u0443\u0449\u0438\u0439 \u043f\u0430\u0440\u043e\u043b\u044c \u043d\u0435\u0432\u0435\u0440\u043d\u044b\u0439",
-  "passwordChangeError": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0441\u043c\u0435\u043d\u044b \u043f\u0430\u0440\u043e\u043b\u044f",
-  "changeButton": "\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c",
-  "deleteAccountWarning": "\u0412\u0430\u0448 \u0430\u043a\u043a\u0430\u0443\u043d\u0442 \u0431\u0443\u0434\u0435\u0442 \u0443\u0434\u0430\u043b\u0451\u043d \u0431\u0435\u0437\u0432\u043e\u0437\u0432\u0440\u0430\u0442\u043d\u043e.",
-  "speechInitFailed": "\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0438\u043d\u0438\u0446\u0438\u0430\u043b\u0438\u0437\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0440\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u0432\u0430\u043d\u0438\u0435 \u0440\u0435\u0447\u0438.",
-  "rolloThinking": "\u0420\u043e\u043b\u043b\u043e \u0434\u0443\u043c\u0430\u0435\u0442...",
-  "speechNotAvailableMsg": "\u0420\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u0432\u0430\u043d\u0438\u0435 \u0440\u0435\u0447\u0438 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u043d\u043e",
-  "tireRecommendation": "\u0420\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0430\u0446\u0438\u044f \u0448\u0438\u043d",
-  "appHelp": "\u041f\u043e\u043c\u043e\u0449\u044c",
-  "askFreely": "\u0421\u043f\u0440\u043e\u0441\u0438\u0442\u044c",
-  "vehicleTypeCar": "\u0410\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c",
-  "vehicleTypeMotorcycle": "\u041c\u043e\u0442\u043e\u0446\u0438\u043a\u043b",
-  "vehicleTypeTrailer": "\u041f\u0440\u0438\u0446\u0435\u043f",
-  "fuelPetrol": "\u0411\u0435\u043d\u0437\u0438\u043d",
-  "fuelDiesel": "\u0414\u0438\u0437\u0435\u043b\u044c",
-  "fuelElectric": "\u042d\u043b\u0435\u043a\u0442\u0440\u043e",
-  "fuelHybrid": "\u0413\u0438\u0431\u0440\u0438\u0434",
-  "fuelPluginHybrid": "\u041f\u043b\u0430\u0433\u0438\u043d-\u0433\u0438\u0431\u0440\u0438\u0434",
-  "fuelLpg": "\u0413\u0430\u0437 (LPG)",
-  "fuelCng": "\u041c\u0435\u0442\u0430\u043d (CNG)",
-  "searchHint": "\u041f\u043e\u0438\u0441\u043a...",
-  "vehicleUpdated": "\u0410\u0432\u0442\u043e \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u043e",
-  "vehicleAdded": "\u0410\u0432\u0442\u043e \u0434\u043e\u0431\u0430\u0432\u043b\u0435\u043d\u043e",
-  "tireSizes": "\u0420\u0430\u0437\u043c\u0435\u0440\u044b \u0448\u0438\u043d",
-  "tireSizesDesc": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0440\u0430\u0437\u043c\u0435\u0440\u044b \u0448\u0438\u043d \u0432\u0430\u0448\u0435\u0433\u043e \u0430\u0432\u0442\u043e.",
-  "scanVehicleDoc": "\u0421\u043a\u0430\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0434\u043e\u043a\u0443\u043c\u0435\u043d\u0442",
-  "autoFillData": "\u0410\u0432\u0442\u043e\u0437\u0430\u043f\u043e\u043b\u043d\u0435\u043d\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0445",
-  "tireSizeRecognized": "\u0420\u0430\u0437\u043c\u0435\u0440 \u0448\u0438\u043d \u0440\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u043d",
-  "tireSizeNotRecognized": "\u0420\u0430\u0437\u043c\u0435\u0440 \u0448\u0438\u043d \u043d\u0435 \u0440\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u043d",
-  "fuelTypeLabel": "\u0422\u0438\u043f \u0442\u043e\u043f\u043b\u0438\u0432\u0430",
-  "selectFuel": "\u0412\u044b\u0431\u0440\u0430\u0442\u044c \u0442\u043e\u043f\u043b\u0438\u0432\u043e",
-  "inspectionDate": "\u0414\u0430\u0442\u0430 \u0422\u041e",
-  "inspectionReminder": "\u041d\u0430\u043f\u043e\u043c\u043d\u0438\u0442\u044c \u043e \u0422\u041e",
-  "noReminder": "\u0411\u0435\u0437 \u043d\u0430\u043f\u043e\u043c\u0438\u043d\u0430\u043d\u0438\u044f",
-  "daysBefore": "\u0437\u0430 {days} \u0434\u043d\u0435\u0439",
-  "@daysBefore": {"placeholders": {"days": {"type": "String"}}},
-  "frontWheel": "\u041f\u0435\u0440\u0435\u0434\u043d\u0435\u0435 \u043a\u043e\u043b\u0435\u0441\u043e",
-  "rearWheel": "\u0417\u0430\u0434\u043d\u0435\u0435 \u043a\u043e\u043b\u0435\u0441\u043e",
-  "differentFrontRear": "\u0420\u0430\u0437\u043d\u044b\u0435 \u043f\u0435\u0440\u0435\u0434/\u0437\u0430\u0434",
-  "mixedTireSizesLabel": "\u0420\u0430\u0437\u043d\u044b\u0435 \u0440\u0430\u0437\u043c\u0435\u0440\u044b \u0448\u0438\u043d",
-  "summerTiresLabel": "\u041b\u0435\u0442\u043d\u0438\u0435 \u0448\u0438\u043d\u044b",
-  "winterTiresLabel": "\u0417\u0438\u043c\u043d\u0438\u0435 \u0448\u0438\u043d\u044b",
-  "allSeasonTiresLabel": "\u0412\u0441\u0435\u0441\u0435\u0437\u043e\u043d\u043d\u044b\u0435 \u0448\u0438\u043d\u044b",
-  "onboardingTitle1": "\u0428\u0438\u043d\u043e\u043c\u043e\u043d\u0442\u0430\u0436 \u043f\u043e \u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u043d\u043d\u043e\u0439 \u0446\u0435\u043d\u0435",
-  "onboardingDesc1": "\u041d\u0430\u0439\u0434\u0438\u0442\u0435 \u043f\u043e\u0434\u0445\u043e\u0434\u044f\u0449\u0438\u0439 \u0448\u0438\u043d\u043e\u043c\u043e\u043d\u0442\u0430\u0436 \u0440\u044f\u0434\u043e\u043c \u0438 \u0437\u0430\u0431\u0440\u043e\u043d\u0438\u0440\u0443\u0439\u0442\u0435 \u043e\u043d\u043b\u0430\u0439\u043d.",
-  "onboardingTitle2": "\u0411\u044b\u0441\u0442\u0440\u043e\u0435 \u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435",
-  "onboardingDesc2": "\u0412\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u0440\u0435\u043c\u044f, \u0441\u0440\u0430\u0432\u043d\u0438\u0442\u0435 \u043c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0438\u0435 \u0438 \u0437\u0430\u0431\u0440\u043e\u043d\u0438\u0440\u0443\u0439\u0442\u0435 \u0437\u0430 2 \u043c\u0438\u043d\u0443\u0442\u044b.",
-  "onboardingTitle3": "\u0412\u0430\u0448 \u043b\u0438\u0447\u043d\u044b\u0439 \u0418\u0418-\u043a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u043d\u0442",
-  "onboardingDesc3": "\u041d\u0430\u0448 \u0443\u043c\u043d\u044b\u0439 \u0430\u0441\u0441\u0438\u0441\u0442\u0435\u043d\u0442 \u043f\u043e\u043c\u043e\u0436\u0435\u0442 \u0441 \u0432\u044b\u0431\u043e\u0440\u043e\u043c \u0448\u0438\u043d.",
-  "searchForWorkshops": "\u041f\u043e\u0438\u0441\u043a \u043c\u0430\u0441\u0442\u0435\u0440\u0441\u043a\u0438\u0445",
-  "searchForWorkshopsDesc": "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0438\u043d\u0434\u0435\u043a\u0441 \u0438\u043b\u0438 \u0433\u043e\u0440\u043e\u0434.",
-  "locationNotDetermined": "\u041c\u0435\u0441\u0442\u043e\u043f\u043e\u043b\u043e\u0436\u0435\u043d\u0438\u0435 \u043d\u0435 \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d\u043e. \u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0438\u043d\u0434\u0435\u043a\u0441.",
-  "searchFailed": "\u041f\u043e\u0438\u0441\u043a \u043d\u0435 \u0443\u0434\u0430\u043b\u0441\u044f. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0441\u043d\u043e\u0432\u0430.",
-  "today": "\u0421\u0435\u0433\u043e\u0434\u043d\u044f",
-  "tomorrow": "\u0417\u0430\u0432\u0442\u0440\u0430",
-  "inDaysCount": "\u0427\u0435\u0440\u0435\u0437 {days} \u0434\u043d\u0435\u0439",
-  "@inDaysCount": {"placeholders": {"days": {"type": "String"}}},
-  "breakdownHelp": "\u041f\u043e\u043c\u043e\u0449\u044c \u043d\u0430 \u0434\u043e\u0440\u043e\u0433\u0435",
-  "tapToSpeak": "\u041d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u0433\u043e\u0432\u043e\u0440\u0438\u0442\u044c",
-  "aiErrorMessage": "\u0418\u0437\u0432\u0438\u043d\u0438\u0442\u0435, \u043f\u0440\u043e\u0438\u0437\u043e\u0448\u043b\u0430 \u043e\u0448\u0438\u0431\u043a\u0430. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0435\u0449\u0451 \u0440\u0430\u0437.",
-  "noVehicleForAi": "\u0412\u044b \u0435\u0449\u0451 \u043d\u0435 \u0434\u043e\u0431\u0430\u0432\u0438\u043b\u0438 \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u044c. \u0414\u043e\u0431\u0430\u0432\u044c\u0442\u0435 \u0434\u043b\u044f \u043f\u0435\u0440\u0441\u043e\u043d\u0430\u043b\u044c\u043d\u044b\u0445 \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0430\u0446\u0438\u0439.",
-  "noPhoneNumber": "\u041d\u043e\u043c\u0435\u0440 \u0442\u0435\u043b\u0435\u0444\u043e\u043d\u0430 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d",
-  "closedToday": "\u0421\u0435\u0433\u043e\u0434\u043d\u044f \u0437\u0430\u043a\u0440\u044b\u0442\u043e",
-  "closesAt": "\u0417\u0430\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u0432 {time}",
-  "@closesAt": {"placeholders": {"time": {"type": "String"}}},
-  "opensAt": "\u041e\u0442\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f \u0432 {time}",
-  "@opensAt": {"placeholders": {"time": {"type": "String"}}},
-  "hintModel": "\u043d\u0430\u043f\u0440. Golf, 3er, MT-07",
-  "invalidYear": "\u041d\u0435\u0432\u0435\u0440\u043d\u044b\u0439 \u0433\u043e\u0434",
-  "loggedInAs": "\u0412\u043e\u0448\u043b\u0438 \u043a\u0430\u043a {role}",
-  "@loggedInAs": {"placeholders": {"role": {"type": "String"}}},
-  "helloUser": "\u041f\u0440\u0438\u0432\u0435\u0442, {name}!",
-  "@helloUser": {"placeholders": {"name": {"type": "String"}}},
-  "saveError": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0438\u044f",
-  "monthLabel": "\u041c\u0435\u0441\u044f\u0446",
-  "yearLabel": "\u0413\u043e\u0434",
-  "serviceOnlyCarTrailer": "\u042d\u0442\u0430 \u0443\u0441\u043b\u0443\u0433\u0430 \u0434\u043e\u0441\u0442\u0443\u043f\u043d\u0430 \u0442\u043e\u043b\u044c\u043a\u043e \u0434\u043b\u044f \u0430\u0432\u0442\u043e\u043c\u043e\u0431\u0438\u043b\u0435\u0439/\u043f\u0440\u0438\u0446\u0435\u043f\u043e\u0432.",
-  "selectMotorcycleFirst": "\u041f\u043e\u0436\u0430\u043b\u0443\u0439\u0441\u0442\u0430, \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 \u043c\u043e\u0442\u043e\u0446\u0438\u043a\u043b.",
+  "language": "Язык",
+  "homeTitle": "Главная",
+  "profile": "Профиль",
+  "reviews": "Отзывы",
+  "voiceMode": "Голосовой режим",
+  "scanDocument": "Сканировать документ авто",
+  "mixedTires": "Смешанные шины",
+  "welcomeDesc3": "Наш интеллектуальный ассистент поможет вам выбрать шины и ответит на все вопросы о вашем авто.",
+  "emergencyTitle": "Режим аварии",
+  "nearbyWorkshops": "Ближайшие мастерские",
+  "haveAccount": "У меня уже есть аккаунт",
+  "registerAtB24": "Зарегистрироваться на Bereifung24",
+  "vehicleRecognized": "Автомобиль распознан!",
+  "acceptData": "Принять данные",
+  "serviceOffers": "Услуги",
+  "viewAll": "Все →",
+  "whatIsPlanned": "Что запланировано на сегодня?",
+  "emergencyHelp": "Помощь на дороге",
+  "findWorkshopNow": "Найти мастерскую сейчас",
+  "locationFound": "Местоположение найдено!",
+  "locatingPosition2": "Определение местоположения...",
+  "searchingNearby": "Поиск мастерских поблизости...",
+  "retryLocating": "Попробовать снова",
+  "manualEntry": "Ввести вручную →",
+  "flatLay": "Положите документ авто ровно",
+  "addressMissing": "Адрес отсутствует",
+  "addressMissingDesc": "Добавьте адрес, чтобы найти мастерские поблизости.",
+  "yourAiAdvisor": "Ваш ИИ-консультант!",
+  "serviceTireChange": "Замена\nшин",
+  "serviceWheelChange": "Замена\nколёс",
+  "serviceTireRepair": "Ремонт\nшин",
+  "serviceAlignment": "Развал-\nсхождение",
+  "serviceMotorcycleTire": "Мото-\nшины",
+  "serviceClimate": "Климат-\nсервис",
+  "winterTireSeason": "Сезон зимних шин",
+  "summerTireSeason": "Сезон летних шин",
+  "winterSeasonTip": "Установите зимние шины сейчас!",
+  "summerSeasonTip": "Время менять! Запишитесь пока есть места.",
+  "co2SavingsTitle": "Экономия CO2 через онлайн-бронирование",
+  "co2BasedOnVehicle": "На основе данных вашего авто",
+  "co2TripsSaved": "Поездок\nсэкономлено",
+  "co2KmAvoided": "Км\nсэкономлено",
+  "co2Saved": "CO2\nсэкономлено",
+  "co2FuelSaved": "Топливо\nсэкономлено",
+  "switchVehicle": "Сменить авто",
+  "addAVehicle": "Добавьте авто",
+  "forPersonalizedRec": "для персонализированных рекомендаций",
+  "appForCustomersOnly": "Это приложение для клиентов.",
+  "trailerServiceOnly": "Для прицепов доступен только шиномонтаж.",
+  "sortUpcoming": "Ближайший запис",
+  "sortPrice": "Цена",
+  "sortBookedDate": "Дата бронирования",
+  "bookingsLoadError": "Не удалось загрузить записи",
+  "noBookingsDesc": "У вас нет записей. Найдите мастерскую!",
+  "myVehicles": "Мои авто",
+  "vehiclesLoadError": "Не удалось загрузить авто",
+  "noVehiclesDesc": "Добавьте первое авто.",
+  "buildYear": "Год {year}",
+  "@buildYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "tireSummer": "Лето",
+  "tireWinter": "Зима",
+  "tireAllSeason": "Всесезон",
+  "daysCount": "{count} дней",
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "locationFailedPermission": "Не удалось определить местоположение.",
+  "errorOccurred": "Произошла ошибка.",
+  "workshopsFoundNearby": "{count} мастерская поблизости",
+  "@workshopsFoundNearby": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "workshopsFoundNearbyPlural": "{count} мастерских поблизости",
+  "@workshopsFoundNearbyPlural": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "noWorkshopsNearby": "Мастерских не найдено",
+  "emergencyBottomHint": "Позвоните в мастерскую и договоритесь о помощи.",
+  "noWorkshopsIn25km": "Мастерских в радиусе 25 км нет.",
+  "emergencyNumbers": "Экстренные номера",
+  "policeEmergency": "Полиция / Служба спасения",
+  "openStatus": "Открыто",
+  "closedStatus": "Закрыто",
+  "callAnyway": "Позвонить",
+  "legal": "Правовая информация",
+  "termsOfService": "Условия",
+  "imprint": "О компании",
+  "noName": "Без имени",
+  "requiredField": "Обязательное поле",
+  "minEightChars": "Минимум 8 символов",
+  "confirmPasswordLabel": "Подтвердить пароль",
+  "passwordsDoNotMatch": "Пароли не совпадают",
+  "currentPasswordWrong": "Текущий пароль неверный",
+  "passwordChangeError": "Ошибка смены пароля",
+  "changeButton": "Изменить",
+  "deleteAccountWarning": "Ваш аккаунт будет удалён безвозвратно.",
+  "speechInitFailed": "Не удалось инициализировать распознавание речи.",
+  "rolloThinking": "Ролло думает...",
+  "speechNotAvailableMsg": "Распознавание речи недоступно",
+  "tireRecommendation": "Рекомендация шин",
+  "appHelp": "Помощь",
+  "askFreely": "Спросить",
+  "vehicleTypeCar": "Автомобиль",
+  "vehicleTypeMotorcycle": "Мотоцикл",
+  "vehicleTypeTrailer": "Прицеп",
+  "fuelPetrol": "Бензин",
+  "fuelDiesel": "Дизель",
+  "fuelElectric": "Электро",
+  "fuelHybrid": "Гибрид",
+  "fuelPluginHybrid": "Плагин-гибрид",
+  "fuelLpg": "Газ (LPG)",
+  "fuelCng": "Метан (CNG)",
+  "searchHint": "Поиск...",
+  "vehicleUpdated": "Авто обновлено",
+  "vehicleAdded": "Авто добавлено",
+  "tireSizes": "Размеры шин",
+  "tireSizesDesc": "Введите размеры шин вашего авто.",
+  "scanVehicleDoc": "Сканировать документ",
+  "autoFillData": "Автозаполнение данных",
+  "tireSizeRecognized": "Размер шин распознан",
+  "tireSizeNotRecognized": "Размер шин не распознан",
+  "fuelTypeLabel": "Тип топлива",
+  "selectFuel": "Выбрать топливо",
+  "inspectionDate": "Дата ТО",
+  "inspectionReminder": "Напомнить о ТО",
+  "noReminder": "Без напоминания",
+  "daysBefore": "за {days} дней",
+  "@daysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "frontWheel": "Переднее колесо",
+  "rearWheel": "Заднее колесо",
+  "differentFrontRear": "Разные перед/зад",
+  "mixedTireSizesLabel": "Разные размеры шин",
+  "summerTiresLabel": "Летние шины",
+  "winterTiresLabel": "Зимние шины",
+  "allSeasonTiresLabel": "Всесезонные шины",
+  "onboardingTitle1": "Шиномонтаж по фиксированной цене",
+  "onboardingDesc1": "Найдите подходящий шиномонтаж рядом и забронируйте онлайн.",
+  "onboardingTitle2": "Быстрое бронирование",
+  "onboardingDesc2": "Выберите время, сравните мастерские и забронируйте за 2 минуты.",
+  "onboardingTitle3": "Ваш личный ИИ-консультант",
+  "onboardingDesc3": "Наш умный ассистент поможет с выбором шин.",
+  "searchForWorkshops": "Поиск мастерских",
+  "searchForWorkshopsDesc": "Введите индекс или город.",
+  "locationNotDetermined": "Местоположение не определено. Введите индекс.",
+  "searchFailed": "Поиск не удался. Попробуйте снова.",
+  "today": "Сегодня",
+  "tomorrow": "Завтра",
+  "inDaysCount": "Через {days} дней",
+  "@inDaysCount": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "breakdownHelp": "Помощь на дороге",
+  "tapToSpeak": "Нажмите, чтобы говорить",
+  "aiErrorMessage": "Извините, произошла ошибка. Попробуйте ещё раз.",
+  "noVehicleForAi": "Вы ещё не добавили автомобиль. Добавьте для персональных рекомендаций.",
+  "noPhoneNumber": "Номер телефона недоступен",
+  "closedToday": "Сегодня закрыто",
+  "closesAt": "Закрывается в {time}",
+  "@closesAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "opensAt": "Открывается в {time}",
+  "@opensAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "hintModel": "напр. Golf, 3er, MT-07",
+  "invalidYear": "Неверный год",
+  "loggedInAs": "Вошли как {role}",
+  "@loggedInAs": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
+  "helloUser": "Привет, {name}!",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "saveError": "Ошибка сохранения",
+  "monthLabel": "Месяц",
+  "yearLabel": "Год",
+  "serviceOnlyCarTrailer": "Эта услуга доступна только для автомобилей/прицепов.",
+  "selectMotorcycleFirst": "Пожалуйста, выберите мотоцикл.",
   "adacBreakdown": "ADAC",
-  "opensOnDay": "\u041e\u0442\u043a\u0440\u044b\u0432\u0430\u0435\u0442\u0441\u044f {day} {time}",
-  "@opensOnDay": {"placeholders": {"day": {"type": "String"}, "time": {"type": "String"}}},
-  "hintYear": "\u043d\u0430\u043f\u0440. 2022",
-  "hintLicensePlate": "\u043d\u0430\u043f\u0440. M-AB 1234",
-  "rolloInitialGreeting": "\u041f\u0440\u0438\u0432\u0435\u0442! \ud83d\udc4b \u042f **Rollo**, \u0432\u0430\u0448 \u0418\u0418-\u043a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u043d\u0442. \u0427\u0435\u043c \u043c\u043e\u0433\u0443 \u043f\u043e\u043c\u043e\u0447\u044c?",
-  "voiceModeError": "\u041e\u0448\u0438\u0431\u043a\u0430 \u0437\u0430\u043f\u0443\u0441\u043a\u0430 \u0433\u043e\u043b\u043e\u0441\u043e\u0432\u043e\u0433\u043e \u0440\u0435\u0436\u0438\u043c\u0430",
+  "opensOnDay": "Открывается {day} {time}",
+  "@opensOnDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "hintYear": "напр. 2022",
+  "hintLicensePlate": "напр. M-AB 1234",
+  "rolloInitialGreeting": "Привет! 👋 Я **Rollo**, ваш ИИ-консультант. Чем могу помочь?",
+  "voiceModeError": "Ошибка запуска голосового режима",
   "rolloSpeaking": "Ролло говорит...",
   "noResponseReceived": "Ответ не получен.",
   "chipRecommendMsg": "Хочу рекомендацию по шинам",
@@ -563,7 +593,13 @@
   "chipWorkshopMsg": "Покажи мастерские рядом",
   "chipFreeMsg": "У меня вопрос о шинах",
   "rolloIntroWithVehicle": "Привет! Я Ролло, твой консультант по шинам. Вижу, ты ездишь на {vehicle}. Чем могу помочь?",
-  "@rolloIntroWithVehicle": { "placeholders": { "vehicle": { "type": "String" } } },
+  "@rolloIntroWithVehicle": {
+    "placeholders": {
+      "vehicle": {
+        "type": "String"
+      }
+    }
+  },
   "rolloIntroGeneric": "Привет! Я Ролло, твой консультант по шинам. Чем могу помочь?",
   "tireNotStoredLabel": "не указан",
   "otherBrand": "Другие",
@@ -571,11 +607,29 @@
   "tireTabWinter": "❄️ Зима",
   "tireTabAllSeason": "🌦️ Всесезон",
   "tireValidationError": "{label}: Индекс нагрузки и индекс скорости обязательны",
-  "@tireValidationError": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationError": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "tireValidationErrorRear": "{label} (задняя ось): Индекс нагрузки и индекс скорости обязательны",
-  "@tireValidationErrorRear": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationErrorRear": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "fieldsRecognized": "{count} полей распознано и применено",
-  "@fieldsRecognized": { "placeholders": { "count": { "type": "int" } } },
+  "@fieldsRecognized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tireSizeApplyHint": "Этот размер — утверждённая шина по техпаспорту. Нажмите \"Применить\", чтобы ввести.",
   "tireSizeInvalidHint": "Отсканированный размер шины не совпадает с доступными значениями. Пожалуйста, отсканируйте техпаспорт повторно или введите размер шины вручную.",
   "searchMyLocation": "Моё местоположение",
@@ -583,9 +637,14 @@
   "searchSettings": "Настройки",
   "workshopCountOne": "1 мастерская",
   "workshopCountMany": "{count} мастерских",
-  "@workshopCountMany": { "placeholders": { "count": { "type": "int" } } },
+  "@workshopCountMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sortDistance": "Расстояние",
-  "sortPrice": "Цена",
   "sortRating": "Рейтинг",
   "withTires": "С шинами",
   "montageOnly": "Только монтаж",
@@ -622,11 +681,23 @@
   "baseLabel": "Базовый",
   "tiresFallback": "Шины",
   "totalWithPrice": "Итого {price}€",
-  "@totalWithPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@totalWithPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "tiresAvailable": "Шины в наличии",
   "noTiresLabel": "Нет шин",
   "fixedPrice": "Фиксированная цена {price}€",
-  "@fixedPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@fixedPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "priceOnRequest": "Цена по запросу",
   "newBadge": "Новый",
   "moreTiresAvailable": "Ещё шины доступны в этой мастерской",
@@ -644,7 +715,6 @@
   "noSummerSize": "Размер летних шин не сохранён. Укажите размер в профиле автомобиля.",
   "brakeService": "Тормозной сервис",
   "batteryService": "Сервис аккумулятора",
-  "wheelWash": "Мойка колёс",
   "alignMeasureBoth": "📐 Измерение — обе оси",
   "alignMeasureFront": "📐 Измерение — передняя ось",
   "alignMeasureRear": "📐 Измерение — задняя ось",
@@ -690,20 +760,43 @@
   "pkgMontage4": "Монтаж (4 шины)",
   "pkgMontage2": "Монтаж (2 шины)",
   "missingTireSizeTitle": "Размер {season} не сохранён",
-  "@missingTireSizeTitle": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeTitle": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "missingTireSizeDesc": "Для поиска {season} укажите размер шин в профиле автомобиля.",
-  "@missingTireSizeDesc": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeDesc": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "storeTireSizeButton": "Указать размер {season}",
-  "@storeTireSizeButton": { "placeholders": { "season": { "type": "String" } } },
+  "@storeTireSizeButton": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsCountLabel": "({count} отзывов)",
-  "@reviewsCountLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@reviewsCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "errorServiceCarOnly": "Эта услуга доступна только для автомобилей/прицепов. Выберите \"Мотоциклетные шины\".",
   "errorNeedMotorcycle": "Для поиска мотоциклетных шин выберите мотоцикл.",
   "errorTrailerTireOnly": "Для прицепов доступен только шинный сервис (замена шин / замена колёс).",
   "errorLocationFailed": "Не удалось определить местоположение. Введите почтовый индекс.",
   "errorSearchFailed": "Поиск не удался. Попробуйте ещё раз.",
   "vehicleLoadError": "Не удалось загрузить автомобили",
-
   "selectWidth": "Выберите ширину (мм):",
   "selectAspectRatio": "Выберите высоту профиля (%):",
   "selectRimSize": "Выберите размер диска (дюйм):",
@@ -712,17 +805,35 @@
   "availableTimes": "Доступное время",
   "selectedTire": "Выбранная шина",
   "selectedTireAxle": "Выбранная шина – {axle}",
-  "@selectedTireAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@selectedTireAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "tireRecommendations": "Рекомендации по шинам",
   "tireRecommendationsAxle": "Рекомендации по шинам – {axle}",
-  "@tireRecommendationsAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@tireRecommendationsAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "encryptedPayment": "Зашифрованная и безопасная оплата через Stripe",
   "bookingAgreementPrefix": "Бронируя, вы соглашаетесь с нашими ",
   "termsLink": "Условиями",
   "andThe": " и ",
   "agreementSuffix": ".",
   "bookAndPay": "Забронировать и оплатить – {price} €",
-  "@bookAndPay": { "placeholders": { "price": { "type": "String" } } },
+  "@bookAndPay": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "bookBinding": "Забронировать (обязательно)",
   "bookingInProgress": "Бронирование...",
   "creditCard": "Кредитная карта",
@@ -733,9 +844,21 @@
   "pleaseSelectDate": "Пожалуйста, выберите дату",
   "pleaseSelectTime": "Пожалуйста, выберите время",
   "bookAppointmentAt": "Записаться – {time}",
-  "@bookAppointmentAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookAppointmentAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "bookTireAndMontageAt": "Шины и монтаж – {time}",
-  "@bookTireAndMontageAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookTireAndMontageAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsLoadError": "Не удалось загрузить отзывы",
   "payButtonLabel": "Оплатить",
   "paymentTookTooLong": "Оплата заняла слишком много времени. Попробуйте ещё раз.",
@@ -759,7 +882,13 @@
   "paymentStatusLabel": "Статус оплаты",
   "basePrice": "Базовая цена",
   "couponLabel": "Купон ({code})",
-  "@couponLabel": { "placeholders": { "code": { "type": "String" } } },
+  "@couponLabel": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "discountLabel": "Скидка",
   "missionText": "Bereifung24 связывает водителей с лучшими шиномонтажными мастерскими поблизости. Мы делаем замену шин, монтаж и сервис такими же простыми, как онлайн-заказ – прозрачно, честно и надёжно.",
   "balancingX4": "Балансировка (×4)",
@@ -771,17 +900,51 @@
   "detailsCouldNotLoad": "Не удалось загрузить детали",
   "bookingLabel": "Бронирование",
   "bookingNumber": "Номер брони: {id}",
-  "@bookingNumber": { "placeholders": { "id": { "type": "String" } } },
-  "timeLabel": "Время: {time}",
-  "@timeLabel": { "placeholders": { "time": { "type": "String" } } },
+  "@bookingNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "@timeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "durationLabel": "Длительность: ок. {minutes} минут",
-  "@durationLabel": { "placeholders": { "minutes": { "type": "int" } } },
-  "licensePlateLabel": "Номерной знак: {plate}",
-  "@licensePlateLabel": { "placeholders": { "plate": { "type": "String" } } },
+  "@durationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@licensePlateLabel": {
+    "placeholders": {
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
   "tireSizeLabel": "Размер: {size}",
-  "@tireSizeLabel": { "placeholders": { "size": { "type": "String" } } },
+  "@tireSizeLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "tireQuantityLabel": "Количество: {count} шт.",
-  "@tireQuantityLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@tireQuantityLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "wheelWashing": "Мойка колёс",
   "rateWorkshopButton": "Оценить мастерскую",
   "tagline": "Ваш шинный сервис – просто и быстро",
@@ -790,8 +953,7 @@
   "beingProcessed": "В обработке",
   "completedStatus": "Завершено",
   "appointmentCancelled": "Эта запись была отменена",
-  "errorSendingReview": "Ошибка отправки. Попробуйте ещё раз."
-,
+  "errorSendingReview": "Ошибка отправки. Попробуйте ещё раз.",
   "axleSetSameBrand": "⭐ Комплект на ось: один бренд",
   "axleSetSameBrandDesc": "Передняя и задняя ось одного бренда (2× перед. + 2× задн.)",
   "axleSetSameBrandTapHint": "Нажмите, чтобы показать только комплекты одного бренда",
@@ -800,20 +962,68 @@
   "axleSetSameModelTapHint": "Нажмите, чтобы комбинировать передние и задние шины",
   "axleSetBadge": "⭐ КОМПЛЕКТ",
   "axleSetsAvailable": "Доступно комплектов: {count}",
-  "@axleSetsAvailable": { "placeholders": { "count": { "type": "int" } } },
+  "@axleSetsAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "activityNewBooking": "Новая запись от {name} – {service}",
-  "@activityNewBooking": { "placeholders": { "name": { "type": "String" }, "service": { "type": "String" } } },
+  "@activityNewBooking": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
   "activityPayoutReceived": "Выплата получена – {amount} €",
-  "@activityPayoutReceived": { "placeholders": { "amount": { "type": "String" } } },
+  "@activityPayoutReceived": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "activityNewReview": "Отзыв на {rating} звёзд от {name}",
-  "@activityNewReview": { "placeholders": { "rating": { "type": "int" }, "name": { "type": "String" } } },
+  "@activityNewReview": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "timeJustNow": "Только что",
   "timeMinutesAgo": "{minutes} мин назад",
-  "@timeMinutesAgo": { "placeholders": { "minutes": { "type": "int" } } },
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{hours} ч назад",
-  "@timeHoursAgo": { "placeholders": { "hours": { "type": "int" } } },
+  "@timeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{days} дн. назад",
-  "@timeDaysAgo": { "placeholders": { "days": { "type": "int" } } },
+  "@timeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "timeYesterday": "Вчера",
   "workshopNotificationSettings": "Push-уведомления",
   "workshopNotificationSettingsDesc": "Выберите, какие push-уведомления вы хотите получать",
@@ -826,5 +1036,10 @@
   "workshopNotifPayoutReceived": "Выплата получена",
   "workshopNotifPayoutReceivedDesc": "Уведомление о выплатах комиссии",
   "workshopNotifAppointmentReminder": "Напоминание о записи (за 24 ч)",
-  "workshopNotifAppointmentReminderDesc": "Напоминание за день до предстоящих записей"
+  "workshopNotifAppointmentReminderDesc": "Напоминание за день до предстоящих записей",
+  "manufacturerFilterLabel": "Производитель:",
+  "pricesUnmountedHint": "💡 Цены действительны только для колёс, снятых с транспортного средства.",
+  "confirmMotorcycleBookingTitle": "Пожалуйста, подтвердите",
+  "confirmMotorcycleBookingBody": "Пожалуйста, убедитесь, что выбранная шина подходит для вашего мотоцикла (например, Sport, Tourer, Cross, Enduro).\n\nМонтаж выполняется только на уже снятых колёсах, доставленных в мастерскую. Снятие и установка колёс на мотоцикле не входят в услугу.",
+  "confirmAndBook": "Подтвердить и забронировать"
 }

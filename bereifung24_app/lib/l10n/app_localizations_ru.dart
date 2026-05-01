@@ -2398,4 +2398,21 @@ class SRu extends S {
   @override
   String get workshopNotifAppointmentReminderDesc =>
       'Напоминание за день до предстоящих записей';
+
+  @override
+  String get manufacturerFilterLabel => 'Производитель:';
+
+  @override
+  String get pricesUnmountedHint =>
+      '💡 Цены действительны только для колёс, снятых с транспортного средства.';
+
+  @override
+  String get confirmMotorcycleBookingTitle => 'Пожалуйста, подтвердите';
+
+  @override
+  String get confirmMotorcycleBookingBody =>
+      'Пожалуйста, убедитесь, что выбранная шина подходит для вашего мотоцикла (например, Sport, Tourer, Cross, Enduro).\n\nМонтаж выполняется только на уже снятых колёсах, доставленных в мастерскую. Снятие и установка колёс на мотоцикле не входят в услугу.';
+
+  @override
+  String get confirmAndBook => 'Подтвердить и забронировать';
 }

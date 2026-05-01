@@ -1,8 +1,6 @@
-﻿{
+{
   "@@locale": "tr",
-
   "appTitle": "Bereifung24",
-
   "login": "Giriş yap",
   "register": "Kayıt ol",
   "logout": "Çıkış yap",
@@ -20,7 +18,6 @@
   "loading": "Yükleniyor...",
   "error": "Hata",
   "ok": "OK",
-
   "email": "E-posta",
   "password": "Şifre",
   "firstName": "Ad",
@@ -32,10 +29,8 @@
   "zipLabel": "Posta kodu *",
   "city": "Şehir *",
   "emailRequired": "E-posta adresi *",
-
   "invalidEmail": "Geçersiz e-posta",
   "passwordsNoMatch": "Şifreler eşleşmiyor",
-
   "loginWithGoogle": "Google ile giriş yap",
   "loginWithApple": "Apple ile giriş yap",
   "loginWithBiometric": "Biyometri ile giriş yap",
@@ -45,20 +40,17 @@
   "noAccount": "Hesabın yok mu?",
   "hasAccount": "Zaten bir hesabın var mı?",
   "backToLogin": "Girişe dön",
-
   "resetPassword": "Şifre sıfırla",
   "resetPasswordDesc": "E-posta adresini gir, şifreni sıfırlamak için bir bağlantı göndereceğiz.",
   "sendLink": "Bağlantı gönder",
   "checkInbox": "Gelen kutunu kontrol et ve şifreni sıfırlamak için bağlantıyı takip et.",
   "enterValidEmail": "Lütfen geçerli bir e-posta gir",
-
   "googleLoginFailed": "Google girişi başarısız",
   "appleLoginFailed": "Apple girişi başarısız",
   "googleRegisterFailed": "Google kaydı başarısız",
   "appleRegisterFailed": "Apple kaydı başarısız",
   "acceptTerms": "Lütfen kullanım koşullarını kabul et",
   "privacyPolicy": "Gizlilik Politikası",
-
   "completeAddress": "Adresi tamamla",
   "completeProfile": "Profili tamamla",
   "addressNeeded": "Yakınındaki atölyeleri bulabilmemiz için lütfen adresini gir.",
@@ -66,13 +58,11 @@
   "appleNameNotProvided": "Apple adını iletmedi. Lütfen profilini tamamla.",
   "addressInfoText": "Yakınındaki atölyeleri bulmak ve mesafeyi hesaplamak için adresin gereklidir.",
   "confirmPassword": "Şifreyi onayla",
-
   "welcomeTitle1": "Sabit fiyatla lastik servisi",
   "welcomeDesc1": "Yakınındaki doğru lastik servisini bul ve kolayca online rezervasyon yap – garantili sabit fiyatla.",
   "welcomeTitle2": "Hızlı ve kolay rezervasyon",
   "welcomeDesc2": "Tercih ettiğin randevuyu seç, atölyeleri karşılaştır ve 2 dakikadan kısa sürede rezervasyon yap – hepsi tek uygulamada.",
   "welcomeTitle3": "Kişisel yapay zeka danışmanın",
-
   "account": "Hesap",
   "editProfile": "Profili düzenle",
   "notifications": "Bildirimler",
@@ -82,38 +72,31 @@
   "giveFeedback": "Geri bildirim ver",
   "dangerZone": "Tehlikeli bölge",
   "deleteAccount": "Hesabı sil",
-
   "changePasswordTitle": "Şifre değiştir",
   "currentPassword": "Mevcut şifre",
   "newPassword": "Yeni şifre",
   "confirmNewPassword": "Şifreyi onayla",
   "passwordChanged": "Şifre başarıyla değiştirildi",
   "change": "Değiştir",
-
   "logoutConfirm": "Çıkış yap?",
   "logoutConfirmText": "Gerçekten çıkış yapmak istiyor musun?",
-
   "deleteAccountConfirm": "Hesabı sil?",
   "deleteAccountDone": "Hesap silindi",
   "deletePermanently": "Kalıcı olarak sil",
-
   "appearance": "Görünüm",
   "system": "Sistem",
   "light": "Açık",
   "dark": "Koyu",
-
   "personalData": "Kişisel veriler",
   "phoneNumber": "Telefon numarası *",
   "address": "Adres",
   "profileUpdated": "Profil güncellendi",
   "errorSaving": "Kaydetme hatası",
-
   "feedback": "Geri bildirim",
   "giveFeedbackTitle": "Geri bildirim ver",
   "feedbackHint": "Neyi geliştirebiliriz? Neler hoşuna gidiyor?",
   "selectRating": "Lütfen bir değerlendirme seç",
   "errorSending": "Gönderme hatası. Lütfen tekrar dene.",
-
   "settingsSaved": "Ayarlar kaydedildi",
   "appointmentReminder": "Randevu hatırlatma",
   "appointmentReminderDesc": "Randevudan 24 saat önce hatırlatma",
@@ -121,16 +104,13 @@
   "seasonHintDesc": "Sezon başında lastik değişimi hatırlatması",
   "bookingUpdates": "Rezervasyon güncellemeleri",
   "bookingUpdatesDesc": "Rezervasyonlarının durum değişiklikleri",
-
   "agb": "Kullanım Koşulları",
   "datenschutz": "Gizlilik Politikası",
   "impressum": "Yasal Bilgiler",
-
   "review": "Değerlendirme",
   "rateWorkshop": "Atölyeyi değerlendir",
   "backToBookings": "Rezervasyonlara dön",
   "reviewHint": "Deneyiminizi anlatın...",
-
   "selectService": "Servis seç",
   "whatService": "Ne yaptırmak istiyorsun?",
   "tireChange": "Lastik değişimi",
@@ -144,7 +124,6 @@
   "axleAlignment": "Rot balans",
   "axleAlignmentDesc": "Düz ayar ve kamber ayarı",
   "climateService": "Klima servisi",
-
   "vehicleType": "Araç tipi",
   "trailer": "Römork",
   "vehicleData": "Araç verileri",
@@ -155,34 +134,27 @@
   "licensePlateHint": "ör. M-AB 1234",
   "tireSizeOptional": "Lastik boyutu (isteğe bağlı)",
   "tireSizeHint": "ör. 205/55 R16",
-
   "selectDate": "Tarih seç",
   "selectDateDesc": "Tarih ve saat seç.",
   "time": "Saat",
-
   "summary": "Özet",
   "notesOptional": "Notlar (isteğe bağlı)",
   "notesHint": "ör. Lastikler bagajda",
-
   "payment": "Ödeme",
   "completePayment": "Lütfen ödemeyi tamamla.",
   "totalAmount": "Toplam tutar",
   "totalPrice": "Toplam fiyat",
   "total": "Toplam",
   "paymentMethods": "Visa, Mastercard, SEPA",
-
   "bookingSuccessful": "Rezervasyon başarılı!",
   "goToBookings": "Randevularıma git",
   "goToHome": "Ana sayfaya git",
-
   "cancelBooking": "Rezervasyonu iptal et?",
   "progressLost": "İlerlemeniz kaybolacak.",
   "yesCancel": "Evet, iptal et",
-
   "bookingFailed": "Rezervasyon başarısız. Lütfen tekrar dene.",
   "paymentCancelled": "Ödeme iptal edildi.",
   "paymentFailed": "Ödeme başarısız. Lütfen tekrar dene.",
-
   "bookingOverview": "Rezervasyon özeti",
   "workshop": "Atölye",
   "service": "Servis",
@@ -199,13 +171,11 @@
   "frontAxleMoto": "ÖT",
   "rearAxleMoto": "AT",
   "myBookings": "Rezervasyonlarım",
-
   "upcoming": "Gelecek",
   "past": "Geçmiş",
   "noBookings": "Rezervasyon yok",
   "couldNotLoadBookings": "Randevular yüklenemedi",
   "searchWorkshop": "Atölye ara",
-
   "bookingDetails": "Rezervasyon detayları",
   "couldNotLoadDetails": "Detaylar yüklenemedi",
   "bookingNotFound": "Rezervasyon bulunamadı",
@@ -220,13 +190,11 @@
   "paymentDetails": "Ödeme detayları",
   "remarks": "Notlar",
   "yourMessageToWorkshop": "Atölyeye mesajınız",
-
   "bookTireAndMontage": "Lastik ve montaj rezervasyonu",
   "bookNow": "Şimdi rezervasyon yap",
   "couldNotLoadVehicles": "Araçlar yüklenemedi",
   "selectVehicleTitle": "Araç seç",
   "addVehicleTitle": "Araç ekle",
-
   "zipOrCity": "Posta kodu veya şehir...",
   "useLocation": "Konum kullan",
   "locatingPosition": "Konum belirleniyor...",
@@ -248,7 +216,6 @@
   "selected": "Seçildi",
   "priceOverview": "Fiyat özeti",
   "confirmed": "Onaylandı",
-
   "aboutWorkshop": "Atölye hakkında",
   "addressLabel": "Adres",
   "yourVehicle": "Aracın",
@@ -257,7 +224,6 @@
   "noReviewsYet": "Henüz değerlendirme yok.",
   "workshopLoadError": "Atölye yüklenemedi",
   "clockSuffix": "",
-
   "vehicles": "Araçlar",
   "addVehicleButton": "Ekle",
   "noVehicles": "Araç yok",
@@ -265,7 +231,6 @@
   "deleteVehicleConfirm": "\"{brand} {model}\" gerçekten silinsin mi?",
   "vehicleDeleted": "Araç silindi",
   "deleteFailed": "Silme başarısız",
-
   "editVehicle": "Aracı düzenle",
   "manufacturer": "Üretici *",
   "manufacturerHint": "ör. Yamaha, Kawasaki",
@@ -292,7 +257,6 @@
   "tireSizeSelected": "Lastik boyutu seçildi",
   "otherSize": "Diğer boyut",
   "noCameraAvailable": "Kamera mevcut değil",
-
   "aiAdvisorSpeechInitError": "Ses tanıma başlatılamadı.",
   "aiAdvisorVoiceModeError": "Ses modu başlatma hatası: {error}",
   "speechOutputOn": "Sesli çıktı açık",
@@ -316,18 +280,14 @@
   "recommendTires": "Lastik önerisi istiyorum",
   "showNearbyWorkshops": "Yakınımdaki atölyeleri göster",
   "tireNotStored": "kayıtlı değil",
-
   "locationCouldNotBeDetermined": "Konum belirlenemedi. Lütfen GPS ayarlarını kontrol et.",
   "stripeNotConfigured": "Stripe yapılandırılmamış. Lütfen daha sonra tekrar dene.",
   "notificationsDescription": "Rezervasyonlar ve güncellemeler için bildirimler",
-
   "workshopBookings": "Rezervasyonlar",
   "noBookingsEmoji": "📋",
   "errorLabel": "Hata: {error}",
-
   "workshopCalendar": "Takvim",
   "noAppointments": "📭",
-
   "workshopDashboard": "Kontrol Paneli",
   "workshopNext7Days": "Sonraki 7 gün",
   "workshopTodayAppointments": "Bugünün randevuları",
@@ -343,14 +303,19 @@
   "rotateScreen": "Ekranı döndür",
   "tapToSwitch": "Değiştirmek için dokun ›",
   "reviewsCount": "{count} değerlendirme",
-
   "workshopProfile": "Profil",
   "landingPageTitle": "Açılış sayfanız",
   "activeStatus": "Aktif",
   "inactiveStatus": "Pasif",
   "shareLink": "Sayfayı paylaş",
   "landingPageShareMessage": "Sayfamızı ziyaret edin ve doğrudan çevrimiçi rezervasyon yapın: {url}",
-  "@landingPageShareMessage": { "placeholders": { "url": { "type": "String" } } },
+  "@landingPageShareMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "qrCode": "QR kodu",
   "noLandingPage": "Açılış sayfası yok",
   "noLandingPageDescription": "Açılış sayfanız yönetim portalı üzerinden oluşturulur ve yönetilir.",
@@ -368,17 +333,13 @@
   "replySaved": "Yanıt kaydedildi ✅",
   "sendReply": "Yanıt gönder",
   "reply": "Yanıtla",
-
   "serviceNotAvailable": "Servis mevcut değil",
   "completeProfileButton": "Profili tamamla",
-
   "locationSettings": "Konum ayarları",
   "callNow": "Şimdi ara",
-
   "wheelWash": "Jant yıkama",
   "foreignObjectRepair": "Yabancı cisim tamiri",
   "confirmed_status": "Onaylandı",
-
   "madeInDeutschland": "Made with ❤️ in Almanya",
   "openSourceLicenses": "Açık kaynak lisansları",
   "contact": "İletişim",
@@ -400,7 +361,7 @@
   "vehicleRecognized": "Arac tanindi!",
   "acceptData": "Verileri kabul et",
   "serviceOffers": "Servis teklifleri",
-  "viewAll": "Tumunu gor \u2192",
+  "viewAll": "Tumunu gor →",
   "whatIsPlanned": "Bugun ne planlanmis?",
   "emergencyHelp": "Ariza yardimi",
   "findWorkshopNow": "Simdi atolye bul",
@@ -408,7 +369,7 @@
   "locatingPosition2": "Konum belirleniyor...",
   "searchingNearby": "Yakininizdaki atolyeler araniyor...",
   "retryLocating": "Tekrar dene",
-  "manualEntry": "Manuel giris \u2192",
+  "manualEntry": "Manuel giris →",
   "flatLay": "Arac belgesini duz yerlestirin",
   "addressMissing": "Adres eksik",
   "addressMissingDesc": "Yakin atolyeleri bulmak ve randevu almak icin adresini ekle.",
@@ -443,18 +404,42 @@
   "vehiclesLoadError": "Araclar yuklenemedi",
   "noVehiclesDesc": "Daha hizli rezervasyon icin ilk aracinizi ekleyin.",
   "buildYear": "Yil {year}",
-  "@buildYear": {"placeholders": {"year": {"type": "String"}}},
+  "@buildYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
   "tireSummer": "Yaz",
   "tireWinter": "Kis",
   "tireAllSeason": "Dort mevsim",
   "daysCount": "{count} gun",
-  "@daysCount": {"placeholders": {"count": {"type": "String"}}},
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "locationFailedPermission": "Konum belirlenemedi.\nLutfen konum izinlerini etkinlestirin.",
   "errorOccurred": "Bir hata olustu.",
   "workshopsFoundNearby": "Yakininda {count} atolye bulundu",
-  "@workshopsFoundNearby": {"placeholders": {"count": {"type": "String"}}},
+  "@workshopsFoundNearby": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "workshopsFoundNearbyPlural": "Yakininda {count} atolye bulundu",
-  "@workshopsFoundNearbyPlural": {"placeholders": {"count": {"type": "String"}}},
+  "@workshopsFoundNearbyPlural": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "noWorkshopsNearby": "Yakinda atolye bulunamadi",
   "emergencyBottomHint": "Atolyeyi arayin ve acil yardim ayarlayin.",
   "noWorkshopsIn25km": "25 km yaricapta atolye bulunamadi.",
@@ -506,7 +491,13 @@
   "inspectionReminder": "Muayene hatirlatmasi",
   "noReminder": "Hatirlatma yok",
   "daysBefore": "{days} gun once",
-  "@daysBefore": {"placeholders": {"days": {"type": "String"}}},
+  "@daysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "frontWheel": "On tekerlek",
   "rearWheel": "Arka tekerlek",
   "differentFrontRear": "Farkli on/arka lastikler",
@@ -527,7 +518,13 @@
   "today": "Bugun",
   "tomorrow": "Yarin",
   "inDaysCount": "{days} gun icinde",
-  "@inDaysCount": {"placeholders": {"days": {"type": "String"}}},
+  "@inDaysCount": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "breakdownHelp": "Yol Yardimi",
   "tapToSpeak": "Konusmak icin dokun",
   "aiErrorMessage": "Uzgunuz, bir hata olustu. Lutfen tekrar deneyin.",
@@ -535,15 +532,39 @@
   "noPhoneNumber": "Telefon numarasi mevcut degil",
   "closedToday": "Bugun kapali",
   "closesAt": "Saat {time} kapaniyor",
-  "@closesAt": {"placeholders": {"time": {"type": "String"}}},
+  "@closesAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "opensAt": "Saat {time} aciliyor",
-  "@opensAt": {"placeholders": {"time": {"type": "String"}}},
+  "@opensAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintModel": "orn. Golf, 3 Serisi, MT-07",
   "invalidYear": "Gecersiz yil",
   "loggedInAs": "{role} olarak giris yapildi",
-  "@loggedInAs": {"placeholders": {"role": {"type": "String"}}},
+  "@loggedInAs": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "helloUser": "Merhaba, {name}!",
-  "@helloUser": {"placeholders": {"name": {"type": "String"}}},
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "saveError": "Kaydetme hatasi",
   "monthLabel": "Ay",
   "yearLabel": "Yil",
@@ -551,10 +572,19 @@
   "selectMotorcycleFirst": "Lutfen arac olarak bir motosiklet secin.",
   "adacBreakdown": "ADAC Yol Yardimi",
   "opensOnDay": "{day} {time} aciliyor",
-  "@opensOnDay": {"placeholders": {"day": {"type": "String"}, "time": {"type": "String"}}},
+  "@opensOnDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintYear": "orn. 2022",
   "hintLicensePlate": "orn. M-AB 1234",
-  "rolloInitialGreeting": "Merhaba! Ben **Rollo**, yapay zeka lastik danisman\u0131n\u0131z. Size nasil yardimci olabilirim?",
+  "rolloInitialGreeting": "Merhaba! Ben **Rollo**, yapay zeka lastik danismanınız. Size nasil yardimci olabilirim?",
   "voiceModeError": "Ses modu baslatilamadi",
   "rolloSpeaking": "Rollo konuşuyor...",
   "noResponseReceived": "Yanıt alınamadı.",
@@ -563,7 +593,13 @@
   "chipWorkshopMsg": "Yakınımdaki atölyeleri göster",
   "chipFreeMsg": "Lastikler hakkında bir sorum var",
   "rolloIntroWithVehicle": "Merhaba! Ben Rollo, lastik danışmanın. Bir {vehicle} kullandığını görüyorum. Sana nasıl yardımcı olabilirim?",
-  "@rolloIntroWithVehicle": { "placeholders": { "vehicle": { "type": "String" } } },
+  "@rolloIntroWithVehicle": {
+    "placeholders": {
+      "vehicle": {
+        "type": "String"
+      }
+    }
+  },
   "rolloIntroGeneric": "Merhaba! Ben Rollo, lastik danışmanın. Sana nasıl yardımcı olabilirim?",
   "tireNotStoredLabel": "kayıtlı değil",
   "otherBrand": "Diğer",
@@ -571,11 +607,29 @@
   "tireTabWinter": "❄️ Kış",
   "tireTabAllSeason": "🌦️ Dört Mevsim",
   "tireValidationError": "{label}: Yük indeksi ve hız sınıfı zorunludur",
-  "@tireValidationError": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationError": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "tireValidationErrorRear": "{label} (arka aks): Yük indeksi ve hız sınıfı zorunludur",
-  "@tireValidationErrorRear": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationErrorRear": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "fieldsRecognized": "{count} alan tanındı ve uygulandı",
-  "@fieldsRecognized": { "placeholders": { "count": { "type": "int" } } },
+  "@fieldsRecognized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tireSizeApplyHint": "Bu boyut, ruhsata göre onaylı lastik ölçüsüdür. Girmek için \"Uygula\" düğmesine basın.",
   "tireSizeInvalidHint": "Taranan lastik boyutu mevcut değerlerle eşleşmiyor. Lütfen ruhsatı tekrar tarayın veya lastik boyutunu elle girin.",
   "searchMyLocation": "Konumum",
@@ -583,9 +637,14 @@
   "searchSettings": "Ayarlar",
   "workshopCountOne": "1 atölye",
   "workshopCountMany": "{count} atölye",
-  "@workshopCountMany": { "placeholders": { "count": { "type": "int" } } },
+  "@workshopCountMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sortDistance": "Mesafe",
-  "sortPrice": "Fiyat",
   "sortRating": "Değerlendirme",
   "withTires": "Lastikli",
   "montageOnly": "Sadece montaj",
@@ -622,11 +681,23 @@
   "baseLabel": "Temel",
   "tiresFallback": "Lastikler",
   "totalWithPrice": "Toplam {price}€",
-  "@totalWithPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@totalWithPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "tiresAvailable": "Lastikler mevcut",
   "noTiresLabel": "Lastik yok",
   "fixedPrice": "Sabit fiyat {price}€",
-  "@fixedPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@fixedPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "priceOnRequest": "İstek üzerine fiyat",
   "newBadge": "Yeni",
   "moreTiresAvailable": "Bu atölyede daha fazla lastik mevcut",
@@ -644,7 +715,6 @@
   "noSummerSize": "Yaz lastiği boyutu kayıtlı değil. Araç profilinde boyutu ekleyin.",
   "brakeService": "Fren servisi",
   "batteryService": "Akü servisi",
-  "wheelWash": "Jant yıkama",
   "alignMeasureBoth": "📐 Ölçüm — Her iki aks",
   "alignMeasureFront": "📐 Ölçüm — Ön aks",
   "alignMeasureRear": "📐 Ölçüm — Arka aks",
@@ -690,20 +760,43 @@
   "pkgMontage4": "Montaj (4 lastik)",
   "pkgMontage2": "Montaj (2 lastik)",
   "missingTireSizeTitle": "{season} boyutu kayıtlı değil",
-  "@missingTireSizeTitle": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeTitle": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "missingTireSizeDesc": "{season} aramak için araç profilinde lastik boyutunu ekleyin.",
-  "@missingTireSizeDesc": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeDesc": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "storeTireSizeButton": "{season} boyutunu ekle",
-  "@storeTireSizeButton": { "placeholders": { "season": { "type": "String" } } },
+  "@storeTireSizeButton": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsCountLabel": "({count} değerlendirme)",
-  "@reviewsCountLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@reviewsCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "errorServiceCarOnly": "Bu hizmet yalnızca otomobil/römork için geçerlidir. Lütfen servis olarak \"Motosiklet Lastikleri\" seçin.",
   "errorNeedMotorcycle": "Motosiklet lastikleri aramak için lütfen araç olarak motosiklet seçin.",
   "errorTrailerTireOnly": "Römorklar için yalnızca lastik servisi (lastik değişimi / jant değişimi) mevcuttur.",
   "errorLocationFailed": "Konum belirlenemedi. Lütfen bir posta kodu girin.",
   "errorSearchFailed": "Arama başarısız oldu. Lütfen tekrar deneyin.",
   "vehicleLoadError": "Araçlar yüklenemedi",
-
   "selectWidth": "Genişlik seçin (mm):",
   "selectAspectRatio": "Oran seçin (%):",
   "selectRimSize": "Jant boyutu seçin (inç):",
@@ -712,17 +805,35 @@
   "availableTimes": "Mevcut saatler",
   "selectedTire": "Seçilen lastik",
   "selectedTireAxle": "Seçilen lastik – {axle}",
-  "@selectedTireAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@selectedTireAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "tireRecommendations": "Lastik önerileri",
   "tireRecommendationsAxle": "Lastik önerileri – {axle}",
-  "@tireRecommendationsAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@tireRecommendationsAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "encryptedPayment": "Stripe ile şifreli ve güvenli ödeme",
   "bookingAgreementPrefix": "Rezervasyon yaparak ",
   "termsLink": "Şartlar",
   "andThe": " ve ",
   "agreementSuffix": "'ı kabul etmiş olursunuz.",
   "bookAndPay": "Rezerve et ve öde – {price} €",
-  "@bookAndPay": { "placeholders": { "price": { "type": "String" } } },
+  "@bookAndPay": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "bookBinding": "Şimdi rezerve et (bağlayıcı)",
   "bookingInProgress": "Rezervasyon yapılıyor...",
   "creditCard": "Kredi kartı",
@@ -733,9 +844,21 @@
   "pleaseSelectDate": "Lütfen bir tarih seçin",
   "pleaseSelectTime": "Lütfen bir saat seçin",
   "bookAppointmentAt": "Randevu al – {time}",
-  "@bookAppointmentAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookAppointmentAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "bookTireAndMontageAt": "Lastik ve montaj al – {time}",
-  "@bookTireAndMontageAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookTireAndMontageAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsLoadError": "Değerlendirmeler yüklenemedi",
   "payButtonLabel": "Öde",
   "paymentTookTooLong": "Ödeme çok uzun sürdü. Lütfen tekrar deneyin.",
@@ -759,7 +882,13 @@
   "paymentStatusLabel": "Ödeme durumu",
   "basePrice": "Temel fiyat",
   "couponLabel": "Kupon ({code})",
-  "@couponLabel": { "placeholders": { "code": { "type": "String" } } },
+  "@couponLabel": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "discountLabel": "İndirim",
   "missionText": "Bereifung24, sürücüleri yakınlarındaki en iyi lastik atölyeleriyle buluşturur. Lastik değişimi, montaj ve servisi online sipariş kadar kolay hale getiriyoruz – şeffaf, adil ve güvenilir.",
   "balancingX4": "Balans (×4)",
@@ -771,17 +900,51 @@
   "detailsCouldNotLoad": "Detaylar yüklenemedi",
   "bookingLabel": "Rezervasyon",
   "bookingNumber": "Rezervasyon No: {id}",
-  "@bookingNumber": { "placeholders": { "id": { "type": "String" } } },
-  "timeLabel": "Saat: {time}",
-  "@timeLabel": { "placeholders": { "time": { "type": "String" } } },
+  "@bookingNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "@timeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "durationLabel": "Süre: yaklaşık {minutes} dakika",
-  "@durationLabel": { "placeholders": { "minutes": { "type": "int" } } },
-  "licensePlateLabel": "Plaka: {plate}",
-  "@licensePlateLabel": { "placeholders": { "plate": { "type": "String" } } },
+  "@durationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@licensePlateLabel": {
+    "placeholders": {
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
   "tireSizeLabel": "Boyut: {size}",
-  "@tireSizeLabel": { "placeholders": { "size": { "type": "String" } } },
+  "@tireSizeLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "tireQuantityLabel": "Adet: {count} adet",
-  "@tireQuantityLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@tireQuantityLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "wheelWashing": "Jant yıkama",
   "rateWorkshopButton": "Atölyeyi değerlendir",
   "tagline": "Lastik servisiniz – kolay ve hızlı",
@@ -790,8 +953,7 @@
   "beingProcessed": "İşleniyor",
   "completedStatus": "Tamamlandı",
   "appointmentCancelled": "Bu randevu iptal edildi",
-  "errorSendingReview": "Gönderme hatası. Lütfen tekrar deneyin."
-,
+  "errorSendingReview": "Gönderme hatası. Lütfen tekrar deneyin.",
   "axleSetSameBrand": "⭐ Aks seti: aynı marka",
   "axleSetSameBrandDesc": "Ön ve arka aks aynı markadan (2× ön + 2× arka)",
   "axleSetSameBrandTapHint": "Sadece aynı marka setlerini görmek için dokunun",
@@ -800,20 +962,68 @@
   "axleSetSameModelTapHint": "Ön ve arka lastikleri birleştirmek için dokunun",
   "axleSetBadge": "⭐ AKS SETİ",
   "axleSetsAvailable": "{count} aks seti mevcut",
-  "@axleSetsAvailable": { "placeholders": { "count": { "type": "int" } } },
+  "@axleSetsAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "activityNewBooking": "{name} tarafından yeni rezervasyon – {service}",
-  "@activityNewBooking": { "placeholders": { "name": { "type": "String" }, "service": { "type": "String" } } },
+  "@activityNewBooking": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
   "activityPayoutReceived": "Ödeme alındı – {amount} €",
-  "@activityPayoutReceived": { "placeholders": { "amount": { "type": "String" } } },
+  "@activityPayoutReceived": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "activityNewReview": "{name} tarafından {rating} yıldızlı değerlendirme",
-  "@activityNewReview": { "placeholders": { "rating": { "type": "int" }, "name": { "type": "String" } } },
+  "@activityNewReview": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "timeJustNow": "Az önce",
   "timeMinutesAgo": "{minutes} dk önce",
-  "@timeMinutesAgo": { "placeholders": { "minutes": { "type": "int" } } },
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{hours} sa önce",
-  "@timeHoursAgo": { "placeholders": { "hours": { "type": "int" } } },
+  "@timeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{days} gün önce",
-  "@timeDaysAgo": { "placeholders": { "days": { "type": "int" } } },
+  "@timeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "timeYesterday": "Dün",
   "workshopNotificationSettings": "Push bildirimleri",
   "workshopNotificationSettingsDesc": "Hangi push bildirimlerini almak istediğinizi seçin",
@@ -826,5 +1036,10 @@
   "workshopNotifPayoutReceived": "Ödeme alındı",
   "workshopNotifPayoutReceivedDesc": "Komisyon ödemeleri hakkında bildirim",
   "workshopNotifAppointmentReminder": "Randevu hatırlatıcısı (24 saat öncesi)",
-  "workshopNotifAppointmentReminderDesc": "Yaklaşan randevulardan bir gün önce hatırlatıcı"
+  "workshopNotifAppointmentReminderDesc": "Yaklaşan randevulardan bir gün önce hatırlatıcı",
+  "manufacturerFilterLabel": "Üretici:",
+  "pricesUnmountedHint": "💡 Fiyatlar yalnızca araçtan sökülmüş tekerlekler için geçerlidir.",
+  "confirmMotorcycleBookingTitle": "Lütfen onaylayın",
+  "confirmMotorcycleBookingBody": "Lütfen seçtiğiniz lastiğin motosikletiniz için uygun olduğundan emin olun (örn. Sport, Tourer, Cross, Enduro).\n\nMontaj yalnızca servise sökülmüş olarak getirilen tekerleklere yapılır. Tekerleklerin motosiklette sökülmesi ve takılması hizmete dahil değildir.",
+  "confirmAndBook": "Onayla ve rezerve et"
 }

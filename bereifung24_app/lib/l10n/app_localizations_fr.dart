@@ -2415,4 +2415,21 @@ class SFr extends S {
   @override
   String get workshopNotifAppointmentReminderDesc =>
       'Rappel un jour avant les rendez-vous à venir';
+
+  @override
+  String get manufacturerFilterLabel => 'Fabricant :';
+
+  @override
+  String get pricesUnmountedHint =>
+      '💡 Les prix s\'appliquent uniquement aux roues démontées du véhicule.';
+
+  @override
+  String get confirmMotorcycleBookingTitle => 'Veuillez confirmer';
+
+  @override
+  String get confirmMotorcycleBookingBody =>
+      'Assurez-vous que le pneu sélectionné convient à votre moto (par ex. Sport, Tourer, Cross, Enduro).\n\nLe montage est effectué uniquement sur des roues déjà démontées et apportées à l\'atelier. Le démontage et le remontage sur la moto ne sont pas inclus.';
+
+  @override
+  String get confirmAndBook => 'Confirmer et réserver';
 }

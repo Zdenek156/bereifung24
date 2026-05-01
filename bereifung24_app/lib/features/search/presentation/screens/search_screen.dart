@@ -1949,7 +1949,7 @@ class TireChangeFilters extends StatelessWidget {
               color: isDark ? const Color(0xFF94A3B8) : Colors.grey[700]),
           const SizedBox(width: 8),
           Text(
-            'Hersteller:',
+            S.of(context)!.manufacturerFilterLabel,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1972,7 +1972,7 @@ class TireChangeFilters extends StatelessWidget {
                 items: <DropdownMenuItem<String?>>[
                   DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Alle Hersteller (${brands.length})',
+                    child: Text(S.of(context)!.allManufacturersCount(brands.length),
                         style: const TextStyle(fontSize: 12)),
                   ),
                   ...brands.map((b) => DropdownMenuItem<String?>(
@@ -2661,7 +2661,7 @@ class MotorcycleTireFilters extends StatelessWidget {
           // Hint: Preise gelten nur für ausgebaute Räder
           const SizedBox(height: 8),
           _hintBox(context,
-              '💡 Preise gelten nur für Räder im ausgebauten Zustand.'),
+              S.of(context)!.pricesUnmountedHint),
         ],
       ),
     );
@@ -2752,7 +2752,7 @@ class MotorcycleTireFilters extends StatelessWidget {
               color: isDark ? const Color(0xFF94A3B8) : Colors.grey[700]),
           const SizedBox(width: 8),
           Text(
-            'Hersteller:',
+            S.of(context)!.manufacturerFilterLabel,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -2775,7 +2775,7 @@ class MotorcycleTireFilters extends StatelessWidget {
                 items: <DropdownMenuItem<String?>>[
                   DropdownMenuItem<String?>(
                     value: null,
-                    child: Text('Alle Hersteller (${brands.length})',
+                    child: Text(S.of(context)!.allManufacturersCount(brands.length),
                         style: const TextStyle(fontSize: 12)),
                   ),
                   ...brands.map((b) => DropdownMenuItem<String?>(

@@ -2406,4 +2406,21 @@ class SEn extends S {
   @override
   String get workshopNotifAppointmentReminderDesc =>
       'Reminder one day before upcoming appointments';
+
+  @override
+  String get manufacturerFilterLabel => 'Manufacturer:';
+
+  @override
+  String get pricesUnmountedHint =>
+      '💡 Prices apply only to wheels removed from the vehicle.';
+
+  @override
+  String get confirmMotorcycleBookingTitle => 'Please confirm';
+
+  @override
+  String get confirmMotorcycleBookingBody =>
+      'Please make sure the selected tire is suitable for your motorcycle (e.g. Sport, Tourer, Cross, Enduro).\n\nMounting is performed only on wheels brought to the workshop already removed. Removing and reinstalling the wheels on the motorcycle is not included.';
+
+  @override
+  String get confirmAndBook => 'Confirm & Book';
 }

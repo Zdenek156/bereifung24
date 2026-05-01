@@ -1,8 +1,6 @@
-﻿{
+{
   "@@locale": "fr",
-
   "appTitle": "Bereifung24",
-
   "login": "Se connecter",
   "register": "S'inscrire",
   "logout": "Se déconnecter",
@@ -20,7 +18,6 @@
   "loading": "Chargement...",
   "error": "Erreur",
   "ok": "OK",
-
   "email": "E-mail",
   "password": "Mot de passe",
   "firstName": "Prénom",
@@ -32,10 +29,8 @@
   "zipLabel": "Code postal *",
   "city": "Ville *",
   "emailRequired": "Adresse e-mail *",
-
   "invalidEmail": "E-mail invalide",
   "passwordsNoMatch": "Les mots de passe ne correspondent pas",
-
   "loginWithGoogle": "Se connecter avec Google",
   "loginWithApple": "Se connecter avec Apple",
   "loginWithBiometric": "Se connecter par biométrie",
@@ -45,20 +40,17 @@
   "noAccount": "Pas encore de compte ?",
   "hasAccount": "Déjà un compte ?",
   "backToLogin": "Retour à la connexion",
-
   "resetPassword": "Réinitialiser le mot de passe",
   "resetPasswordDesc": "Entrez votre adresse e-mail et nous vous enverrons un lien pour réinitialiser votre mot de passe.",
   "sendLink": "Envoyer le lien",
   "checkInbox": "Vérifiez votre boîte de réception et suivez le lien pour réinitialiser votre mot de passe.",
   "enterValidEmail": "Veuillez entrer un e-mail valide",
-
   "googleLoginFailed": "Échec de la connexion Google",
   "appleLoginFailed": "Échec de la connexion Apple",
   "googleRegisterFailed": "Échec de l'inscription Google",
   "appleRegisterFailed": "Échec de l'inscription Apple",
   "acceptTerms": "Veuillez accepter les conditions d'utilisation",
   "privacyPolicy": "Politique de confidentialité",
-
   "completeAddress": "Compléter l'adresse",
   "completeProfile": "Compléter le profil",
   "addressNeeded": "Veuillez entrer votre adresse pour trouver des ateliers près de chez vous.",
@@ -66,13 +58,11 @@
   "appleNameNotProvided": "Apple n'a pas transmis votre nom. Veuillez compléter votre profil.",
   "addressInfoText": "Votre adresse est nécessaire pour trouver des ateliers à proximité et calculer les distances.",
   "confirmPassword": "Confirmer le mot de passe",
-
   "welcomeTitle1": "Service pneus à prix fixe",
   "welcomeDesc1": "Trouvez le bon service pneus près de chez vous et réservez facilement en ligne – au prix fixe garanti.",
   "welcomeTitle2": "Réservation rapide et facile",
   "welcomeDesc2": "Choisissez votre rendez-vous, comparez les ateliers et réservez en moins de 2 minutes – tout dans une appli.",
   "welcomeTitle3": "Votre conseiller IA personnel",
-
   "account": "Compte",
   "editProfile": "Modifier le profil",
   "notifications": "Notifications",
@@ -82,38 +72,31 @@
   "giveFeedback": "Donner un avis",
   "dangerZone": "Zone dangereuse",
   "deleteAccount": "Supprimer le compte",
-
   "changePasswordTitle": "Changer le mot de passe",
   "currentPassword": "Mot de passe actuel",
   "newPassword": "Nouveau mot de passe",
   "confirmNewPassword": "Confirmer le mot de passe",
   "passwordChanged": "Mot de passe changé avec succès",
   "change": "Changer",
-
   "logoutConfirm": "Se déconnecter ?",
   "logoutConfirmText": "Voulez-vous vraiment vous déconnecter ?",
-
   "deleteAccountConfirm": "Supprimer le compte ?",
   "deleteAccountDone": "Le compte a été supprimé",
   "deletePermanently": "Supprimer définitivement",
-
   "appearance": "Apparence",
   "system": "Système",
   "light": "Clair",
   "dark": "Sombre",
-
   "personalData": "Données personnelles",
   "phoneNumber": "Numéro de téléphone *",
   "address": "Adresse",
   "profileUpdated": "Profil mis à jour",
   "errorSaving": "Erreur lors de l'enregistrement",
-
   "feedback": "Avis",
   "giveFeedbackTitle": "Donner un avis",
   "feedbackHint": "Que pouvons-nous améliorer ? Qu'est-ce qui vous plaît ?",
   "selectRating": "Veuillez sélectionner une note",
   "errorSending": "Erreur lors de l'envoi. Veuillez réessayer.",
-
   "settingsSaved": "Paramètres enregistrés",
   "appointmentReminder": "Rappel de rendez-vous",
   "appointmentReminderDesc": "Rappel 24h avant votre rendez-vous",
@@ -121,16 +104,13 @@
   "seasonHintDesc": "Rappel de changement de pneus au début de la saison",
   "bookingUpdates": "Mises à jour des réservations",
   "bookingUpdatesDesc": "Changements de statut de vos réservations",
-
   "agb": "Conditions générales",
   "datenschutz": "Politique de confidentialité",
   "impressum": "Mentions légales",
-
   "review": "Avis",
   "rateWorkshop": "Évaluer l'atelier",
   "backToBookings": "Retour aux réservations",
   "reviewHint": "Décrivez votre expérience...",
-
   "selectService": "Choisir un service",
   "whatService": "Que souhaitez-vous faire ?",
   "tireChange": "Changement de pneus",
@@ -144,7 +124,6 @@
   "axleAlignment": "Géométrie",
   "axleAlignmentDesc": "Réglage du parallélisme et du carrossage",
   "climateService": "Entretien climatisation",
-
   "vehicleType": "Type de véhicule",
   "trailer": "Remorque",
   "vehicleData": "Données du véhicule",
@@ -155,34 +134,27 @@
   "licensePlateHint": "ex. M-AB 1234",
   "tireSizeOptional": "Taille des pneus (facultatif)",
   "tireSizeHint": "ex. 205/55 R16",
-
   "selectDate": "Choisir une date",
   "selectDateDesc": "Choisissez la date et l'heure.",
   "time": "Heure",
-
   "summary": "Résumé",
   "notesOptional": "Remarques (facultatif)",
   "notesHint": "ex. Pneus dans le coffre",
-
   "payment": "Paiement",
   "completePayment": "Veuillez effectuer le paiement.",
   "totalAmount": "Montant total",
   "totalPrice": "Prix total",
   "total": "Total",
   "paymentMethods": "Visa, Mastercard, SEPA",
-
   "bookingSuccessful": "Réservation réussie !",
   "goToBookings": "Aller à mes rendez-vous",
   "goToHome": "Aller à l'accueil",
-
   "cancelBooking": "Annuler la réservation ?",
   "progressLost": "Votre progression sera perdue.",
   "yesCancel": "Oui, annuler",
-
   "bookingFailed": "Réservation échouée. Veuillez réessayer.",
   "paymentCancelled": "Paiement annulé.",
   "paymentFailed": "Paiement échoué. Veuillez réessayer.",
-
   "bookingOverview": "Aperçu de la réservation",
   "workshop": "Atelier",
   "service": "Service",
@@ -199,20 +171,18 @@
   "frontAxleMoto": "AV",
   "rearAxleMoto": "AR",
   "myBookings": "Mes réservations",
-
   "upcoming": "À venir",
   "past": "Passées",
   "noBookings": "Aucune réservation",
   "couldNotLoadBookings": "Impossible de charger les rendez-vous",
   "searchWorkshop": "Rechercher un atelier",
-
   "bookingDetails": "Détails de la réservation",
   "couldNotLoadDetails": "Impossible de charger les détails",
   "bookingNotFound": "Réservation introuvable",
   "booking": "Réservation",
   "timeLabel": "Heure : {time}",
   "durationMinutes": "Durée : environ {minutes} minutes",
-  "licensePlateLabel": "Plaque : {plate}",
+  "licensePlateLabel": "Plaque d'immatriculation : {plate}",
   "tireDetails": "Détails des pneus",
   "tireSize": "Taille : {size}",
   "tireQuantity": "Quantité : {count} pièces",
@@ -220,13 +190,11 @@
   "paymentDetails": "Détails du paiement",
   "remarks": "Remarques",
   "yourMessageToWorkshop": "Votre message à l'atelier",
-
   "bookTireAndMontage": "Réserver pneus et montage",
   "bookNow": "Réserver maintenant",
   "couldNotLoadVehicles": "Impossible de charger les véhicules",
   "selectVehicleTitle": "Sélectionner un véhicule",
   "addVehicleTitle": "Ajouter un véhicule",
-
   "zipOrCity": "Code postal ou ville...",
   "useLocation": "Utiliser la position",
   "locatingPosition": "Localisation en cours...",
@@ -248,7 +216,6 @@
   "selected": "Sélectionné",
   "priceOverview": "Aperçu des prix",
   "confirmed": "Confirmé",
-
   "aboutWorkshop": "À propos de l'atelier",
   "addressLabel": "Adresse",
   "yourVehicle": "Votre véhicule",
@@ -257,7 +224,6 @@
   "noReviewsYet": "Pas encore d'avis.",
   "workshopLoadError": "Impossible de charger l'atelier",
   "clockSuffix": "h",
-
   "vehicles": "Véhicules",
   "addVehicleButton": "Ajouter",
   "noVehicles": "Aucun véhicule",
@@ -265,7 +231,6 @@
   "deleteVehicleConfirm": "Supprimer vraiment « {brand} {model} » ?",
   "vehicleDeleted": "Véhicule supprimé",
   "deleteFailed": "Échec de la suppression",
-
   "editVehicle": "Modifier le véhicule",
   "manufacturer": "Fabricant *",
   "manufacturerHint": "ex. Yamaha, Kawasaki",
@@ -292,7 +257,6 @@
   "tireSizeSelected": "Taille de pneu sélectionnée",
   "otherSize": "Autre taille",
   "noCameraAvailable": "Aucune caméra disponible",
-
   "aiAdvisorSpeechInitError": "Impossible d'initialiser la reconnaissance vocale.",
   "aiAdvisorVoiceModeError": "Erreur au démarrage du mode vocal : {error}",
   "speechOutputOn": "Sortie vocale activée",
@@ -316,18 +280,14 @@
   "recommendTires": "Je souhaite une recommandation de pneus",
   "showNearbyWorkshops": "Montrez-moi les ateliers à proximité",
   "tireNotStored": "non enregistré",
-
   "locationCouldNotBeDetermined": "Impossible de déterminer la position. Vérifiez vos paramètres GPS.",
   "stripeNotConfigured": "Stripe n'est pas configuré. Veuillez réessayer plus tard.",
   "notificationsDescription": "Notifications pour les réservations et mises à jour",
-
   "workshopBookings": "Réservations",
   "noBookingsEmoji": "📋",
   "errorLabel": "Erreur : {error}",
-
   "workshopCalendar": "Calendrier",
   "noAppointments": "📭",
-
   "workshopDashboard": "Tableau de bord",
   "workshopNext7Days": "7 prochains jours",
   "workshopTodayAppointments": "Rendez-vous d'aujourd'hui",
@@ -343,14 +303,19 @@
   "rotateScreen": "Tourner l'écran",
   "tapToSwitch": "Appuyer pour changer ›",
   "reviewsCount": "{count} avis",
-
   "workshopProfile": "Profil",
   "landingPageTitle": "Votre page d'atterrissage",
   "activeStatus": "Active",
   "inactiveStatus": "Inactive",
   "shareLink": "Partager la page",
   "landingPageShareMessage": "Visitez notre page et réservez directement en ligne : {url}",
-  "@landingPageShareMessage": { "placeholders": { "url": { "type": "String" } } },
+  "@landingPageShareMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "qrCode": "Code QR",
   "noLandingPage": "Aucune page d'atterrissage",
   "noLandingPageDescription": "Votre page d'atterrissage est créée et gérée via le portail d'administration.",
@@ -368,17 +333,13 @@
   "replySaved": "Réponse enregistrée ✅",
   "sendReply": "Envoyer la réponse",
   "reply": "Répondre",
-
   "serviceNotAvailable": "Service non disponible",
   "completeProfileButton": "Compléter le profil",
-
   "locationSettings": "Paramètres de localisation",
   "callNow": "Appeler maintenant",
-
-  "wheelWash": "Lavage de roues",
+  "wheelWash": "Lavage des roues",
   "foreignObjectRepair": "Réparation corps étranger",
   "confirmed_status": "Confirmé",
-
   "madeInDeutschland": "Made with ❤️ en Allemagne",
   "openSourceLicenses": "Licences open source",
   "contact": "Contact",
@@ -400,7 +361,7 @@
   "vehicleRecognized": "Vehicule reconnu !",
   "acceptData": "Accepter les donnees",
   "serviceOffers": "Offres de service",
-  "viewAll": "Tous \u2192",
+  "viewAll": "Tous →",
   "whatIsPlanned": "Qu'est-ce qui est prevu aujourd'hui ?",
   "emergencyHelp": "Assistance panne",
   "findWorkshopNow": "Trouver un atelier maintenant",
@@ -408,75 +369,99 @@
   "locatingPosition2": "Localisation en cours...",
   "searchingNearby": "Recherche d'ateliers a proximite...",
   "retryLocating": "Reessayer",
-  "manualEntry": "Saisir manuellement \u2192",
+  "manualEntry": "Saisir manuellement →",
   "flatLay": "Posez le document du vehicule a plat",
   "addressMissing": "Adresse manquante",
   "addressMissingDesc": "Ajoutez votre adresse pour trouver des ateliers et prendre rendez-vous.",
   "yourAiAdvisor": "Votre conseiller IA !",
   "serviceTireChange": "Changement\nde pneus",
   "serviceWheelChange": "Changement\nde roues",
-  "serviceTireRepair": "R\u00e9paration\nde pneus",
+  "serviceTireRepair": "Réparation\nde pneus",
   "serviceAlignment": "Alignement\ndes roues",
   "serviceMotorcycleTire": "Pneus\nmoto",
   "serviceClimate": "Service\nclimatisation",
   "winterTireSeason": "Saison pneus hiver",
-  "summerTireSeason": "Saison pneus \u00e9t\u00e9",
+  "summerTireSeason": "Saison pneus été",
   "winterSeasonTip": "Faites monter vos pneus hiver maintenant !",
-  "summerSeasonTip": "C'est le moment de changer ! R\u00e9servez avant que ce soit complet.",
-  "co2SavingsTitle": "\u00c9conomies CO2 via r\u00e9servations en ligne",
-  "co2BasedOnVehicle": "Bas\u00e9 sur les donn\u00e9es de votre v\u00e9hicule",
-  "co2TripsSaved": "Trajets\n\u00e9conomis\u00e9s",
-  "co2KmAvoided": "Km\n\u00e9vit\u00e9s",
-  "co2Saved": "CO2\n\u00e9conomis\u00e9",
-  "co2FuelSaved": "Carburant\n\u00e9conomis\u00e9",
-  "switchVehicle": "Changer de v\u00e9hicule",
-  "addAVehicle": "Ajoutez un v\u00e9hicule",
-  "forPersonalizedRec": "pour des recommandations personnalis\u00e9es",
+  "summerSeasonTip": "C'est le moment de changer ! Réservez avant que ce soit complet.",
+  "co2SavingsTitle": "Économies CO2 via réservations en ligne",
+  "co2BasedOnVehicle": "Basé sur les données de votre véhicule",
+  "co2TripsSaved": "Trajets\néconomisés",
+  "co2KmAvoided": "Km\névités",
+  "co2Saved": "CO2\néconomisé",
+  "co2FuelSaved": "Carburant\néconomisé",
+  "switchVehicle": "Changer de véhicule",
+  "addAVehicle": "Ajoutez un véhicule",
+  "forPersonalizedRec": "pour des recommandations personnalisées",
   "appForCustomersOnly": "Cette application est pour les clients.",
   "trailerServiceOnly": "Pour les remorques, seul le service pneus est disponible.",
   "sortUpcoming": "Prochain rendez-vous",
   "sortPrice": "Prix",
-  "sortBookedDate": "Date de r\u00e9servation",
-  "bookingsLoadError": "Impossible de charger les r\u00e9servations",
-  "noBookingsDesc": "Aucune r\u00e9servation. Cherchez un atelier et r\u00e9servez !",
-  "myVehicles": "Mes v\u00e9hicules",
-  "vehiclesLoadError": "Impossible de charger les v\u00e9hicules",
-  "noVehiclesDesc": "Ajoutez votre premier v\u00e9hicule pour r\u00e9server plus vite.",
-  "buildYear": "Ann\u00e9e {year}",
-  "@buildYear": {"placeholders": {"year": {"type": "String"}}},
-  "tireSummer": "\u00c9t\u00e9",
+  "sortBookedDate": "Date de réservation",
+  "bookingsLoadError": "Impossible de charger les réservations",
+  "noBookingsDesc": "Aucune réservation. Cherchez un atelier et réservez !",
+  "myVehicles": "Mes véhicules",
+  "vehiclesLoadError": "Impossible de charger les véhicules",
+  "noVehiclesDesc": "Ajoutez votre premier véhicule pour réserver plus vite.",
+  "buildYear": "Année {year}",
+  "@buildYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "tireSummer": "Été",
   "tireWinter": "Hiver",
   "tireAllSeason": "4 saisons",
   "daysCount": "{count} jours",
-  "@daysCount": {"placeholders": {"count": {"type": "String"}}},
-  "locationFailedPermission": "Position non d\u00e9termin\u00e9e.\nActivez la localisation.",
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "locationFailedPermission": "Position non déterminée.\nActivez la localisation.",
   "errorOccurred": "Une erreur est survenue.",
-  "workshopsFoundNearby": "{count} atelier trouv\u00e9 \u00e0 proximit\u00e9",
-  "@workshopsFoundNearby": {"placeholders": {"count": {"type": "String"}}},
-  "workshopsFoundNearbyPlural": "{count} ateliers trouv\u00e9s \u00e0 proximit\u00e9",
-  "@workshopsFoundNearbyPlural": {"placeholders": {"count": {"type": "String"}}},
-  "noWorkshopsNearby": "Aucun atelier trouv\u00e9 \u00e0 proximit\u00e9",
-  "emergencyBottomHint": "Appelez l'atelier et organisez une aide imm\u00e9diate.",
+  "workshopsFoundNearby": "{count} atelier trouvé à proximité",
+  "@workshopsFoundNearby": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "workshopsFoundNearbyPlural": "{count} ateliers trouvés à proximité",
+  "@workshopsFoundNearbyPlural": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "noWorkshopsNearby": "Aucun atelier trouvé à proximité",
+  "emergencyBottomHint": "Appelez l'atelier et organisez une aide immédiate.",
   "noWorkshopsIn25km": "Aucun atelier dans un rayon de 25 km.",
-  "emergencyNumbers": "Num\u00e9ros d'urgence",
+  "emergencyNumbers": "Numéros d'urgence",
   "policeEmergency": "Police / Urgences",
   "openStatus": "Ouvert",
-  "closedStatus": "Ferm\u00e9",
-  "callAnyway": "Appeler quand m\u00eame",
-  "legal": "Mentions l\u00e9gales",
+  "closedStatus": "Fermé",
+  "callAnyway": "Appeler quand même",
+  "legal": "Mentions légales",
   "termsOfService": "CGV",
-  "imprint": "Mentions l\u00e9gales",
+  "imprint": "Mentions légales",
   "noName": "Sans nom",
   "requiredField": "Champ obligatoire",
-  "minEightChars": "Au moins 8 caract\u00e8res",
+  "minEightChars": "Au moins 8 caractères",
   "confirmPasswordLabel": "Confirmer le mot de passe",
   "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
   "currentPasswordWrong": "Mot de passe actuel incorrect",
   "passwordChangeError": "Erreur lors du changement",
   "changeButton": "Modifier",
-  "deleteAccountWarning": "Votre compte et toutes vos donn\u00e9es seront supprim\u00e9s d\u00e9finitivement.",
+  "deleteAccountWarning": "Votre compte et toutes vos données seront supprimés définitivement.",
   "speechInitFailed": "Impossible d'initialiser la reconnaissance vocale.",
-  "rolloThinking": "Rollo r\u00e9fl\u00e9chit...",
+  "rolloThinking": "Rollo réfléchit...",
   "speechNotAvailableMsg": "Reconnaissance vocale indisponible",
   "tireRecommendation": "Recommandation pneus",
   "appHelp": "Aide",
@@ -486,14 +471,14 @@
   "vehicleTypeTrailer": "Remorque",
   "fuelPetrol": "Essence",
   "fuelDiesel": "Diesel",
-  "fuelElectric": "\u00c9lectrique",
+  "fuelElectric": "Électrique",
   "fuelHybrid": "Hybride",
   "fuelPluginHybrid": "Plug-in Hybride",
   "fuelLpg": "GPL",
   "fuelCng": "GNC",
   "searchHint": "Rechercher...",
-  "vehicleUpdated": "V\u00e9hicule mis \u00e0 jour",
-  "vehicleAdded": "V\u00e9hicule ajout\u00e9",
+  "vehicleUpdated": "Véhicule mis à jour",
+  "vehicleAdded": "Véhicule ajouté",
   "tireSizes": "Dimensions pneus",
   "tireSizesDesc": "Entrez les dimensions des pneus.",
   "scanVehicleDoc": "Scanner carte grise",
@@ -502,32 +487,44 @@
   "tireSizeNotRecognized": "Taille de pneu non reconnue",
   "fuelTypeLabel": "Type de carburant",
   "selectFuel": "Choisir carburant",
-  "inspectionDate": "Date de contr\u00f4le technique",
-  "inspectionReminder": "Rappel contr\u00f4le technique",
+  "inspectionDate": "Date de contrôle technique",
+  "inspectionReminder": "Rappel contrôle technique",
   "noReminder": "Pas de rappel",
   "daysBefore": "{days} jours avant",
-  "@daysBefore": {"placeholders": {"days": {"type": "String"}}},
+  "@daysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "frontWheel": "Roue avant",
-  "rearWheel": "Roue arri\u00e8re",
-  "differentFrontRear": "Pneus avant/arri\u00e8re diff\u00e9rents",
-  "mixedTireSizesLabel": "Pneus mixtes (dimensions diff\u00e9rentes)",
-  "summerTiresLabel": "Pneus \u00e9t\u00e9",
+  "rearWheel": "Roue arrière",
+  "differentFrontRear": "Pneus avant/arrière différents",
+  "mixedTireSizesLabel": "Pneus mixtes (dimensions différentes)",
+  "summerTiresLabel": "Pneus été",
   "winterTiresLabel": "Pneus hiver",
   "allSeasonTiresLabel": "Pneus 4 saisons",
-  "onboardingTitle1": "Service pneus \u00e0 prix fixe",
-  "onboardingDesc1": "Trouvez le bon service pneus et r\u00e9servez en ligne \u00e0 prix garanti.",
-  "onboardingTitle2": "R\u00e9servation rapide et facile",
-  "onboardingDesc2": "Choisissez votre cr\u00e9neau, comparez et r\u00e9servez en 2 minutes.",
+  "onboardingTitle1": "Service pneus à prix fixe",
+  "onboardingDesc1": "Trouvez le bon service pneus et réservez en ligne à prix garanti.",
+  "onboardingTitle2": "Réservation rapide et facile",
+  "onboardingDesc2": "Choisissez votre créneau, comparez et réservez en 2 minutes.",
   "onboardingTitle3": "Votre conseiller IA personnel",
-  "onboardingDesc3": "Notre assistant vous aide \u00e0 choisir vos pneus.",
+  "onboardingDesc3": "Notre assistant vous aide à choisir vos pneus.",
   "searchForWorkshops": "Rechercher des ateliers",
   "searchForWorkshopsDesc": "Entrez un code postal ou une ville.",
-  "locationNotDetermined": "Position non d\u00e9termin\u00e9e. Entrez un code postal.",
-  "searchFailed": "Recherche \u00e9chou\u00e9e. R\u00e9essayez.",
+  "locationNotDetermined": "Position non déterminée. Entrez un code postal.",
+  "searchFailed": "Recherche échouée. Réessayez.",
   "today": "Aujourd'hui",
   "tomorrow": "Demain",
   "inDaysCount": "Dans {days} jours",
-  "@inDaysCount": {"placeholders": {"days": {"type": "String"}}},
+  "@inDaysCount": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "breakdownHelp": "Depannage",
   "tapToSpeak": "Appuyez pour parler",
   "aiErrorMessage": "Desole, une erreur est survenue. Veuillez reessayer.",
@@ -535,15 +532,39 @@
   "noPhoneNumber": "Aucun numero de telephone disponible",
   "closedToday": "Ferme aujourd'hui",
   "closesAt": "Ferme a {time}",
-  "@closesAt": {"placeholders": {"time": {"type": "String"}}},
+  "@closesAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "opensAt": "Ouvre a {time}",
-  "@opensAt": {"placeholders": {"time": {"type": "String"}}},
+  "@opensAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintModel": "ex. Golf, Serie 3, MT-07",
   "invalidYear": "Annee invalide",
   "loggedInAs": "Connecte en tant que {role}",
-  "@loggedInAs": {"placeholders": {"role": {"type": "String"}}},
+  "@loggedInAs": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "helloUser": "Bonjour, {name} !",
-  "@helloUser": {"placeholders": {"name": {"type": "String"}}},
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "saveError": "Erreur lors de la sauvegarde",
   "monthLabel": "Mois",
   "yearLabel": "Annee",
@@ -551,7 +572,16 @@
   "selectMotorcycleFirst": "Veuillez selectionner une moto comme vehicule.",
   "adacBreakdown": "ADAC Depannage",
   "opensOnDay": "Ouvre {day} {time}",
-  "@opensOnDay": {"placeholders": {"day": {"type": "String"}, "time": {"type": "String"}}},
+  "@opensOnDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintYear": "ex. 2022",
   "hintLicensePlate": "ex. M-AB 1234",
   "rolloInitialGreeting": "Bonjour ! Je suis **Rollo**, votre conseiller pneus IA. Comment puis-je vous aider ?",
@@ -563,7 +593,13 @@
   "chipWorkshopMsg": "Montre-moi les ateliers à proximité",
   "chipFreeMsg": "J'ai une question sur les pneus",
   "rolloIntroWithVehicle": "Bonjour ! Je suis Rollo, ton conseiller pneus. Je vois que tu conduis une {vehicle}. Comment puis-je t'aider ?",
-  "@rolloIntroWithVehicle": { "placeholders": { "vehicle": { "type": "String" } } },
+  "@rolloIntroWithVehicle": {
+    "placeholders": {
+      "vehicle": {
+        "type": "String"
+      }
+    }
+  },
   "rolloIntroGeneric": "Bonjour ! Je suis Rollo, ton conseiller pneus. Comment puis-je t'aider ?",
   "tireNotStoredLabel": "non enregistré",
   "otherBrand": "Autre",
@@ -571,11 +607,29 @@
   "tireTabWinter": "❄️ Hiver",
   "tireTabAllSeason": "🌦️ 4 Saisons",
   "tireValidationError": "{label} : L'indice de charge et l'indice de vitesse sont obligatoires",
-  "@tireValidationError": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationError": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "tireValidationErrorRear": "{label} (essieu arrière) : L'indice de charge et l'indice de vitesse sont obligatoires",
-  "@tireValidationErrorRear": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationErrorRear": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "fieldsRecognized": "{count} champs reconnus et appliqués",
-  "@fieldsRecognized": { "placeholders": { "count": { "type": "int" } } },
+  "@fieldsRecognized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tireSizeApplyHint": "Cette taille est la dimension de pneu homologuée selon la carte grise. Appuyez sur \"Appliquer\" pour la saisir.",
   "tireSizeInvalidHint": "La taille de pneu scannée ne correspond pas aux valeurs disponibles. Veuillez rescanner la carte grise ou saisir la taille manuellement.",
   "searchMyLocation": "Ma position",
@@ -583,9 +637,14 @@
   "searchSettings": "Paramètres",
   "workshopCountOne": "1 atelier",
   "workshopCountMany": "{count} ateliers",
-  "@workshopCountMany": { "placeholders": { "count": { "type": "int" } } },
+  "@workshopCountMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sortDistance": "Distance",
-  "sortPrice": "Prix",
   "sortRating": "Note",
   "withTires": "Avec pneus",
   "montageOnly": "Montage seul",
@@ -622,11 +681,23 @@
   "baseLabel": "Base",
   "tiresFallback": "Pneus",
   "totalWithPrice": "Total {price}€",
-  "@totalWithPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@totalWithPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "tiresAvailable": "Pneus disponibles",
   "noTiresLabel": "Pas de pneus",
   "fixedPrice": "Prix fixe {price}€",
-  "@fixedPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@fixedPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "priceOnRequest": "Prix sur demande",
   "newBadge": "Nouveau",
   "moreTiresAvailable": "Plus de pneus disponibles dans cet atelier",
@@ -644,7 +715,6 @@
   "noSummerSize": "Pas de taille de pneu été enregistrée. Ajoutez la taille dans le profil du véhicule.",
   "brakeService": "Service freins",
   "batteryService": "Service batterie",
-  "wheelWash": "Lavage des roues",
   "alignMeasureBoth": "📐 Mesure — Les deux essieux",
   "alignMeasureFront": "📐 Mesure — Essieu avant",
   "alignMeasureRear": "📐 Mesure — Essieu arrière",
@@ -690,20 +760,43 @@
   "pkgMontage4": "Montage (4 pneus)",
   "pkgMontage2": "Montage (2 pneus)",
   "missingTireSizeTitle": "Pas de taille {season} enregistrée",
-  "@missingTireSizeTitle": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeTitle": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "missingTireSizeDesc": "Pour chercher {season}, ajoutez la taille dans le profil du véhicule.",
-  "@missingTireSizeDesc": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeDesc": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "storeTireSizeButton": "Ajouter taille {season}",
-  "@storeTireSizeButton": { "placeholders": { "season": { "type": "String" } } },
+  "@storeTireSizeButton": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsCountLabel": "({count} avis)",
-  "@reviewsCountLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@reviewsCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "errorServiceCarOnly": "Ce service est uniquement disponible pour voitures/remorques. Veuillez sélectionner \"Pneus moto\".",
   "errorNeedMotorcycle": "Veuillez sélectionner une moto pour rechercher des pneus moto.",
   "errorTrailerTireOnly": "Pour les remorques, seul le service pneus (changement de pneus / changement de roues) est disponible.",
   "errorLocationFailed": "Impossible de déterminer la position. Veuillez entrer un code postal.",
   "errorSearchFailed": "La recherche a échoué. Veuillez réessayer.",
   "vehicleLoadError": "Impossible de charger les véhicules",
-
   "selectWidth": "Sélectionnez la largeur (mm) :",
   "selectAspectRatio": "Sélectionnez le rapport (%) :",
   "selectRimSize": "Sélectionnez la taille de jante (pouces) :",
@@ -712,17 +805,35 @@
   "availableTimes": "Horaires disponibles",
   "selectedTire": "Pneu sélectionné",
   "selectedTireAxle": "Pneu sélectionné – {axle}",
-  "@selectedTireAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@selectedTireAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "tireRecommendations": "Recommandations de pneus",
   "tireRecommendationsAxle": "Recommandations de pneus – {axle}",
-  "@tireRecommendationsAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@tireRecommendationsAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "encryptedPayment": "Paiement crypté et sécurisé via Stripe",
   "bookingAgreementPrefix": "En réservant, vous acceptez nos ",
   "termsLink": "Conditions",
   "andThe": " et la ",
   "agreementSuffix": ".",
   "bookAndPay": "Réserver et payer – {price} €",
-  "@bookAndPay": { "placeholders": { "price": { "type": "String" } } },
+  "@bookAndPay": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "bookBinding": "Réserver maintenant (engagement)",
   "bookingInProgress": "Réservation en cours...",
   "creditCard": "Carte de crédit",
@@ -733,9 +844,21 @@
   "pleaseSelectDate": "Veuillez sélectionner une date",
   "pleaseSelectTime": "Veuillez sélectionner une heure",
   "bookAppointmentAt": "Prendre rendez-vous – {time}",
-  "@bookAppointmentAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookAppointmentAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "bookTireAndMontageAt": "Réserver pneus et montage – {time}",
-  "@bookTireAndMontageAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookTireAndMontageAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsLoadError": "Impossible de charger les avis",
   "payButtonLabel": "Payer",
   "paymentTookTooLong": "Le paiement a pris trop de temps. Veuillez réessayer.",
@@ -759,7 +882,13 @@
   "paymentStatusLabel": "Statut du paiement",
   "basePrice": "Prix de base",
   "couponLabel": "Coupon ({code})",
-  "@couponLabel": { "placeholders": { "code": { "type": "String" } } },
+  "@couponLabel": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "discountLabel": "Réduction",
   "missionText": "Bereifung24 met en relation les conducteurs avec les meilleurs ateliers de pneus à proximité. Nous rendons le changement de pneus, le montage et le service aussi simples qu'une commande en ligne – transparent, équitable et fiable.",
   "balancingX4": "Équilibrage (×4)",
@@ -771,17 +900,51 @@
   "detailsCouldNotLoad": "Impossible de charger les détails",
   "bookingLabel": "Réservation",
   "bookingNumber": "N° de réservation : {id}",
-  "@bookingNumber": { "placeholders": { "id": { "type": "String" } } },
-  "timeLabel": "Heure : {time}",
-  "@timeLabel": { "placeholders": { "time": { "type": "String" } } },
+  "@bookingNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "@timeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "durationLabel": "Durée : env. {minutes} minutes",
-  "@durationLabel": { "placeholders": { "minutes": { "type": "int" } } },
-  "licensePlateLabel": "Plaque d'immatriculation : {plate}",
-  "@licensePlateLabel": { "placeholders": { "plate": { "type": "String" } } },
+  "@durationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@licensePlateLabel": {
+    "placeholders": {
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
   "tireSizeLabel": "Taille : {size}",
-  "@tireSizeLabel": { "placeholders": { "size": { "type": "String" } } },
+  "@tireSizeLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "tireQuantityLabel": "Quantité : {count} pièces",
-  "@tireQuantityLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@tireQuantityLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "wheelWashing": "Lavage des roues",
   "rateWorkshopButton": "Évaluer l'atelier",
   "tagline": "Votre service pneus – simple et rapide",
@@ -790,8 +953,7 @@
   "beingProcessed": "En cours de traitement",
   "completedStatus": "Terminé",
   "appointmentCancelled": "Ce rendez-vous a été annulé",
-  "errorSendingReview": "Erreur d'envoi. Veuillez réessayer."
-,
+  "errorSendingReview": "Erreur d'envoi. Veuillez réessayer.",
   "axleSetSameBrand": "⭐ Set d'essieu : même marque",
   "axleSetSameBrandDesc": "Essieu avant et arrière de la même marque (2× av. + 2× ar.)",
   "axleSetSameBrandTapHint": "Touchez pour n'afficher que les sets de la même marque",
@@ -800,20 +962,68 @@
   "axleSetSameModelTapHint": "Touchez pour combiner pneus avant et arrière",
   "axleSetBadge": "⭐ SET D'ESSIEU",
   "axleSetsAvailable": "{count} sets d'essieu disponibles",
-  "@axleSetsAvailable": { "placeholders": { "count": { "type": "int" } } },
+  "@axleSetsAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "activityNewBooking": "Nouvelle réservation de {name} – {service}",
-  "@activityNewBooking": { "placeholders": { "name": { "type": "String" }, "service": { "type": "String" } } },
+  "@activityNewBooking": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
   "activityPayoutReceived": "Paiement reçu – {amount} €",
-  "@activityPayoutReceived": { "placeholders": { "amount": { "type": "String" } } },
+  "@activityPayoutReceived": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "activityNewReview": "Avis de {rating} étoiles de {name}",
-  "@activityNewReview": { "placeholders": { "rating": { "type": "int" }, "name": { "type": "String" } } },
+  "@activityNewReview": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "timeJustNow": "À l'instant",
   "timeMinutesAgo": "Il y a {minutes} min",
-  "@timeMinutesAgo": { "placeholders": { "minutes": { "type": "int" } } },
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "Il y a {hours} h",
-  "@timeHoursAgo": { "placeholders": { "hours": { "type": "int" } } },
+  "@timeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "Il y a {days} jours",
-  "@timeDaysAgo": { "placeholders": { "days": { "type": "int" } } },
+  "@timeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "timeYesterday": "Hier",
   "workshopNotificationSettings": "Notifications push",
   "workshopNotificationSettingsDesc": "Choisissez quelles notifications push vous souhaitez recevoir",
@@ -826,5 +1036,10 @@
   "workshopNotifPayoutReceived": "Paiement reçu",
   "workshopNotifPayoutReceivedDesc": "Notification concernant les paiements de commission",
   "workshopNotifAppointmentReminder": "Rappel de rendez-vous (24 h avant)",
-  "workshopNotifAppointmentReminderDesc": "Rappel un jour avant les rendez-vous à venir"
+  "workshopNotifAppointmentReminderDesc": "Rappel un jour avant les rendez-vous à venir",
+  "manufacturerFilterLabel": "Fabricant :",
+  "pricesUnmountedHint": "💡 Les prix s'appliquent uniquement aux roues démontées du véhicule.",
+  "confirmMotorcycleBookingTitle": "Veuillez confirmer",
+  "confirmMotorcycleBookingBody": "Assurez-vous que le pneu sélectionné convient à votre moto (par ex. Sport, Tourer, Cross, Enduro).\n\nLe montage est effectué uniquement sur des roues déjà démontées et apportées à l'atelier. Le démontage et le remontage sur la moto ne sont pas inclus.",
+  "confirmAndBook": "Confirmer et réserver"
 }

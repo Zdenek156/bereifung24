@@ -2417,4 +2417,21 @@ class SDe extends S {
   @override
   String get workshopNotifAppointmentReminderDesc =>
       'Erinnerung einen Tag vor anstehenden Terminen';
+
+  @override
+  String get manufacturerFilterLabel => 'Hersteller:';
+
+  @override
+  String get pricesUnmountedHint =>
+      '💡 Preise gelten nur für Räder im ausgebauten Zustand.';
+
+  @override
+  String get confirmMotorcycleBookingTitle => 'Bitte bestätigen';
+
+  @override
+  String get confirmMotorcycleBookingBody =>
+      'Bitte stelle sicher, dass der gewählte Reifen für dein Motorrad geeignet ist (z. B. Sport, Tourer, Cross, Enduro).\n\nDie Montage erfolgt ausschließlich an zur Werkstatt gebrachten, bereits ausgebauten Rädern. Der Aus- und Einbau am Motorrad ist nicht enthalten.';
+
+  @override
+  String get confirmAndBook => 'Bestätigen & Buchen';
 }

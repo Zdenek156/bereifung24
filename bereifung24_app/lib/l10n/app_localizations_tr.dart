@@ -2401,4 +2401,21 @@ class STr extends S {
   @override
   String get workshopNotifAppointmentReminderDesc =>
       'Yaklaşan randevulardan bir gün önce hatırlatıcı';
+
+  @override
+  String get manufacturerFilterLabel => 'Üretici:';
+
+  @override
+  String get pricesUnmountedHint =>
+      '💡 Fiyatlar yalnızca araçtan sökülmüş tekerlekler için geçerlidir.';
+
+  @override
+  String get confirmMotorcycleBookingTitle => 'Lütfen onaylayın';
+
+  @override
+  String get confirmMotorcycleBookingBody =>
+      'Lütfen seçtiğiniz lastiğin motosikletiniz için uygun olduğundan emin olun (örn. Sport, Tourer, Cross, Enduro).\n\nMontaj yalnızca servise sökülmüş olarak getirilen tekerleklere yapılır. Tekerleklerin motosiklette sökülmesi ve takılması hizmete dahil değildir.';
+
+  @override
+  String get confirmAndBook => 'Onayla ve rezerve et';
 }

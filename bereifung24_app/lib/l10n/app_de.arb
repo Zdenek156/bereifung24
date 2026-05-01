@@ -1,7 +1,5 @@
-﻿{
-
+{
   "appTitle": "Bereifung24",
-
   "login": "Anmelden",
   "register": "Registrieren",
   "logout": "Abmelden",
@@ -19,7 +17,6 @@
   "loading": "Laden...",
   "error": "Fehler",
   "ok": "OK",
-
   "email": "E-Mail",
   "password": "Passwort",
   "firstName": "Vorname",
@@ -31,10 +28,8 @@
   "zipLabel": "Postleitzahl *",
   "city": "Stadt *",
   "emailRequired": "E-Mail-Adresse *",
-
   "invalidEmail": "Ungültige E-Mail",
   "passwordsNoMatch": "Passwörter stimmen nicht überein",
-
   "loginWithGoogle": "Mit Google anmelden",
   "loginWithApple": "Mit Apple anmelden",
   "loginWithBiometric": "Mit Biometrie anmelden",
@@ -44,20 +39,17 @@
   "noAccount": "Noch kein Konto?",
   "hasAccount": "Bereits ein Konto?",
   "backToLogin": "Zurück zum Login",
-
   "resetPassword": "Passwort zurücksetzen",
   "resetPasswordDesc": "Gib deine E-Mail-Adresse ein und wir senden dir einen Link zum Zurücksetzen deines Passworts.",
   "sendLink": "Link senden",
   "checkInbox": "Prüfe dein Postfach und folge dem Link zum Zurücksetzen deines Passworts.",
   "enterValidEmail": "Bitte gültige E-Mail eingeben",
-
   "googleLoginFailed": "Google-Anmeldung fehlgeschlagen",
   "appleLoginFailed": "Apple-Anmeldung fehlgeschlagen",
   "googleRegisterFailed": "Google-Registrierung fehlgeschlagen",
   "appleRegisterFailed": "Apple-Registrierung fehlgeschlagen",
   "acceptTerms": "Bitte akzeptiere die Nutzungsbedingungen",
   "privacyPolicy": "Datenschutzerklärung",
-
   "completeAddress": "Adresse vervollständigen",
   "completeProfile": "Profil vervollständigen",
   "addressNeeded": "Bitte gib noch deine Adresse an, damit wir Werkstätten in deiner Nähe finden können.",
@@ -65,13 +57,11 @@
   "appleNameNotProvided": "Apple hat deinen Namen nicht übermittelt. Bitte vervollständige dein Profil.",
   "addressInfoText": "Ihre Adresse wird benötigt, um Werkstätten in Ihrer Nähe zu finden und die Entfernung zu berechnen.",
   "confirmPassword": "Passwort bestätigen",
-
   "welcomeTitle1": "Reifenservice zum Festpreis",
   "welcomeDesc1": "Finde den passenden Reifenservice in deiner Nähe und buche bequem online – zum garantierten Festpreis.",
   "welcomeTitle2": "Schnell & einfach buchen",
   "welcomeDesc2": "Wähle deinen Wunschtermin, vergleiche Werkstätten und buche in unter 2 Minuten – alles in einer App.",
   "welcomeTitle3": "Dein persönlicher KI-Berater",
-
   "account": "Konto",
   "editProfile": "Profil bearbeiten",
   "notifications": "Benachrichtigungen",
@@ -81,38 +71,31 @@
   "giveFeedback": "Feedback geben",
   "dangerZone": "Gefahrenzone",
   "deleteAccount": "Konto löschen",
-
   "changePasswordTitle": "Passwort ändern",
   "currentPassword": "Aktuelles Passwort",
   "newPassword": "Neues Passwort",
   "confirmNewPassword": "Passwort bestätigen",
   "passwordChanged": "Passwort erfolgreich geändert",
   "change": "Ändern",
-
   "logoutConfirm": "Abmelden?",
   "logoutConfirmText": "Möchtest du dich wirklich abmelden?",
-
   "deleteAccountConfirm": "Konto löschen?",
   "deleteAccountDone": "Konto wurde gelöscht",
   "deletePermanently": "Endgültig löschen",
-
   "appearance": "Erscheinungsbild",
   "system": "System",
   "light": "Hell",
   "dark": "Dunkel",
-
   "personalData": "Persönliche Daten",
   "phoneNumber": "Telefonnummer *",
   "address": "Adresse",
   "profileUpdated": "Profil aktualisiert",
   "errorSaving": "Fehler beim Speichern",
-
   "feedback": "Feedback",
   "giveFeedbackTitle": "Feedback geben",
   "feedbackHint": "Was können wir verbessern? Was gefällt dir gut?",
   "selectRating": "Bitte wähle eine Bewertung",
   "errorSending": "Fehler beim Senden. Bitte versuche es erneut.",
-
   "settingsSaved": "Einstellungen gespeichert",
   "appointmentReminder": "Terminerinnerung",
   "appointmentReminderDesc": "Erinnerung 24h vor deinem Termin",
@@ -120,16 +103,13 @@
   "seasonHintDesc": "Hinweis zum Reifenwechsel bei Saisonbeginn",
   "bookingUpdates": "Buchungs-Updates",
   "bookingUpdatesDesc": "Statusänderungen deiner Buchungen",
-
   "agb": "Allgemeine Geschäftsbedingungen",
   "datenschutz": "Datenschutzerklärung",
   "impressum": "Impressum",
-
   "review": "Bewertung",
   "rateWorkshop": "Werkstatt bewerten",
   "backToBookings": "Zurück zu Buchungen",
   "reviewHint": "Beschreiben Sie Ihre Erfahrung...",
-
   "selectService": "Service wählen",
   "whatService": "Was möchtest du machen lassen?",
   "tireChange": "Reifenwechsel",
@@ -143,7 +123,6 @@
   "axleAlignment": "Achsvermessung",
   "axleAlignmentDesc": "Spur und Sturz einstellen",
   "climateService": "Klimaservice",
-
   "vehicleType": "Fahrzeugtyp",
   "trailer": "Anhänger",
   "vehicleData": "Fahrzeug-Daten",
@@ -154,34 +133,27 @@
   "licensePlateHint": "z.B. M-AB 1234",
   "tireSizeOptional": "Reifengröße (optional)",
   "tireSizeHint": "z.B. 205/55 R16",
-
   "selectDate": "Termin wählen",
   "selectDateDesc": "Wähle Datum und Uhrzeit.",
   "time": "Uhrzeit",
-
   "summary": "Zusammenfassung",
   "notesOptional": "Anmerkungen (optional)",
   "notesHint": "z.B. Reifen liegen im Kofferraum",
-
   "payment": "Zahlung",
   "completePayment": "Bitte schließe die Zahlung ab.",
   "totalAmount": "Gesamtbetrag",
   "totalPrice": "Gesamtpreis",
   "total": "Gesamt",
   "paymentMethods": "Visa, Mastercard, SEPA",
-
   "bookingSuccessful": "Buchung erfolgreich!",
   "goToBookings": "Zu meinen Terminen",
   "goToHome": "Zur Startseite",
-
   "cancelBooking": "Buchung abbrechen?",
   "progressLost": "Dein Fortschritt geht verloren.",
   "yesCancel": "Ja, abbrechen",
-
   "bookingFailed": "Buchung fehlgeschlagen. Bitte versuche es erneut.",
   "paymentCancelled": "Zahlung abgebrochen.",
   "paymentFailed": "Zahlung fehlgeschlagen. Bitte versuche es erneut.",
-
   "bookingOverview": "Buchungsübersicht",
   "workshop": "Werkstatt",
   "service": "Service",
@@ -198,67 +170,131 @@
   "frontAxleMoto": "VR",
   "rearAxleMoto": "HR",
   "myBookings": "Meine Buchungen",
-
   "upcoming": "Kommende",
   "past": "Vergangene",
   "noBookings": "Keine Buchungen",
   "couldNotLoadBookings": "Termine konnten nicht geladen werden",
   "searchWorkshop": "Werkstatt suchen",
-
   "bookingDetails": "Buchungsdetails",
   "couldNotLoadDetails": "Details konnten nicht geladen werden",
   "bookingNotFound": "Buchung nicht gefunden",
   "booking": "Buchung",
   "timeLabel": "Uhrzeit: {time}",
-  "@timeLabel": { "placeholders": { "time": { "type": "String" } } },
+  "@timeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "durationMinutes": "Dauer: ca. {minutes} Minuten",
-  "@durationMinutes": { "placeholders": { "minutes": { "type": "int" } } },
+  "@durationMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "licensePlateLabel": "Kennzeichen: {plate}",
-  "@licensePlateLabel": { "placeholders": { "plate": { "type": "String" } } },
+  "@licensePlateLabel": {
+    "placeholders": {
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
   "tireDetails": "Reifendetails",
   "tireSize": "Größe: {size}",
-  "@tireSize": { "placeholders": { "size": { "type": "String" } } },
+  "@tireSize": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "tireQuantity": "Anzahl: {count} Stück",
-  "@tireQuantity": { "placeholders": { "count": { "type": "int" } } },
+  "@tireQuantity": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "additionalServices": "Zusatzleistungen",
   "paymentDetails": "Zahlungsdetails",
   "remarks": "Anmerkungen",
   "yourMessageToWorkshop": "Ihre Nachricht an die Werkstatt",
-
   "bookTireAndMontage": "Reifen & Montage buchen",
   "bookNow": "Jetzt buchen",
   "couldNotLoadVehicles": "Fahrzeuge konnten nicht geladen werden",
   "selectVehicleTitle": "Fahrzeug wählen",
   "addVehicleTitle": "Fahrzeug hinzufügen",
-
   "zipOrCity": "PLZ oder Stadt...",
   "useLocation": "Standort verwenden",
   "locatingPosition": "Standort wird ermittelt...",
   "locationError": "Standortfehler: {error}",
-  "@locationError": { "placeholders": { "error": { "type": "String" } } },
+  "@locationError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "radius": "Umkreis",
   "sortBy": "Sortieren nach",
   "allSeason": "Ganzjahr",
   "serviceNotOffered": "{label} wird von dieser Werkstatt nicht angeboten",
-  "@serviceNotOffered": { "placeholders": { "label": { "type": "String" } } },
+  "@serviceNotOffered": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "notAvailable": "Nicht verfügbar",
   "storeTireSize": "{season}-Größe hinterlegen",
-  "@storeTireSize": { "placeholders": { "season": { "type": "String" } } },
+  "@storeTireSize": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "frontAxleFull": "Vorderachse",
   "rearAxleFull": "Hinterachse",
   "allManufacturers": "Alle Hersteller",
   "allManufacturersCount": "Alle Hersteller ({count})",
-  "@allManufacturersCount": { "placeholders": { "count": { "type": "int" } } },
+  "@allManufacturersCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "brandCount": "{brand} ({count})",
-  "@brandCount": { "placeholders": { "brand": { "type": "String" }, "count": { "type": "int" } } },
+  "@brandCount": {
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "showMore": "Weitere anzeigen ({count})",
-  "@showMore": { "placeholders": { "count": { "type": "int" } } },
+  "@showMore": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "showLess": "Weniger anzeigen",
   "showLessTires": "Weniger Reifen anzeigen",
   "selected": "Ausgewählt",
   "priceOverview": "Preisübersicht",
   "confirmed": "Bestätigt",
-
   "aboutWorkshop": "Über die Werkstatt",
   "addressLabel": "Adresse",
   "yourVehicle": "Dein Fahrzeug",
@@ -267,16 +303,23 @@
   "noReviewsYet": "Noch keine Bewertungen vorhanden.",
   "workshopLoadError": "Werkstatt konnte nicht geladen werden",
   "clockSuffix": "Uhr",
-
   "vehicles": "Fahrzeuge",
   "addVehicleButton": "Hinzufügen",
   "noVehicles": "Keine Fahrzeuge",
   "deleteVehicle": "Fahrzeug löschen",
-  "deleteVehicleConfirm": "\u201E{brand} {model}\u201C wirklich löschen?",
-  "@deleteVehicleConfirm": { "placeholders": { "brand": { "type": "String" }, "model": { "type": "String" } } },
+  "deleteVehicleConfirm": "„{brand} {model}“ wirklich löschen?",
+  "@deleteVehicleConfirm": {
+    "placeholders": {
+      "brand": {
+        "type": "String"
+      },
+      "model": {
+        "type": "String"
+      }
+    }
+  },
   "vehicleDeleted": "Fahrzeug gelöscht",
   "deleteFailed": "Löschen fehlgeschlagen",
-
   "editVehicle": "Fahrzeug bearbeiten",
   "manufacturer": "Hersteller *",
   "manufacturerHint": "z.B. Yamaha, Kawasaki",
@@ -297,18 +340,35 @@
   "tireSizeInfo": "Gib die Reifengrößen deines Fahrzeugs ein.",
   "searchDots": "Suchen...",
   "errorSavingVehicle": "Fehler beim Speichern: {error}",
-  "@errorSavingVehicle": { "placeholders": { "error": { "type": "String" } } },
+  "@errorSavingVehicle": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "apply": "Übernehmen",
   "scanned": "Gescannt: {value}",
-  "@scanned": { "placeholders": { "value": { "type": "String" } } },
+  "@scanned": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "scanAgain": "Erneut scannen",
   "tireSizeSelected": "Reifengröße ausgewählt",
   "otherSize": "Andere Größe",
   "noCameraAvailable": "Keine Kamera verfügbar",
-
   "aiAdvisorSpeechInitError": "Spracherkennung konnte nicht initialisiert werden.",
   "aiAdvisorVoiceModeError": "Fehler beim Starten des Sprachmodus: {error}",
-  "@aiAdvisorVoiceModeError": { "placeholders": { "error": { "type": "String" } } },
+  "@aiAdvisorVoiceModeError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "speechOutputOn": "Sprachausgabe an",
   "speechOutputOff": "Sprachausgabe aus",
   "deleteChat": "Chat löschen",
@@ -322,29 +382,46 @@
   "speechPermissionNeeded": "Spracherkennung-Berechtigung benötigt. Bitte in den Einstellungen aktivieren.",
   "rolloGreeting": "Rollo begrüßt dich...",
   "rolloIntro": "Hallo! Ich bin Rollo, dein Reifenberater. Ich sehe, du fährst einen {vehicle}. Wie kann ich dir helfen?",
-  "@rolloIntro": { "placeholders": { "vehicle": { "type": "String" } } },
+  "@rolloIntro": {
+    "placeholders": {
+      "vehicle": {
+        "type": "String"
+      }
+    }
+  },
   "listening": "Ich höre zu...",
   "speechNotAvailable": "Spracherkennung nicht verfügbar",
   "vehicleSelected": "{vehicle} ausgewählt! 🚗\nReifengröße: **{tireSize}**",
-  "@vehicleSelected": { "placeholders": { "vehicle": { "type": "String" }, "tireSize": { "type": "String" } } },
+  "@vehicleSelected": {
+    "placeholders": {
+      "vehicle": {
+        "type": "String"
+      },
+      "tireSize": {
+        "type": "String"
+      }
+    }
+  },
   "noVehicleAdded": "Du hast noch kein Fahrzeug angelegt. Bitte füge zuerst ein Fahrzeug unter **Fahrzeuge** hinzu, damit ich dir Reifen empfehlen kann.",
   "whichVehicle": "Für welches Fahrzeug brauchst du Hilfe?",
   "recommendTires": "Ich möchte eine Reifen-Empfehlung",
   "showNearbyWorkshops": "Zeig mir Werkstätten in meiner Nähe",
   "tireNotStored": "nicht hinterlegt",
-
   "locationCouldNotBeDetermined": "Standort konnte nicht ermittelt werden. Bitte prüfe deine GPS-Einstellungen.",
   "stripeNotConfigured": "Stripe ist nicht konfiguriert. Bitte versuche es später erneut.",
   "notificationsDescription": "Benachrichtigungen für Buchungen und Updates",
-
   "workshopBookings": "Buchungen",
   "noBookingsEmoji": "📋",
   "errorLabel": "Fehler: {error}",
-  "@errorLabel": { "placeholders": { "error": { "type": "String" } } },
-
+  "@errorLabel": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "workshopCalendar": "Kalender",
   "noAppointments": "📭",
-
   "workshopDashboard": "Dashboard",
   "workshopNext7Days": "Nächste 7 Tage",
   "workshopTodayAppointments": "Heutige Termine",
@@ -360,15 +437,26 @@
   "rotateScreen": "Bildschirm drehen",
   "tapToSwitch": "Tippen zum Wechseln ›",
   "reviewsCount": "{count} Bewertungen",
-  "@reviewsCount": { "placeholders": { "count": { "type": "int" } } },
-
+  "@reviewsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "workshopProfile": "Profil",
   "landingPageTitle": "Ihre Landing Page",
   "activeStatus": "Aktiv",
   "inactiveStatus": "Inaktiv",
   "shareLink": "Seite teilen",
   "landingPageShareMessage": "Besuchen Sie unsere Seite und buchen Sie direkt online: {url}",
-  "@landingPageShareMessage": { "placeholders": { "url": { "type": "String" } } },
+  "@landingPageShareMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "qrCode": "QR-Code",
   "noLandingPage": "Keine Landing Page",
   "noLandingPageDescription": "Ihre Landing Page wird über das Admin-Portal erstellt und verwaltet.",
@@ -386,24 +474,19 @@
   "replySaved": "Antwort gespeichert ✅",
   "sendReply": "Antwort senden",
   "reply": "Antworten",
-
   "serviceNotAvailable": "Service nicht verfügbar",
   "completeProfileButton": "Profil vervollständigen",
-
   "locationSettings": "Standort-Einstellungen",
   "callNow": "Jetzt anrufen",
-
   "wheelWash": "Räder waschen",
   "foreignObjectRepair": "Fremdkörper-Reparatur",
   "confirmed_status": "Bestätigt",
-
   "madeInDeutschland": "Made with ❤️ in Deutschland",
   "openSourceLicenses": "Open-Source-Lizenzen",
   "contact": "Kontakt",
   "companyInfo": "Firmeninformationen",
   "followUs": "Folge uns",
   "mission": "Unsere Mission",
-
   "homeTitle": "Startseite",
   "profile": "Profil",
   "reviews": "Bewertungen",
@@ -430,10 +513,10 @@
   "flatLay": "Fahrzeugschein flach hinlegen",
   "language": "Sprache",
   "addressMissing": "Adresse fehlt",
-  "addressMissingDesc": "Bitte hinterlege deine Adresse, um Werkst\u00e4tten in deiner N\u00e4he zu finden und Termine buchen zu k\u00f6nnen.",
+  "addressMissingDesc": "Bitte hinterlege deine Adresse, um Werkstätten in deiner Nähe zu finden und Termine buchen zu können.",
   "yourAiAdvisor": "Dein KI-Berater!",
   "serviceTireChange": "Reifen-\nwechsel",
-  "serviceWheelChange": "R\u00e4der-\nwechsel",
+  "serviceWheelChange": "Räder-\nwechsel",
   "serviceTireRepair": "Reifen-\nreparatur",
   "serviceAlignment": "Achsver-\nmessung",
   "serviceMotorcycleTire": "Motorrad-\nReifen",
@@ -441,18 +524,18 @@
   "winterTireSeason": "Winterreifen-Saison",
   "summerTireSeason": "Sommerreifen-Saison",
   "winterSeasonTip": "Von O bis O: Oktober bis Ostern. Jetzt Winterreifen aufziehen lassen!",
-  "summerSeasonTip": "Zeit f\u00fcr den Wechsel! Jetzt Termin sichern bevor es voll wird.",
-  "co2SavingsTitle": "Deine CO\u2082-Einsparung durch Online-Buchungen",
+  "summerSeasonTip": "Zeit für den Wechsel! Jetzt Termin sichern bevor es voll wird.",
+  "co2SavingsTitle": "Deine CO₂-Einsparung durch Online-Buchungen",
   "co2BasedOnVehicle": "Basierend auf deinen Fahrzeugdaten",
   "co2TripsSaved": "Fahrten\ngespart",
   "co2KmAvoided": "Fahrtwege\nvermieden",
-  "co2Saved": "CO\u2082\neingespart",
+  "co2Saved": "CO₂\neingespart",
   "co2FuelSaved": "Kraftstoff\ngespart",
   "switchVehicle": "Fahrzeug wechseln",
-  "addAVehicle": "F\u00fcge ein Fahrzeug hinzu",
-  "forPersonalizedRec": "f\u00fcr personalisierte Empfehlungen",
-  "appForCustomersOnly": "Diese App ist f\u00fcr Kunden. F\u00fcr die Werkstattverwaltung nutze bitte das Web-Dashboard.",
-  "trailerServiceOnly": "F\u00fcr Anh\u00e4nger ist nur der Reifenservice verf\u00fcgbar.",
+  "addAVehicle": "Füge ein Fahrzeug hinzu",
+  "forPersonalizedRec": "für personalisierte Empfehlungen",
+  "appForCustomersOnly": "Diese App ist für Kunden. Für die Werkstattverwaltung nutze bitte das Web-Dashboard.",
+  "trailerServiceOnly": "Für Anhänger ist nur der Reifenservice verfügbar.",
   "sortUpcoming": "Kommender Termin",
   "sortPrice": "Preis",
   "sortBookedDate": "Buchungsdatum",
@@ -460,26 +543,50 @@
   "noBookingsDesc": "Du hast noch keine Buchungen. Suche eine Werkstatt und buche deinen ersten Termin!",
   "myVehicles": "Meine Fahrzeuge",
   "vehiclesLoadError": "Fahrzeuge konnten nicht geladen werden",
-  "noVehiclesDesc": "F\u00fcge dein erstes Fahrzeug hinzu, um schneller buchen zu k\u00f6nnen.",
+  "noVehiclesDesc": "Füge dein erstes Fahrzeug hinzu, um schneller buchen zu können.",
   "buildYear": "Bj. {year}",
-  "@buildYear": {"placeholders": {"year": {"type": "String"}}},
+  "@buildYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
   "tireSummer": "Sommer",
   "tireWinter": "Winter",
   "tireAllSeason": "Ganzjahr",
   "daysCount": "{count} Tage",
-  "@daysCount": {"placeholders": {"count": {"type": "String"}}},
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "locationFailedPermission": "Standort konnte nicht ermittelt werden.\nBitte aktiviere die Standortfreigabe.",
   "errorOccurred": "Ein Fehler ist aufgetreten.",
-  "workshopsFoundNearby": "{count} Werkstatt in deiner N\u00e4he gefunden",
-  "@workshopsFoundNearby": {"placeholders": {"count": {"type": "String"}}},
-  "workshopsFoundNearbyPlural": "{count} Werkst\u00e4tten in deiner N\u00e4he gefunden",
-  "@workshopsFoundNearbyPlural": {"placeholders": {"count": {"type": "String"}}},
-  "noWorkshopsNearby": "Keine Werkst\u00e4tten in der N\u00e4he gefunden",
-  "emergencyBottomHint": "Rufe die Werkstatt an und vereinbare eine Soforthilfe. Deinen n\u00e4chsten Service kannst du danach direkt \u00fcber B24 buchen.",
-  "noWorkshopsIn25km": "Leider gibt es keine Werkst\u00e4tten in 25 km Umkreis.",
+  "workshopsFoundNearby": "{count} Werkstatt in deiner Nähe gefunden",
+  "@workshopsFoundNearby": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "workshopsFoundNearbyPlural": "{count} Werkstätten in deiner Nähe gefunden",
+  "@workshopsFoundNearbyPlural": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "noWorkshopsNearby": "Keine Werkstätten in der Nähe gefunden",
+  "emergencyBottomHint": "Rufe die Werkstatt an und vereinbare eine Soforthilfe. Deinen nächsten Service kannst du danach direkt über B24 buchen.",
+  "noWorkshopsIn25km": "Leider gibt es keine Werkstätten in 25 km Umkreis.",
   "emergencyNumbers": "Notfall-Nummern",
   "policeEmergency": "Polizei / Notruf",
-  "openStatus": "Ge\u00f6ffnet",
+  "openStatus": "Geöffnet",
   "closedStatus": "Geschlossen",
   "callAnyway": "Trotzdem anrufen",
   "legal": "Rechtliches",
@@ -488,21 +595,21 @@
   "noName": "Kein Name",
   "requiredField": "Pflichtfeld",
   "minEightChars": "Mindestens 8 Zeichen",
-  "confirmPasswordLabel": "Passwort best\u00e4tigen",
-  "passwordsDoNotMatch": "Passw\u00f6rter stimmen nicht \u00fcberein",
+  "confirmPasswordLabel": "Passwort bestätigen",
+  "passwordsDoNotMatch": "Passwörter stimmen nicht überein",
   "currentPasswordWrong": "Aktuelles Passwort ist falsch",
-  "passwordChangeError": "Fehler beim \u00c4ndern des Passworts",
-  "changeButton": "\u00c4ndern",
-  "deleteAccountWarning": "Dein Konto und alle Daten werden unwiderruflich gel\u00f6scht. Diese Aktion kann nicht r\u00fcckg\u00e4ngig gemacht werden.",
+  "passwordChangeError": "Fehler beim Ändern des Passworts",
+  "changeButton": "Ändern",
+  "deleteAccountWarning": "Dein Konto und alle Daten werden unwiderruflich gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
   "speechInitFailed": "Spracherkennung konnte nicht initialisiert werden.",
   "rolloThinking": "Rollo denkt nach...",
-  "speechNotAvailableMsg": "Spracherkennung nicht verf\u00fcgbar",
+  "speechNotAvailableMsg": "Spracherkennung nicht verfügbar",
   "tireRecommendation": "Reifen-Empfehlung",
   "appHelp": "App-Hilfe",
   "askFreely": "Frei fragen",
   "vehicleTypeCar": "Auto",
   "vehicleTypeMotorcycle": "Motorrad",
-  "vehicleTypeTrailer": "Anh\u00e4nger",
+  "vehicleTypeTrailer": "Anhänger",
   "fuelPetrol": "Benzin",
   "fuelDiesel": "Diesel",
   "fuelElectric": "Elektrisch",
@@ -512,41 +619,53 @@
   "fuelCng": "Erdgas (CNG)",
   "searchHint": "Suchen...",
   "vehicleUpdated": "Fahrzeug aktualisiert",
-  "vehicleAdded": "Fahrzeug hinzugef\u00fcgt",
-  "tireSizes": "Reifengr\u00f6\u00dfen",
-  "tireSizesDesc": "Gib die Reifengr\u00f6\u00dfen deines Fahrzeugs ein.",
+  "vehicleAdded": "Fahrzeug hinzugefügt",
+  "tireSizes": "Reifengrößen",
+  "tireSizesDesc": "Gib die Reifengrößen deines Fahrzeugs ein.",
   "scanVehicleDoc": "Fahrzeugschein scannen",
-  "autoFillData": "Alle Fahrzeugdaten automatisch ausf\u00fcllen",
-  "tireSizeRecognized": "Reifengr\u00f6\u00dfe aus Fahrzeugschein erkannt",
-  "tireSizeNotRecognized": "Reifengr\u00f6\u00dfe nicht erkannt",
+  "autoFillData": "Alle Fahrzeugdaten automatisch ausfüllen",
+  "tireSizeRecognized": "Reifengröße aus Fahrzeugschein erkannt",
+  "tireSizeNotRecognized": "Reifengröße nicht erkannt",
   "fuelTypeLabel": "Kraftstoffart",
-  "selectFuel": "Kraftstoff w\u00e4hlen",
-  "inspectionDate": "T\u00dcV-Termin",
-  "inspectionReminder": "An T\u00dcV-Termin erinnern",
+  "selectFuel": "Kraftstoff wählen",
+  "inspectionDate": "TÜV-Termin",
+  "inspectionReminder": "An TÜV-Termin erinnern",
   "noReminder": "Keine Erinnerung",
   "daysBefore": "{days} Tage vorher",
-  "@daysBefore": {"placeholders": {"days": {"type": "String"}}},
+  "@daysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "frontWheel": "Vorderrad",
   "rearWheel": "Hinterrad",
   "differentFrontRear": "Unterschiedliche Vorder-/Hinterreifen",
-  "mixedTireSizesLabel": "Mischbereifung (unterschiedliche Gr\u00f6\u00dfen)",
+  "mixedTireSizesLabel": "Mischbereifung (unterschiedliche Größen)",
   "summerTiresLabel": "Sommerreifen",
   "winterTiresLabel": "Winterreifen",
   "allSeasonTiresLabel": "Ganzjahresreifen",
   "onboardingTitle1": "Reifenservice zum Festpreis",
-  "onboardingDesc1": "Finde den passenden Reifenservice in deiner N\u00e4he und buche bequem online \u2013 zum garantierten Festpreis.",
+  "onboardingDesc1": "Finde den passenden Reifenservice in deiner Nähe und buche bequem online – zum garantierten Festpreis.",
   "onboardingTitle2": "Schnell & einfach buchen",
-  "onboardingDesc2": "W\u00e4hle deinen Wunschtermin, vergleiche Werkst\u00e4tten und buche in unter 2 Minuten \u2013 alles in einer App.",
-  "onboardingTitle3": "Dein pers\u00f6nlicher KI-Berater",
+  "onboardingDesc2": "Wähle deinen Wunschtermin, vergleiche Werkstätten und buche in unter 2 Minuten – alles in einer App.",
+  "onboardingTitle3": "Dein persönlicher KI-Berater",
   "onboardingDesc3": "Unser intelligenter Assistent hilft dir bei der Reifenwahl und beantwortet alle Fragen rund ums Fahrzeug.",
-  "searchForWorkshops": "Suche nach Werkst\u00e4tten",
-  "searchForWorkshopsDesc": "Gib eine PLZ oder Stadt ein, um Werkst\u00e4tten in deiner N\u00e4he zu finden.",
+  "searchForWorkshops": "Suche nach Werkstätten",
+  "searchForWorkshopsDesc": "Gib eine PLZ oder Stadt ein, um Werkstätten in deiner Nähe zu finden.",
   "locationNotDetermined": "Standort konnte nicht ermittelt werden. Bitte gib eine PLZ ein.",
   "searchFailed": "Suche fehlgeschlagen. Bitte versuche es erneut.",
   "today": "Heute",
   "tomorrow": "Morgen",
   "inDaysCount": "In {days} Tagen",
-  "@inDaysCount": {"placeholders": {"days": {"type": "String"}}},
+  "@inDaysCount": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "breakdownHelp": "Pannenhilfe",
   "tapToSpeak": "Tippe zum Sprechen",
   "aiErrorMessage": "Entschuldigung, da ist etwas schiefgelaufen. Bitte versuche es nochmal.",
@@ -554,15 +673,39 @@
   "noPhoneNumber": "Keine Telefonnummer hinterlegt",
   "closedToday": "Heute geschlossen",
   "closesAt": "Schließt um {time} Uhr",
-  "@closesAt": {"placeholders": {"time": {"type": "String"}}},
+  "@closesAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "opensAt": "Öffnet um {time} Uhr",
-  "@opensAt": {"placeholders": {"time": {"type": "String"}}},
+  "@opensAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintModel": "z.B. Golf, 3er, MT-07",
   "invalidYear": "Ungültiges Jahr",
   "loggedInAs": "Angemeldet als {role}",
-  "@loggedInAs": {"placeholders": {"role": {"type": "String"}}},
+  "@loggedInAs": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "helloUser": "Hallo, {name}!",
-  "@helloUser": {"placeholders": {"name": {"type": "String"}}},
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "saveError": "Fehler beim Speichern",
   "monthLabel": "Monat",
   "yearLabel": "Jahr",
@@ -570,7 +713,16 @@
   "selectMotorcycleFirst": "Bitte wähle ein Motorrad als Fahrzeug.",
   "adacBreakdown": "ADAC Pannenhilfe",
   "opensOnDay": "Öffnet {day} {time}",
-  "@opensOnDay": {"placeholders": {"day": {"type": "String"}, "time": {"type": "String"}}},
+  "@opensOnDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintYear": "z.B. 2022",
   "hintLicensePlate": "z.B. M-AB 1234",
   "rolloInitialGreeting": "Hallo! 👋 Ich bin **Rollo**, dein KI-Reifen-Berater. Wie kann ich dir helfen?",
@@ -582,7 +734,13 @@
   "chipWorkshopMsg": "Zeig mir Werkstätten in meiner Nähe",
   "chipFreeMsg": "Ich habe eine Frage zu Reifen",
   "rolloIntroWithVehicle": "Hallo! Ich bin Rollo, dein Reifenberater. Ich sehe, du fährst einen {vehicle}. Wie kann ich dir helfen?",
-  "@rolloIntroWithVehicle": { "placeholders": { "vehicle": { "type": "String" } } },
+  "@rolloIntroWithVehicle": {
+    "placeholders": {
+      "vehicle": {
+        "type": "String"
+      }
+    }
+  },
   "rolloIntroGeneric": "Hallo! Ich bin Rollo, dein Reifenberater. Wie kann ich dir helfen?",
   "tireNotStoredLabel": "nicht hinterlegt",
   "otherBrand": "Sonstige",
@@ -590,11 +748,29 @@
   "tireTabWinter": "❄️ Winter",
   "tireTabAllSeason": "🌦️ Ganzjahr",
   "tireValidationError": "{label}: Tragfähigkeit und Geschwindigkeitsindex sind Pflichtfelder",
-  "@tireValidationError": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationError": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "tireValidationErrorRear": "{label} (Hinterachse): Tragfähigkeit und Geschwindigkeitsindex sind Pflichtfelder",
-  "@tireValidationErrorRear": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationErrorRear": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "fieldsRecognized": "{count} Felder erkannt und übernommen",
-  "@fieldsRecognized": { "placeholders": { "count": { "type": "int" } } },
+  "@fieldsRecognized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tireSizeApplyHint": "Diese Größe ist die zugelassene Bereifung laut Fahrzeugschein. Drücke \"Übernehmen\", um sie einzutragen.",
   "tireSizeInvalidHint": "Die gescannte Reifengröße stimmt nicht mit den verfügbaren Werten überein. Bitte scanne den Fahrzeugschein erneut oder gib die Reifengröße von Hand ein.",
   "searchMyLocation": "Mein Standort",
@@ -602,9 +778,14 @@
   "searchSettings": "Einstellungen",
   "workshopCountOne": "1 Werkstatt",
   "workshopCountMany": "{count} Werkstätten",
-  "@workshopCountMany": { "placeholders": { "count": { "type": "int" } } },
+  "@workshopCountMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sortDistance": "Entfernung",
-  "sortPrice": "Preis",
   "sortRating": "Bewertung",
   "withTires": "Mit Reifen",
   "montageOnly": "Nur Montage",
@@ -641,11 +822,23 @@
   "baseLabel": "Basis",
   "tiresFallback": "Reifen",
   "totalWithPrice": "Gesamt {price}€",
-  "@totalWithPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@totalWithPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "tiresAvailable": "Reifen verfügbar",
   "noTiresLabel": "Keine Reifen",
   "fixedPrice": "Festpreis {price}€",
-  "@fixedPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@fixedPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "priceOnRequest": "Preis auf Anfrage",
   "newBadge": "Neu",
   "moreTiresAvailable": "Weitere Reifen bei dieser Werkstatt verfügbar",
@@ -663,7 +856,6 @@
   "noSummerSize": "Keine Sommerreifengröße gespeichert. Bitte hinterlege die Größe in deinem Fahrzeugprofil.",
   "brakeService": "Bremsendienst",
   "batteryService": "Batterieservice",
-  "wheelWash": "Räder waschen",
   "alignMeasureBoth": "📐 Vermessung — Beide Achsen",
   "alignMeasureFront": "📐 Vermessung — Vorderachse",
   "alignMeasureRear": "📐 Vermessung — Hinterachse",
@@ -709,45 +901,83 @@
   "pkgMontage4": "Montage (4 Reifen)",
   "pkgMontage2": "Montage (2 Reifen)",
   "missingTireSizeTitle": "Keine {season}-Größe gespeichert",
-  "@missingTireSizeTitle": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeTitle": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "missingTireSizeDesc": "Um {season} zu suchen, hinterlege bitte die passende Reifengröße in deinem Fahrzeugprofil.",
-  "@missingTireSizeDesc": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeDesc": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "storeTireSizeButton": "{season}-Größe hinterlegen",
-  "@storeTireSizeButton": { "placeholders": { "season": { "type": "String" } } },
+  "@storeTireSizeButton": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsCountLabel": "({count} Bewertungen)",
-  "@reviewsCountLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@reviewsCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "vehicleLoadError": "Fahrzeuge konnten nicht geladen werden",
   "errorServiceCarOnly": "Dieser Service ist nur für PKW/Anhänger verfügbar. Bitte wähle \"Motorrad-Reifen\" als Service.",
   "errorNeedMotorcycle": "Bitte wähle ein Motorrad als Fahrzeug, um Motorrad-Reifen zu suchen.",
   "errorTrailerTireOnly": "Für Anhänger ist nur der Reifenservice (Reifenwechsel / Räderwechsel) verfügbar.",
   "errorLocationFailed": "Standort konnte nicht ermittelt werden. Bitte gib eine PLZ ein.",
   "errorSearchFailed": "Suche fehlgeschlagen. Bitte versuche es erneut.",
-
   "selectWidth": "Breite wählen (mm):",
   "selectAspectRatio": "Querschnitt wählen (%):",
   "selectRimSize": "Felgengröße wählen (Zoll):",
   "selectLoadIndex": "Tragfähigkeit wählen:",
   "selectSpeedIndex": "Geschwindigkeitsindex wählen:",
-
   "availableTimes": "Verfügbare Uhrzeiten",
   "selectedTire": "Ausgewählter Reifen",
   "selectedTireAxle": "Ausgewählter Reifen – {axle}",
-  "@selectedTireAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@selectedTireAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "tireRecommendations": "Reifenempfehlungen",
   "tireRecommendationsAxle": "Reifenempfehlungen – {axle}",
-  "@tireRecommendationsAxle": { "placeholders": { "axle": { "type": "String" } } },
-
+  "@tireRecommendationsAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "encryptedPayment": "Verschlüsselte & sichere Zahlung über Stripe",
   "bookingAgreementPrefix": "Mit der Buchung stimmst du unseren ",
   "termsLink": "AGBs",
   "andThe": " und der ",
   "agreementSuffix": " zu.",
   "bookAndPay": "Jetzt buchen & bezahlen – {price} €",
-  "@bookAndPay": { "placeholders": { "price": { "type": "String" } } },
+  "@bookAndPay": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "bookBinding": "Jetzt verbindlich buchen",
   "bookingInProgress": "Wird gebucht...",
   "creditCard": "Kreditkarte",
-
   "pleaseSelectService": "Bitte Service wählen",
   "pleaseSelectTires": "Bitte Reifen wählen",
   "pleaseSelectBothTires": "Bitte VA + HA Reifen wählen",
@@ -755,14 +985,24 @@
   "pleaseSelectDate": "Bitte Datum wählen",
   "pleaseSelectTime": "Bitte Uhrzeit wählen",
   "bookAppointmentAt": "Termin buchen – {time}",
-  "@bookAppointmentAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookAppointmentAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "bookTireAndMontageAt": "Reifen & Montage buchen – {time}",
-  "@bookTireAndMontageAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookTireAndMontageAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsLoadError": "Bewertungen konnten nicht geladen werden",
-
   "payButtonLabel": "Bezahlen",
   "paymentTookTooLong": "Zahlung hat zu lange gedauert. Bitte versuche es erneut.",
-
   "feedbackQuestion": "Wie zufrieden bist du mit Bereifung24?",
   "feedbackSubtitle": "Deine Meinung ist uns wichtig! Bewerte uns und hinterlasse optional einen Kommentar.",
   "commentOptional": "Kommentar (optional)",
@@ -775,23 +1015,24 @@
   "ratingOkay": "Okay",
   "ratingGood": "Gut",
   "ratingExcellent": "Ausgezeichnet",
-
   "submitReview": "Bewertung absenden",
   "rateLater": "Später bewerten",
   "reviewNotGood": "Nicht gut",
   "reviewExcellent": "Hervorragend",
-
   "paymentType": "Zahlungsart",
   "paymentStatusLabel": "Zahlungsstatus",
   "basePrice": "Grundpreis",
   "couponLabel": "Gutschein ({code})",
-  "@couponLabel": { "placeholders": { "code": { "type": "String" } } },
+  "@couponLabel": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "discountLabel": "Rabatt",
-
   "missionText": "Bereifung24 verbindet Autofahrer mit den besten Reifenwerkstätten in der Nähe. Wir machen Reifenwechsel, Montage und Service so einfach wie eine Online-Bestellung – transparent, fair und zuverlässig.",
-
   "balancingX4": "Auswuchten (×4)",
-
   "howWasYourVisit": "Wie war Ihr Besuch?",
   "reviewHelpsOthers": "Bewerten Sie Ihren Termin und helfen Sie anderen Kunden bei der Suche.",
   "reviewThankYou": "Ihre Bewertung hilft anderen Kunden bei der Werkstattsuche.",
@@ -800,17 +1041,37 @@
   "detailsCouldNotLoad": "Details konnten nicht geladen werden",
   "bookingLabel": "Buchung",
   "bookingNumber": "Buchungs-Nr: {id}",
-  "@bookingNumber": { "placeholders": { "id": { "type": "String" } } },
-  "timeLabel": "Uhrzeit: {time}",
-  "@timeLabel": { "placeholders": { "time": { "type": "String" } } },
+  "@bookingNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
   "durationLabel": "Dauer: ca. {minutes} Minuten",
-  "@durationLabel": { "placeholders": { "minutes": { "type": "int" } } },
-  "licensePlateLabel": "Kennzeichen: {plate}",
-  "@licensePlateLabel": { "placeholders": { "plate": { "type": "String" } } },
+  "@durationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "tireSizeLabel": "Größe: {size}",
-  "@tireSizeLabel": { "placeholders": { "size": { "type": "String" } } },
+  "@tireSizeLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "tireQuantityLabel": "Anzahl: {count} Stück",
-  "@tireQuantityLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@tireQuantityLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "wheelWashing": "Räder waschen",
   "rateWorkshopButton": "Werkstatt bewerten",
   "tagline": "Dein Reifenservice – einfach & schnell",
@@ -819,8 +1080,7 @@
   "beingProcessed": "Wird gerade bearbeitet",
   "completedStatus": "Abgeschlossen",
   "appointmentCancelled": "Dieser Termin wurde storniert",
-  "errorSendingReview": "Fehler beim Senden. Bitte versuche es erneut."
-,
+  "errorSendingReview": "Fehler beim Senden. Bitte versuche es erneut.",
   "axleSetSameBrand": "⭐ Achs-Set: gleicher Hersteller",
   "axleSetSameBrandDesc": "Vorder- und Hinterachse vom gleichen Hersteller (2× VA + 2× HA)",
   "axleSetSameBrandTapHint": "Antippen, um nur Sets vom gleichen Hersteller anzuzeigen",
@@ -829,20 +1089,68 @@
   "axleSetSameModelTapHint": "Antippen, um Vorder- und Hinterreifen zu kombinieren",
   "axleSetBadge": "⭐ ACHS-SET",
   "axleSetsAvailable": "{count} Achs-Sets verfügbar",
-  "@axleSetsAvailable": { "placeholders": { "count": { "type": "int" } } },
+  "@axleSetsAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "activityNewBooking": "Neue Buchung von {name} – {service}",
-  "@activityNewBooking": { "placeholders": { "name": { "type": "String" }, "service": { "type": "String" } } },
+  "@activityNewBooking": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
   "activityPayoutReceived": "Auszahlung erhalten – {amount} €",
-  "@activityPayoutReceived": { "placeholders": { "amount": { "type": "String" } } },
+  "@activityPayoutReceived": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "activityNewReview": "{rating}-Sterne Bewertung von {name}",
-  "@activityNewReview": { "placeholders": { "rating": { "type": "int" }, "name": { "type": "String" } } },
+  "@activityNewReview": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "timeJustNow": "Gerade eben",
   "timeMinutesAgo": "Vor {minutes} Min.",
-  "@timeMinutesAgo": { "placeholders": { "minutes": { "type": "int" } } },
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "Vor {hours} Std.",
-  "@timeHoursAgo": { "placeholders": { "hours": { "type": "int" } } },
+  "@timeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "Vor {days} Tagen",
-  "@timeDaysAgo": { "placeholders": { "days": { "type": "int" } } },
+  "@timeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "timeYesterday": "Gestern",
   "workshopNotificationSettings": "Push-Benachrichtigungen",
   "workshopNotificationSettingsDesc": "Wähle, welche Push-Benachrichtigungen du erhalten möchtest",
@@ -855,5 +1163,10 @@
   "workshopNotifPayoutReceived": "Auszahlung erhalten",
   "workshopNotifPayoutReceivedDesc": "Benachrichtigung über Provisionsauszahlungen",
   "workshopNotifAppointmentReminder": "Terminerinnerung (24 h vorher)",
-  "workshopNotifAppointmentReminderDesc": "Erinnerung einen Tag vor anstehenden Terminen"
+  "workshopNotifAppointmentReminderDesc": "Erinnerung einen Tag vor anstehenden Terminen",
+  "manufacturerFilterLabel": "Hersteller:",
+  "pricesUnmountedHint": "💡 Preise gelten nur für Räder im ausgebauten Zustand.",
+  "confirmMotorcycleBookingTitle": "Bitte bestätigen",
+  "confirmMotorcycleBookingBody": "Bitte stelle sicher, dass der gewählte Reifen für dein Motorrad geeignet ist (z. B. Sport, Tourer, Cross, Enduro).\n\nDie Montage erfolgt ausschließlich an zur Werkstatt gebrachten, bereits ausgebauten Rädern. Der Aus- und Einbau am Motorrad ist nicht enthalten.",
+  "confirmAndBook": "Bestätigen & Buchen"
 }

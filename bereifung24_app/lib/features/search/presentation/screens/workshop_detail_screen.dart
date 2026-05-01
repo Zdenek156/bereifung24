@@ -1707,25 +1707,25 @@ class _WorkshopDetailScreenState extends ConsumerState<WorkshopDetailScreen> {
                         if (isMotorcycleTire) {
                           final confirmed = await showDialog<bool>(
                             context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Bitte bestätigen'),
-                              content: const Text(
-                                'Bitte stelle sicher, dass der gewählte Reifen für dein Motorrad geeignet ist (z. B. Sport, Tourer, Cross, Enduro).\n\n'
-                                'Die Montage erfolgt ausschließlich an zur Werkstatt gebrachten, bereits ausgebauten Rädern. Der Aus- und Einbau am Motorrad ist nicht enthalten.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(ctx).pop(false),
-                                  child: const Text('Abbrechen'),
-                                ),
-                                FilledButton(
-                                  onPressed: () =>
-                                      Navigator.of(ctx).pop(true),
-                                  child: const Text('Bestätigen & Buchen'),
-                                ),
-                              ],
-                            ),
+                            builder: (ctx) {
+                              final s = S.of(ctx)!;
+                              return AlertDialog(
+                                title: Text(s.confirmMotorcycleBookingTitle),
+                                content: Text(s.confirmMotorcycleBookingBody),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(false),
+                                    child: Text(s.cancel),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () =>
+                                        Navigator.of(ctx).pop(true),
+                                    child: Text(s.confirmAndBook),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                           if (confirmed != true) return;
                           if (!context.mounted) return;

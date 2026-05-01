@@ -2418,4 +2418,21 @@ class SIt extends S {
   @override
   String get workshopNotifAppointmentReminderDesc =>
       'Promemoria un giorno prima degli appuntamenti imminenti';
+
+  @override
+  String get manufacturerFilterLabel => 'Produttore:';
+
+  @override
+  String get pricesUnmountedHint =>
+      '💡 I prezzi si applicano solo alle ruote smontate dal veicolo.';
+
+  @override
+  String get confirmMotorcycleBookingTitle => 'Conferma';
+
+  @override
+  String get confirmMotorcycleBookingBody =>
+      'Assicurati che lo pneumatico selezionato sia adatto alla tua moto (ad es. Sport, Tourer, Cross, Enduro).\n\nIl montaggio viene eseguito esclusivamente su ruote già smontate e portate in officina. Lo smontaggio e il rimontaggio sulla moto non sono inclusi.';
+
+  @override
+  String get confirmAndBook => 'Conferma e prenota';
 }

@@ -1,8 +1,6 @@
-﻿{
+{
   "@@locale": "en",
-
   "appTitle": "Bereifung24",
-
   "login": "Log in",
   "register": "Register",
   "logout": "Log out",
@@ -20,7 +18,6 @@
   "loading": "Loading...",
   "error": "Error",
   "ok": "OK",
-
   "email": "Email",
   "password": "Password",
   "firstName": "First name",
@@ -32,10 +29,8 @@
   "zipLabel": "Postal code *",
   "city": "City *",
   "emailRequired": "Email address *",
-
   "invalidEmail": "Invalid email",
   "passwordsNoMatch": "Passwords do not match",
-
   "loginWithGoogle": "Sign in with Google",
   "loginWithApple": "Sign in with Apple",
   "loginWithBiometric": "Sign in with biometrics",
@@ -45,20 +40,17 @@
   "noAccount": "Don't have an account?",
   "hasAccount": "Already have an account?",
   "backToLogin": "Back to login",
-
   "resetPassword": "Reset password",
   "resetPasswordDesc": "Enter your email address and we'll send you a link to reset your password.",
   "sendLink": "Send link",
   "checkInbox": "Check your inbox and follow the link to reset your password.",
   "enterValidEmail": "Please enter a valid email",
-
   "googleLoginFailed": "Google sign-in failed",
   "appleLoginFailed": "Apple sign-in failed",
   "googleRegisterFailed": "Google sign-up failed",
   "appleRegisterFailed": "Apple sign-up failed",
   "acceptTerms": "Please accept the terms and conditions",
   "privacyPolicy": "Privacy Policy",
-
   "completeAddress": "Complete address",
   "completeProfile": "Complete profile",
   "addressNeeded": "Please enter your address so we can find workshops near you.",
@@ -66,13 +58,11 @@
   "appleNameNotProvided": "Apple did not provide your name. Please complete your profile.",
   "addressInfoText": "Your address is needed to find workshops near you and calculate distances.",
   "confirmPassword": "Confirm password",
-
   "welcomeTitle1": "Tire service at a fixed price",
   "welcomeDesc1": "Find the right tire service near you and book conveniently online – at a guaranteed fixed price.",
   "welcomeTitle2": "Quick & easy booking",
   "welcomeDesc2": "Choose your preferred appointment, compare workshops and book in under 2 minutes – all in one app.",
   "welcomeTitle3": "Your personal AI advisor",
-
   "account": "Account",
   "editProfile": "Edit profile",
   "notifications": "Notifications",
@@ -82,38 +72,31 @@
   "giveFeedback": "Give feedback",
   "dangerZone": "Danger zone",
   "deleteAccount": "Delete account",
-
   "changePasswordTitle": "Change password",
   "currentPassword": "Current password",
   "newPassword": "New password",
   "confirmNewPassword": "Confirm password",
   "passwordChanged": "Password changed successfully",
   "change": "Change",
-
   "logoutConfirm": "Log out?",
   "logoutConfirmText": "Do you really want to log out?",
-
   "deleteAccountConfirm": "Delete account?",
   "deleteAccountDone": "Account has been deleted",
   "deletePermanently": "Delete permanently",
-
   "appearance": "Appearance",
   "system": "System",
   "light": "Light",
   "dark": "Dark",
-
   "personalData": "Personal data",
   "phoneNumber": "Phone number *",
   "address": "Address",
   "profileUpdated": "Profile updated",
   "errorSaving": "Error saving",
-
   "feedback": "Feedback",
   "giveFeedbackTitle": "Give feedback",
   "feedbackHint": "What can we improve? What do you like?",
   "selectRating": "Please select a rating",
   "errorSending": "Error sending. Please try again.",
-
   "settingsSaved": "Settings saved",
   "appointmentReminder": "Appointment reminder",
   "appointmentReminderDesc": "Reminder 24h before your appointment",
@@ -121,16 +104,13 @@
   "seasonHintDesc": "Reminder to change tires at the start of the season",
   "bookingUpdates": "Booking updates",
   "bookingUpdatesDesc": "Status changes for your bookings",
-
   "agb": "Terms and Conditions",
   "datenschutz": "Privacy Policy",
   "impressum": "Legal Notice",
-
   "review": "Review",
   "rateWorkshop": "Rate workshop",
   "backToBookings": "Back to bookings",
   "reviewHint": "Describe your experience...",
-
   "selectService": "Select service",
   "whatService": "What would you like done?",
   "tireChange": "Tire change",
@@ -144,7 +124,6 @@
   "axleAlignment": "Wheel alignment",
   "axleAlignmentDesc": "Adjust toe and camber",
   "climateService": "Climate service",
-
   "vehicleType": "Vehicle type",
   "trailer": "Trailer",
   "vehicleData": "Vehicle data",
@@ -155,34 +134,27 @@
   "licensePlateHint": "e.g. M-AB 1234",
   "tireSizeOptional": "Tire size (optional)",
   "tireSizeHint": "e.g. 205/55 R16",
-
   "selectDate": "Select date",
   "selectDateDesc": "Choose date and time.",
   "time": "Time",
-
   "summary": "Summary",
   "notesOptional": "Notes (optional)",
   "notesHint": "e.g. Tires are in the trunk",
-
   "payment": "Payment",
   "completePayment": "Please complete the payment.",
   "totalAmount": "Total amount",
   "totalPrice": "Total price",
   "total": "Total",
   "paymentMethods": "Visa, Mastercard, SEPA",
-
   "bookingSuccessful": "Booking successful!",
   "goToBookings": "Go to my appointments",
   "goToHome": "Go to homepage",
-
   "cancelBooking": "Cancel booking?",
   "progressLost": "Your progress will be lost.",
   "yesCancel": "Yes, cancel",
-
   "bookingFailed": "Booking failed. Please try again.",
   "paymentCancelled": "Payment cancelled.",
   "paymentFailed": "Payment failed. Please try again.",
-
   "bookingOverview": "Booking overview",
   "workshop": "Workshop",
   "service": "Service",
@@ -199,13 +171,11 @@
   "frontAxleMoto": "FW",
   "rearAxleMoto": "RW",
   "myBookings": "My bookings",
-
   "upcoming": "Upcoming",
   "past": "Past",
   "noBookings": "No bookings",
   "couldNotLoadBookings": "Could not load appointments",
   "searchWorkshop": "Search workshop",
-
   "bookingDetails": "Booking details",
   "couldNotLoadDetails": "Could not load details",
   "bookingNotFound": "Booking not found",
@@ -220,13 +190,11 @@
   "paymentDetails": "Payment details",
   "remarks": "Remarks",
   "yourMessageToWorkshop": "Your message to the workshop",
-
   "bookTireAndMontage": "Book tires & fitting",
   "bookNow": "Book now",
   "couldNotLoadVehicles": "Could not load vehicles",
   "selectVehicleTitle": "Select vehicle",
   "addVehicleTitle": "Add vehicle",
-
   "zipOrCity": "Zip code or city...",
   "useLocation": "Use location",
   "locatingPosition": "Getting location...",
@@ -248,7 +216,6 @@
   "selected": "Selected",
   "priceOverview": "Price overview",
   "confirmed": "Confirmed",
-
   "aboutWorkshop": "About the workshop",
   "addressLabel": "Address",
   "yourVehicle": "Your vehicle",
@@ -257,7 +224,6 @@
   "noReviewsYet": "No reviews yet.",
   "workshopLoadError": "Could not load workshop",
   "clockSuffix": "",
-
   "vehicles": "Vehicles",
   "addVehicleButton": "Add",
   "noVehicles": "No vehicles",
@@ -265,7 +231,6 @@
   "deleteVehicleConfirm": "Really delete \"{brand} {model}\"?",
   "vehicleDeleted": "Vehicle deleted",
   "deleteFailed": "Delete failed",
-
   "editVehicle": "Edit vehicle",
   "manufacturer": "Manufacturer *",
   "manufacturerHint": "e.g. Yamaha, Kawasaki",
@@ -292,7 +257,6 @@
   "tireSizeSelected": "Tire size selected",
   "otherSize": "Other size",
   "noCameraAvailable": "No camera available",
-
   "aiAdvisorSpeechInitError": "Speech recognition could not be initialized.",
   "aiAdvisorVoiceModeError": "Error starting voice mode: {error}",
   "speechOutputOn": "Speech output on",
@@ -316,18 +280,14 @@
   "recommendTires": "I'd like a tire recommendation",
   "showNearbyWorkshops": "Show me workshops nearby",
   "tireNotStored": "not stored",
-
   "locationCouldNotBeDetermined": "Location could not be determined. Please check your GPS settings.",
   "stripeNotConfigured": "Stripe is not configured. Please try again later.",
   "notificationsDescription": "Notifications for bookings and updates",
-
   "workshopBookings": "Bookings",
   "noBookingsEmoji": "📋",
   "errorLabel": "Error: {error}",
-
   "workshopCalendar": "Calendar",
   "noAppointments": "📭",
-
   "workshopDashboard": "Dashboard",
   "workshopNext7Days": "Next 7 days",
   "workshopTodayAppointments": "Today's appointments",
@@ -343,14 +303,19 @@
   "rotateScreen": "Rotate screen",
   "tapToSwitch": "Tap to switch ›",
   "reviewsCount": "{count} reviews",
-
   "workshopProfile": "Profile",
   "landingPageTitle": "Your landing page",
   "activeStatus": "Active",
   "inactiveStatus": "Inactive",
   "shareLink": "Share page",
   "landingPageShareMessage": "Visit our page and book directly online: {url}",
-  "@landingPageShareMessage": { "placeholders": { "url": { "type": "String" } } },
+  "@landingPageShareMessage": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "qrCode": "QR code",
   "noLandingPage": "No landing page",
   "noLandingPageDescription": "Your landing page is created and managed via the admin portal.",
@@ -368,24 +333,19 @@
   "replySaved": "Reply saved ✅",
   "sendReply": "Send reply",
   "reply": "Reply",
-
   "serviceNotAvailable": "Service not available",
   "completeProfileButton": "Complete profile",
-
   "locationSettings": "Location settings",
   "callNow": "Call now",
-
   "wheelWash": "Wheel wash",
   "foreignObjectRepair": "Foreign object repair",
   "confirmed_status": "Confirmed",
-
   "madeInDeutschland": "Made with ❤️ in Germany",
   "openSourceLicenses": "Open-source licenses",
   "contact": "Contact",
   "companyInfo": "Company information",
   "followUs": "Follow us",
   "mission": "Our mission",
-
   "homeTitle": "Home",
   "profile": "Profile",
   "reviews": "Reviews",
@@ -424,11 +384,11 @@
   "summerTireSeason": "Summer tire season",
   "winterSeasonTip": "From O to O: October to Easter. Get your winter tires fitted now!",
   "summerSeasonTip": "Time to switch! Book your appointment now before slots fill up.",
-  "co2SavingsTitle": "Your CO\u2082 savings through online bookings",
+  "co2SavingsTitle": "Your CO₂ savings through online bookings",
   "co2BasedOnVehicle": "Based on your vehicle data",
   "co2TripsSaved": "Trips\nsaved",
   "co2KmAvoided": "Distance\navoided",
-  "co2Saved": "CO\u2082\nsaved",
+  "co2Saved": "CO₂\nsaved",
   "co2FuelSaved": "Fuel\nsaved",
   "switchVehicle": "Switch vehicle",
   "addAVehicle": "Add a vehicle",
@@ -444,18 +404,42 @@
   "vehiclesLoadError": "Vehicles could not be loaded",
   "noVehiclesDesc": "Add your first vehicle to book faster.",
   "buildYear": "Year {year}",
-  "@buildYear": {"placeholders": {"year": {"type": "String"}}},
+  "@buildYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
   "tireSummer": "Summer",
   "tireWinter": "Winter",
   "tireAllSeason": "All-season",
   "daysCount": "{count} days",
-  "@daysCount": {"placeholders": {"count": {"type": "String"}}},
+  "@daysCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "locationFailedPermission": "Location could not be determined.\nPlease enable location services.",
   "errorOccurred": "An error occurred.",
   "workshopsFoundNearby": "{count} workshop found nearby",
-  "@workshopsFoundNearby": {"placeholders": {"count": {"type": "String"}}},
+  "@workshopsFoundNearby": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "workshopsFoundNearbyPlural": "{count} workshops found nearby",
-  "@workshopsFoundNearbyPlural": {"placeholders": {"count": {"type": "String"}}},
+  "@workshopsFoundNearbyPlural": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "noWorkshopsNearby": "No workshops found nearby",
   "emergencyBottomHint": "Call the workshop and arrange immediate help. You can book your next service directly via B24 afterwards.",
   "noWorkshopsIn25km": "Unfortunately, there are no workshops within 25 km.",
@@ -507,7 +491,13 @@
   "inspectionReminder": "Remind me of inspection",
   "noReminder": "No reminder",
   "daysBefore": "{days} days before",
-  "@daysBefore": {"placeholders": {"days": {"type": "String"}}},
+  "@daysBefore": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "frontWheel": "Front wheel",
   "rearWheel": "Rear wheel",
   "differentFrontRear": "Different front/rear tires",
@@ -516,9 +506,9 @@
   "winterTiresLabel": "Winter tires",
   "allSeasonTiresLabel": "All-season tires",
   "onboardingTitle1": "Tire service at a fixed price",
-  "onboardingDesc1": "Find the right tire service near you and book conveniently online \u2013 at a guaranteed fixed price.",
+  "onboardingDesc1": "Find the right tire service near you and book conveniently online – at a guaranteed fixed price.",
   "onboardingTitle2": "Quick & easy booking",
-  "onboardingDesc2": "Choose your preferred appointment, compare workshops and book in under 2 minutes \u2013 all in one app.",
+  "onboardingDesc2": "Choose your preferred appointment, compare workshops and book in under 2 minutes – all in one app.",
   "onboardingTitle3": "Your personal AI advisor",
   "onboardingDesc3": "Our intelligent assistant helps you choose tires and answers all questions about your vehicle.",
   "searchForWorkshops": "Search for workshops",
@@ -528,7 +518,13 @@
   "today": "Today",
   "tomorrow": "Tomorrow",
   "inDaysCount": "In {days} days",
-  "@inDaysCount": {"placeholders": {"days": {"type": "String"}}},
+  "@inDaysCount": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "breakdownHelp": "Breakdown Help",
   "tapToSpeak": "Tap to speak",
   "aiErrorMessage": "Sorry, something went wrong. Please try again.",
@@ -536,15 +532,39 @@
   "noPhoneNumber": "No phone number available",
   "closedToday": "Closed today",
   "closesAt": "Closes at {time}",
-  "@closesAt": {"placeholders": {"time": {"type": "String"}}},
+  "@closesAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "opensAt": "Opens at {time}",
-  "@opensAt": {"placeholders": {"time": {"type": "String"}}},
+  "@opensAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintModel": "e.g. Golf, 3 Series, MT-07",
   "invalidYear": "Invalid year",
   "loggedInAs": "Logged in as {role}",
-  "@loggedInAs": {"placeholders": {"role": {"type": "String"}}},
+  "@loggedInAs": {
+    "placeholders": {
+      "role": {
+        "type": "String"
+      }
+    }
+  },
   "helloUser": "Hello, {name}!",
-  "@helloUser": {"placeholders": {"name": {"type": "String"}}},
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "saveError": "Error saving",
   "monthLabel": "Month",
   "yearLabel": "Year",
@@ -552,7 +572,16 @@
   "selectMotorcycleFirst": "Please select a motorcycle as vehicle.",
   "adacBreakdown": "ADAC Breakdown",
   "opensOnDay": "Opens {day} {time}",
-  "@opensOnDay": {"placeholders": {"day": {"type": "String"}, "time": {"type": "String"}}},
+  "@opensOnDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "hintYear": "e.g. 2022",
   "hintLicensePlate": "e.g. M-AB 1234",
   "rolloInitialGreeting": "Hello! 👋 I'm **Rollo**, your AI tire advisor. How can I help you?",
@@ -564,7 +593,13 @@
   "chipWorkshopMsg": "Show me workshops nearby",
   "chipFreeMsg": "I have a question about tires",
   "rolloIntroWithVehicle": "Hello! I'm Rollo, your tire advisor. I see you drive a {vehicle}. How can I help you?",
-  "@rolloIntroWithVehicle": { "placeholders": { "vehicle": { "type": "String" } } },
+  "@rolloIntroWithVehicle": {
+    "placeholders": {
+      "vehicle": {
+        "type": "String"
+      }
+    }
+  },
   "rolloIntroGeneric": "Hello! I'm Rollo, your tire advisor. How can I help you?",
   "tireNotStoredLabel": "not stored",
   "otherBrand": "Other",
@@ -572,11 +607,29 @@
   "tireTabWinter": "❄️ Winter",
   "tireTabAllSeason": "🌦️ All-Season",
   "tireValidationError": "{label}: Load index and speed rating are required",
-  "@tireValidationError": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationError": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "tireValidationErrorRear": "{label} (rear axle): Load index and speed rating are required",
-  "@tireValidationErrorRear": { "placeholders": { "label": { "type": "String" } } },
+  "@tireValidationErrorRear": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
   "fieldsRecognized": "{count} fields recognized and applied",
-  "@fieldsRecognized": { "placeholders": { "count": { "type": "int" } } },
+  "@fieldsRecognized": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "tireSizeApplyHint": "This size is the approved tire specification from the vehicle registration. Press \"Apply\" to enter it.",
   "tireSizeInvalidHint": "The scanned tire size does not match available values. Please scan the vehicle registration again or enter the tire size manually.",
   "searchMyLocation": "My Location",
@@ -584,9 +637,14 @@
   "searchSettings": "Settings",
   "workshopCountOne": "1 workshop",
   "workshopCountMany": "{count} workshops",
-  "@workshopCountMany": { "placeholders": { "count": { "type": "int" } } },
+  "@workshopCountMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "sortDistance": "Distance",
-  "sortPrice": "Price",
   "sortRating": "Rating",
   "withTires": "With tires",
   "montageOnly": "Mounting only",
@@ -623,11 +681,23 @@
   "baseLabel": "Basic",
   "tiresFallback": "Tires",
   "totalWithPrice": "Total {price}€",
-  "@totalWithPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@totalWithPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "tiresAvailable": "Tires available",
   "noTiresLabel": "No tires",
   "fixedPrice": "Fixed price {price}€",
-  "@fixedPrice": { "placeholders": { "price": { "type": "String" } } },
+  "@fixedPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "priceOnRequest": "Price on request",
   "newBadge": "New",
   "moreTiresAvailable": "More tires available at this workshop",
@@ -645,7 +715,6 @@
   "noSummerSize": "No summer tire size saved. Please add the size in your vehicle profile.",
   "brakeService": "Brake service",
   "batteryService": "Battery service",
-  "wheelWash": "Wheel wash",
   "alignMeasureBoth": "📐 Measurement — Both axles",
   "alignMeasureFront": "📐 Measurement — Front axle",
   "alignMeasureRear": "📐 Measurement — Rear axle",
@@ -691,45 +760,83 @@
   "pkgMontage4": "Mounting (4 tires)",
   "pkgMontage2": "Mounting (2 tires)",
   "missingTireSizeTitle": "No {season} size saved",
-  "@missingTireSizeTitle": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeTitle": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "missingTireSizeDesc": "To search for {season}, please add the tire size in your vehicle profile.",
-  "@missingTireSizeDesc": { "placeholders": { "season": { "type": "String" } } },
+  "@missingTireSizeDesc": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "storeTireSizeButton": "Add {season} size",
-  "@storeTireSizeButton": { "placeholders": { "season": { "type": "String" } } },
+  "@storeTireSizeButton": {
+    "placeholders": {
+      "season": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsCountLabel": "({count} reviews)",
-  "@reviewsCountLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@reviewsCountLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "vehicleLoadError": "Could not load vehicles",
   "errorServiceCarOnly": "This service is only available for cars/trailers. Please select \"Motorcycle Tires\" as service.",
   "errorNeedMotorcycle": "Please select a motorcycle as vehicle to search for motorcycle tires.",
   "errorTrailerTireOnly": "Only tire service (tire change / wheel change) is available for trailers.",
   "errorLocationFailed": "Location could not be determined. Please enter a postal code.",
   "errorSearchFailed": "Search failed. Please try again.",
-
   "selectWidth": "Select width (mm):",
   "selectAspectRatio": "Select aspect ratio (%):",
   "selectRimSize": "Select rim size (inch):",
   "selectLoadIndex": "Select load index:",
   "selectSpeedIndex": "Select speed rating:",
-
   "availableTimes": "Available times",
   "selectedTire": "Selected tire",
   "selectedTireAxle": "Selected tire – {axle}",
-  "@selectedTireAxle": { "placeholders": { "axle": { "type": "String" } } },
+  "@selectedTireAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "tireRecommendations": "Tire recommendations",
   "tireRecommendationsAxle": "Tire recommendations – {axle}",
-  "@tireRecommendationsAxle": { "placeholders": { "axle": { "type": "String" } } },
-
+  "@tireRecommendationsAxle": {
+    "placeholders": {
+      "axle": {
+        "type": "String"
+      }
+    }
+  },
   "encryptedPayment": "Encrypted & secure payment via Stripe",
   "bookingAgreementPrefix": "By booking you agree to our ",
   "termsLink": "Terms",
   "andThe": " and the ",
   "agreementSuffix": ".",
   "bookAndPay": "Book & pay now – {price} €",
-  "@bookAndPay": { "placeholders": { "price": { "type": "String" } } },
+  "@bookAndPay": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
   "bookBinding": "Book now (binding)",
   "bookingInProgress": "Booking...",
   "creditCard": "Credit card",
-
   "pleaseSelectService": "Please select a service",
   "pleaseSelectTires": "Please select tires",
   "pleaseSelectBothTires": "Please select FA + RA tires",
@@ -737,14 +844,24 @@
   "pleaseSelectDate": "Please select a date",
   "pleaseSelectTime": "Please select a time",
   "bookAppointmentAt": "Book appointment – {time}",
-  "@bookAppointmentAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookAppointmentAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "bookTireAndMontageAt": "Book tires & fitting – {time}",
-  "@bookTireAndMontageAt": { "placeholders": { "time": { "type": "String" } } },
+  "@bookTireAndMontageAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "reviewsLoadError": "Reviews could not be loaded",
-
   "payButtonLabel": "Pay",
   "paymentTookTooLong": "Payment took too long. Please try again.",
-
   "feedbackQuestion": "How satisfied are you with Bereifung24?",
   "feedbackSubtitle": "Your opinion matters! Rate us and optionally leave a comment.",
   "commentOptional": "Comment (optional)",
@@ -757,23 +874,24 @@
   "ratingOkay": "Okay",
   "ratingGood": "Good",
   "ratingExcellent": "Excellent",
-
   "submitReview": "Submit review",
   "rateLater": "Rate later",
   "reviewNotGood": "Not good",
   "reviewExcellent": "Excellent",
-
   "paymentType": "Payment method",
   "paymentStatusLabel": "Payment status",
   "basePrice": "Base price",
   "couponLabel": "Coupon ({code})",
-  "@couponLabel": { "placeholders": { "code": { "type": "String" } } },
+  "@couponLabel": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
   "discountLabel": "Discount",
-
   "missionText": "Bereifung24 connects drivers with the best tire workshops nearby. We make tire changes, mounting and service as easy as an online order – transparent, fair and reliable.",
-
   "balancingX4": "Balancing (×4)",
-
   "howWasYourVisit": "How was your visit?",
   "reviewHelpsOthers": "Rate your appointment and help other customers find the right workshop.",
   "reviewThankYou": "Your review helps other customers find the right workshop.",
@@ -782,17 +900,51 @@
   "detailsCouldNotLoad": "Details could not be loaded",
   "bookingLabel": "Booking",
   "bookingNumber": "Booking no: {id}",
-  "@bookingNumber": { "placeholders": { "id": { "type": "String" } } },
-  "timeLabel": "Time: {time}",
-  "@timeLabel": { "placeholders": { "time": { "type": "String" } } },
+  "@bookingNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "@timeLabel": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "durationLabel": "Duration: approx. {minutes} minutes",
-  "@durationLabel": { "placeholders": { "minutes": { "type": "int" } } },
-  "licensePlateLabel": "License plate: {plate}",
-  "@licensePlateLabel": { "placeholders": { "plate": { "type": "String" } } },
+  "@durationLabel": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "@licensePlateLabel": {
+    "placeholders": {
+      "plate": {
+        "type": "String"
+      }
+    }
+  },
   "tireSizeLabel": "Size: {size}",
-  "@tireSizeLabel": { "placeholders": { "size": { "type": "String" } } },
+  "@tireSizeLabel": {
+    "placeholders": {
+      "size": {
+        "type": "String"
+      }
+    }
+  },
   "tireQuantityLabel": "Quantity: {count} pieces",
-  "@tireQuantityLabel": { "placeholders": { "count": { "type": "int" } } },
+  "@tireQuantityLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "wheelWashing": "Wheel washing",
   "rateWorkshopButton": "Rate workshop",
   "tagline": "Your tire service – easy & fast",
@@ -801,8 +953,7 @@
   "beingProcessed": "Currently being processed",
   "completedStatus": "Completed",
   "appointmentCancelled": "This appointment was cancelled",
-  "errorSendingReview": "Error sending. Please try again."
-,
+  "errorSendingReview": "Error sending. Please try again.",
   "axleSetSameBrand": "⭐ Axle set: same brand",
   "axleSetSameBrandDesc": "Front and rear axle from the same brand (2× front + 2× rear)",
   "axleSetSameBrandTapHint": "Tap to show only sets from the same brand",
@@ -811,20 +962,68 @@
   "axleSetSameModelTapHint": "Tap to combine front and rear tires",
   "axleSetBadge": "⭐ AXLE SET",
   "axleSetsAvailable": "{count} axle sets available",
-  "@axleSetsAvailable": { "placeholders": { "count": { "type": "int" } } },
+  "@axleSetsAvailable": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "activityNewBooking": "New booking from {name} – {service}",
-  "@activityNewBooking": { "placeholders": { "name": { "type": "String" }, "service": { "type": "String" } } },
+  "@activityNewBooking": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "service": {
+        "type": "String"
+      }
+    }
+  },
   "activityPayoutReceived": "Payout received – {amount} €",
-  "@activityPayoutReceived": { "placeholders": { "amount": { "type": "String" } } },
+  "@activityPayoutReceived": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
   "activityNewReview": "{rating}-star review from {name}",
-  "@activityNewReview": { "placeholders": { "rating": { "type": "int" }, "name": { "type": "String" } } },
+  "@activityNewReview": {
+    "placeholders": {
+      "rating": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "timeJustNow": "Just now",
   "timeMinutesAgo": "{minutes} min ago",
-  "@timeMinutesAgo": { "placeholders": { "minutes": { "type": "int" } } },
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "timeHoursAgo": "{hours} h ago",
-  "@timeHoursAgo": { "placeholders": { "hours": { "type": "int" } } },
+  "@timeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "timeDaysAgo": "{days} days ago",
-  "@timeDaysAgo": { "placeholders": { "days": { "type": "int" } } },
+  "@timeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "timeYesterday": "Yesterday",
   "workshopNotificationSettings": "Push notifications",
   "workshopNotificationSettingsDesc": "Choose which push notifications you want to receive",
@@ -837,5 +1036,10 @@
   "workshopNotifPayoutReceived": "Payout received",
   "workshopNotifPayoutReceivedDesc": "Notification about commission payouts",
   "workshopNotifAppointmentReminder": "Appointment reminder (24 h prior)",
-  "workshopNotifAppointmentReminderDesc": "Reminder one day before upcoming appointments"
+  "workshopNotifAppointmentReminderDesc": "Reminder one day before upcoming appointments",
+  "manufacturerFilterLabel": "Manufacturer:",
+  "pricesUnmountedHint": "💡 Prices apply only to wheels removed from the vehicle.",
+  "confirmMotorcycleBookingTitle": "Please confirm",
+  "confirmMotorcycleBookingBody": "Please make sure the selected tire is suitable for your motorcycle (e.g. Sport, Tourer, Cross, Enduro).\n\nMounting is performed only on wheels brought to the workshop already removed. Removing and reinstalling the wheels on the motorcycle is not included.",
+  "confirmAndBook": "Confirm & Book"
 }

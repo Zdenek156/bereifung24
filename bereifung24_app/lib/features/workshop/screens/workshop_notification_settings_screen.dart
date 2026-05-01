@@ -20,7 +20,6 @@ class _WorkshopNotificationSettingsScreenState
   bool _isSaving = false;
 
   bool _bookingReceived = true;
-  bool _bookingCancelled = true;
   bool _reviewReceived = true;
   bool _payoutReceived = true;
   bool _appointmentReminder = true;
@@ -37,7 +36,6 @@ class _WorkshopNotificationSettingsScreenState
       final data = response.data as Map<String, dynamic>;
       setState(() {
         _bookingReceived = data['notifyWsBookingReceived'] ?? true;
-        _bookingCancelled = data['notifyWsBookingCancelled'] ?? true;
         _reviewReceived = data['notifyWsReviewReceived'] ?? true;
         _payoutReceived = data['notifyWsPayoutReceived'] ?? true;
         _appointmentReminder = data['notifyWsAppointmentReminder'] ?? true;
@@ -53,7 +51,6 @@ class _WorkshopNotificationSettingsScreenState
     try {
       await _api.updateWorkshopNotificationSettings({
         'notifyWsBookingReceived': _bookingReceived,
-        'notifyWsBookingCancelled': _bookingCancelled,
         'notifyWsReviewReceived': _reviewReceived,
         'notifyWsPayoutReceived': _payoutReceived,
         'notifyWsAppointmentReminder': _appointmentReminder,
@@ -105,13 +102,6 @@ class _WorkshopNotificationSettingsScreenState
                   subtitle: s.workshopNotifBookingReceivedDesc,
                   value: _bookingReceived,
                   onChanged: (v) => setState(() => _bookingReceived = v),
-                ),
-                _NotificationTile(
-                  icon: Icons.event_busy,
-                  title: s.workshopNotifBookingCancelled,
-                  subtitle: s.workshopNotifBookingCancelledDesc,
-                  value: _bookingCancelled,
-                  onChanged: (v) => setState(() => _bookingCancelled = v),
                 ),
                 _NotificationTile(
                   icon: Icons.star,

@@ -4510,6 +4510,36 @@ abstract class S {
   /// In de, this message translates to:
   /// **'Erinnerung einen Tag vor anstehenden Terminen'**
   String get workshopNotifAppointmentReminderDesc;
+
+  /// No description provided for @manufacturerFilterLabel.
+  ///
+  /// In de, this message translates to:
+  /// **'Hersteller:'**
+  String get manufacturerFilterLabel;
+
+  /// No description provided for @pricesUnmountedHint.
+  ///
+  /// In de, this message translates to:
+  /// **'💡 Preise gelten nur für Räder im ausgebauten Zustand.'**
+  String get pricesUnmountedHint;
+
+  /// No description provided for @confirmMotorcycleBookingTitle.
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte bestätigen'**
+  String get confirmMotorcycleBookingTitle;
+
+  /// No description provided for @confirmMotorcycleBookingBody.
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte stelle sicher, dass der gewählte Reifen für dein Motorrad geeignet ist (z. B. Sport, Tourer, Cross, Enduro).\n\nDie Montage erfolgt ausschließlich an zur Werkstatt gebrachten, bereits ausgebauten Rädern. Der Aus- und Einbau am Motorrad ist nicht enthalten.'**
+  String get confirmMotorcycleBookingBody;
+
+  /// No description provided for @confirmAndBook.
+  ///
+  /// In de, this message translates to:
+  /// **'Bestätigen & Buchen'**
+  String get confirmAndBook;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

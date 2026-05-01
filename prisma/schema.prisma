@@ -6871,3 +6871,24 @@ model ProspectOutreachEmail {
   @@index([sentAt])
   @@map("prospect_outreach_emails")
 }
+
+// ============================================
+// MOBILE APP VERSION CONFIG (Force Update)
+// ============================================
+// One row per platform ("ios" | "android").
+// App calls GET /api/app/version-check on startup, compares its installed
+// version against minVersion/latestVersion, and shows a (forced) update
+// dialog if needed, linking to storeUrl.
+model AppVersionConfig {
+  id            String   @id @default(cuid())
+  platform      String   @unique // "ios" | "android"
+  minVersion    String   @map("min_version")     // installed < minVersion → forced update
+  latestVersion String   @map("latest_version")  // current store version (optional hint)
+  forceUpdate   Boolean  @default(false) @map("force_update") // override: always force
+  storeUrl      String   @map("store_url")       // App Store / Play Store URL
+  message       String?  @db.Text
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  updatedBy     String?  @map("updated_by")
+
+  @@map("app_version_configs")
+}

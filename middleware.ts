@@ -57,6 +57,7 @@ const ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/admin/legal-texts': 'legal-texts',
   '/admin/workshop-recommendations': 'workshop-empfehlungen',
   '/admin/chargebacks': 'chargebacks',
+  '/admin/app-versions': 'settings',
 }
 
 // API routes to application mapping
@@ -89,6 +90,7 @@ const API_ROUTE_TO_APPLICATION_MAP: Record<string, string> = {
   '/api/admin/legal-texts': 'legal-texts',
   '/api/admin/workshop-recommendations': 'workshop-empfehlungen',
   '/api/admin/chargebacks': 'chargebacks',
+  '/api/admin/app-versions': 'settings',
 }
 
 /**

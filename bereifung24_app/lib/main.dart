@@ -14,6 +14,7 @@ import 'core/services/stripe_service.dart';
 import 'core/services/fcm_service.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/cache_service.dart';
+import 'core/services/version_check_service.dart';
 import 'features/splash/presentation/screens/splash_screen.dart';
 import 'features/auth/providers/auth_provider.dart';
 
@@ -146,6 +147,13 @@ class _Bereifung24AppState extends ConsumerState<Bereifung24App> {
     } catch (e) {
       debugPrint('DeepLink init failed: $e');
     }
+    // Check for mandatory / available app updates.
+    Future.delayed(const Duration(milliseconds: 800), () {
+      final ctx = router.routerDelegate.navigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        VersionCheckService.check(ctx);
+      }
+    });
   }
 
   @override

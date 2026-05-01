@@ -141,6 +141,15 @@ class ApiClient {
     return _dio.put('/user/notification-settings', data: settings);
   }
 
+  Future<Response> getWorkshopNotificationSettings() {
+    return _dio.get('/workshop/notification-settings');
+  }
+
+  Future<Response> updateWorkshopNotificationSettings(
+      Map<String, bool> settings) {
+    return _dio.put('/workshop/notification-settings', data: settings);
+  }
+
   // ── Feedback ──
 
   Future<Response> submitFeedback({

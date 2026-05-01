@@ -61,6 +61,10 @@ class WorkshopProfileScreen extends ConsumerWidget {
               _AppearanceCard(),
               const SizedBox(height: 16),
 
+              // Push notification settings
+              _NotificationSettingsCard(),
+              const SizedBox(height: 16),
+
               // Legal footer + Logout
               const Divider(),
               const SizedBox(height: 8),
@@ -293,13 +297,13 @@ class _LandingPageShareCard extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (e, __) {
         debugPrint('Landing page error: $e');
-        return _buildNoLandingPage(context, isDark);
+        return const SizedBox.shrink();
       },
       data: (lp) {
-        if (lp == null) return _buildNoLandingPage(context, isDark);
+        if (lp == null) return const SizedBox.shrink();
         final slug = (lp['slug'] ?? lp['Slug'] ?? '').toString();
         final isActive = lp['isActive'] == true || lp['is_active'] == true;
-        if (slug.isEmpty) return _buildNoLandingPage(context, isDark);
+        if (slug.isEmpty) return const SizedBox.shrink();
 
         final url = 'https://bereifung24.de/$slug';
 
@@ -415,39 +419,8 @@ class _LandingPageShareCard extends ConsumerWidget {
   }
 
   Widget _buildNoLandingPage(BuildContext context, bool isDark) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-        ),
-      ),
-      child: Column(
-        children: [
-          const Text('🔗', style: TextStyle(fontSize: 28)),
-          const SizedBox(height: 8),
-          Text(
-            S.of(context)!.noLandingPage,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            S.of(context)!.noLandingPageDescription,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: isDark ? Colors.white60 : const Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
-    );
+    // Hidden when workshop has no landing page (kept for backward compat).
+    return const SizedBox.shrink();
   }
 
   void _showQrDialog(BuildContext context, String url) {
@@ -828,6 +801,71 @@ class _OpeningHoursCard extends StatelessWidget {
             );
           }),
         ],
+      ),
+    );
+  }
+}
+
+class _NotificationSettingsCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final s = S.of(context)!;
+    return Material(
+      color: isDark ? const Color(0xFF1E293B) : Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => context.push('/workshop/notifications'),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color:
+                  isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.notifications_active,
+                    color: Color(0xFF0284C7)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      s.workshopNotificationSettings,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      s.workshopNotificationSettingsDesc,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color:
+                            isDark ? Colors.white60 : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right,
+                  color: isDark ? Colors.white38 : Colors.grey),
+            ],
+          ),
+        ),
       ),
     );
   }

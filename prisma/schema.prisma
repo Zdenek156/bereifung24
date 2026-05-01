@@ -145,6 +145,13 @@ model User {
   notifySeason              Boolean @default(true)
   notifyBookingUpdate       Boolean @default(true)
 
+  // Push Notification Settings (Workshop role)
+  notifyWsBookingReceived     Boolean @default(true) @map("notify_ws_booking_received")
+  notifyWsBookingCancelled    Boolean @default(true) @map("notify_ws_booking_cancelled")
+  notifyWsReviewReceived      Boolean @default(true) @map("notify_ws_review_received")
+  notifyWsPayoutReceived      Boolean @default(true) @map("notify_ws_payout_received")
+  notifyWsAppointmentReminder Boolean @default(true) @map("notify_ws_appointment_reminder")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

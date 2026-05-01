@@ -4342,6 +4342,174 @@ abstract class S {
   /// In de, this message translates to:
   /// **'Fehler beim Senden. Bitte versuche es erneut.'**
   String get errorSendingReview;
+
+  /// No description provided for @axleSetSameBrand.
+  ///
+  /// In de, this message translates to:
+  /// **'⭐ Achs-Set: gleicher Hersteller'**
+  String get axleSetSameBrand;
+
+  /// No description provided for @axleSetSameBrandDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorder- und Hinterachse vom gleichen Hersteller (2× VA + 2× HA)'**
+  String get axleSetSameBrandDesc;
+
+  /// No description provided for @axleSetSameBrandTapHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Antippen, um nur Sets vom gleichen Hersteller anzuzeigen'**
+  String get axleSetSameBrandTapHint;
+
+  /// No description provided for @axleSetSameBrandModel.
+  ///
+  /// In de, this message translates to:
+  /// **'⭐ Achs-Set: gleicher Hersteller & Modell'**
+  String get axleSetSameBrandModel;
+
+  /// No description provided for @axleSetSameModelDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Vorder- und Hinterreifen werden als Set angezeigt'**
+  String get axleSetSameModelDesc;
+
+  /// No description provided for @axleSetSameModelTapHint.
+  ///
+  /// In de, this message translates to:
+  /// **'Antippen, um Vorder- und Hinterreifen zu kombinieren'**
+  String get axleSetSameModelTapHint;
+
+  /// No description provided for @axleSetBadge.
+  ///
+  /// In de, this message translates to:
+  /// **'⭐ ACHS-SET'**
+  String get axleSetBadge;
+
+  /// No description provided for @axleSetsAvailable.
+  ///
+  /// In de, this message translates to:
+  /// **'{count} Achs-Sets verfügbar'**
+  String axleSetsAvailable(int count);
+
+  /// No description provided for @activityNewBooking.
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Buchung von {name} – {service}'**
+  String activityNewBooking(String name, String service);
+
+  /// No description provided for @activityPayoutReceived.
+  ///
+  /// In de, this message translates to:
+  /// **'Auszahlung erhalten – {amount} €'**
+  String activityPayoutReceived(String amount);
+
+  /// No description provided for @activityNewReview.
+  ///
+  /// In de, this message translates to:
+  /// **'{rating}-Sterne Bewertung von {name}'**
+  String activityNewReview(int rating, String name);
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In de, this message translates to:
+  /// **'Gerade eben'**
+  String get timeJustNow;
+
+  /// No description provided for @timeMinutesAgo.
+  ///
+  /// In de, this message translates to:
+  /// **'Vor {minutes} Min.'**
+  String timeMinutesAgo(int minutes);
+
+  /// No description provided for @timeHoursAgo.
+  ///
+  /// In de, this message translates to:
+  /// **'Vor {hours} Std.'**
+  String timeHoursAgo(int hours);
+
+  /// No description provided for @timeDaysAgo.
+  ///
+  /// In de, this message translates to:
+  /// **'Vor {days} Tagen'**
+  String timeDaysAgo(int days);
+
+  /// No description provided for @timeYesterday.
+  ///
+  /// In de, this message translates to:
+  /// **'Gestern'**
+  String get timeYesterday;
+
+  /// No description provided for @workshopNotificationSettings.
+  ///
+  /// In de, this message translates to:
+  /// **'Push-Benachrichtigungen'**
+  String get workshopNotificationSettings;
+
+  /// No description provided for @workshopNotificationSettingsDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Wähle, welche Push-Benachrichtigungen du erhalten möchtest'**
+  String get workshopNotificationSettingsDesc;
+
+  /// No description provided for @workshopNotifBookingReceived.
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Buchung'**
+  String get workshopNotifBookingReceived;
+
+  /// No description provided for @workshopNotifBookingReceivedDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Benachrichtigung, wenn ein Kunde einen Termin bucht'**
+  String get workshopNotifBookingReceivedDesc;
+
+  /// No description provided for @workshopNotifBookingCancelled.
+  ///
+  /// In de, this message translates to:
+  /// **'Buchung storniert'**
+  String get workshopNotifBookingCancelled;
+
+  /// No description provided for @workshopNotifBookingCancelledDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Benachrichtigung, wenn ein Kunde eine Buchung storniert'**
+  String get workshopNotifBookingCancelledDesc;
+
+  /// No description provided for @workshopNotifReviewReceived.
+  ///
+  /// In de, this message translates to:
+  /// **'Neue Bewertung'**
+  String get workshopNotifReviewReceived;
+
+  /// No description provided for @workshopNotifReviewReceivedDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Benachrichtigung, wenn du eine neue Bewertung erhältst'**
+  String get workshopNotifReviewReceivedDesc;
+
+  /// No description provided for @workshopNotifPayoutReceived.
+  ///
+  /// In de, this message translates to:
+  /// **'Auszahlung erhalten'**
+  String get workshopNotifPayoutReceived;
+
+  /// No description provided for @workshopNotifPayoutReceivedDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Benachrichtigung über Provisionsauszahlungen'**
+  String get workshopNotifPayoutReceivedDesc;
+
+  /// No description provided for @workshopNotifAppointmentReminder.
+  ///
+  /// In de, this message translates to:
+  /// **'Terminerinnerung (24 h vorher)'**
+  String get workshopNotifAppointmentReminder;
+
+  /// No description provided for @workshopNotifAppointmentReminderDesc.
+  ///
+  /// In de, this message translates to:
+  /// **'Erinnerung einen Tag vor anstehenden Terminen'**
+  String get workshopNotifAppointmentReminderDesc;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

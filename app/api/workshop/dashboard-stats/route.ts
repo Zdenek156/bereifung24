@@ -235,7 +235,9 @@ export async function GET(request: NextRequest) {
         type: 'booking',
         message: `Neue Buchung von ${customerName} - ${serviceName}`,
         time: formatTimeAgo(booking.createdAt),
-        date: booking.createdAt
+        date: booking.createdAt,
+        createdAt: booking.createdAt,
+        payload: { customerName, serviceName }
       })
     }
 
@@ -248,7 +250,9 @@ export async function GET(request: NextRequest) {
           type: 'payment',
           message: `Auszahlung erhalten - ${amount} €`,
           time: formatTimeAgo(booking.paidAt),
-          date: booking.paidAt
+          date: booking.paidAt,
+          createdAt: booking.paidAt,
+          payload: { amount }
         })
       }
     }
@@ -261,7 +265,9 @@ export async function GET(request: NextRequest) {
         type: 'review',
         message: `${review.rating}-Sterne Bewertung von ${customerName}`,
         time: formatTimeAgo(review.createdAt),
-        date: review.createdAt
+        date: review.createdAt,
+        createdAt: review.createdAt,
+        payload: { customerName, rating: review.rating }
       })
     }
 

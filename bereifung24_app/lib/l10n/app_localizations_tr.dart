@@ -2292,4 +2292,113 @@ class STr extends S {
 
   @override
   String get errorSendingReview => 'Gönderme hatası. Lütfen tekrar deneyin.';
+
+  @override
+  String get axleSetSameBrand => '⭐ Aks seti: aynı marka';
+
+  @override
+  String get axleSetSameBrandDesc =>
+      'Ön ve arka aks aynı markadan (2× ön + 2× arka)';
+
+  @override
+  String get axleSetSameBrandTapHint =>
+      'Sadece aynı marka setlerini görmek için dokunun';
+
+  @override
+  String get axleSetSameBrandModel => '⭐ Aks seti: aynı marka ve model';
+
+  @override
+  String get axleSetSameModelDesc =>
+      'Ön ve arka lastikler set olarak gösterilir';
+
+  @override
+  String get axleSetSameModelTapHint =>
+      'Ön ve arka lastikleri birleştirmek için dokunun';
+
+  @override
+  String get axleSetBadge => '⭐ AKS SETİ';
+
+  @override
+  String axleSetsAvailable(int count) {
+    return '$count aks seti mevcut';
+  }
+
+  @override
+  String activityNewBooking(String name, String service) {
+    return '$name tarafından yeni rezervasyon – $service';
+  }
+
+  @override
+  String activityPayoutReceived(String amount) {
+    return 'Ödeme alındı – $amount €';
+  }
+
+  @override
+  String activityNewReview(int rating, String name) {
+    return '$name tarafından $rating yıldızlı değerlendirme';
+  }
+
+  @override
+  String get timeJustNow => 'Az önce';
+
+  @override
+  String timeMinutesAgo(int minutes) {
+    return '$minutes dk önce';
+  }
+
+  @override
+  String timeHoursAgo(int hours) {
+    return '$hours sa önce';
+  }
+
+  @override
+  String timeDaysAgo(int days) {
+    return '$days gün önce';
+  }
+
+  @override
+  String get timeYesterday => 'Dün';
+
+  @override
+  String get workshopNotificationSettings => 'Push bildirimleri';
+
+  @override
+  String get workshopNotificationSettingsDesc =>
+      'Hangi push bildirimlerini almak istediğinizi seçin';
+
+  @override
+  String get workshopNotifBookingReceived => 'Yeni rezervasyon';
+
+  @override
+  String get workshopNotifBookingReceivedDesc =>
+      'Bir müşteri randevu aldığında bildirim';
+
+  @override
+  String get workshopNotifBookingCancelled => 'Rezervasyon iptal edildi';
+
+  @override
+  String get workshopNotifBookingCancelledDesc =>
+      'Bir müşteri rezervasyonu iptal ettiğinde bildirim';
+
+  @override
+  String get workshopNotifReviewReceived => 'Yeni değerlendirme';
+
+  @override
+  String get workshopNotifReviewReceivedDesc =>
+      'Yeni bir değerlendirme aldığınızda bildirim';
+
+  @override
+  String get workshopNotifPayoutReceived => 'Ödeme alındı';
+
+  @override
+  String get workshopNotifPayoutReceivedDesc =>
+      'Komisyon ödemeleri hakkında bildirim';
+
+  @override
+  String get workshopNotifAppointmentReminder =>
+      'Randevu hatırlatıcısı (24 saat öncesi)';
+
+  @override
+  String get workshopNotifAppointmentReminderDesc =>
+      'Yaklaşan randevulardan bir gün önce hatırlatıcı';
 }

@@ -878,6 +878,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       console.log(`⏭️  Workshop ${completeBooking.workshopId} has disabled booking notifications`)
     }
 
+    // Push notification to workshop (independent of email opt-in)
+    try {
+      const { notifyWorkshopBookingReceived } = await import('@/lib/pushNotificationService')
+      await notifyWorkshopBookingReceived(
+        completeBooking.workshopId,
+        completeBooking.id,
+        completeBooking.customer.user.name || 'Kunde',
+        serviceName,
+      )
+      console.log('✅ Workshop push notification sent (booking received)')
+    } catch (pushError) {
+      console.error('⚠️ Workshop push notification failed:', pushError)
+    }
+
     // Create freelancer commission if workshop belongs to a freelancer
     try {
       const { createFreelancerCommission } = await import('@/lib/freelancer/commissionService')
@@ -988,15 +1002,26 @@ async function handlePaymentFailed(paymentIntent: Stripe.PaymentIntent) {
 
     console.log('🚫 [STRIPE WEBHOOK] Booking marked as CANCELLED:', booking?.id)
 
-    // Push notification to customer
+    // Push notification to customer + workshop
     if (booking?.id) {
       try {
         const fullBooking = await prisma.directBooking.findUnique({
           where: { id: booking.id },
-          include: { customer: { select: { user: { select: { id: true } } } } }
+          include: {
+            customer: { select: { user: { select: { id: true, name: true } } } },
+            workshop: { select: { id: true } },
+          }
         })
         if (fullBooking?.customer?.user?.id) {
           await notifyBookingUpdate(fullBooking.customer.user.id, booking.id, 'CANCELLED')
+        }
+        if (fullBooking?.workshop?.id) {
+          const { notifyWorkshopBookingCancelled } = await import('@/lib/pushNotificationService')
+          await notifyWorkshopBookingCancelled(
+            fullBooking.workshop.id,
+            booking.id,
+            fullBooking.customer?.user?.name || undefined,
+          )
         }
       } catch (pushErr) {
         console.error('❌ Push notification error:', pushErr)
@@ -1034,14 +1059,25 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
 
     console.log('✅ Booking refunded')
 
-    // Push notification to customer
+    // Push notification to customer + workshop
     try {
       const refundedBooking = await prisma.directBooking.findFirst({
         where: { stripePaymentId: paymentIntentId },
-        include: { customer: { select: { user: { select: { id: true } } } } }
+        include: {
+          customer: { select: { user: { select: { id: true, name: true } } } },
+          workshop: { select: { id: true } },
+        }
       })
       if (refundedBooking?.customer?.user?.id) {
         await notifyBookingUpdate(refundedBooking.customer.user.id, refundedBooking.id, 'CANCELLED')
+      }
+      if (refundedBooking?.workshop?.id) {
+        const { notifyWorkshopBookingCancelled } = await import('@/lib/pushNotificationService')
+        await notifyWorkshopBookingCancelled(
+          refundedBooking.workshop.id,
+          refundedBooking.id,
+          refundedBooking.customer?.user?.name || undefined,
+        )
       }
     } catch (pushErr) {
       console.error('❌ Push notification error:', pushErr)

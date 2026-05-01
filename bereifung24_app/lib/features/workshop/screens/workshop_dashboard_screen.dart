@@ -481,6 +481,9 @@ class _ActivityTile extends StatelessWidget {
             ? '💳'
             : '⭐';
 
+    final localized = _localizedMessage(context);
+    final localizedTime = _localizedTime(context);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -489,12 +492,12 @@ class _ActivityTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              activity.message,
+              localized,
               style: const TextStyle(fontSize: 13),
             ),
           ),
           Text(
-            activity.time,
+            localizedTime,
             style: TextStyle(
               fontSize: 11,
               color: isDark ? Colors.white38 : const Color(0xFF94A3B8),
@@ -503,5 +506,44 @@ class _ActivityTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _localizedMessage(BuildContext context) {
+    final s = S.of(context)!;
+    final payload = activity.payload as Map<String, dynamic>?;
+    if (payload == null) return activity.message as String;
+    try {
+      switch (activity.type as String) {
+        case 'booking':
+          final name = (payload['customerName'] ?? '').toString();
+          final service = (payload['serviceName'] ?? '').toString();
+          if (name.isEmpty && service.isEmpty) return activity.message as String;
+          return s.activityNewBooking(name, service);
+        case 'payment':
+          final amount = (payload['amount'] ?? '').toString();
+          if (amount.isEmpty) return activity.message as String;
+          return s.activityPayoutReceived(amount);
+        case 'review':
+          final name = (payload['customerName'] ?? '').toString();
+          final rating = payload['rating'] is int
+              ? payload['rating'] as int
+              : int.tryParse('${payload['rating']}') ?? 0;
+          if (rating == 0) return activity.message as String;
+          return s.activityNewReview(rating, name);
+      }
+    } catch (_) {}
+    return activity.message as String;
+  }
+
+  String _localizedTime(BuildContext context) {
+    final s = S.of(context)!;
+    final created = activity.createdAt as DateTime?;
+    if (created == null) return activity.time as String;
+    final diff = DateTime.now().difference(created);
+    if (diff.inMinutes < 1) return s.timeJustNow;
+    if (diff.inMinutes < 60) return s.timeMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return s.timeHoursAgo(diff.inHours);
+    if (diff.inDays == 1) return s.timeYesterday;
+    return s.timeDaysAgo(diff.inDays);
   }
 }

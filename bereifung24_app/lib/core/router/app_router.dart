@@ -32,6 +32,7 @@ import '../../features/workshop/screens/workshop_calendar_screen.dart';
 import '../../features/workshop/screens/workshop_bookings_screen.dart';
 import '../../features/workshop/screens/workshop_reviews_screen.dart';
 import '../../features/workshop/screens/workshop_profile_screen.dart';
+import '../../features/workshop/screens/workshop_notification_settings_screen.dart';
 import '../../features/workshop/widgets/workshop_scaffold.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -313,6 +314,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/workshop/profile',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: WorkshopProfileScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/workshop/notifications',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: WorkshopNotificationSettingsScreen(),
             ),
           ),
         ],

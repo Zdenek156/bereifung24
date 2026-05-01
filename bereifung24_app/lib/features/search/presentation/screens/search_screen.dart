@@ -1898,7 +1898,7 @@ class TireChangeFilters extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '⭐ Achs-Set: gleicher Hersteller',
+                    S.of(context)!.axleSetSameBrand,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -1911,8 +1911,8 @@ class TireChangeFilters extends StatelessWidget {
                   ),
                   Text(
                     active
-                        ? 'Vorder- und Hinterachse vom gleichen Hersteller (2× VA + 2× HA)'
-                        : 'Antippen, um nur Sets vom gleichen Hersteller anzuzeigen',
+                        ? S.of(context)!.axleSetSameBrandDesc
+                        : S.of(context)!.axleSetSameBrandTapHint,
                     style: TextStyle(
                       fontSize: 10,
                       color: active
@@ -2701,7 +2701,7 @@ class MotorcycleTireFilters extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '⭐ Achs-Set: gleicher Hersteller & Modell',
+                    S.of(context)!.axleSetSameBrandModel,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -2714,8 +2714,8 @@ class MotorcycleTireFilters extends StatelessWidget {
                   ),
                   Text(
                     active
-                        ? 'Vorder- und Hinterreifen werden als Set angezeigt'
-                        : 'Antippen, um Vorder- und Hinterreifen zu kombinieren',
+                        ? S.of(context)!.axleSetSameModelDesc
+                        : S.of(context)!.axleSetSameModelTapHint,
                     style: TextStyle(
                       fontSize: 10,
                       color: active
@@ -4671,8 +4671,8 @@ class _WorkshopCard extends ConsumerWidget {
                                       color: const Color(0xFFD97706),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
-                                    child: const Text('⭐ ACHS-SET',
-                                        style: TextStyle(
+                                    child: Text(S.of(context)!.axleSetBadge,
+                                        style: const TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
                                             color: Colors.white)),

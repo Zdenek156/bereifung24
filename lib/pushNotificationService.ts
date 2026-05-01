@@ -190,6 +190,11 @@ export async function sendToUser(
       notifyReminder: true,
       notifySeason: true,
       notifyBookingUpdate: true,
+      notifyWsBookingReceived: true,
+      notifyWsBookingCancelled: true,
+      notifyWsReviewReceived: true,
+      notifyWsPayoutReceived: true,
+      notifyWsAppointmentReminder: true,
     },
   })
 
@@ -352,6 +357,91 @@ export async function notifyReviewRequest(userId: string, bookingId: string, wor
   })
 }
 
+// ── Workshop-side notifications ──
+
+/** Resolve workshopId → owning user.id (for push token lookup) */
+async function getWorkshopUserId(workshopId: string): Promise<string | null> {
+  try {
+    const ws = await prisma.workshop.findUnique({
+      where: { id: workshopId },
+      select: { userId: true },
+    })
+    return ws?.userId ?? null
+  } catch (e) {
+    console.error('[push] getWorkshopUserId failed:', e)
+    return null
+  }
+}
+
+/** Notify workshop: new (paid) booking received */
+export async function notifyWorkshopBookingReceived(
+  workshopId: string,
+  bookingId: string,
+  customerName: string,
+  serviceName: string,
+) {
+  const userId = await getWorkshopUserId(workshopId)
+  if (!userId) return { success: false, error: 'workshop user not found' }
+  return sendToUser(userId, {
+    title: 'Neue Buchung 📋',
+    body: `${customerName} – ${serviceName}`,
+    type: 'ws_booking_received',
+    data: { id: bookingId },
+  })
+}
+
+/** Notify workshop: booking cancelled / refunded */
+export async function notifyWorkshopBookingCancelled(
+  workshopId: string,
+  bookingId: string,
+  customerName?: string,
+) {
+  const userId = await getWorkshopUserId(workshopId)
+  if (!userId) return { success: false, error: 'workshop user not found' }
+  return sendToUser(userId, {
+    title: 'Buchung storniert ❌',
+    body: customerName
+      ? `Die Buchung von ${customerName} wurde storniert.`
+      : 'Eine Buchung wurde storniert.',
+    type: 'ws_booking_cancelled',
+    data: { id: bookingId },
+  })
+}
+
+/** Notify workshop: new review received */
+export async function notifyWorkshopReviewReceived(
+  workshopId: string,
+  rating: number,
+  customerName?: string,
+) {
+  const userId = await getWorkshopUserId(workshopId)
+  if (!userId) return { success: false, error: 'workshop user not found' }
+  const stars = '⭐'.repeat(Math.max(1, Math.min(5, Math.round(rating))))
+  return sendToUser(userId, {
+    title: 'Neue Bewertung ⭐',
+    body: customerName
+      ? `${customerName} hat Sie bewertet: ${stars}`
+      : `Eine neue Bewertung ist eingegangen: ${stars}`,
+    type: 'ws_review_received',
+    data: { rating: String(rating) },
+  })
+}
+
+/** Notify workshop: payout received */
+export async function notifyWorkshopPayoutReceived(
+  workshopId: string,
+  amount: number,
+) {
+  const userId = await getWorkshopUserId(workshopId)
+  if (!userId) return { success: false, error: 'workshop user not found' }
+  return sendToUser(userId, {
+    title: 'Auszahlung erhalten 💰',
+    body: `Eine Auszahlung von ${amount.toFixed(2)} € wurde gutgeschrieben.`,
+    type: 'ws_payout_received',
+    data: { amount: String(amount) },
+  })
+}
+
 // ── Helper ──
 
 function shouldNotify(
@@ -360,6 +450,11 @@ function shouldNotify(
     notifyReminder: boolean
     notifySeason: boolean
     notifyBookingUpdate: boolean
+    notifyWsBookingReceived?: boolean
+    notifyWsBookingCancelled?: boolean
+    notifyWsReviewReceived?: boolean
+    notifyWsPayoutReceived?: boolean
+    notifyWsAppointmentReminder?: boolean
   },
   type: string
 ): boolean {
@@ -372,6 +467,16 @@ function shouldNotify(
       return prefs.notifySeason
     case 'booking_update':
       return prefs.notifyBookingUpdate
+    case 'ws_booking_received':
+      return prefs.notifyWsBookingReceived ?? true
+    case 'ws_booking_cancelled':
+      return prefs.notifyWsBookingCancelled ?? true
+    case 'ws_review_received':
+      return prefs.notifyWsReviewReceived ?? true
+    case 'ws_payout_received':
+      return prefs.notifyWsPayoutReceived ?? true
+    case 'ws_appointment_reminder':
+      return prefs.notifyWsAppointmentReminder ?? true
     case 'manual':
       return true // Manual notifications always go through
     case 'review_prompt':

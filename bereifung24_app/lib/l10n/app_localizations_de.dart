@@ -2307,4 +2307,114 @@ class SDe extends S {
   @override
   String get errorSendingReview =>
       'Fehler beim Senden. Bitte versuche es erneut.';
+
+  @override
+  String get axleSetSameBrand => '⭐ Achs-Set: gleicher Hersteller';
+
+  @override
+  String get axleSetSameBrandDesc =>
+      'Vorder- und Hinterachse vom gleichen Hersteller (2× VA + 2× HA)';
+
+  @override
+  String get axleSetSameBrandTapHint =>
+      'Antippen, um nur Sets vom gleichen Hersteller anzuzeigen';
+
+  @override
+  String get axleSetSameBrandModel =>
+      '⭐ Achs-Set: gleicher Hersteller & Modell';
+
+  @override
+  String get axleSetSameModelDesc =>
+      'Vorder- und Hinterreifen werden als Set angezeigt';
+
+  @override
+  String get axleSetSameModelTapHint =>
+      'Antippen, um Vorder- und Hinterreifen zu kombinieren';
+
+  @override
+  String get axleSetBadge => '⭐ ACHS-SET';
+
+  @override
+  String axleSetsAvailable(int count) {
+    return '$count Achs-Sets verfügbar';
+  }
+
+  @override
+  String activityNewBooking(String name, String service) {
+    return 'Neue Buchung von $name – $service';
+  }
+
+  @override
+  String activityPayoutReceived(String amount) {
+    return 'Auszahlung erhalten – $amount €';
+  }
+
+  @override
+  String activityNewReview(int rating, String name) {
+    return '$rating-Sterne Bewertung von $name';
+  }
+
+  @override
+  String get timeJustNow => 'Gerade eben';
+
+  @override
+  String timeMinutesAgo(int minutes) {
+    return 'Vor $minutes Min.';
+  }
+
+  @override
+  String timeHoursAgo(int hours) {
+    return 'Vor $hours Std.';
+  }
+
+  @override
+  String timeDaysAgo(int days) {
+    return 'Vor $days Tagen';
+  }
+
+  @override
+  String get timeYesterday => 'Gestern';
+
+  @override
+  String get workshopNotificationSettings => 'Push-Benachrichtigungen';
+
+  @override
+  String get workshopNotificationSettingsDesc =>
+      'Wähle, welche Push-Benachrichtigungen du erhalten möchtest';
+
+  @override
+  String get workshopNotifBookingReceived => 'Neue Buchung';
+
+  @override
+  String get workshopNotifBookingReceivedDesc =>
+      'Benachrichtigung, wenn ein Kunde einen Termin bucht';
+
+  @override
+  String get workshopNotifBookingCancelled => 'Buchung storniert';
+
+  @override
+  String get workshopNotifBookingCancelledDesc =>
+      'Benachrichtigung, wenn ein Kunde eine Buchung storniert';
+
+  @override
+  String get workshopNotifReviewReceived => 'Neue Bewertung';
+
+  @override
+  String get workshopNotifReviewReceivedDesc =>
+      'Benachrichtigung, wenn du eine neue Bewertung erhältst';
+
+  @override
+  String get workshopNotifPayoutReceived => 'Auszahlung erhalten';
+
+  @override
+  String get workshopNotifPayoutReceivedDesc =>
+      'Benachrichtigung über Provisionsauszahlungen';
+
+  @override
+  String get workshopNotifAppointmentReminder =>
+      'Terminerinnerung (24 h vorher)';
+
+  @override
+  String get workshopNotifAppointmentReminderDesc =>
+      'Erinnerung einen Tag vor anstehenden Terminen';
 }

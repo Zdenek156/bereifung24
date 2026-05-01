@@ -89,18 +89,33 @@ class RecentActivity {
   final String type;
   final String message;
   final String time;
+  final DateTime? createdAt;
+  final Map<String, dynamic>? payload;
 
   RecentActivity({
     required this.id,
     required this.type,
     required this.message,
     required this.time,
+    this.createdAt,
+    this.payload,
   });
 
-  factory RecentActivity.fromJson(Map<String, dynamic> json) => RecentActivity(
-        id: json['id'] ?? '',
-        type: json['type'] ?? '',
-        message: json['message'] ?? '',
-        time: json['time'] ?? '',
-      );
+  factory RecentActivity.fromJson(Map<String, dynamic> json) {
+    DateTime? created;
+    final raw = json['createdAt'] ?? json['date'];
+    if (raw is String) {
+      created = DateTime.tryParse(raw);
+    }
+    return RecentActivity(
+      id: json['id'] ?? '',
+      type: json['type'] ?? '',
+      message: json['message'] ?? '',
+      time: json['time'] ?? '',
+      createdAt: created,
+      payload: json['payload'] is Map
+          ? Map<String, dynamic>.from(json['payload'] as Map)
+          : null,
+    );
+  }
 }

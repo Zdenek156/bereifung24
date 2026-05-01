@@ -245,6 +245,18 @@ export async function POST(req: NextRequest) {
       })
       console.log('[REVIEW API] Review created successfully:', newReview.id)
 
+      // Push notification to workshop
+      try {
+        const { notifyWorkshopReviewReceived } = await import('@/lib/pushNotificationService')
+        await notifyWorkshopReviewReceived(
+          workshopId!,
+          validatedData.rating,
+          user.name || undefined,
+        )
+      } catch (pushErr) {
+        console.error('[REVIEW API] Workshop push failed:', pushErr)
+      }
+
       // Mark ReviewPrompt as completed (if one exists for this direct booking)
       if (isDirectBooking) {
         await prisma.reviewPrompt.updateMany({

@@ -2299,4 +2299,111 @@ class SEn extends S {
 
   @override
   String get errorSendingReview => 'Error sending. Please try again.';
+
+  @override
+  String get axleSetSameBrand => '⭐ Axle set: same brand';
+
+  @override
+  String get axleSetSameBrandDesc =>
+      'Front and rear axle from the same brand (2× front + 2× rear)';
+
+  @override
+  String get axleSetSameBrandTapHint =>
+      'Tap to show only sets from the same brand';
+
+  @override
+  String get axleSetSameBrandModel => '⭐ Axle set: same brand & model';
+
+  @override
+  String get axleSetSameModelDesc => 'Front and rear tires shown as a set';
+
+  @override
+  String get axleSetSameModelTapHint => 'Tap to combine front and rear tires';
+
+  @override
+  String get axleSetBadge => '⭐ AXLE SET';
+
+  @override
+  String axleSetsAvailable(int count) {
+    return '$count axle sets available';
+  }
+
+  @override
+  String activityNewBooking(String name, String service) {
+    return 'New booking from $name – $service';
+  }
+
+  @override
+  String activityPayoutReceived(String amount) {
+    return 'Payout received – $amount €';
+  }
+
+  @override
+  String activityNewReview(int rating, String name) {
+    return '$rating-star review from $name';
+  }
+
+  @override
+  String get timeJustNow => 'Just now';
+
+  @override
+  String timeMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String timeHoursAgo(int hours) {
+    return '$hours h ago';
+  }
+
+  @override
+  String timeDaysAgo(int days) {
+    return '$days days ago';
+  }
+
+  @override
+  String get timeYesterday => 'Yesterday';
+
+  @override
+  String get workshopNotificationSettings => 'Push notifications';
+
+  @override
+  String get workshopNotificationSettingsDesc =>
+      'Choose which push notifications you want to receive';
+
+  @override
+  String get workshopNotifBookingReceived => 'New booking';
+
+  @override
+  String get workshopNotifBookingReceivedDesc =>
+      'Notification when a customer books an appointment';
+
+  @override
+  String get workshopNotifBookingCancelled => 'Booking cancelled';
+
+  @override
+  String get workshopNotifBookingCancelledDesc =>
+      'Notification when a customer cancels a booking';
+
+  @override
+  String get workshopNotifReviewReceived => 'New review';
+
+  @override
+  String get workshopNotifReviewReceivedDesc =>
+      'Notification when you receive a new review';
+
+  @override
+  String get workshopNotifPayoutReceived => 'Payout received';
+
+  @override
+  String get workshopNotifPayoutReceivedDesc =>
+      'Notification about commission payouts';
+
+  @override
+  String get workshopNotifAppointmentReminder =>
+      'Appointment reminder (24 h prior)';
+
+  @override
+  String get workshopNotifAppointmentReminderDesc =>
+      'Reminder one day before upcoming appointments';
 }

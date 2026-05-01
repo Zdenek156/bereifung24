@@ -2809,7 +2809,7 @@ class _AchsSetRecommendationsSectionState
         ),
         const SizedBox(height: 4),
         Text(
-          '${filteredPairs.length} Achs-Sets verfügbar',
+          S.of(context)!.axleSetsAvailable(filteredPairs.length),
           style: TextStyle(
               color: isDark ? const Color(0xFF94A3B8) : Colors.grey[600],
               fontSize: 13),
@@ -2999,7 +2999,7 @@ class _AchsSetPairCard extends StatelessWidget {
                         color: const Color(0xFFD97706),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text('⭐ ACHS-SET',
+                      child: Text(S.of(context)!.axleSetBadge,
                           style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,

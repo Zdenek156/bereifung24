@@ -2289,4 +2289,113 @@ class SRu extends S {
 
   @override
   String get errorSendingReview => 'Ошибка отправки. Попробуйте ещё раз.';
+
+  @override
+  String get axleSetSameBrand => '⭐ Комплект на ось: один бренд';
+
+  @override
+  String get axleSetSameBrandDesc =>
+      'Передняя и задняя ось одного бренда (2× перед. + 2× задн.)';
+
+  @override
+  String get axleSetSameBrandTapHint =>
+      'Нажмите, чтобы показать только комплекты одного бренда';
+
+  @override
+  String get axleSetSameBrandModel => '⭐ Комплект на ось: один бренд и модель';
+
+  @override
+  String get axleSetSameModelDesc =>
+      'Передние и задние шины показаны как комплект';
+
+  @override
+  String get axleSetSameModelTapHint =>
+      'Нажмите, чтобы комбинировать передние и задние шины';
+
+  @override
+  String get axleSetBadge => '⭐ КОМПЛЕКТ';
+
+  @override
+  String axleSetsAvailable(int count) {
+    return 'Доступно комплектов: $count';
+  }
+
+  @override
+  String activityNewBooking(String name, String service) {
+    return 'Новая запись от $name – $service';
+  }
+
+  @override
+  String activityPayoutReceived(String amount) {
+    return 'Выплата получена – $amount €';
+  }
+
+  @override
+  String activityNewReview(int rating, String name) {
+    return 'Отзыв на $rating звёзд от $name';
+  }
+
+  @override
+  String get timeJustNow => 'Только что';
+
+  @override
+  String timeMinutesAgo(int minutes) {
+    return '$minutes мин назад';
+  }
+
+  @override
+  String timeHoursAgo(int hours) {
+    return '$hours ч назад';
+  }
+
+  @override
+  String timeDaysAgo(int days) {
+    return '$days дн. назад';
+  }
+
+  @override
+  String get timeYesterday => 'Вчера';
+
+  @override
+  String get workshopNotificationSettings => 'Push-уведомления';
+
+  @override
+  String get workshopNotificationSettingsDesc =>
+      'Выберите, какие push-уведомления вы хотите получать';
+
+  @override
+  String get workshopNotifBookingReceived => 'Новая запись';
+
+  @override
+  String get workshopNotifBookingReceivedDesc =>
+      'Уведомление, когда клиент бронирует приём';
+
+  @override
+  String get workshopNotifBookingCancelled => 'Запись отменена';
+
+  @override
+  String get workshopNotifBookingCancelledDesc =>
+      'Уведомление, когда клиент отменяет запись';
+
+  @override
+  String get workshopNotifReviewReceived => 'Новый отзыв';
+
+  @override
+  String get workshopNotifReviewReceivedDesc =>
+      'Уведомление при получении нового отзыва';
+
+  @override
+  String get workshopNotifPayoutReceived => 'Выплата получена';
+
+  @override
+  String get workshopNotifPayoutReceivedDesc =>
+      'Уведомление о выплатах комиссии';
+
+  @override
+  String get workshopNotifAppointmentReminder =>
+      'Напоминание о записи (за 24 ч)';
+
+  @override
+  String get workshopNotifAppointmentReminderDesc =>
+      'Напоминание за день до предстоящих записей';
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/theme/app_theme.dart';
@@ -105,6 +106,22 @@ class WorkshopProfileScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: FutureBuilder<PackageInfo>(
+                  future: PackageInfo.fromPlatform(),
+                  builder: (context, snapshot) {
+                    final version = snapshot.data?.version ?? '...';
+                    return Text(
+                      'Bereifung24 \u00b7 Version $version',
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.grey[400],
+                        fontSize: 12,
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 40),

@@ -59,15 +59,18 @@ export async function GET(request: NextRequest) {
     let updateAvailable = false;
 
     if (installedVersion) {
-      // Forced if explicit forceUpdate flag, OR installed < minVersion
+      const cmpMin = compareVersions(installedVersion, config.minVersion);
+      const cmpLatest = compareVersions(installedVersion, config.latestVersion);
+
+      // Forced when:
+      //  - installed < minVersion (always blocking), OR
+      //  - forceUpdate flag is set AND installed < latestVersion
+      // Higher-than-latest test/dev builds are never blocked.
       updateRequired =
-        config.forceUpdate ||
-        compareVersions(installedVersion, config.minVersion) < 0;
+        cmpMin < 0 || (config.forceUpdate && cmpLatest < 0);
 
       // Optional hint when not forced and a newer version exists
-      updateAvailable =
-        !updateRequired &&
-        compareVersions(installedVersion, config.latestVersion) < 0;
+      updateAvailable = !updateRequired && cmpLatest < 0;
     }
 
     return NextResponse.json({

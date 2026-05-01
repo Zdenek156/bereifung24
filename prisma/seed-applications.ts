@@ -403,6 +403,18 @@ const defaultApplications = [
     sortOrder: 85
   },
 
+  // MOBILE APP VERSIONS
+  {
+    key: 'app-versions',
+    name: 'App-Versionen',
+    description: 'Pflicht-Updates und Store-Links für die Mobile App steuern',
+    icon: 'Smartphone',
+    adminRoute: '/admin/app-versions',
+    color: 'sky',
+    category: 'GENERAL',
+    sortOrder: 95
+  },
+
   // INVOICES
   {
     key: 'rechnungen',

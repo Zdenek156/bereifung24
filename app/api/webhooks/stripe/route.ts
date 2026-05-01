@@ -96,6 +96,10 @@ export async function POST(request: NextRequest) {
         await handleAccountUpdated(event.data.object as Stripe.Account)
         break
 
+      case 'payout.paid':
+        await handlePayoutPaid(event.data.object as Stripe.Payout, event.account)
+        break
+
       case 'charge.dispute.created':
       case 'charge.dispute.updated':
       case 'charge.dispute.closed':
@@ -1166,6 +1170,55 @@ async function handleAccountUpdated(account: Stripe.Account) {
     console.log('⚠️  No workshop or freelancer found for Stripe account:', account.id)
   } catch (error) {
     console.error('❌ Error handling account update:', error)
+  }
+}
+
+/**
+ * Handle payout.paid event (Stripe Connect)
+ * Fired when a payout to a connected account is paid out.
+ * event.account is the Connected Account ID (acct_...).
+ */
+async function handlePayoutPaid(payout: Stripe.Payout, accountId?: string) {
+  try {
+    console.log('💰 Payout paid:', payout.id, 'amount:', payout.amount, 'account:', accountId)
+
+    if (!accountId) {
+      console.warn('⚠️  payout.paid without event.account — skipping')
+      return
+    }
+
+    const amount = payout.amount / 100 // cents → euros
+
+    // Try workshop first
+    const workshop = await prisma.workshop.findFirst({
+      where: { stripeAccountId: accountId },
+      select: { id: true, companyName: true },
+    })
+
+    if (workshop) {
+      try {
+        const { notifyWorkshopPayoutReceived } = await import('@/lib/pushNotificationService')
+        await notifyWorkshopPayoutReceived(workshop.id, amount)
+        console.log(`✅ Workshop push notification sent (payout received): ${workshop.companyName} – ${amount.toFixed(2)}€`)
+      } catch (pushErr) {
+        console.error('⚠️ Workshop payout push failed:', pushErr)
+      }
+      return
+    }
+
+    // Fallback: freelancer (no push helper yet, just log)
+    const freelancer = await prisma.freelancer.findFirst({
+      where: { stripeAccountId: accountId },
+      select: { id: true },
+    })
+    if (freelancer) {
+      console.log(`ℹ️  Payout for freelancer ${freelancer.id} – ${amount.toFixed(2)}€ (no push wired)`)
+      return
+    }
+
+    console.warn('⚠️  No workshop or freelancer found for payout account:', accountId)
+  } catch (error) {
+    console.error('❌ Error handling payout.paid:', error)
   }
 }
 

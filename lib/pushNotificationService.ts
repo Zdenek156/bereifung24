@@ -442,6 +442,24 @@ export async function notifyWorkshopPayoutReceived(
   })
 }
 
+/** Notify workshop: appointment reminder (e.g. ~24h before) */
+export async function notifyWorkshopAppointmentReminder(
+  workshopId: string,
+  bookingId: string,
+  customerName: string,
+  serviceName: string,
+  time: string,
+) {
+  const userId = await getWorkshopUserId(workshopId)
+  if (!userId) return { success: false, error: 'workshop user not found' }
+  return sendToUser(userId, {
+    title: 'Termin morgen ⏰',
+    body: `${time} – ${customerName} (${serviceName})`,
+    type: 'ws_appointment_reminder',
+    data: { id: bookingId },
+  })
+}
+
 // ── Helper ──
 
 function shouldNotify(

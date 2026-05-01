@@ -5957,6 +5957,9 @@ model DirectBooking {
   // Commission Billing (for monthly commission invoices)
   commissionBilledAt DateTime? @map("commission_billed_at") // When commission was included in monthly invoice
 
+  // Push Notification Tracking
+  workshopReminderSentAt DateTime? @map("workshop_reminder_sent_at") // 24h appointment reminder push sent to workshop
+
   // Coupon / Gutschein
   couponId       String?  @map("coupon_id")
   couponCode       String?  @map("coupon_code") @db.VarChar(50)

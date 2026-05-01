@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/getAuthUser'
 import { prisma } from '@/lib/prisma'
-import { notifyBookingReminder } from '@/lib/pushNotificationService'
+import { notifyBookingReminder, notifyWorkshopAppointmentReminder } from '@/lib/pushNotificationService'
 
 /**
  * POST /api/cron/push-reminders
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const tomorrowStart = new Date(tomorrowStr + 'T00:00:00.000Z')
     const tomorrowEnd = new Date(tomorrowStr + 'T23:59:59.999Z')
 
-    // Get confirmed direct bookings for tomorrow where customer has FCM token
+    // Get all confirmed direct bookings for tomorrow (workshop reminder always; customer reminder only if FCM token)
     const bookings = await prisma.directBooking.findMany({
       where: {
         date: {
@@ -44,22 +44,17 @@ export async function POST(request: NextRequest) {
           lte: tomorrowEnd,
         },
         status: { in: ['RESERVED', 'CONFIRMED'] },
-        customer: {
-          user: {
-            fcmToken: { not: null },
-          },
-        },
       },
       include: {
         customer: {
           include: {
             user: {
-              select: { id: true, fcmToken: true },
+              select: { id: true, name: true, fcmToken: true },
             },
           },
         },
         workshop: {
-          select: { companyName: true },
+          select: { id: true, companyName: true },
         },
       },
     })
@@ -68,43 +63,82 @@ export async function POST(request: NextRequest) {
 
     let sent = 0
     let failed = 0
+    let wsSent = 0
+    let wsFailed = 0
+
+    const serviceLabels: Record<string, string> = {
+      'WHEEL_CHANGE': 'Räderwechsel',
+      'TIRE_CHANGE': 'Reifenwechsel',
+      'TIRE_MOUNT': 'Reifenmontage',
+      'TIRE_REPAIR': 'Reifenreparatur',
+      'MOTORCYCLE_TIRE': 'Motorradreifen',
+      'ALIGNMENT_BOTH': 'Achsvermessung',
+      'CLIMATE_SERVICE': 'Klimaservice',
+    }
 
     for (const booking of bookings) {
+      // Customer reminder (only when customer has FCM token)
       const userId = booking.customer?.user?.id
-      if (!userId) continue
+      if (userId && booking.customer?.user?.fcmToken) {
+        try {
+          const dateFormatted = new Date(booking.date).toLocaleDateString('de-DE', {
+            weekday: 'long',
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+          })
 
-      try {
-        const dateFormatted = new Date(booking.date).toLocaleDateString('de-DE', {
-          weekday: 'long',
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric',
-        })
+          const result = await notifyBookingReminder(
+            userId,
+            booking.id,
+            booking.workshop?.companyName || 'Werkstatt',
+            dateFormatted,
+            booking.time
+          )
 
-        const result = await notifyBookingReminder(
-          userId,
-          booking.id,
-          booking.workshop?.companyName || 'Werkstatt',
-          dateFormatted,
-          booking.time
-        )
+          if (result.success) sent++
+          else failed++
+        } catch (error) {
+          console.error(`[CRON PUSH] Customer error for booking ${booking.id}:`, error)
+          failed++
+        }
+      }
 
-        if (result.success) sent++
-        else failed++
-      } catch (error) {
-        console.error(`[CRON PUSH] Error for booking ${booking.id}:`, error)
-        failed++
+      // Workshop reminder (de-duplicated via workshopReminderSentAt)
+      if (booking.workshop?.id && !(booking as any).workshopReminderSentAt) {
+        try {
+          const serviceName = serviceLabels[booking.serviceType] || booking.serviceType
+          const result = await notifyWorkshopAppointmentReminder(
+            booking.workshop.id,
+            booking.id,
+            booking.customer?.user?.name || 'Kunde',
+            serviceName,
+            booking.time,
+          )
+          if (result?.success) {
+            wsSent++
+            await prisma.directBooking.update({
+              where: { id: booking.id },
+              data: { workshopReminderSentAt: new Date() } as any,
+            })
+          } else {
+            wsFailed++
+          }
+        } catch (error) {
+          console.error(`[CRON PUSH] Workshop error for booking ${booking.id}:`, error)
+          wsFailed++
+        }
       }
     }
 
-    console.log(`[CRON PUSH] Reminders sent: ${sent} OK, ${failed} failed`)
+    console.log(`[CRON PUSH] Customer reminders: ${sent} OK, ${failed} failed | Workshop reminders: ${wsSent} OK, ${wsFailed} failed`)
 
     return NextResponse.json({
       success: true,
       date: tomorrowStr,
       bookingsFound: bookings.length,
-      sent,
-      failed,
+      customer: { sent, failed },
+      workshop: { sent: wsSent, failed: wsFailed },
     })
   } catch (error) {
     console.error('[CRON PUSH] Error:', error)

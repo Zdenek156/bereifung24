@@ -2512,38 +2512,40 @@ export default function NewHomePage({
 
             {/* App Stores */}
             {!useServiceCards && (
-            <div className="max-w-5xl mx-auto mt-5 flex flex-wrap items-center justify-center gap-3">
-              <span className="text-primary-100 text-xs font-medium uppercase tracking-wider">
+            <div className="max-w-5xl mx-auto mt-5 flex flex-col items-center justify-center gap-3">
+              <span className="text-primary-100 text-xs font-medium uppercase tracking-wider text-center">
                 Auch als App verfügbar
               </span>
-              <a
-                href="https://apps.apple.com/de/app/bereifung24/id6761443270"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Bereifung24 im App Store laden"
-                className="transition-transform hover:scale-105"
-              >
-                <img
-                  src="/logos/app-store-badge.svg"
-                  alt="Download im App Store"
-                  height={40}
-                  className="h-10 w-auto"
-                />
-              </a>
-              <a
-                href="https://play.google.com/store/apps/details?id=de.bereifung24.bereifung24_app"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Bereifung24 bei Google Play laden"
-                className="transition-transform hover:scale-105"
-              >
-                <img
-                  src="/logos/google-play-badge.png"
-                  alt="Jetzt bei Google Play"
-                  height={40}
-                  className="h-[58px] w-auto -my-2"
-                />
-              </a>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href="https://apps.apple.com/de/app/bereifung24/id6761443270"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Bereifung24 im App Store laden"
+                  className="transition-transform hover:scale-105"
+                >
+                  <img
+                    src="/logos/app-store-badge.svg"
+                    alt="Download im App Store"
+                    height={48}
+                    className="h-12 w-auto"
+                  />
+                </a>
+                <a
+                  href="https://play.google.com/store/apps/details?id=de.bereifung24.bereifung24_app"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Bereifung24 bei Google Play laden"
+                  className="transition-transform hover:scale-105"
+                >
+                  <img
+                    src="/logos/google-play-badge.png"
+                    alt="Jetzt bei Google Play"
+                    height={48}
+                    className="h-12 w-auto"
+                  />
+                </a>
+              </div>
             </div>
             )}
           </div>
@@ -4761,7 +4763,7 @@ export default function NewHomePage({
                     src="/logos/google-play-badge.png"
                     alt="Jetzt bei Google Play"
                     height={48}
-                    className="h-[70px] w-auto -my-3"
+                    className="h-12 w-auto"
                   />
                 </a>
               </div>

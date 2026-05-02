@@ -2541,8 +2541,8 @@ export default function NewHomePage({
                   <img
                     src="/logos/google-play-badge.png"
                     alt="Jetzt bei Google Play"
-                    height={48}
-                    className="h-12 w-auto"
+                    height={70}
+                    className="h-[70px] w-auto -my-3"
                   />
                 </a>
               </div>
@@ -4762,8 +4762,8 @@ export default function NewHomePage({
                   <img
                     src="/logos/google-play-badge.png"
                     alt="Jetzt bei Google Play"
-                    height={48}
-                    className="h-12 w-auto"
+                    height={70}
+                    className="h-[70px] w-auto -my-3"
                   />
                 </a>
               </div>

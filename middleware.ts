@@ -10,7 +10,7 @@ const STATIC_ROUTES = [
   '/faq', '/support', '/pricing', '/workshop-benefits', '/cookie-settings', '/influencer',
   '/werkstatt', '/werkstatt-werden', '/mitarbeiter', '/karriere', '/ratgeber', '/home', '/suche',
   '/_next', '/favicon.ico', '/apple-icon', '/icon', '/uploads', '/Bilder', '/logos',
-  '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/sitemap-werkstatt.xml', '/sitemap-reifen.xml', '/app-download', '/demo',
+  '/robots.txt', '/sitemap', '/sitemap.xml', '/sitemap-blog.xml', '/sitemap-werkstatt.xml', '/sitemap-reifen.xml', '/sitemap-app.xml', '/app-download', '/app', '/demo',
   '/smart-tire-advisor', '/invoices', '/workshop', '/services', '/freelancer', '/reifen', '/konto-loeschen',
   '/api/mobile-auth', '/ueber-uns',
   '/reifenwechsel', '/winterreifen', '/sommerreifen', '/reifenmontage', '/raederwechsel',

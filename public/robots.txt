@@ -13,3 +13,4 @@ Sitemap: https://bereifung24.de/sitemap-blog.xml
 Sitemap: https://bereifung24.de/sitemap-werkstatt.xml
 Sitemap: https://bereifung24.de/sitemap-reifen.xml
 Sitemap: https://bereifung24.de/sitemap-services.xml
+Sitemap: https://bereifung24.de/sitemap-app.xml

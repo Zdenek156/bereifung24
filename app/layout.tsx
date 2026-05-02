@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 import SessionWrapper from './components/SessionWrapper'
 import CookieBanner from '@/components/CookieBanner'
+import AppInstallBanner from '@/components/AppInstallBanner'
 import { Suspense } from 'react'
 import Analytics from './components/Analytics'
 import StructuredData from './components/StructuredData'
@@ -63,6 +64,8 @@ export default function RootLayout({
   return (
     <html lang="de" translate="no">
       <head>
+        {/* iOS Safari Smart App Banner */}
+        <meta name="apple-itunes-app" content="app-id=6761443270" />
         {/* Bing Webmaster Tools Verification - Required for ChatGPT/Bing Search visibility */}
         <meta name="msvalidate.01" content="BING_VERIFICATION_CODE_HERE" />
         {/* Resource Hints for Performance */}
@@ -80,6 +83,7 @@ export default function RootLayout({
           </Suspense>
           {children}
           <CookieBanner />
+          <AppInstallBanner />
         </SessionWrapper>
       </body>
     </html>

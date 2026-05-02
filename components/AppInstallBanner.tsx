@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 const DISMISS_KEY = 'b24_app_banner_dismissed_at'
 const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000 // 7 Tage
 const PLAY_STORE_URL =
-  'https://play.google.com/store/apps/details?id=de.bereifung24.bereifung24App'
+  'https://play.google.com/store/apps/details?id=de.bereifung24.bereifung24_app'
 const APP_STORE_URL = 'https://apps.apple.com/de/app/bereifung24/id6761443270'
 
 type Platform = 'android' | 'ios' | null

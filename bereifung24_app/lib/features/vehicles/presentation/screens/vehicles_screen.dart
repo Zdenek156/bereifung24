@@ -42,17 +42,26 @@ class VehiclesScreen extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    S.of(context)!.myVehicles,
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                  Expanded(
+                    child: Text(
+                      S.of(context)!.myVehicles,
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  const SizedBox(width: 12),
                   FilledButton.icon(
                     onPressed: () => context.push('/vehicles/add'),
                     icon: const Icon(Icons.add, size: 18),
-                    label: Text(S.of(context)!.addVehicleButton),
+                    label: Text(
+                      S.of(context)!.addVehicleButton,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),

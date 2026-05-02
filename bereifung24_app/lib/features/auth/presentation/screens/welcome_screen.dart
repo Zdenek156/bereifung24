@@ -140,17 +140,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
                     child: FilledButton(
                       onPressed: () => context.go('/login'),
                       style: FilledButton.styleFrom(
                         backgroundColor: B24Colors.primaryBlue,
+                        minimumSize: const Size.fromHeight(52),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
                         S.of(context)!.haveAccount,
+                        textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -161,7 +164,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   const SizedBox(height: 12),
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
                     child: OutlinedButton(
                       onPressed: () => context.go('/register'),
                       style: OutlinedButton.styleFrom(
@@ -169,12 +171,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           color: B24Colors.primaryBlue,
                           width: 1.5,
                         ),
+                        minimumSize: const Size.fromHeight(52),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: Text(
                         S.of(context)!.registerAtB24,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
